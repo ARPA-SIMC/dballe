@@ -1079,6 +1079,82 @@ this->add_method("insert_block", [](Fixture& f) {
     wassert(actual(dbapi0.quantesono()) == 1);
 });
 
+this->add_method("query_attr_values", [](Fixture& f) {
+    auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
+    fortran::DbAPI dbapi0(tr, "write", "write", "write");
+    dbapi0.scopa();
+    dbapi0.unsetall();
+    dbapi0.seti("lat", 4500000);
+    dbapi0.seti("lon", 1000000);
+    dbapi0.setc("rep_memo", "generic");
+    dbapi0.setdate(2014, 1, 6, 18, 0, 0);
+    dbapi0.setlevel(105, 2000, 2147483647, 2147483647);
+    dbapi0.settimerange(4, 3600, 7200);
+    dbapi0.seti("B13003", 85);
+    dbapi0.prendilo();
+    dbapi0.unsetb();
+    dbapi0.setd("*B33192", 30.000000);
+    dbapi0.seti("*B33193", 50);
+    dbapi0.setd("*B33194", 70.000000);
+    dbapi0.critica();
+    dbapi0.seti("B12101", 27315);
+    dbapi0.prendilo();
+    dbapi0.unsetb();
+    dbapi0.setd("*B33192", 30.000000);
+    dbapi0.seti("*B33193", 50);
+    dbapi0.setd("*B33194", 70.000000);
+    dbapi0.critica();
+    dbapi0.unsetall();
+    dbapi0.setc("varlist", "B12101");
+    wassert(actual(dbapi0.voglioquesto()) == 1);
+    wassert(actual(dbapi0.dammelo()) == WR_VAR(0, 12, 101));
+    dbapi0.setc("*varlist", "*B33193,*B33194");
+    wassert(actual(dbapi0.voglioancora()) == 2);
+    wassert(actual(dbapi0.ancora()) == "*B33193");
+    wassert(dbapi0.enqi("*B33193"));
+    wassert(dbapi0.enqb("*B33193"));
+    wassert(dbapi0.enqr("*B33193"));
+    wassert(dbapi0.enqd("*B33193"));
+    string sres;
+    bool val = dbapi0.enqc("*B33193", sres);
+    // error: cannot parse a Varcode out of '*B33193'
+});
+
+this->add_method("query_attr_filtered", [](Fixture& f) {
+    auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
+    fortran::DbAPI dbapi0(tr, "write", "write", "write");
+    dbapi0.scopa();
+    dbapi0.unsetall();
+    dbapi0.seti("lat", 4500000);
+    dbapi0.seti("lon", 1000000);
+    dbapi0.setc("rep_memo", "generic");
+    dbapi0.setdate(2014, 1, 6, 18, 0, 0);
+    dbapi0.setlevel(105, 2000, 2147483647, 2147483647);
+    dbapi0.settimerange(4, 3600, 7200);
+    dbapi0.seti("B13003", 85);
+    dbapi0.prendilo();
+    dbapi0.unsetb();
+    dbapi0.setd("*B33192", 30.000000);
+    dbapi0.seti("*B33193", 50);
+    dbapi0.setd("*B33194", 70.000000);
+    dbapi0.critica();
+    dbapi0.seti("B12101", 27315);
+    dbapi0.prendilo();
+    dbapi0.unsetb();
+    dbapi0.setd("*B33192", 30.000000);
+    dbapi0.seti("*B33193", 50);
+    dbapi0.setd("*B33194", 70.000000);
+    dbapi0.critica();
+    dbapi0.unsetall();
+    dbapi0.setc("varlist", "B12101");
+    dbapi0.setc("*varlist", "*B33193,*B33194");
+    wassert(actual(dbapi0.voglioquesto()) == 1);
+    wassert(actual(dbapi0.dammelo()) == WR_VAR(0, 12, 101));
+    wassert(actual(dbapi0.voglioancora()) == 2);
+    wassert(actual(dbapi0.ancora()) == "*B33193");
+    wassert(actual(dbapi0.ancora()) == "*B33194");
+});
+
 }
 
 }
