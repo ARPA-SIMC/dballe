@@ -34,7 +34,7 @@ void Context::print(FILE* out) const
 {
     fprintf(out, "Level ");
     level.print(out, "-", " tr ");
-    trange.print(out, "-", " ");
+    trange.print(out, "-", "\n");
     values.print(out);
 }
 

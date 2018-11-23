@@ -613,7 +613,7 @@ void Message::print(FILE* out) const
 
     fprintf(out, "Level ");
     Level().print(out, "-", " tr ");
-    Trange().print(out, "-", " ");
+    Trange().print(out, "-", "\n");
     station_data.print(out);
 
     switch (type)
