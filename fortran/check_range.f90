@@ -42,6 +42,8 @@ program check_range
       call ensure_no_error("set rep_memo")
       ierr = idba_set(handle, "block", 1)
       call ensure_no_error("set block")
+      ierr = idba_setcontextana(handle)
+      call ensure_no_error("setcontextana")
       ierr = idba_prendilo(handle)
       call ensure_no_error("first prendilo")
 

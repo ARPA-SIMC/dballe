@@ -1066,6 +1066,19 @@ this->add_method("transactions", [](Fixture& f) {
     }
 });
 
+this->add_method("insert_block", [](Fixture& f) {
+    auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
+    fortran::DbAPI dbapi0(tr, "write", "write", "write");
+    dbapi0.scopa();
+    dbapi0.setd("lat", -45.678902);
+    dbapi0.setd("lon", -12.345600);
+    dbapi0.setc("rep_memo", "synop");
+    dbapi0.seti("block", 1);
+    dbapi0.setcontextana();
+    dbapi0.prendilo();
+    wassert(actual(dbapi0.quantesono()) == 1);
+});
+
 }
 
 }
