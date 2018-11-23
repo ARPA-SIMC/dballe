@@ -5,10 +5,9 @@ set -e
 # Limit to 1G of virtual memory
 ulimit -v 1000000
 
+CMDDIR=`pwd`
 TOP_SRCDIR=`pwd`/`dirname $0`/..
 PYTHON=${PYTHON:-python}
-
-CMD=`pwd`/"$1"
 
 ## Run under eatmydata if available
 
@@ -56,31 +55,34 @@ trap cleanup EXIT
 #echo Output saved in `pwd`/testrun-$id
 
 # Try to debug the libtool executable, if present
-DIR=`dirname $CMD`
-BASE=`basename $CMD`
-if [ "${BASE##*.}" = "py" ]
-then
-    CMD="$PYTHON $CMD"
-fi
-if [ ! -z "$DEBUGGER" ]
-then
-    echo "Running $DEBUGGER $CMD $ARGS"
-    RES=0
-    if ! libtool --mode=execute $DEBUGGER $CMD $ARGS
+RES=0
+for cmd in "$@"
+do
+    CMD="$CMDDIR/$cmd"
+    DIR=`dirname $CMD`
+    BASE=`basename $CMD`
+    if [ "${BASE##*.}" = "py" ]
     then
-        RES=$?
-        echo "Failed with result $RES"
+        CMD="$PYTHON $CMD"
     fi
-else
-    echo "Running $CMD $ARGS"
-    RES=0
-    if $CMD $ARGS
+    if [ ! -z "$DEBUGGER" ]
     then
-        true
+        echo "Running $DEBUGGER $CMD $ARGS"
+        if ! libtool --mode=execute $DEBUGGER $CMD $ARGS
+        then
+            RES=$?
+            echo "Failed with result $RES"
+        fi
     else
-        RES=$?
-        echo "Failed with result $RES"
+        echo "Running $CMD $ARGS"
+        if $CMD $ARGS
+        then
+            true
+        else
+            RES=$?
+            echo "Failed with result $RES"
+        fi
     fi
-fi
+done
 
 exit $RES

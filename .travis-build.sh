@@ -19,7 +19,7 @@ then
     pkgcmd="dnf"
     builddep="dnf builddep"
     sed -i '/^tsflags=/d' /etc/dnf/dnf.conf
-    dnf install -y @buildsys-build
+    dnf install -y --allowerasing @buildsys-build
     dnf install -y 'dnf-command(builddep)'
     dnf install -y git
     dnf copr enable -y simc/stable
