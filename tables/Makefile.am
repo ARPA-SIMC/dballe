@@ -25,4 +25,4 @@ B990204.txt: dballe.txt
 B000299.txt: dballe.txt
 	cp $< $@
 
-EXTRA_DIST = $(table_DATA)
+EXTRA_DIST = $(table_DATA) dballe_txt_add_entry

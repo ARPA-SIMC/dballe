@@ -1,0 +1,250 @@
+#!/usr/bin/python3
+
+import argparse
+import logging
+import sys
+import os
+import math
+from contextlib import contextmanager
+
+log = logging.getLogger("dballe_txt_add_entry")
+
+
+class Fail(Exception):
+    pass
+
+
+class DballeTableEntry:
+    """
+    A row from dballe.txt
+    """
+    def __init__(self, line=""):
+        if line != "":
+            self.bcode = line[1:7]
+            self.name = line[8:72].rstrip()
+            self.unitb = line[73:97].rstrip()
+            self.scaleb = int(line[98:101])
+            self.refb = int(line[102:114])
+            self.widthb = int(line[115:118])
+            self.unitc = line[119:142].rstrip()
+            self.scalec = int(line[143:146])
+            self.widthc = int(line[147:157])
+
+    def print(self, file=sys.stdout):
+        file.write(" %s %-64s %-24s %3s %12s %3s %-23s %3s %10s\n" % (
+                   self.bcode, self.name, self.unitb, self.scaleb, self.refb,
+                   self.widthb, self.unitc, self.scalec, self.widthc))
+
+
+class DballeTable:
+    """
+    Contents of dballe.txt
+    """
+    def __init__(self, filename):
+        # TODO: use the local dballe.txt instead of the system one
+        self.table = []
+        for line in open(filename).readlines():
+            self.table.append(DballeTableEntry(line))
+
+    def print(self, file=sys.stdout):
+        for entry in self.table:
+            entry.print(file)
+
+    def add_entry(self, entry):
+        self.table.append(entry)
+        self.table.sort(key=lambda x: x.bcode)
+
+
+# categorie WMO per bufr
+wmobufrcat = (
+    {"x": "01", "name": "Identification", "expl": "Identifies origin and type of data"},
+    {"x": "02", "name": "Instrumentation", "expl": "Defines instrument types used"},
+    {"x": "03", "name": "Reserved"},
+    {"x": "04", "name": "Location (time)", "expl": "Defines time and time derivatives"},
+    {"x": "05", "name": "Location (horizontal - 1)",
+     "expl": "Defines geographical position, including horizontal derivatives, in association with Class 06 (first dimension of horizontal space)"},
+    {"x": "06", "name": "Location (horizontal - 2)",
+     "expl": "Defines geographical position, including horizontal derivatives, in association with Class 05 (second dimension of horizontal space)"},
+    {"x": "07", "name": "Location (vertical)", "expl": "Defines height, altitude, pressure level, including vertical derivatives of position"},
+    {"x": "08", "name": "Significance qualifiers", "expl": "Defines special character of data"},
+    {"x": "09", "name": "Reserved"},
+    {"x": "10", "name": "Non-coordinate location (vertical)",
+     "expl": "Height, altitude, pressure and derivatives observed or measured, not defined as a vertical location"},
+    {"x": "11", "name": "Wind and turbulence", "expl": "Wind speed, direction, etc."},
+    {"x": "12", "name": "Temperature"},
+    {"x": "13", "name": "Hydrographic and hydrological elements", "expl": "Humidity, rainfall, snowfall, etc."},
+    {"x": "14", "name": "Radiation and radiance"},
+    {"x": "15", "name": "Physical/chemical constituents"},
+    {"x": "19", "name": "Synoptic features"},
+    {"x": "20", "name": "Observed phenomena", "expl": "Defines present/past weather, special phenomena, etc."},
+    {"x": "21", "name": "Radar data"},
+    {"x": "22", "name": "Oceanographic elements"},
+    {"x": "23", "name": "Dispersal and transport"},
+    {"x": "24", "name": "Radiological elements"},
+    {"x": "25", "name": "Processing information"},
+    {"x": "26", "name": "Non-coordinate location (time)", "expl": "Defines time and time derivatives that are not coordinates"},
+    {"x": "27", "name": "Non-coordinate location (horizontal - 1)",
+     "expl": "Defines geographical positions, in conjunction with Class 28, that are not coordinates"},
+    {"x": "28", "name": "Non-coordinate location (horizontal - 2)",
+     "expl": "Defines geographical positions, in conjunction with Class 27, that are not coordinates"},
+    {"x": "29", "name": "Map data"},
+    {"x": "30", "name": "Image"},
+    {"x": "31", "name": "Data description operator qualifiers", "expl": "Elements used in conjunction with data description operators"},
+    {"x": "33", "name": "Quality information"},
+    {"x": "35", "name": "Data monitoring information"},
+    {"x": "40", "name": "Satellite data"},
+    {"x": "48", "name": "Reserved for local use"},
+    {"x": "49", "name": "Reserved for local use"},
+    {"x": "50", "name": "Reserved for local use"},
+    {"x": "51", "name": "Reserved for local use"},
+    {"x": "52", "name": "Reserved for local use"},
+    {"x": "53", "name": "Reserved for local use"},
+    {"x": "54", "name": "Reserved for local use"},
+    {"x": "55", "name": "Reserved for local use"},
+    {"x": "56", "name": "Reserved for local use"},
+    {"x": "57", "name": "Reserved for local use"},
+    {"x": "58", "name": "Reserved for local use"},
+    {"x": "59", "name": "Reserved for local use"},
+    {"x": "60", "name": "Reserved for local use"},
+    {"x": "61", "name": "Reserved for local use"},
+    {"x": "62", "name": "Reserved for local use"},
+    {"x": "63", "name": "Reserved for local use"},
+)
+
+
+def wmobufrcat_help():
+    for entry in wmobufrcat:
+        print(entry["x"], entry["name"])
+        if "expl" in entry:
+            print(entry["expl"])
+
+
+class App:
+    def __init__(self, tablefile):
+        self.bufrtable = DballeTable(tablefile)
+
+    def fill_code(self, entry):
+        # Ask the variable category
+        nocat = True
+        while nocat:
+            cat = input("B table category (01-63, ?=help): ")
+            for catdesc in wmobufrcat:
+                if catdesc["x"] == cat:
+                    nocat = False
+                    break
+            else:
+                wmobufrcat_help()
+
+        # Look for a free B code
+        cat = int(cat)
+        if cat < 48:
+            pstart = 192
+        else:
+            pstart = 1
+
+        free_yyy = frozenset(int(x.bcode[-3:]) for x in self.bufrtable.table)
+        for yyy in range(pstart, 256):
+            if yyy not in free_yyy:
+                break
+        else:
+            raise Fail("No free space left in category B{:02}".format(cat))
+
+        # There is still space
+        print(f"The first available code is B{cat:02}{yyy:03}.")
+
+        res = input(f"Variable code: B{cat:02d}")
+        if not res:
+            res = yyy
+        else:
+            res = int(res)
+
+        print(f"Variable code: B{cat:02d}{yyy:03d}")
+        entry.bcode = f"0{cat:02d}{yyy:03d}"
+
+    def fill_desc(self, entry):
+        entry.name = input("Description: ")
+
+    def fill_unit(self, entry):
+        unit = input("Unit: ")
+        entry.unitb = unit
+        entry.unitc = unit
+
+    def fill_ranges(self, entry):
+        minp = float(input("Lowest possible value: "))
+        maxp = float(input("Highest possible value: "))
+        prec = float(input("Precision (minimum significant variation of values): "))
+        scale = int(-math.floor(math.log10(prec)))
+        ref = int(minp*math.pow(10., scale))
+        widthb = int(math.ceil(math.log((maxp-minp)/prec+2)/math.log(2.0)))
+        widthc = int(math.ceil(math.log10(max(abs(minp), abs(maxp))/prec+1)))
+        print(f"Scale: {scale}, base value: {ref}, size: {widthb}b or {widthc}c")
+        entry.scaleb = scale
+        entry.refb = ref
+        entry.widthb = widthb
+        entry.scalec = scale
+        entry.widthc = widthc
+
+    def make_entry(self):
+        entry = DballeTableEntry()
+        self.fill_code(entry)
+        self.fill_desc(entry)
+        self.fill_unit(entry)
+        self.fill_ranges(entry)
+        return entry
+
+    def add_entry(self):
+        entry = self.make_entry()
+        self.bufrtable.add_entry(entry)
+        return entry
+
+    def print(self, file=sys.stdout):
+        self.bufrtable.print(file=file)
+
+
+@contextmanager
+def outfile(args):
+    if args.outfile and args.outfile != "-":
+        with open(args.outfile, "wt", encoding="utf8") as fd:
+            try:
+                yield fd
+            except Exception as e:
+                if os.path.exists(args.outfile):
+                    os.unlink(args.outfile)
+                raise e
+    else:
+        yield sys.stdout
+
+
+def main():
+    default_input = os.path.join(os.path.dirname(__file__), "dballe.txt")
+
+    parser = argparse.ArgumentParser(
+            description="build C code for a lookup table")
+    parser.add_argument("--verbose", "-v", action="store_true", help="verbose output")
+    parser.add_argument("--debug", action="store_true", help="debug output")
+    parser.add_argument("-i", "--infile", action="store", default=default_input, help=f"input file (default: {default_input})")
+    parser.add_argument("-o", "--outfile", action="store", default=default_input, help=f"output file (default: {default_input})")
+    args = parser.parse_args()
+
+    log_format = "%(asctime)-15s %(levelname)s %(message)s"
+    level = logging.WARN
+    if args.debug:
+        level = logging.DEBUG
+    elif args.verbose:
+        level = logging.INFO
+    logging.basicConfig(level=level, stream=sys.stderr, format=log_format)
+
+    app = App(args.infile)
+    new_entry = app.add_entry()
+    with outfile(args) as out:
+        app.print(out)
+    print(f"New entry added to {args.outfile}:")
+    new_entry.print()
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Fail as e:
+        log.error("%s", e)
+        sys.exit(1)
