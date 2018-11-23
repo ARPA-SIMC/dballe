@@ -151,17 +151,13 @@ struct CursorData : public dballe::CursorData
         datetime = msg.get_datetime();
 
         if (merged)
-        {
             for (Values::const_iterator cur = msg.station_data.begin(); cur != msg.station_data.end(); ++cur)
                 if (WR_VAR_X((*cur)->code()) < 4 || WR_VAR_X((*cur)->code()) > 6)
                     rows.emplace_back(cur);
-        }
 
         for (const auto& ctx: msg.data)
-        {
             for (Values::const_iterator cur = ctx.values.begin(); cur != ctx.values.end(); ++cur)
                 rows.emplace_back(ctx.level, ctx.trange, cur);
-        }
     }
 
     int remaining() const override
@@ -180,11 +176,13 @@ struct CursorData : public dballe::CursorData
             return true;
         }
         else if (cur == rows.end())
+        {
             return false;
+        }
         else
         {
             ++cur;
-            return cur == rows.end();
+            return cur != rows.end();
         }
     }
 

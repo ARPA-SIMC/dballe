@@ -202,6 +202,49 @@ void Tests::register_tests()
         }
         // error: no year information found in message to import
     });
+
+    add_method("iterate", []() {
+        std::string fname = tests::datafile("bufr/gts-acars-uk1.bufr");
+        fortran::MsgAPI api(fname.c_str(), "r", "BUFR");
+
+        wassert(actual(api.voglioquesto()) == 11);
+        //001011 SHIP OR MOBILE LAND STATION IDENTIFIER(CCITTIA5): EU3375
+        wassert(actual(api.dammelo()) == WR_VAR(0, 1, 11));
+        // wassert(actual(api.dammelo()) == WR_VAR(0, 4, 1));
+        // 004001 YEAR(YEAR): 2009
+        // 004002 MONTH(MONTH): 2
+        // 004003 DAY(DAY): 24
+        // 004004 HOUR(HOUR): 11
+        // 004005 MINUTE(MINUTE): 31
+        // 005001 LATITUDE (HIGH ACCURACY)(DEGREE): 48.90500
+        // 006001 LONGITUDE (HIGH ACCURACY)(DEGREE): 10.63667
+        wassert(actual(api.dammelo()) == WR_VAR(0,  1,   6));
+        wassert(actual(api.dammelo()) == WR_VAR(0,  2,  61));
+        wassert(actual(api.dammelo()) == WR_VAR(0,  2,  62));
+        wassert(actual(api.dammelo()) == WR_VAR(0,  2,  64));
+        wassert(actual(api.dammelo()) == WR_VAR(0,  7,  30));
+        wassert(actual(api.dammelo()) == WR_VAR(0,  8,   4));
+        wassert(actual(api.dammelo()) == WR_VAR(0, 11,   1));
+        wassert(actual(api.dammelo()) == WR_VAR(0, 11,   2));
+        wassert(actual(api.dammelo()) == WR_VAR(0, 12, 101));
+        wassert(actual(api.dammelo()) == WR_VAR(0, 13,   2));
+        wassert(actual(api.dammelo()) == 0);
+        // Level 102,6260000,-,-, tr 254,0,0
+        // 001006 AIRCRAFT FLIGHT NUMBER(CCITTIA5): LH968
+        // 002061 AIRCRAFT NAVIGATIONAL SYSTEM(CODE TABLE): 0
+        // 002062 TYPE OF AIRCRAFT DATA RELAY SYSTEM(CODE TABLE): 3
+        // 002064 AIRCRAFT ROLL ANGLE QUALITY(CODE TABLE): 0
+        // 007030 HEIGHT OF STATION GROUND ABOVE MEAN SEA LEVEL (SEE NOTE 3)(M): 6260.0
+        // 008004 PHASE OF AIRCRAFT FLIGHT(CODE TABLE): 3
+        // 011001 WIND DIRECTION(DEGREE TRUE): 33
+        // 011002 WIND SPEED(M/S): 33.4
+        // 012101 TEMPERATURE/DRY-BULB TEMPERATURE(K): 240.00
+        // 013002 MIXING RATIO(KG/KG): 0.00000
+
+        wassert(actual(api.voglioquesto()) == api.missing_int);
+
+    });
+
 }
 
 }

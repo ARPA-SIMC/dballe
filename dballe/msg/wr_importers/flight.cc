@@ -35,7 +35,7 @@ public:
                 delete *i;
     }
 
-    virtual void init()
+    void init() override
     {
         WMOImporter::init();
         lev = Level();
@@ -87,7 +87,7 @@ public:
         deferred.clear();
     }
 
-    virtual void run()
+    void run() override
     {
         for (pos = 0; pos < subset->size(); ++pos)
         {

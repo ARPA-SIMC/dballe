@@ -7,7 +7,8 @@
       use test
       use dballef
 
-      integer handle, ival, ndata, n, i
+      integer handle, ival, ndata, n, i, ltype1, l1, ltype2, l2
+      integer have_station, have_data
       integer (kind=dba_int_b):: bval
       real rval
       real*8 dval
@@ -89,6 +90,8 @@
       ierr = idba_unsetall(handle)
       call ensure_no_error("unsetall")
 
+      have_station = 0
+      have_data = 0
       n = 1
       do while ( n > 0 )
         ierr = idba_voglioquesto (handle,n)
@@ -100,17 +103,38 @@
         do i = 1, n
           ierr = idba_dammelo (handle,btable)
           call ensure_no_error("dammelo")
-          ierr = idba_enqd (handle,"B11001",dval)
-          call ensure_no_error("enqd from msg")
-          ierr = idba_enqr (handle,"B11001",rval)
-          call ensure_no_error("enqr from msg")
-          ierr = idba_enqi (handle,"B11001",ival)
-          call ensure_no_error("enqi from msg")
-          ! Value does not fit in a byte
-          !ierr = idba_enqb (handle,"B11001",bval)
-          !call ensure_no_error("enqb from msg")
+          ierr = idba_enqlevel(handle, ltype1, l1, ltype2, l2)
+          call ensure_no_error("enqlevel")
+          ierr = idba_enqc(handle, "var", cval)
+          call ensure_no_error("enqc var")
+          if (cval.eq."B01001") then
+              ierr = idba_enqi (handle,"B01001",ival)
+              call ensure_no_error("enqi from msg (station)")
+              ierr = idba_enqd (handle,"B01001",dval)
+              call ensure_no_error("enqd from msg (station)")
+              ierr = idba_enqr (handle,"B01001",rval)
+              call ensure_no_error("enqr from msg (station)")
+              ierr = idba_enqc (handle,"B01001",cval)
+              call ensure_no_error("enqc from msg (station)")
+              have_station = 1
+          end if
+          if (cval.eq."B11001") then
+              ierr = idba_enqd (handle,"B11001",dval)
+              call ensure_no_error("enqd from msg")
+              ierr = idba_enqr (handle,"B11001",rval)
+              call ensure_no_error("enqr from msg")
+              ierr = idba_enqi (handle,"B11001",ival)
+              call ensure_no_error("enqi from msg")
+              ! Value does not fit in a byte
+              !ierr = idba_enqb (handle,"B11001",bval)
+              !call ensure_no_error("enqb from msg")
+              have_data = 1
+          end if
         end do
       end do
+
+      call ensure("have_station", have_station.eq.1)
+      call ensure("have_data", have_data.eq.1)
 
       ierr = idba_fatto(handle)
       call ensure_no_error("fatto")
