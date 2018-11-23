@@ -1,13 +1,7 @@
-usr/include/dballe/file.h
-usr/include/dballe/fwd.h
-usr/include/dballe/importer.h
-usr/include/dballe/exporter.h
-usr/include/dballe/message.h
-usr/include/dballe/query.h
-usr/include/dballe/record.h
-usr/include/dballe/transaction.h
-usr/include/dballe/types.h
-usr/include/dballe/var.h
+usr/include/dballe/[a-c]*.h
+usr/include/dballe/data.h
+usr/include/dballe/db.h
+usr/include/dballe/[e-z]*.h
 usr/include/dballe/core
 usr/include/dballe/msg
 usr/include/dballe/sql
