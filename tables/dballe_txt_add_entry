@@ -5,6 +5,7 @@ import logging
 import sys
 import os
 import math
+import readline
 from contextlib import contextmanager
 
 log = logging.getLogger("dballe_txt_add_entry")
@@ -12,6 +13,38 @@ log = logging.getLogger("dballe_txt_add_entry")
 
 class Fail(Exception):
     pass
+
+
+def fancy_input(prompt, prefill=None, completer=None, strip=True, default=None, type=None):
+    def hook():
+        if prefill is not None:
+            readline.insert_text(prefill)
+            readline.redisplay()
+    readline.set_pre_input_hook(hook)
+    if completer is not None:
+        readline.set_completer(completer)
+
+    try:
+        while True:
+            result = input(prompt)
+            if strip:
+                result = result.strip()
+
+            if default is not None:
+                if not result:
+                    return default
+
+            if type is not None:
+                try:
+                    result = type(result)
+                except ValueError as e:
+                    print(e)
+                    continue
+
+            return result
+    finally:
+        readline.set_pre_input_hook()
+        readline.set_completer()
 
 
 class DballeTableEntry:
@@ -53,6 +86,41 @@ class DballeTable:
     def add_entry(self, entry):
         self.table.append(entry)
         self.table.sort(key=lambda x: x.bcode)
+
+
+class UnitCompleter:
+    def __init__(self, table):
+        self.table = table.table
+        self.opts = []
+
+    def __call__(self, text, state):
+        try:
+            if state == 0:
+                self.opts = sorted(frozenset(x.unitb for x in self.table if x.unitb.startswith(text)))
+            if state >= len(self.opts):
+                return None
+            return self.opts[state]
+        except Exception:
+            log.exception("COMPLETER FAILED")
+
+
+class DescCompleter:
+    def __init__(self, table):
+        self.words = set()
+        for entry in table.table:
+            for word in entry.name.split():
+                self.words.add(word)
+        self.opts = []
+
+    def __call__(self, text, state):
+        try:
+            if state == 0:
+                self.opts = sorted(w for w in self.words if w.startswith(text))
+            if state >= len(self.opts):
+                return None
+            return self.opts[state]
+        except Exception:
+            log.exception("COMPLETER FAILED")
 
 
 # categorie WMO per bufr
@@ -127,7 +195,7 @@ class App:
         # Ask the variable category
         nocat = True
         while nocat:
-            cat = input("B table category (01-63, ?=help): ")
+            cat = fancy_input("B table category (01-63, ?=help): ")
             for catdesc in wmobufrcat:
                 if catdesc["x"] == cat:
                     nocat = False
@@ -152,7 +220,7 @@ class App:
         # There is still space
         print(f"The first available code is B{cat:02}{yyy:03}.")
 
-        res = input(f"Variable code: B{cat:02d}")
+        res = fancy_input(f"Variable code: B{cat:02d}", prefill=f"{yyy:03}")
         if not res:
             res = yyy
         else:
@@ -162,17 +230,17 @@ class App:
         entry.bcode = f"0{cat:02d}{yyy:03d}"
 
     def fill_desc(self, entry):
-        entry.name = input("Description: ")
+        entry.name = fancy_input("Description: ", completer=DescCompleter(self.bufrtable))
 
     def fill_unit(self, entry):
-        unit = input("Unit: ")
+        unit = fancy_input("Unit: ", completer=UnitCompleter(self.bufrtable))
         entry.unitb = unit
         entry.unitc = unit
 
     def fill_ranges(self, entry):
-        minp = float(input("Lowest possible value: "))
-        maxp = float(input("Highest possible value: "))
-        prec = float(input("Precision (minimum significant variation of values): "))
+        minp = fancy_input("Lowest possible value: ", type=float)
+        maxp = fancy_input("Highest possible value: ", type=float)
+        prec = fancy_input("Precision (minimum significant variation of values): ", type=float)
         scale = int(-math.floor(math.log10(prec)))
         ref = int(minp*math.pow(10., scale))
         widthb = int(math.ceil(math.log((maxp-minp)/prec+2)/math.log(2.0)))
@@ -233,6 +301,8 @@ def main():
     elif args.verbose:
         level = logging.INFO
     logging.basicConfig(level=level, stream=sys.stderr, format=log_format)
+
+    readline.parse_and_bind("tab: complete")
 
     app = App(args.infile)
     new_entry = app.add_entry()
