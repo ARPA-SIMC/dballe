@@ -155,6 +155,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	cmdline/dbadb.h \
 	simple/dbapi.h \
 	simple/simple.h \
+	simple/traced.h \
 	simple/commonapi.h \
 	simple/msgapi.h
 if HAVE_LIBPQ
@@ -266,6 +267,7 @@ libdballe_la_SOURCES = \
 	cmdline/conversion.cc \
 	cmdline/dbadb.cc \
 	simple/simple.cc \
+	simple/traced.cc \
 	simple/commonapi.cc \
 	simple/commonapi-access.cc \
 	simple/msgapi.cc \
@@ -379,6 +381,7 @@ test_dballe_SOURCES = \
 	db/db-export-test.cc \
 	db/summary-test.cc \
 	db/explorer-test.cc \
+	simple/traced-test.cc \
 	simple/commonapi-test.cc \
 	simple/msgapi-test.cc \
 	simple/dbapi-test.cc \

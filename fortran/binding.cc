@@ -1,6 +1,7 @@
 #include "config.h"
 #include "dballe/simple/msgapi.h"
 #include "dballe/simple/dbapi.h"
+#include "dballe/simple/traced.h"
 #include "dballe/core/var.h"
 #include "dballe/core/string.h"
 #include "dballe/db/db.h"
@@ -12,9 +13,6 @@
 #include "handles.h"
 #include "error.h"
 #include "trace.h"
-
-//#define TRACEMISSING(type) fprintf(stderr, "SET TO MISSING (" type ")\n")
-#define TRACEMISSING(type) do {} while(0)
 
 /*
  * First attempt using constants
@@ -96,11 +94,14 @@ struct fortran::Handler<HSimple, MAX_SIMPLE> hsimp;
 
 static int usage_refcount = 0;
 
+static dballe::fortran::Tracer* tracer = nullptr;
+
 static void lib_init()
 {
     if (usage_refcount > 0)
         return;
 
+    tracer = dballe::fortran::Tracer::create().release();
     fortran::trace_init();
     fortran::error_init();
     hsess.init("DB-All.e database sessions", "MAX_CALLBACKS");
@@ -159,7 +160,7 @@ int idba_presentati(int* dbahandle, const char* url)
             if (url == NULL) url = "";
         }
 
-        IF_TRACING(fortran::log_presentati_url(*dbahandle, url));
+        tracer->log_presentati_url(*dbahandle, url);
 
         hs.url = url;
 
@@ -189,7 +190,7 @@ int idba_presentati(int* dbahandle, const char* url)
  */
 int idba_arrivederci(int *dbahandle)
 {
-    IF_TRACING(fortran::log_arrivederci(*dbahandle));
+    tracer->log_arrivederci(*dbahandle);
 
     // try {
         hsess.release(*dbahandle);
@@ -267,12 +268,9 @@ int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* 
         *handle = hsimp.request();
         HSession& hs = hsess.get(dbahandle);
         HSimple& h = hsimp.get(*handle);
-        IF_TRACING(h.trace.log_preparati(dbahandle, *handle, anaflag, dataflag, attrflag));
-        unsigned perms = fortran::DbAPI::compute_permissions(anaflag, dataflag, attrflag);
-        bool readonly = !(perms & (fortran::DbAPI::PERM_ANA_WRITE | fortran::DbAPI::PERM_DATA_ADD | fortran::DbAPI::PERM_DATA_WRITE | fortran::DbAPI::PERM_ATTR_WRITE));
-        auto db = dynamic_pointer_cast<db::DB>(DB::connect_from_url(hs.url.c_str()));
-        auto tr = dynamic_pointer_cast<db::Transaction>(db->transaction(readonly));
-        h.api = new fortran::DbAPI(tr, perms);
+
+        std::unique_ptr<dballe::fortran::API> api = tracer->preparati(dbahandle, *handle, hs.url.c_str(), anaflag, dataflag, attrflag);
+        h.api = api.release();
 
         return fortran::success();
     } catch (error& e) {
@@ -305,9 +303,8 @@ int idba_messaggi(int* handle, const char* filename, const char* mode, const cha
         //HSession& hs = hsess.get(*dbahandle);
         HSimple& h = hsimp.get(*handle);
 
-        IF_TRACING(h.trace.log_messaggi(*handle, filename, mode, type));
-
-        h.api = new fortran::MsgAPI(filename, mode, type);
+        std::unique_ptr<dballe::fortran::API> api = tracer->messaggi(*handle, filename, mode, type);
+        h.api = api.release();
 
         return fortran::success();
     } catch (error& e) {
@@ -327,7 +324,6 @@ int idba_fatto(int* handle)
 {
     try {
         HSimple& h = hsimp.get(*handle);
-        IF_TRACING(h.trace.log_fatto());
         h.api->fatto();
         hsimp.release(*handle);
         return fortran::success();
@@ -363,16 +359,9 @@ int idba_seti(int handle, const char* parameter, const int* value)
     try {
         HSimple& h = hsimp.get(handle);
         if (*value == MISSING_INT)
-        {
-            TRACEMISSING("int");
-            IF_TRACING(h.trace.log_unset(parameter));
             h.api->unset(parameter);
-        }
         else
-        {
-            IF_TRACING(h.trace.log_set(parameter, *value));
             h.api->seti(parameter, *value);
-        }
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -398,16 +387,9 @@ int idba_setb(int handle, const char* parameter, const unsigned char* value)
     try {
         HSimple& h = hsimp.get(handle);
         if (*value == MISSING_BYTE)
-        {
-            TRACEMISSING("byte");
-            IF_TRACING(h.trace.log_unset(parameter));
             h.api->unset(parameter);
-        }
         else
-        {
-            IF_TRACING(h.trace.log_set(parameter, *value));
             h.api->setb(parameter, *value);
-        }
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -435,16 +417,9 @@ int idba_setr(int handle, const char* parameter, const float* value)
     try {
         HSimple& h = hsimp.get(handle);
         if (*value == MISSING_REAL)
-        {
-            TRACEMISSING("real");
-            IF_TRACING(h.trace.log_unset(parameter));
             h.api->unset(parameter);
-        }
         else
-        {
-            IF_TRACING(h.trace.log_set(parameter, *value));
             h.api->setr(parameter, *value);
-        }
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -470,16 +445,9 @@ int idba_setd(int handle, const char* parameter, const double* value)
     try {
         HSimple& h = hsimp.get(handle);
         if (*value == MISSING_DOUBLE)
-        {
-            TRACEMISSING("double");
-            IF_TRACING(h.trace.log_unset(parameter));
             h.api->unset(parameter);
-        }
         else
-        {
-            IF_TRACING(h.trace.log_set(parameter, *value));
             h.api->setd(parameter, *value);
-        }
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -505,17 +473,9 @@ int idba_setc(int handle, const char* parameter, const char* value)
     try {
         HSimple& h = hsimp.get(handle);
         if (value[0] == 0)
-        {
-            TRACEMISSING("char");
-            IF_TRACING(h.trace.log_unset(parameter));
             h.api->unset(parameter);
-        }
         else
-        {
-            IF_TRACING(h.trace.log_set(parameter, value));
             h.api->setc(parameter, value);
-        }
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -679,7 +639,6 @@ int idba_unset(int handle, const char* parameter)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_unset(parameter));
         h.api->unset(parameter);
 
         return fortran::success();
@@ -698,7 +657,6 @@ int idba_unsetb(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_func("unsetb"));
         h.api->unsetb();
         return fortran::success();
     } catch (error& e) {
@@ -716,7 +674,6 @@ int idba_unsetall(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_func("unsetall"));
         h.api->unsetall();
         return fortran::success();
     } catch (error& e) {
@@ -737,7 +694,6 @@ int idba_setcontextana(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_func("setcontextana"));
         h.api->setcontextana();
 
         return fortran::success();
@@ -776,13 +732,9 @@ int idba_setlevel(int handle, int ltype1, int l1, int ltype2, int l2)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_setlevel(
-                fromfortran(ltype1), fromfortran(l1),
-                fromfortran(ltype2), fromfortran(l2)));
         h.api->setlevel(
             fromfortran(ltype1), fromfortran(l1),
             fromfortran(ltype2), fromfortran(l2));
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -807,9 +759,7 @@ int idba_settimerange(int handle, int ptype, int p1, int p2)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_settimerange(fromfortran(ptype), fromfortran(p1), fromfortran(p2)));
         h.api->settimerange(fromfortran(ptype), fromfortran(p1), fromfortran(p2));
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -842,14 +792,9 @@ int idba_setdate(int handle,
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_setdate(
-                fromfortran(year), fromfortran(month), fromfortran(day),
-                fromfortran(hour), fromfortran(min), fromfortran(sec)));
-
         h.api->setdate(
             fromfortran(year), fromfortran(month), fromfortran(day),
             fromfortran(hour), fromfortran(min), fromfortran(sec));
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -882,13 +827,9 @@ int idba_setdatemin(int handle,
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_setdate(
-                fromfortran(year), fromfortran(month), fromfortran(day),
-                fromfortran(hour), fromfortran(min), fromfortran(sec), "min"));
         h.api->setdatemin(
             fromfortran(year), fromfortran(month), fromfortran(day),
             fromfortran(hour), fromfortran(min), fromfortran(sec));
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -921,13 +862,9 @@ int idba_setdatemax(int handle,
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_setdate(
-                fromfortran(year), fromfortran(month), fromfortran(day),
-                fromfortran(hour), fromfortran(min), fromfortran(sec), "max"));
         h.api->setdatemax(
             fromfortran(year), fromfortran(month), fromfortran(day),
             fromfortran(hour), fromfortran(min), fromfortran(sec));
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1052,14 +989,9 @@ int idba_scopa(int handle, const char* repinfofile)
     try {
         HSimple& h = hsimp.get(handle);
         if (repinfofile[0] == 0)
-        {
-            IF_TRACING(h.trace.log_scopa());
             h.api->scopa(nullptr);
-        } else {
-            IF_TRACING(h.trace.log_scopa(repinfofile));
+        else
             h.api->scopa(repinfofile);
-        }
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1111,7 +1043,6 @@ int idba_elencamele(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_func("elencamele"));
         h.api->elencamele();
 
         return fortran::success();
@@ -1209,7 +1140,6 @@ int idba_prendilo(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_func("prendilo"));
         h.api->prendilo();
         return fortran::success();
     } catch (error& e) {
@@ -1231,9 +1161,7 @@ int idba_dimenticami(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_func("dimenticami"));
         h.api->dimenticami();
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1255,7 +1183,6 @@ int idba_remove_all(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_func("remove_all"));
         h.api->remove_all();
         return fortran::success();
     } catch (error& e) {
@@ -1349,7 +1276,6 @@ int idba_critica(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_func("critica"));
         h.api->critica();
         return fortran::success();
     } catch (error& e) {
@@ -1380,7 +1306,6 @@ int idba_scusa(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_func("scusa"));
         h.api->scusa();
         return fortran::success();
     } catch (error& e) {
@@ -1425,7 +1350,6 @@ int idba_messages_open_input(
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_messages_open_input(filename, mode, format, simplified));
         h.api->messages_open_input(filename, mode, File::parse_encoding(format), simplified);
         return fortran::success();
     } catch (error& e) {
@@ -1458,7 +1382,6 @@ int idba_messages_open_output(
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_messages_open_output(filename, mode, format));
         h.api->messages_open_output(filename, mode, File::parse_encoding(format));
         return fortran::success();
     } catch (error& e) {
@@ -1512,7 +1435,6 @@ int idba_messages_write_next(int handle, const char* template_name)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_messages_write_next(template_name));
         h.api->messages_write_next(template_name);
         return fortran::success();
     } catch (error& e) {

@@ -77,28 +77,14 @@ void trace_init()
     }
 }
 
-void log_presentati_url(int handle, const char* chosen_dsn)
-{
-    string arg1 = c_escape(chosen_dsn);
-    fprintf(trace_file, "auto db%d(DB::connect_from_url(\"%s\"));\n", handle, arg1.c_str());
-}
-
-void log_presentati_dsn(int handle, const char* dsn, const char* user, const char* pwd)
-{
-    string arg1 = c_escape(dsn);
-    string arg2 = c_escape(user);
-    fprintf(trace_file, "auto db%d(DB::connect(\"%s\", \"%s\", \"xxx\"));\n",
-            handle, arg1.c_str(), arg2.c_str());
-}
-
-void log_arrivederci(int handle)
-{
-    fprintf(trace_file, "// db%d not used anymore\n", handle);
-}
-
 void log_error(wreport::error& e)
 {
     fprintf(trace_file, "// error: %s\n", e.what());
+}
+
+void log_result(wreport::Varcode code)
+{
+    fprintf(trace_file, "wassert(actual(code) == WR_VAR(0, %d %d);\n", WR_VAR_X(code), WR_VAR_Y(code));
 }
 
 void log_result(int res)
@@ -114,26 +100,6 @@ void log_result(const char* res)
         fprintf(trace_file, "wassert(actual(sres) == \"%s\");\n", arg.c_str());
     } else
         fprintf(trace_file, "wassert(actual(sres) == null);\n");
-}
-
-void SessionTracer::log_preparati(int dbahandle, int handle, const char* anaflag, const char* dataflag, const char* attrflag)
-{
-    snprintf(trace_tag, 10, "dbapi%d", handle);
-    fprintf(trace_file, "DbAPI %s(*db%d, \"%s\", \"%s\", \"%s\");\n",
-            trace_tag, dbahandle, anaflag, dataflag, attrflag);
-}
-
-void SessionTracer::log_messaggi(int handle, const char* filename, const char* mode, const char* type)
-{
-    snprintf(trace_tag, 10, "msgapi%d", handle);
-    string arg1(c_escape(filename));
-    fprintf(trace_file, "MsgAPI %s(\"%s\", \"%s\", %s);\n",
-            trace_tag, arg1.c_str(), mode, type);
-}
-
-void SessionTracer::log_func(const char* call)
-{
-    fprintf(trace_file, "%s.%s();\n", trace_tag, call);
 }
 
 void SessionTracer::log_quantesono()
@@ -153,7 +119,7 @@ void SessionTracer::log_voglioancora()
 
 void SessionTracer::log_dammelo()
 {
-    fprintf(trace_file, "sres = %s.dammelo();\n", trace_tag);
+    fprintf(trace_file, "code = %s.dammelo();\n", trace_tag);
 }
 
 void SessionTracer::log_ancora()
@@ -161,87 +127,9 @@ void SessionTracer::log_ancora()
     fprintf(trace_file, "sres = %s.ancora();\n", trace_tag);
 }
 
-void SessionTracer::log_set(const char* parm, int val)
-{
-    string arg = c_escape(parm);
-    fprintf(trace_file, "%s.seti(\"%s\", %d);\n", trace_tag, arg.c_str(), val);
-}
-
-void SessionTracer::log_set(const char* parm, double val)
-{
-    string arg = c_escape(parm);
-    fprintf(trace_file, "%s.setd(\"%s\", %f);\n", trace_tag, arg.c_str(), val);
-}
-
-void SessionTracer::log_set(const char* parm, const char* val)
-{
-    string arg1 = c_escape(parm);
-    string arg2 = c_escape(val);
-    fprintf(trace_file, "%s.setc(\"%s\", \"%s\");\n", trace_tag, arg1.c_str(), arg2.c_str());
-}
-
-void SessionTracer::log_setlevel(int ltype1, int l1, int ltype2, int l2)
-{
-    fprintf(trace_file, "%s.setlevel(%d, %d, %d, %d);\n", trace_tag, ltype1, l1, ltype2, l2);
-}
-
-void SessionTracer::log_settimerange(int pind, int p1, int p2)
-{
-    fprintf(trace_file, "%s.settimerange(%d, %d, %d);\n", trace_tag, pind, p1, p2);
-}
-
-void SessionTracer::log_setdate(int y, int m, int d, int ho, int mi, int se, const char* what)
-{
-    fprintf(trace_file, "%s.setdate%s(%d, %d, %d, %d, %d, %d);\n", trace_tag, what, y, m, d, ho, mi, se);
-}
-
-void SessionTracer::log_unset(const char* parm)
-{
-    string arg = c_escape(parm);
-    fprintf(trace_file, "%s.unset(\"%s\");\n", trace_tag, arg.c_str());
-}
-
-void SessionTracer::log_scopa(const char* fname)
-{
-    if (fname)
-    {
-        string arg = c_escape(fname);
-        fprintf(trace_file, "%s.scopa(\"%s\");\n", trace_tag, arg.c_str());
-    }
-    else
-        fprintf(trace_file, "%s.scopa();\n", trace_tag);
-}
-
-void SessionTracer::log_fatto()
-{
-    fprintf(trace_file, "// %s not used anymore\n", trace_tag);
-}
-
-void SessionTracer::log_messages_open_input(const char* fname, const char* mode, const char* format, bool simplified)
-{
-    string arg1 = c_escape(fname);
-    string arg2 = c_escape(mode);
-    fprintf(trace_file, "%s.messages_open_input(\"%s\", \"%s\", %s, %s);\n",
-            trace_tag, arg1.c_str(), arg2.c_str(), format, simplified ? "true" : "false");
-}
-
-void SessionTracer::log_messages_open_output(const char* fname, const char* mode, const char* format)
-{
-    string arg1 = c_escape(fname);
-    string arg2 = c_escape(mode);
-    fprintf(trace_file, "%s.messages_open_output(\"%s\", \"%s\", %s);\n",
-            trace_tag, arg1.c_str(), arg2.c_str(), format);
-}
-
 void SessionTracer::log_messages_read_next()
 {
     fprintf(trace_file, "ires = %s.messages_read_next();\n", trace_tag);
-}
-
-void SessionTracer::log_messages_write_next(const char* template_name)
-{
-    string arg = c_escape(template_name);
-    fprintf(trace_file, "%s.messages_write_next(\"%s\");\n", trace_tag, arg.c_str());
 }
 
 }

@@ -11,15 +11,28 @@ struct Tracer
 {
     virtual ~Tracer() {}
 
+    virtual std::unique_ptr<API> wrap_api(int handle, std::unique_ptr<API> api) = 0;
+
+    std::unique_ptr<API> preparati(int dbahandle, int handle, const char* url, const char* anaflag, const char* dataflag, const char* attrflag);
+    std::unique_ptr<API> messaggi(int handle, const char* filename, const char* mode, const char* type);
+
+    virtual void log_presentati_url(int handle, const char* chosen_dsn) = 0;
+    virtual void log_arrivederci(int handle) = 0;
+    virtual void log_preparati(int dbahandle, int handle, const char* anaflag, const char* dataflag, const char* attrflag) = 0;
+    virtual void log_messaggi(int handle, const char* filename, const char* mode, const char* type) = 0;
+
     static std::unique_ptr<Tracer> create();
 };
 
+struct FileTracer;
+
 struct TracedAPI : public API
 {
+    FileTracer& tracer;
     std::string name;
     std::unique_ptr<API> api;
 
-    TracedAPI(const std::string& name, std::unique_ptr<API> api);
+    TracedAPI(FileTracer& tracer, const std::string& name, std::unique_ptr<API> api);
 
     void scopa(const char* repinfofile=0) override;
     void remove_all() override;
@@ -36,8 +49,8 @@ struct TracedAPI : public API
     void setcontextana() override;
     void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) override;
     void setlevel(int ltype1, int l1, int ltype2, int l2) override;
-    void enqtimerange(int& ptype, int& p1, int& p2) override;
-    void settimerange(int ptype, int p1, int p2) override;
+    void enqtimerange(int& pind, int& p1, int& p2) override;
+    void settimerange(int pind, int p1, int p2) override;
     void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) override;
     void setdate(int year, int month, int day, int hour, int min, int sec) override;
     void setdatemin(int year, int month, int day, int hour, int min, int sec) override;
