@@ -8,6 +8,7 @@ import tempfile
 import resource
 import shlex
 import subprocess
+from contextlib import contextmanager
 
 
 log = logging.getLogger("runtest")
@@ -134,6 +135,28 @@ class PyTestCase(TestCase):
         return args[0] != self.name
 
 
+@contextmanager
+def term_red():
+    if not os.isatty(sys.stderr.fileno()):
+        yield
+        return
+
+    sys.stderr.buffer.write(b"\x1b[31m")
+    yield
+    sys.stderr.buffer.write(b"\x1b[0m")
+
+
+@contextmanager
+def term_green():
+    if not os.isatty(sys.stderr.fileno()):
+        yield
+        return
+
+    sys.stderr.buffer.write(b"\x1b[32m")
+    yield
+    sys.stderr.buffer.write(b"\x1b[0m")
+
+
 def main():
     parser = argparse.ArgumentParser(
             description="run DB-All.e unit tests")
@@ -173,7 +196,12 @@ def main():
         else:
             fail += 1
 
-    log.info("%d tests requested, %d succeeded, %d failed, %d did not run.", len(tests), success, fail, not_run)
+    if fail > 0:
+        with term_red():
+            log.info("%d tests requested, %d succeeded, %d failed, %d did not run.", len(tests), success, fail, not_run)
+    elif fail == 0 and not_run == 0:
+        with term_green():
+            log.info("%d tests requested, %d succeeded, %d failed, %d did not run.", len(tests), success, fail, not_run)
 
     if any(x.success is not True for x in tests):
         sys.exit(1)
