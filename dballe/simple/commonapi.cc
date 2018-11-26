@@ -139,12 +139,32 @@ int CommonAPIImplementation::enqi(const char* param)
 
 signed char CommonAPIImplementation::enqb(const char* param)
 {
+    if (param[0] == '*')
+    {
+        if (!qcoutput.valid)
+            error_consistency::throwf("enqb %s can only be called after a voglioancora", param);
+        wreport::Varcode code = resolve_varcode(param + 1);
+        if (const wreport::Var* var = qcoutput.values.maybe_var(code))
+            if (var->isset())
+                return var->enqi();
+        return missing_byte;
+    }
     if (!operation) return missing_byte;
     return operation->enqb(param);
 }
 
 float CommonAPIImplementation::enqr(const char* param)
 {
+    if (param[0] == '*')
+    {
+        if (!qcoutput.valid)
+            error_consistency::throwf("enqb %s can only be called after a voglioancora", param);
+        wreport::Varcode code = resolve_varcode(param + 1);
+        if (const wreport::Var* var = qcoutput.values.maybe_var(code))
+            if (var->isset())
+                return var->enqd();
+        return missing_float;
+    }
     if (!operation) return missing_float;
     return operation->enqr(param);
 }
