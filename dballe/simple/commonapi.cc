@@ -268,12 +268,11 @@ void CommonAPIImplementation::setc(const char* param, const char* value)
         } else if (strcmp(param + 1, "var") == 0) {
             if (!operation)
                 throw error_consistency("*var set without context_id, or before any dammelo or prendilo");
-            std::vector<wreport::Varcode> varcodes { resolve_varcode(value + 1) };
-            operation->select_attrs(varcodes);
+            selected_attr_codes = std::vector<wreport::Varcode>{resolve_varcode(value + 1)};
         } else if (strcmp(param + 1, "varlist") == 0) {
             if (!operation)
                 throw error_consistency("*varlist set without context_id, or before any dammelo or prendilo");
-            std::vector<wreport::Varcode> varcodes;
+            selected_attr_codes.clear();
             size_t pos = 0;
             while (true)
             {
@@ -282,13 +281,12 @@ void CommonAPIImplementation::setc(const char* param, const char* value)
 
                 if (*(value + pos) != '*')
                     throw error_consistency("QC value names must start with '*'");
-                varcodes.push_back(resolve_varcode(value + pos + 1));
+                selected_attr_codes.push_back(resolve_varcode(value + pos + 1));
 
                 if (!*(value + pos + len))
                     break;
                 pos += len + 1;
             }
-            operation->select_attrs(varcodes);
         } else {
             // Set varcode=value
             qcinput.set(resolve_varcode(param + 1), value);
@@ -356,11 +354,9 @@ void CommonAPIImplementation::unset(const char* param)
                 throw error_consistency("*var_related set without context_id, or before any dammelo or prendilo");
             operation->set_varcode(0);
         } else if (strcmp(param + 1, "var") == 0) {
-            if (!operation) return;
-            operation->select_attrs(std::vector<wreport::Varcode>());
+            selected_attr_codes.clear();
         } else if (strcmp(param + 1, "varlist") == 0) {
-            if (!operation) return;
-            operation->select_attrs(std::vector<wreport::Varcode>());
+            selected_attr_codes.clear();
         } else {
             qcinput.unset(resolve_varcode(param + 1));
         }
@@ -375,11 +371,9 @@ void CommonAPIImplementation::unsetall()
     qcinput.clear();
     input_query.clear();
     input_data.clear();
+    selected_attr_codes.clear();
     if (operation)
-    {
         operation->set_varcode(0);
-        operation->select_attrs(std::vector<wreport::Varcode>());
-    }
     station_context = false;
 }
 

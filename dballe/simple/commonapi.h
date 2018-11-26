@@ -41,17 +41,9 @@ struct Attributes
  */
 class Operation
 {
-protected:
-    /// Selected varcodes
-    std::vector<wreport::Varcode> selected_attr_codes;
-
 public:
     virtual ~Operation();
     virtual void set_varcode(wreport::Varcode varcode);
-    virtual void select_attrs(const std::vector<wreport::Varcode>& varcodes)
-    {
-        selected_attr_codes = varcodes;
-    }
     virtual void voglioancora(Attributes& dest) = 0;
     virtual void critica(Values& qcinput) = 0;
     virtual void scusa() = 0;
@@ -173,6 +165,8 @@ public:
     unsigned perms = 0;
     core::Query input_query;
     core::Data input_data;
+    /// Selected attribute varcodes (*varlist)
+    std::vector<wreport::Varcode> selected_attr_codes;
     bool station_context = false;
     Values qcinput;
     Attributes qcoutput;

@@ -190,14 +190,14 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
     {
         if (dammelo_ended) throw error_consistency("voglioancora called after dammelo returned end of data");
         function<void(unique_ptr<Var>&&)> consumer;
-        if (this->selected_attr_codes.empty())
+        if (api.selected_attr_codes.empty())
         {
             consumer = [&](unique_ptr<Var>&& var) {
                 dest.values.set(std::move(*var));
             };
         } else {
             consumer = [&](unique_ptr<Var>&& var) {
-                for (auto code: this->selected_attr_codes)
+                for (auto code: api.selected_attr_codes)
                     if (code == var->code())
                     {
                         dest.values.set(std::move(*var));
@@ -218,7 +218,7 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
     void scusa() override
     {
         if (dammelo_ended) throw error_consistency("scusa called after dammelo returned end of data");
-        CursorTraits<Cursor>::attr_remove(*api.tr, this->cursor->attr_reference_id(), this->selected_attr_codes);
+        CursorTraits<Cursor>::attr_remove(*api.tr, this->cursor->attr_reference_id(), api.selected_attr_codes);
         valid_cached_attrs = false;
     }
 };
@@ -271,11 +271,6 @@ struct PrendiloOperation : public Operation
             last_inserted_data_id = api.input_data.values.begin()->data_id;
         else
             last_inserted_data_id = API::missing_int;
-    }
-    void select_attrs(const std::vector<wreport::Varcode>& varcodes) override
-    {
-        if (!varcodes.empty())
-            throw error_consistency("*var and *varlist cannot be set after a prendilo");
     }
     void voglioancora(Attributes& dest) override
     {
@@ -348,14 +343,14 @@ struct VaridOperation : public Operation
             throw error_consistency("voglioancora called with an invalid *context_id");
         // Retrieve the varcodes of the attributes that we want
         function<void(unique_ptr<Var>&&)> consumer;
-        if (selected_attr_codes.empty())
+        if (api.selected_attr_codes.empty())
         {
             consumer = [&](unique_ptr<Var>&& var) {
                 dest.values.set(std::move(var));
             };
         } else {
             consumer = [&](unique_ptr<Var>&& var) {
-                for (auto code: selected_attr_codes)
+                for (auto code: api.selected_attr_codes)
                     if (code == var->code())
                     {
                         dest.values.set(std::move(var));
@@ -373,7 +368,7 @@ struct VaridOperation : public Operation
     }
     void scusa() override
     {
-        api.tr->attr_remove_data(varid, selected_attr_codes);
+        api.tr->attr_remove_data(varid, api.selected_attr_codes);
     }
     int enqi(const char* param) const override { throw wreport::error_unimplemented("Varid::enqi handle *params or forward to previous operation"); }
     double enqd(const char* param) const override { throw wreport::error_unimplemented("Varid::enqd handle *params or forward to previous operation"); }

@@ -231,13 +231,6 @@ struct PrendiloOperation : public Operation
             api.input_query.query.clear();
         }
     }
-#if 0
-    void select_attrs(const std::vector<wreport::Varcode>& varcodes) override
-    {
-        if (!varcodes.empty())
-            throw error_consistency("*var and *varlist cannot be set after a prendilo");
-    }
-#endif
     void voglioancora(Attributes& dest) override
     {
         throw error_consistency("voglioancora cannot be called after a prendilo");
