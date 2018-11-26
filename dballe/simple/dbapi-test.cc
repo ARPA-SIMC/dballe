@@ -1155,6 +1155,12 @@ this->add_method("query_attr_filtered", [](Fixture& f) {
     wassert(actual(dbapi0.ancora()) == "*B33194");
 });
 
+this->add_method("set_varlist", [](Fixture& f) {
+    auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
+    fortran::DbAPI dbapi0(tr, "write", "write", "write");
+    wassert(dbapi0.setc("*varlist", "*B33193,*B33194"));
+});
+
 }
 
 }

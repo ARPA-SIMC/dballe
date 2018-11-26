@@ -266,12 +266,8 @@ void CommonAPIImplementation::setc(const char* param, const char* value)
                 throw error_consistency("*var_related set without context_id, or before any dammelo or prendilo");
             operation->set_varcode(resolve_varcode(value));
         } else if (strcmp(param + 1, "var") == 0) {
-            if (!operation)
-                throw error_consistency("*var set without context_id, or before any dammelo or prendilo");
             selected_attr_codes = std::vector<wreport::Varcode>{resolve_varcode(value + 1)};
         } else if (strcmp(param + 1, "varlist") == 0) {
-            if (!operation)
-                throw error_consistency("*varlist set without context_id, or before any dammelo or prendilo");
             selected_attr_codes.clear();
             size_t pos = 0;
             while (true)
