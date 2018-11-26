@@ -18,7 +18,7 @@ dballeincludedir = $(includedir)/dballe
 # Include the F90 interface file as well
 dist_dballeinclude_HEADERS = dballef.h dballeff.h
 
-dist_noinst_HEADERS = common.h handles.h error.h trace.h
+dist_noinst_HEADERS = common.h handles.h error.h
 
 nodist_include_HEADERS = dballef.mod
 
@@ -27,7 +27,6 @@ lib_LTLIBRARIES = libdballef.la
 libdballef_la_SOURCES = \
 	common.cc \
 	error.cc \
-	trace.cc \
 	binding.cc \
 	dballef.f90
 libdballef_la_LIBADD = ../dballe/libdballe.la

@@ -12,7 +12,6 @@
 #include "common.h"
 #include "handles.h"
 #include "error.h"
-#include "trace.h"
 
 /*
  * First attempt using constants
@@ -75,7 +74,6 @@ struct fortran::Handler<HSession, MAX_SESSION> hsess;
 struct HSimple : public fortran::HBase
 {
     fortran::API* api;
-    fortran::SessionTracer trace;
 
     void start()
     {
@@ -102,7 +100,6 @@ static void lib_init()
         return;
 
     tracer = dballe::fortran::Tracer::create().release();
-    fortran::trace_init();
     fortran::error_init();
     hsess.init("DB-All.e database sessions", "MAX_CALLBACKS");
     hsimp.init("DB-All.e work sessions", "MAX_SIMPLE");
@@ -1016,9 +1013,7 @@ int idba_quantesono(int handle, int* count)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_quantesono());
         *count = h.api->quantesono();
-        IF_TRACING(fortran::log_result(*count));
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1077,9 +1072,7 @@ int idba_voglioquesto(int handle, int* count)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_voglioquesto());
         *count = h.api->voglioquesto();
-        IF_TRACING(fortran::log_result(*count));
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1106,11 +1099,9 @@ int idba_dammelo(int handle, char* parameter, int parameter_len)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_dammelo());
         wreport::Varcode res = h.api->dammelo();
         char buf[8];
         format_bcode(res, buf);
-        IF_TRACING(fortran::log_result(buf));
         fortran::cstring_to_fortran(buf, parameter, parameter_len);
         return fortran::success();
     } catch (error& e) {
@@ -1213,9 +1204,7 @@ int idba_voglioancora(int handle, int* count)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_voglioancora());
         *count = h.api->voglioancora();
-        IF_TRACING(fortran::log_result(*count));
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1236,9 +1225,7 @@ int idba_ancora(int handle, char* parameter, unsigned parameter_len)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_ancora());
         const char* res = h.api->ancora();
-        IF_TRACING(fortran::log_result(res));
         fortran::cstring_to_fortran(res, parameter, parameter_len);
         return fortran::success();
     } catch (error& e) {
@@ -1410,9 +1397,7 @@ int idba_messages_read_next(int handle, int *found)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_messages_read_next());
         *found = h.api->messages_read_next();
-        IF_TRACING(fortran::log_result(*found));
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);

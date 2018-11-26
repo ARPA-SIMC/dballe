@@ -5,6 +5,7 @@
 #include <wreport/utils/string.h>
 #include <cstdlib>
 #include <cstdio>
+#include <sstream>
 
 using namespace wreport;
 
@@ -87,8 +88,184 @@ struct FileTracer : public Tracer
     {
         fprintf(trace_file, "// db%d not used anymore\n", handle);
     }
+
+    template<typename... Args>
+    void log_void(Args&&... args)
+    {
+        fprintf(trace_file, std::forward<Args>(args)...);
+        fputs(";\n", trace_file);
+    }
 };
 
+namespace {
+
+struct FuncLogger
+{
+    TracedAPI& tracer;
+    const char* name;
+    std::stringstream args;
+    bool has_result = false;
+
+    FuncLogger(TracedAPI& tracer, const char* name) : tracer(tracer), name(name) {}
+    ~FuncLogger()
+    {
+        if (!has_result) // Assume successful void function
+            fprintf(tracer.tracer.trace_file, "wassert(%s.%s(%s));\n", tracer.name.c_str(), name, args.str().c_str());
+    }
+
+    void _log_args() {}
+
+    void _log_args(bool arg)
+    {
+        args << (arg ? "true" : "false");
+    }
+
+    void _log_args(double arg)
+    {
+        args << arg;
+    }
+
+    void _log_args(float arg)
+    {
+        args << arg;
+    }
+
+    void _log_args(int arg)
+    {
+        args << arg;
+    }
+
+    void _log_args(Encoding encoding)
+    {
+        args << File::encoding_name(encoding);
+    }
+
+    void _log_args(const char* arg)
+    {
+        if (arg)
+            args << '"' << str::encode_cstring(arg) << '"';
+        else
+            args << "nullptr";
+    }
+
+    template<typename T, typename... Args>
+    void _log_args(const T& arg, Args&&... args)
+    {
+        _log_args(arg);
+        this->args << ", ";
+        _log_args(std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    void log_args(Args&&... args)
+    {
+        _log_args(std::forward<Args>(args)...);
+    }
+
+    int log_result(bool res)
+    {
+        fprintf(tracer.tracer.trace_file, "wassert(actual(%s.%s(%s)) == %s);\n", tracer.name.c_str(), name, args.str().c_str(), res ? "true" : "false");
+        has_result = true;
+        return res;
+    }
+
+    int log_result(int res)
+    {
+        if (res == API::missing_int)
+            fprintf(tracer.tracer.trace_file, "wassert(actual(%s.%s(%s)) == API::missing_int);\n", tracer.name.c_str(), name, args.str().c_str());
+        else
+            fprintf(tracer.tracer.trace_file, "wassert(actual(%s.%s(%s)) == %d);\n", tracer.name.c_str(), name, args.str().c_str(), res);
+        has_result = true;
+        return res;
+    }
+
+    signed char log_result(signed char res)
+    {
+        if (res == API::missing_byte)
+            fprintf(tracer.tracer.trace_file, "wassert(actual(%s.%s(%s)) == API::missing_byte);\n", tracer.name.c_str(), name, args.str().c_str());
+        else
+            fprintf(tracer.tracer.trace_file, "wassert(actual((int)%s.%s(%s)) == %d);\n", tracer.name.c_str(), name, args.str().c_str(), (int)res);
+        has_result = true;
+        return res;
+    }
+
+    float log_result(float res)
+    {
+        if (res == API::missing_float)
+            fprintf(tracer.tracer.trace_file, "wassert(actual(%s.%s(%s)) == API::missing_float);\n", tracer.name.c_str(), name, args.str().c_str());
+        else
+            fprintf(tracer.tracer.trace_file, "wassert(actual(%s.%s(%s)) == %f);\n", tracer.name.c_str(), name, args.str().c_str(), (double)res);
+        has_result = true;
+        return res;
+    }
+
+    double log_result(double res)
+    {
+        if (res == API::missing_double)
+            fprintf(tracer.tracer.trace_file, "wassert(actual(%s.%s(%s)) == API::missing_double);\n", tracer.name.c_str(), name, args.str().c_str());
+        else
+            fprintf(tracer.tracer.trace_file, "wassert(actual(%s.%s(%s)) == %f);\n", tracer.name.c_str(), name, args.str().c_str(), res);
+        has_result = true;
+        return res;
+    }
+
+    const char* log_result(const char* res)
+    {
+        if (res)
+        {
+            std::string fmt = str::encode_cstring(res);
+            fprintf(tracer.tracer.trace_file, "wassert(actual(%s.%s(%s)) == \"%s\");\n", tracer.name.c_str(), name, args.str().c_str(), fmt.c_str());
+        } else {
+            fprintf(tracer.tracer.trace_file, "wassert(actual(%s.%s(%s)) == nullptr);\n", tracer.name.c_str(), name, args.str().c_str());
+        }
+        has_result = true;
+        return res;
+    }
+
+    wreport::Varcode log_result(wreport::Varcode res)
+    {
+        if (res == 0)
+            fprintf(tracer.tracer.trace_file, "wassert(actual(%s.%s(%s)) == 0);\n", tracer.name.c_str(), name, args.str().c_str());
+        else
+            fprintf(tracer.tracer.trace_file, "wassert(actual(%s.%s(%s)) == WR_VAR(%d, %d, %d));\n", tracer.name.c_str(), name, args.str().c_str(), WR_VAR_FXY(res));
+        has_result = true;
+        return res;
+    }
+
+    void log_exception(std::exception& e)
+    {
+        fprintf(tracer.tracer.trace_file, "wassert_throws(std::exception, %s.%s(%s)); // %s\n", tracer.name.c_str(), name, args.str().c_str(), e.what());
+        has_result = true;
+    }
+};
+
+template<typename... Margs, typename... Args>
+void run_and_log(TracedAPI& tracer, const char* name, void (API::*meth)(Margs...), Args&&... args)
+{
+    FuncLogger logger(tracer, name);
+    logger.log_args(std::forward<Args>(args)...);
+    try {
+        ((tracer.api.get())->*(meth))(std::forward<Args>(args)...);
+    } catch (std::exception& e) {
+        logger.log_exception(e);
+        throw;
+    }
+}
+
+template<typename R, typename... Margs, typename... Args>
+R run_and_log(TracedAPI& tracer, const char* name, R (API::*meth)(Margs...), Args&&... args)
+{
+    FuncLogger logger(tracer, name);
+    logger.log_args(std::forward<Args>(args)...);
+    try {
+        return logger.log_result(((tracer.api.get())->*(meth))(std::forward<Args>(args)...));
+    } catch (std::exception& e) {
+        logger.log_exception(e);
+        throw;
+    }
+}
+
+}
 
 std::unique_ptr<Tracer> Tracer::create()
 {
@@ -107,218 +284,260 @@ TracedAPI::TracedAPI(FileTracer& tracer, const std::string& name, std::unique_pt
 {
 }
 
+#define RUN(name, ...) run_and_log(*this, #name, &API::name, ## __VA_ARGS__);
+
 void TracedAPI::scopa(const char* repinfofile)
 {
-    if (repinfofile)
-    {
-        std::string arg = str::encode_cstring(repinfofile);
-        fprintf(tracer.trace_file, "%s.scopa(\"%s\");\n", name.c_str(), arg.c_str());
-    }
-    else
-        fprintf(tracer.trace_file, "%s.scopa();\n", name.c_str());
-    api->scopa(repinfofile);
+    RUN(scopa, repinfofile);
 }
 
 void TracedAPI::remove_all()
 {
-    fprintf(tracer.trace_file, "%s.remove_all();\n", name.c_str());
-    api->remove_all();
+    RUN(remove_all);
 }
 
 int TracedAPI::enqi(const char* param)
 {
-    return api->enqi(param);
+    return RUN(enqi, param);
 }
 
 signed char TracedAPI::enqb(const char* param)
 {
-    return api->enqb(param);
+    return RUN(enqb, param);
 }
 
 float TracedAPI::enqr(const char* param)
 {
-    return api->enqr(param);
+    return RUN(enqr, param);
 }
 
 double TracedAPI::enqd(const char* param)
 {
-    return api->enqd(param);
+    return RUN(enqd, param);
 }
 
 bool TracedAPI::enqc(const char* param, std::string& res)
 {
-    return api->enqc(param, res);
+    FILE*& out = tracer.trace_file;
+    std::string arg_param = str::encode_cstring(param);
+    bool ret;
+    fputs("{\n", out);
+    fputs("    std::string res;\n", out);
+    try {
+        ret = api->enqc(param, res);
+    } catch (std::exception& e) {
+        fprintf(out, "    wassert_throws(std::exception, %s.enqc(\"%s\", res)); // %s\n", name.c_str(), arg_param.c_str(), e.what());
+        fputs("}\n", out);
+        throw;
+    }
+    if (ret)
+    {
+        std::string arg_res = str::encode_cstring(res);
+        fprintf(out, "    wassert_true(%s.enqc(\"%s\", res));\n", name.c_str(), arg_param.c_str());
+        fprintf(out, "    wassert(actual(res) == \"%s\");\n", arg_res.c_str());
+    }
+    else
+        fprintf(out, "    wassert_false(%s.enqc(\"%s\", res));\n", name.c_str(), arg_param.c_str());
+    fputs("}\n", out);
+    return ret;
 }
 
 void TracedAPI::seti(const char* param, int value)
 {
-    std::string arg = str::encode_cstring(param);
-    fprintf(tracer.trace_file, "%s.seti(\"%s\", %d);\n", name.c_str(), arg.c_str(), value);
-    api->seti(param, value);
+    RUN(seti, param, value);
 }
 
 void TracedAPI::setb(const char* param, signed char value)
 {
-    std::string arg = str::encode_cstring(param);
-    fprintf(tracer.trace_file, "%s.setb(\"%s\", %hhd;\n", name.c_str(), arg.c_str(), value);
-    api->setb(param, value);
+    RUN(setb, param, value);
 }
 
 void TracedAPI::setr(const char* param, float value)
 {
-    std::string arg = str::encode_cstring(param);
-    fprintf(tracer.trace_file, "%s.seti(\"%s\", %f);\n", name.c_str(), arg.c_str(), (double)value);
-    api->setr(param, value);
+    RUN(setr, param, value);
 }
 
 void TracedAPI::setd(const char* param, double value)
 {
-    std::string arg = str::encode_cstring(param);
-    fprintf(tracer.trace_file, "%s.setd(\"%s\", %f);\n", name.c_str(), arg.c_str(), value);
-    api->setd(param, value);
+    RUN(setd, param, value);
 }
 
 void TracedAPI::setc(const char* param, const char* value)
 {
-    std::string arg1 = str::encode_cstring(param);
-    std::string arg2 = str::encode_cstring(value);
-    fprintf(tracer.trace_file, "%s.setc(\"%s\", \"%s\");\n", name.c_str(), arg1.c_str(), arg2.c_str());
-    api->setc(param, value);
+    RUN(setc, param, value);
 }
 
 void TracedAPI::setcontextana()
 {
-    fprintf(tracer.trace_file, "%s.setcontextana();\n", name.c_str());
-    api->setcontextana();
+    RUN(setcontextana);
+}
+
+namespace {
+
+void print_compare_int(FILE* out, const char* name, int val)
+{
+    if (val == API::missing_int)
+        fprintf(out, "    wassert(actual(%s) == API::missing_int);\n", name);
+    else
+        fprintf(out, "    wassert(actual(%s) == %d);\n", name, val);
+}
+
 }
 
 void TracedAPI::enqlevel(int& ltype1, int& l1, int& ltype2, int& l2)
 {
-    api->enqlevel(ltype1, l1, ltype2, l2);
+    FILE*& out = tracer.trace_file;
+    fputs("{\n", out);
+    fputs("    int ltype1, l1, ltype2, l2;\n", out);
+    try {
+        api->enqlevel(ltype1, l1, ltype2, l2);
+    } catch (std::exception& e) {
+        fprintf(out, "    wassert_throws(std::exception, %s.enqlevel(ltype1, l1, ltype2, l2)); // %s\n", name.c_str(), e.what());
+        fputs("}\n", out);
+        throw;
+    }
+    fprintf(out, "    wassert(%s.enqlevel(ltype1, l1, ltype2, l2));\n", name.c_str());
+    print_compare_int(out, "ltype1", ltype1);
+    print_compare_int(out, "l1", l1);
+    print_compare_int(out, "ltype2", ltype2);
+    print_compare_int(out, "l2", l2);
+    fputs("}\n", out);
 }
 
 void TracedAPI::setlevel(int ltype1, int l1, int ltype2, int l2)
 {
-    fprintf(tracer.trace_file, "%s.setlevel(%d, %d, %d, %d);\n", name.c_str(), ltype1, l1, ltype2, l2);
-    api->setlevel(ltype1, l1, ltype2, l2);
+    RUN(setlevel, ltype1, l1, ltype2, l2);
 }
 
 void TracedAPI::enqtimerange(int& pind, int& p1, int& p2)
 {
-    api->enqtimerange(pind, p1, p2);
+    FILE*& out = tracer.trace_file;
+    fputs("{\n", out);
+    fputs("    int pind, p1, p2;\n", out);
+    try {
+        api->enqtimerange(pind, p1, p2);
+    } catch (std::exception& e) {
+        fprintf(out, "    wassert_throws(std::exception, %s.enqtimerange(pind, p1, p2)); // %s\n", name.c_str(), e.what());
+        fputs("}\n", out);
+        throw;
+    }
+    fprintf(out, "    wassert(%s.enqtimerange(pind, p1, p2));\n", name.c_str());
+    print_compare_int(out, "pind", pind);
+    print_compare_int(out, "p1", p1);
+    print_compare_int(out, "p2", p2);
+    fputs("}\n", out);
 }
 
 void TracedAPI::settimerange(int pind, int p1, int p2)
 {
-    fprintf(tracer.trace_file, "%s.settimerange(%d, %d, %d);\n", name.c_str(), pind, p1, p2);
-    api->settimerange(pind, p1, p2);
+    RUN(settimerange, pind, p1, p2);
 }
 
 void TracedAPI::enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec)
 {
-    api->enqdate(year, month, day, hour, min, sec);
+    FILE*& out = tracer.trace_file;
+    fputs("{\n", out);
+    fputs("    int year, month, day, hour, min, sec;\n", out);
+    try {
+        api->enqdate(year, month, day, hour, min, sec);
+    } catch (std::exception& e) {
+        fprintf(out, "    wassert_throws(std::exception, %s.enqdate(year, month, day, hour, min, sec)); // %s\n", name.c_str(), e.what());
+        fputs("}\n", out);
+        throw;
+    }
+    fprintf(out, "    wassert(%s.enqdate(year, month, day, hour, min, sec));\n", name.c_str());
+    print_compare_int(out, "year",  year);
+    print_compare_int(out, "month", month);
+    print_compare_int(out, "day",   day);
+    print_compare_int(out, "hour",  hour);
+    print_compare_int(out, "min",   min);
+    print_compare_int(out, "sec",   sec);
+    fputs("}\n", out);
 }
 
 void TracedAPI::setdate(int year, int month, int day, int hour, int min, int sec)
 {
-    fprintf(tracer.trace_file, "%s.setdate(%d, %d, %d, %d, %d, %d);\n", name.c_str(), year, month, day, hour, min, sec);
-    api->setdate(year, month, day, hour, min, sec);
+    RUN(setdate, year, month, day, hour, min, sec);
 }
 
 void TracedAPI::setdatemin(int year, int month, int day, int hour, int min, int sec)
 {
-    fprintf(tracer.trace_file, "%s.setdatemin(%d, %d, %d, %d, %d, %d);\n", name.c_str(), year, month, day, hour, min, sec);
-    api->setdatemin(year, month, day, hour, min, sec);
+    RUN(setdatemin, year, month, day, hour, min, sec);
 }
 
 void TracedAPI::setdatemax(int year, int month, int day, int hour, int min, int sec)
 {
-    fprintf(tracer.trace_file, "%s.setdatemax(%d, %d, %d, %d, %d, %d);\n", name.c_str(), year, month, day, hour, min, sec);
-    api->setdatemax(year, month, day, hour, min, sec);
+    RUN(setdatemax, year, month, day, hour, min, sec);
 }
 
 void TracedAPI::unset(const char* param)
 {
-    std::string arg = str::encode_cstring(param);
-    fprintf(tracer.trace_file, "%s.unset(\"%s\");\n", name.c_str(), arg.c_str());
-    api->unset(param);
+    RUN(unset, param);
 }
 
 void TracedAPI::unsetall()
 {
-    fprintf(tracer.trace_file, "%s.unsetall();\n", name.c_str());
-    api->unsetall();
+    RUN(unsetall);
 }
 
 void TracedAPI::unsetb()
 {
-    fprintf(tracer.trace_file, "%s.unsetb();\n", name.c_str());
-    api->unsetb();
+    RUN(unsetb);
 }
 
 int TracedAPI::quantesono()
 {
-    return api->quantesono();
+    return RUN(quantesono);
 }
 
 void TracedAPI::elencamele()
 {
-    fprintf(tracer.trace_file, "%s.elencamele();\n", name.c_str());
-    api->elencamele();
+    RUN(elencamele);
 }
 
 int TracedAPI::voglioquesto()
 {
-    return api->voglioquesto();
+    return RUN(voglioquesto);
 }
 
 wreport::Varcode TracedAPI::dammelo()
 {
-    return api->dammelo();
+    return RUN(dammelo);
 }
 
 void TracedAPI::prendilo()
 {
-    fprintf(tracer.trace_file, "%s.prendilo();\n", name.c_str());
-    api->prendilo();
+    RUN(prendilo);
 }
 
 void TracedAPI::dimenticami()
 {
-    fprintf(tracer.trace_file, "%s.dimenticami();\n", name.c_str());
-    api->dimenticami();
+    RUN(dimenticami);
 }
 
 int TracedAPI::voglioancora()
 {
-    return api->voglioancora();
+    return RUN(voglioancora);
 }
 
 const char* TracedAPI::ancora()
 {
-    return api->ancora();
+    return RUN(ancora);
 }
 
 void TracedAPI::critica()
 {
-    fprintf(tracer.trace_file, "%s.critica();\n", name.c_str());
-    api->critica();
+    RUN(critica);
 }
 
 void TracedAPI::scusa()
 {
-    fprintf(tracer.trace_file, "%s.scusa();\n", name.c_str());
-    api->scusa();
+    RUN(scusa);
 }
 
 void TracedAPI::messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified)
 {
-    std::string arg1 = str::encode_cstring(filename);
-    std::string arg2 = str::encode_cstring(mode);
-    std::string enc = File::encoding_name(format);
-    fprintf(tracer.trace_file, "%s.messages_open_input(\"%s\", \"%s\", Encoding::%s, %s);\n",
-            name.c_str(), arg1.c_str(), arg2.c_str(), enc.c_str(), simplified ? "true" : "false");
-    api->messages_open_input(filename, mode, format, simplified);
+    RUN(messages_open_input, filename, mode, format, simplified);
 }
 
 void TracedAPI::messages_open_output(const char* filename, const char* mode, Encoding format)
@@ -326,20 +545,20 @@ void TracedAPI::messages_open_output(const char* filename, const char* mode, Enc
     std::string arg1 = str::encode_cstring(filename);
     std::string arg2 = str::encode_cstring(mode);
     std::string enc = File::encoding_name(format);
-    fprintf(tracer.trace_file, "%s.messages_open_output(\"%s\", \"%s\", Encoding::%s);\n",
+    tracer.log_void("%s.messages_open_output(\"%s\", \"%s\", Encoding::%s)",
             name.c_str(), arg1.c_str(), arg2.c_str(), enc.c_str());
     api->messages_open_output(filename, mode, format);
 }
 
 bool TracedAPI::messages_read_next()
 {
-    return api->messages_read_next();
+    return RUN(messages_read_next);
 }
 
 void TracedAPI::messages_write_next(const char* template_name)
 {
     std::string arg = str::encode_cstring(template_name);
-    fprintf(tracer.trace_file, "%s.messages_write_next(\"%s\");\n", name.c_str(), arg.c_str());
+    tracer.log_void("%s.messages_write_next(\"%s\")", name.c_str(), arg.c_str());
     api->messages_write_next(template_name);
 }
 
@@ -360,7 +579,7 @@ const char* TracedAPI::spiegab(const char* varcode, const char* value)
 
 void TracedAPI::fatto()
 {
-    fprintf(tracer.trace_file, "// %s not used anymore\n", name.c_str());
+    tracer.log_void("// %s not used anymore\n", name.c_str());
     api->fatto();
 }
 

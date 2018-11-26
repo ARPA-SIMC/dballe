@@ -32,7 +32,7 @@ public:
     virtual ~DbAPI();
 
     void seti(const char* param, int value) override;
-    void scopa(const char* repinfofile=0) override;
+    void scopa(const char* repinfofile=nullptr) override;
     void remove_all() override;
     int quantesono() override;
     int voglioquesto() override;
