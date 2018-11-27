@@ -40,16 +40,10 @@ dballef.mod: libdballef.la
 
 TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
-check_PROGRAMS = check_missing_msg
-
 #TESTS = $(check_PROGRAMS)
 dbtestlib = test.f90 dbtest.f90 dballef.mod
 
-check_missing_msg_SOURCES = test.f90 check_missing_msg.f90
-check_missing_msg_LDADD = libdballef.la
-check_missing_msg_FCFLAGS = -g
-
-check_PROGRAMS += check_real0 check_range check_fdballe check_attrs check_missing check_segfault1 check_multiplehandler check_spiegab check_messages check_transactions1
+check_PROGRAMS = check_real0 check_range check_fdballe check_attrs check_set check_missing check_missing_msg check_segfault1 check_multiplehandler check_spiegab check_messages check_transactions1
 
 check_real0_SOURCES = $(dbtestlib) check_real0.f90
 check_real0_LDADD = libdballef.la
@@ -67,9 +61,17 @@ check_attrs_SOURCES = $(dbtestlib) check_attrs.f90
 check_attrs_LDADD = libdballef.la
 check_attrs_FCFLAGS = -g
 
+check_set_SOURCES = $(dbtestlib) check_set.f90
+check_set_LDADD = libdballef.la
+check_set_FCFLAGS = -g
+
 check_missing_SOURCES = $(dbtestlib) check_missing.f90
 check_missing_LDADD = libdballef.la
 check_missing_FCFLAGS = -g
+
+check_missing_msg_SOURCES = test.f90 check_missing_msg.f90
+check_missing_msg_LDADD = libdballef.la
+check_missing_msg_FCFLAGS = -g
 
 check_segfault1_SOURCES = $(dbtestlib) check_segfault1.f90
 check_segfault1_LDADD = libdballef.la

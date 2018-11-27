@@ -115,6 +115,12 @@ struct FuncLogger
 
     void _log_args() {}
 
+    template<typename T>
+    void _log_args(const T& arg)
+    {
+        wreport::error_unimplemented::throwf("cannot log an argument of unspecified type");
+    }
+
     void _log_args(bool arg)
     {
         args << (arg ? "true" : "false");
@@ -133,6 +139,11 @@ struct FuncLogger
     void _log_args(int arg)
     {
         args << arg;
+    }
+
+    void _log_args(signed char arg)
+    {
+        args << (int)arg;
     }
 
     void _log_args(Encoding encoding)
