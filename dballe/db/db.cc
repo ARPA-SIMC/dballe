@@ -176,14 +176,6 @@ void DB::attr_remove_data(int data_id, const db::AttrList& attrs)
     t->commit();
 }
 
-bool DB::export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
-{
-    auto t = dynamic_pointer_cast<db::Transaction>(transaction());
-    bool res = t->export_msgs(query, dest);
-    t->commit();
-    return res;
-}
-
 void DB::dump(FILE* out)
 {
     auto t = dynamic_pointer_cast<db::Transaction>(transaction());

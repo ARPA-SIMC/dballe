@@ -53,9 +53,61 @@ struct ProtoMessage
     ProtoMessage() : msg(new impl::Message) {}
 };
 
+struct Cursor : public dballe::CursorMessage
+{
+    typedef std::vector<std::unique_ptr<dballe::Message>> Results;
+    Results results;
+    Results::iterator cur;
+    bool at_start = true;
+
+    const Message& get_message() const override
+    {
+        return **cur;
+    }
+
+    std::unique_ptr<Message> detach_message() override
+    {
+        return std::move(*cur);
+    }
+
+    int remaining() const override
+    {
+        if (at_start)
+            return results.size();
+        return results.end() - cur;
+    }
+
+    bool next() override
+    {
+        if (at_start)
+        {
+            cur = results.begin();
+            at_start = false;
+        }
+        else if (cur != results.end())
+            ++cur;
+        return cur != results.end();
+
+    }
+
+    void discard() override
+    {
+        cur = results.end();
+    }
+
+    DBStation get_station() const override
+    {
+        DBStation res;
+        res.coords = (*cur)->get_coords();
+        res.ident  = (*cur)->get_ident();
+        res.report = (*cur)->get_report();
+        return res;
+    }
+};
+
 }
 
-bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest)
+std::unique_ptr<dballe::CursorMessage> Transaction::query_messages(const Query& query)
 {
     Tracer<> trc(this->trc ? this->trc->trace_export_msgs(query) : nullptr);
     v7::LevTr& lt = levtr();
@@ -103,7 +155,7 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
 
     lt.prefetch_ids(trc, id_levtrs);
 
-    std::vector<std::unique_ptr<Message>> msgs;
+    std::unique_ptr<Cursor> res(new Cursor);
     for (auto& r: results)
     {
         station_values.read(*this, r.first);
@@ -130,17 +182,13 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
             if (msg.msg->type == MessageType::PILOT || msg.msg->type == MessageType::TEMP || msg.msg->type == MessageType::TEMP_SHIP)
                 msg.msg->sounding_pack_levels();
 
-            msgs.emplace_back(std::move(msg.msg));
+            res->results.emplace_back(std::move(msg.msg));
         }
         r.second.clear();
     }
     results.clear();
 
-    for(auto& msg: msgs)
-        if (!dest(std::move(msg)))
-            return false;
-
-    return true;
+    return std::unique_ptr<dballe::CursorMessage>(res.release());
 }
 
 }

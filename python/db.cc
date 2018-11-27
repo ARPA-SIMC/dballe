@@ -701,12 +701,13 @@ struct export_to_file : MethKwargs<Impl>
                     opts.template_name = "generic";
                 auto exporter = Exporter::create(out->encoding(), opts);
                 ReleaseGIL gil;
-                self->db->export_msgs(*query, [&](unique_ptr<Message>&& msg) {
+                auto cursor = self->db->query_messages(*query);
+                while (cursor->next())
+                {
                     impl::Messages msgs;
-                    msgs.emplace_back(move(msg));
+                    msgs.emplace_back(cursor->detach_message());
                     out->write(exporter->to_binary(msgs));
-                    return true;
-                });
+                }
                 gil.lock();
                 Py_RETURN_NONE;
             } else {
@@ -716,18 +717,19 @@ struct export_to_file : MethKwargs<Impl>
                 auto exporter = Exporter::create(encoding, opts);
                 pyo_unique_ptr res(nullptr);
                 bool has_error = false;
-                self->db->export_msgs(*query, [&](unique_ptr<Message>&& msg) {
+                auto cursor = self->db->query_messages(*query);
+                while (cursor->next())
+                {
                     impl::Messages msgs;
-                    msgs.emplace_back(move(msg));
+                    msgs.emplace_back(cursor->detach_message());
                     std::string encoded = exporter->to_binary(msgs);
                     res = pyo_unique_ptr(PyObject_CallMethod(file, (char*)"write", (char*)"y#", encoded.data(), (int)encoded.size()));
                     if (!res)
                     {
                         has_error = true;
-                        return false;
+                        break;
                     }
-                    return true;
-                });
+                }
                 if (has_error)
                     return nullptr;
                 Py_RETURN_NONE;

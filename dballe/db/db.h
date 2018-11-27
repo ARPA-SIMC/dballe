@@ -201,20 +201,6 @@ public:
     virtual void attr_remove_data(int data_id, const db::AttrList& attrs) = 0;
 
     /**
-     * Perform the query in `query', and send the results to dest.
-     *
-     * Return false from dest to interrupt the query.
-     *
-     * @param query
-     *   The query to perform
-     * @param dest
-     *   The function that will handle the resulting messages
-     * @returns true if the query reached its end, false if it got interrupted
-     *   because dest returned false.
-     */
-    virtual bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) = 0;
-
-    /**
      * Update the repinfo table in the database, with the data found in the given
      * file.
      *
@@ -380,20 +366,6 @@ public:
      *   associated to the value will be deleted.
      */
     void attr_remove_data(int data_id, const db::AttrList& attrs);
-
-    /**
-     * Perform the query in `query', and send the results to dest.
-     *
-     * Return false from dest to interrupt the query.
-     *
-     * @param query
-     *   The query to perform
-     * @param dest
-     *   The function that will handle the resulting messages
-     * @returns true if the query reached its end, false if it got interrupted
-     *   because dest returned false.
-     */
-    bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest);
 
     /**
      * Dump the entire contents of the database to an output stream

@@ -115,7 +115,7 @@ public:
      * highest priority.
      *
      * @param query
-     *   The record with the query data (see @ref dba_record_keywords)
+     *   The Query selecting the stations to return
      * @return
      *   The cursor to use to iterate over the results
      */
@@ -128,8 +128,7 @@ public:
      * in increasing order of priority.
      *
      * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input")
+     *   The Query selecting the station data to return
      * @return
      *   The cursor to use to iterate over the results
      */
@@ -142,8 +141,7 @@ public:
      * in increasing order of priority.
      *
      * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input")
+     *   The Query selecting the data to return
      * @return
      *   The cursor to use to iterate over the results
      */
@@ -153,15 +151,21 @@ public:
      * Query a summary of what the result would be for a query.
      *
      * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input")
+     *   The Query selecting the data to summarise
      * @return
-     *   The cursor to use to iterate over the results. The results are the
-     *   same as query_data, except that no context_id, datetime and value are
-     *   provided, so it only gives all the available combinations of data
-     *   contexts.
+     *   The cursor to use to iterate over the results
      */
     virtual std::unique_ptr<CursorSummary> query_summary(const Query& query) = 0;
+
+    /**
+     * Query the database returning the matching data as Message objects.
+     *
+     * @param query
+     *   The Query selecting the data that will go into the Message objects
+     * @return
+     *   The cursor to use to iterate over the results
+     */
+    virtual std::unique_ptr<CursorMessage> query_messages(const Query& query) = 0;
 
     /**
      * Remove all data from the database.
@@ -266,7 +270,7 @@ struct DB: public std::enable_shared_from_this<DB>
      * highest priority.
      *
      * @param query
-     *   The record with the query data (see @ref dba_record_keywords)
+     *   The Query selecting the stations to return
      * @return
      *   The cursor to use to iterate over the results
      */
@@ -279,8 +283,7 @@ struct DB: public std::enable_shared_from_this<DB>
      * in increasing order of priority.
      *
      * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input")
+     *   The Query selecting the station data to return
      * @return
      *   The cursor to use to iterate over the results
      */
@@ -293,8 +296,7 @@ struct DB: public std::enable_shared_from_this<DB>
      * in increasing order of priority.
      *
      * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input")
+     *   The Query selecting the data to return
      * @return
      *   The cursor to use to iterate over the results
      */
@@ -304,15 +306,21 @@ struct DB: public std::enable_shared_from_this<DB>
      * Query a summary of what the result would be for a query.
      *
      * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input")
+     *   The Query selecting the data to summarise
      * @return
-     *   The cursor to use to iterate over the results. The results are the
-     *   same as query_data, except that no context_id, datetime and value are
-     *   provided, so it only gives all the available combinations of data
-     *   contexts.
+     *   The cursor to use to iterate over the results
      */
     virtual std::unique_ptr<CursorSummary> query_summary(const Query& query);
+
+    /**
+     * Query the database returning the matching data as Message objects.
+     *
+     * @param query
+     *   The Query selecting the data that will go into the Message objects
+     * @return
+     *   The cursor to use to iterate over the results
+     */
+    virtual std::unique_ptr<CursorMessage> query_messages(const Query& query);
 
     /**
      * Remove all data from the database.

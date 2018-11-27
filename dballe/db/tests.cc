@@ -38,20 +38,18 @@ std::unique_ptr<dballe::sql::Connection> get_test_connection(const std::string& 
 impl::Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const dballe::Query& query)
 {
     impl::Messages res;
-    tr->export_msgs(query, [&](unique_ptr<Message>&& msg) {
-        res.emplace_back(move(msg));
-        return true;
-    });
+    auto cursor = tr->query_messages(query);
+    while (cursor->next())
+        res.emplace_back(cursor->detach_message());
     return res;
 }
 
 impl::Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const char* query)
 {
     impl::Messages res;
-    tr->export_msgs(*dballe::tests::query_from_string(query), [&](unique_ptr<Message>&& msg) {
-        res.emplace_back(move(msg));
-        return true;
-    });
+    auto cursor = tr->query_messages(*dballe::tests::query_from_string(query));
+    while (cursor->next())
+        res.emplace_back(cursor->detach_message());
     return res;
 }
 

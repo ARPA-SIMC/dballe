@@ -159,7 +159,9 @@ this->add_method("stationdata", [](Fixture& f) {
     }
 
     impl::Messages msgs;
-    f.tr->export_msgs(core::Query(), [&](unique_ptr<Message>&& msg) { msgs.push_back(move(msg)); return true; });
+    auto cursor = f.tr->query_messages(core::Query());
+    while (cursor->next())
+        msgs.push_back(cursor->detach_message());
     wassert(actual(msgs.size()) == 2);
 
     //msgs.print(stderr);

@@ -21,6 +21,12 @@ struct EmptyCursor : public Interface
     DBStation get_station() const override { return DBStation(); }
 };
 
+struct EmptyCursorMessage : public EmptyCursor<dballe::CursorMessage>
+{
+    const Message& get_message() const override { throw wreport::error_notfound("cannot retrieve a message from an empty result set"); }
+    std::unique_ptr<Message> detach_message() override { throw wreport::error_notfound("cannot retrieve a message from an empty result set"); }
+};
+
 struct EmptyCursorStation : public EmptyCursor<dballe::CursorStation>
 {
     DBValues get_values() const override { return DBValues(); }
@@ -50,6 +56,16 @@ struct EmptyCursorSummary : public EmptyCursor<dballe::CursorSummary>
     size_t get_count() const override { return 0; }
 };
 
+}
+
+bool CursorMessage::enqi(const char* key, unsigned len, int& res) const { return false; }
+bool CursorMessage::enqd(const char* key, unsigned len, double& res) const { return false; }
+bool CursorMessage::enqs(const char* key, unsigned len, std::string& res) const { return false; }
+bool CursorMessage::enqf(const char* key, unsigned len, std::string& res) const { return false; }
+
+std::unique_ptr<CursorMessage> CursorMessage::make_empty()
+{
+    return std::unique_ptr<CursorMessage>(new EmptyCursorMessage);
 }
 
 std::unique_ptr<CursorStation> CursorStation::make_empty()

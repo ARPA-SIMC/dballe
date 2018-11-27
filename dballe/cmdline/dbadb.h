@@ -14,10 +14,10 @@ namespace cmdline {
 class Dbadb
 {
 protected:
-    db::DB& db;
+    DB& db;
 
 public:
-    Dbadb(db::DB& db) : db(db) {}
+    Dbadb(DB& db) : db(db) {}
 
     /// Query data in the database and output results as arbitrary human readable text
     int do_dump(const Query& query, FILE* out);

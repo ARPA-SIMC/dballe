@@ -68,6 +68,7 @@ public:
     std::unique_ptr<dballe::CursorStationData> query_station_data(const Query& query) override;
     std::unique_ptr<dballe::CursorData> query_data(const Query& query);
     std::unique_ptr<dballe::CursorSummary> query_summary(const Query& query);
+    std::unique_ptr<dballe::CursorMessage> query_messages(const Query& query);
     void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
 
@@ -83,7 +84,6 @@ public:
     void attr_remove_data(int data_id, const db::AttrList& attrs) override;
     void import_message(const Message& message, const dballe::DBImportOptions& opts) override;
     void import_messages(const std::vector<std::shared_ptr<Message>>& msgs, const dballe::DBImportOptions& opts) override;
-    bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) override;
     void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated) override;
 
     static Transaction& downcast(dballe::db::Transaction& transaction);

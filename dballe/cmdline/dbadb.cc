@@ -22,7 +22,7 @@ struct Importer : public Action
     const DBImportOptions& opts;
     std::shared_ptr<dballe::Transaction> transaction;
 
-    Importer(db::DB& db, const DBImportOptions& opts) : db(db), opts(opts) {}
+    Importer(dballe::DB& db, const DBImportOptions& opts) : db(db), opts(opts) {}
 
     virtual bool operator()(const cmdline::Item& item);
     void commit()
@@ -93,10 +93,9 @@ int Dbadb::do_stations(const Query& query, FILE* out)
 
 int Dbadb::do_export_dump(const Query& query, FILE* out)
 {
-    db.export_msgs(query, [&](unique_ptr<Message>&& msg) {
-        msg->print(out);
-        return true;
-    });
+    auto cursor = db.query_messages(query);
+    while (cursor->next())
+        cursor->get_message().print(out);
     return 0;
 }
 
@@ -137,7 +136,10 @@ int Dbadb::do_export(const Query& query, File& file, const char* output_template
         forced_repmemo = forced_repmemo;
     auto exporter = Exporter::create(file.encoding(), opts);
 
-    db.export_msgs(query, [&](unique_ptr<Message>&& msg) {
+    auto cursor = db.query_messages(query);
+    while (cursor->next())
+    {
+        auto msg = cursor->detach_message();
         /* Override the message type if the user asks for it */
         if (forced_repmemo != NULL)
         {
@@ -148,8 +150,7 @@ int Dbadb::do_export(const Query& query, File& file, const char* output_template
         std::vector<std::shared_ptr<Message>> msgs;
         msgs.emplace_back(move(msg));
         file.write(exporter->to_binary(msgs));
-        return true;
-    });
+    }
     return 0;
 }
 

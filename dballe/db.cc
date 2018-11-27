@@ -87,6 +87,13 @@ std::unique_ptr<CursorSummary> DB::query_summary(const Query& query)
     return res;
 }
 
+std::unique_ptr<CursorMessage> DB::query_messages(const Query& query)
+{
+    auto t = transaction();
+    auto res = t->query_messages(query);
+    return res;
+}
+
 void DB::remove_all()
 {
     auto t = transaction();

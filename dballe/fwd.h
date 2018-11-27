@@ -78,6 +78,7 @@ struct CursorStation;
 struct CursorStationData;
 struct CursorData;
 struct CursorSummary;
+struct CursorMessage;
 
 namespace db {
 

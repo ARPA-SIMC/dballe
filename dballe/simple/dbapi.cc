@@ -556,12 +556,13 @@ void DbAPI::messages_write_next(const char* template_name)
     auto exporter = Exporter::create(out.encoding(), options);
 
     // Do the export with the current filter
-    tr->export_msgs(input_query, [&](unique_ptr<Message>&& msg) {
+    auto cursor = tr->query_messages(input_query);
+    while (cursor->next())
+    {
         std::vector<std::shared_ptr<dballe::Message>> msgs;
-        msgs.emplace_back(move(msg));
+        msgs.emplace_back(cursor->detach_message());
         out.write(exporter->to_binary(msgs));
-        return true;
-    });
+    }
 }
 
 std::unique_ptr<API> DbAPI::fortran_connect(const char* url, const char* anaflag, const char* dataflag, const char* attrflag)

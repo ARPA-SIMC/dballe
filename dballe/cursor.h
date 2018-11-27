@@ -123,5 +123,20 @@ struct CursorSummary : public Cursor
     static std::unique_ptr<CursorSummary> make_empty();
 };
 
+/// Cursor iterating over messages
+struct CursorMessage : public Cursor
+{
+    bool enqi(const char* key, unsigned len, int& res) const override;
+    bool enqd(const char* key, unsigned len, double& res) const override;
+    bool enqs(const char* key, unsigned len, std::string& res) const override;
+    bool enqf(const char* key, unsigned len, std::string& res) const override;
+
+    virtual const Message& get_message() const = 0;
+    virtual std::unique_ptr<Message> detach_message() = 0;
+
+    /// Create a CursorStation iterating on no results
+    static std::unique_ptr<CursorMessage> make_empty();
+};
+
 }
 #endif
