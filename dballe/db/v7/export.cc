@@ -9,6 +9,7 @@
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 #include "dballe/core/query.h"
+#include <map>
 #include <memory>
 #include <cstring>
 #include <iostream>
@@ -22,7 +23,6 @@ namespace db {
 namespace v7 {
 
 namespace {
-
 
 struct StationValues : public Values
 {
@@ -39,49 +39,19 @@ struct StationValues : public Values
     }
 };
 
-struct DataRow
+struct ProtoVar
 {
     dballe::DBStation station;
     int id_levtr;
-    Datetime datetime;
-    int id_data;
-    wreport::Var* var;
+    std::unique_ptr<wreport::Var> var;
+    ProtoVar(int id_levtr, std::unique_ptr<wreport::Var> var) : id_levtr(id_levtr), var(std::move(var)) {}
+};
 
-    DataRow(const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)
-        : station(station), id_levtr(id_levtr), datetime(datetime), id_data(id_data), var(var.release())
-    {
-    }
-    DataRow(const DataRow&) = delete;
-    DataRow(DataRow&& o)
-        : station(move(o.station)), id_levtr(o.id_levtr), datetime(move(o.datetime)), id_data(o.id_data), var(o.var)
-    {
-        o.var = nullptr;
-    }
-    ~DataRow()
-    {
-        delete var;
-    }
-    DataRow& operator=(const DataRow&) = delete;
-    DataRow& operator=(DataRow&& o)
-    {
-        if (this == &o) return *this;
-        delete var;
-        var = nullptr;
-        station = o.station;
-        id_levtr = o.id_levtr;
-        datetime = o.datetime;
-        id_data = o.id_data;
-        var = o.var;
-        o.var = nullptr;
-        return *this;
-    }
-
-    std::unique_ptr<wreport::Var> release_var()
-    {
-        std::unique_ptr<wreport::Var> res(var);
-        var = nullptr;
-        return res;
-    }
+struct ProtoMessage
+{
+    std::unique_ptr<impl::Message> msg;
+    std::vector<ProtoVar> vars;
+    ProtoMessage() : msg(new impl::Message) {}
 };
 
 }
@@ -90,9 +60,6 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
 {
     Tracer<> trc(this->trc ? this->trc->trace_export_msgs(query) : nullptr);
     v7::LevTr& lt = levtr();
-
-    // Message being built
-    unique_ptr<impl::Message> msg;
 
     // The big export query
     DataQueryBuilder qb(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT | DBA_DB_MODIFIER_WITH_ATTRIBUTES, false);
@@ -112,87 +79,71 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
 
     // Retrieve results, buffering them locally to avoid performing concurrent
     // queries
-    std::vector<DataRow> results;
+    std::map<int, std::vector<ProtoMessage>> results;
+    std::set<int> id_levtrs;
+    ProtoMessage* msg;
     data().run_data_query(trc, qb, [&](const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
-        results.emplace_back(station, id_levtr, datetime, id_data, move(var));
+        if (station.id != last_ana_id || datetime != last_datetime)
+        {
+            auto& vec = results[station.id];
+            vec.emplace_back();
+            msg = &vec.back();
+            msg->msg->set_datetime(datetime);
+            msg->msg->station_data.set(newvar(WR_VAR(0, 1, 194), station.report));
+            msg->msg->type = impl::Message::type_from_repmemo(station.report.c_str());
+            msg->msg->station_data.set(newvar(WR_VAR(0, 5, 1), station.coords.lat));
+            msg->msg->station_data.set(newvar(WR_VAR(0, 6, 1), station.coords.lon));
+            if (!station.ident.is_missing())
+                msg->msg->station_data.set(newvar(WR_VAR(0, 1, 11), (const char*)station.ident));
+            last_datetime = datetime;
+            last_ana_id = station.id;
+        }
+        id_levtrs.insert(id_levtr);
+        msg->vars.emplace_back(id_levtr, std::move(var));
     });
 
-    for (auto& row: results)
+    lt.prefetch_ids(trc, id_levtrs);
+
+    std::vector<std::unique_ptr<Message>> msgs;
+    for (auto& r: results)
     {
-        //TRACE("Got B%02d%03d %ld,%ld, %ld,%ld %ld,%ld,%ld %s\n",
-        //        WR_VAR_X(sqlrec.out_varcode), WR_VAR_Y(sqlrec.out_varcode),
-        //        sqlrec.out_ltype1, sqlrec.out_l1, sqlrec.out_ltype2, sqlrec.out_l2, sqlrec.out_pind, sqlrec.out_p1, sqlrec.out_p2,
-        //        sqlrec.out_value);
-
-        /* See if we have the start of a new message */
-        if (row.station.id != last_ana_id || row.datetime != last_datetime)
+        station_values.read(*this, r.first);
+        for (auto& msg: r.second)
         {
-            // Flush current message
-            TRACE("New message\n");
-            if (msg.get() != NULL)
-            {
-                TRACE("Sending old message to consumer\n");
-                if (msg->type == MessageType::PILOT || msg->type == MessageType::TEMP || msg->type == MessageType::TEMP_SHIP)
-                {
-                    unique_ptr<impl::Message> copy(new impl::Message);
-                    msg->sounding_pack_levels(*copy);
-                    /* DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_reverse_levels(msg)); */
-                    if (!dest(move(copy)))
-                        return false;
-                } else
-                    if (!dest(move(msg)))
-                        return false;
-            }
-
-            // Start writing a new message
-            msg.reset(new impl::Message);
-
-            // Fill in datetime
-            msg->set_datetime(row.datetime);
-
-            // Update station layer cache if needed
-            if (row.station.id != last_ana_id)
-                station_values.read(*this, row.station.id);
-
-            // Fill in report information
-            msg->station_data.set(newvar(WR_VAR(0, 1, 194), row.station.report));
-            msg->type = impl::Message::type_from_repmemo(row.station.report.c_str());
-
-            // Fill in the basic station values
-            msg->station_data.set(newvar(WR_VAR(0, 5, 1), row.station.coords.lat));
-            msg->station_data.set(newvar(WR_VAR(0, 6, 1), row.station.coords.lon));
-            if (!row.station.ident.is_missing())
-                msg->station_data.set(newvar(WR_VAR(0, 1, 11), (const char*)row.station.ident));
-
             // Fill in station information
-            msg->station_data.merge(station_values);
+            msg.msg->station_data.merge(station_values);
 
-            // Update current context information
-            last_datetime = row.datetime;
-            last_ana_id = row.station.id;
+            // Move variables to contexts
+            int last_id_levtr = -1;
+            impl::msg::Context* ctx = nullptr;
+            for (auto& pvar: msg.vars)
+            {
+                if (pvar.id_levtr != last_id_levtr)
+                {
+                    ctx = lt.to_msg(trc, pvar.id_levtr, *msg.msg);
+                    last_id_levtr = pvar.id_levtr;
+                }
+                ctx->values.set(std::move(pvar.var));
+            }
+            msg.vars.clear();
+
+            // Send message to consumer
+            if (msg.msg->type == MessageType::PILOT || msg.msg->type == MessageType::TEMP || msg.msg->type == MessageType::TEMP_SHIP)
+            {
+                unique_ptr<impl::Message> copy(new impl::Message);
+                msg.msg->sounding_pack_levels(*copy);
+                msgs.emplace_back(std::move(copy));
+                msg.msg.reset();
+            } else
+                msgs.emplace_back(std::move(msg.msg));
         }
-
-        TRACE("Inserting var %01d%02d%03d (%s)\n", WR_VAR_FXY(var->code()), var->enqc());
-        impl::msg::Context* ctx = lt.to_msg(trc, row.id_levtr, *msg);
-        if (ctx)
-            ctx->values.set(row.release_var());
+        r.second.clear();
     }
+    results.clear();
 
-    if (msg.get() != NULL)
-    {
-        TRACE("Inserting leftover old message\n");
-        if (msg->type == MessageType::PILOT || msg->type == MessageType::TEMP || msg->type == MessageType::TEMP_SHIP)
-        {
-            unique_ptr<impl::Message> copy(new impl::Message);
-            msg->sounding_pack_levels(*copy);
-            /* DBA_RUN_OR_GOTO(cleanup, dba_msg_sounding_reverse_levels(msg)); */
-            if (!dest(move(copy)))
-                return false;
-            msg.release();
-        } else
-            if (!dest(move(msg)))
-                return false;
-    }
+    for(auto& msg: msgs)
+        if (!dest(std::move(msg)))
+            return false;
 
     return true;
 }
