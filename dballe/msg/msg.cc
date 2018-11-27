@@ -621,14 +621,14 @@ void Message::print(FILE* out) const
         case MessageType::PILOT:
         case MessageType::TEMP:
         case MessageType::TEMP_SHIP:
+        {
+            unsigned sounding_idx = 0;
             for (auto i = data.cbegin(); i != data.cend(); ++i)
             {
-                const Var* vsig = i->find_vsig();
-                if (vsig != NULL)
+                if (const Var* vsig = i->find_vsig())
                 {
                     int vs = vsig->enqi();
-
-                    fprintf(out, "Sounding #%zd (level %d -", (i - data.cbegin()) + 1, vs);
+                    fprintf(out, "Sounding #%u (level %d -", ++sounding_idx, vs);
                     if (vs & BUFR08042::MISSING) fprintf(out, " missing");
                     if (vs & BUFR08042::H2PRESS) fprintf(out, " h2press");
                     if (vs & BUFR08042::RESERVED) fprintf(out, " reserved");
@@ -652,6 +652,7 @@ void Message::print(FILE* out) const
                 i->print(out);
             }
             break;
+        }
         default:
             for (const auto& ctx: data)
                 ctx.print(out);
@@ -686,7 +687,7 @@ unsigned Message::diff(const dballe::Message& o) const
     // Compare station data
     auto v1 = station_data.cbegin();
     auto v2 = msg.station_data.cbegin();
-    while (v1 != station_data.cend() && v2 != station_data.cend())
+    while (v1 != station_data.cend() && v2 != msg.station_data.cend())
     {
         // Skip second=0 in station context
         if (v1->code() == WR_VAR(0, 4, 6) && (*v1)->enqi() == 0) ++v1;
@@ -897,27 +898,19 @@ const char* Message::repmemo_from_type(MessageType type)
     }
 }
 
-void Message::sounding_pack_levels(Message& dst) const
+void Message::sounding_pack_levels()
 {
-    dst.clear();
-    dst.type = type;
-    dst.station_data = station_data;
-
-    for (const auto& ctx: data)
+    msg::Contexts new_data;
+    for (auto& ctx: data)
     {
-        // If it is not a sounding level, just copy it
-        if (!ctx.find_vsig())
-        {
-            dst.obtain_context(ctx.level, ctx.trange).values.merge(ctx.values);
-            continue;
-        }
-
-        // FIXME: shouldn't this also set significance bits in the output level?
-        for (const auto& val: ctx.values)
-        {
-            dst.set(Level(ctx.level.ltype1, ctx.level.l1), ctx.trange, *val);
-        }
+        if (ctx.find_vsig())
+            // FIXME: shouldn't this also set significance bits in the output level?
+            new_data.obtain(Level(ctx.level.ltype1, ctx.level.l1), ctx.trange)->values.merge(std::move(ctx.values));
+        else
+            // If it is not a sounding level, just copy it
+            new_data.obtain(ctx.level, ctx.trange)->values = std::move(ctx.values);
     }
+    data = std::move(new_data);
 }
 
 void Message::set_datetime(const Datetime& dt)

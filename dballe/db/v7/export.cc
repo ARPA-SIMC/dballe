@@ -41,7 +41,6 @@ struct StationValues : public Values
 
 struct ProtoVar
 {
-    dballe::DBStation station;
     int id_levtr;
     std::unique_ptr<wreport::Var> var;
     ProtoVar(int id_levtr, std::unique_ptr<wreport::Var> var) : id_levtr(id_levtr), var(std::move(var)) {}
@@ -129,13 +128,9 @@ bool Transaction::export_msgs(const dballe::Query& query, std::function<bool(std
 
             // Send message to consumer
             if (msg.msg->type == MessageType::PILOT || msg.msg->type == MessageType::TEMP || msg.msg->type == MessageType::TEMP_SHIP)
-            {
-                unique_ptr<impl::Message> copy(new impl::Message);
-                msg.msg->sounding_pack_levels(*copy);
-                msgs.emplace_back(std::move(copy));
-                msg.msg.reset();
-            } else
-                msgs.emplace_back(std::move(msg.msg));
+                msg.msg->sounding_pack_levels();
+
+            msgs.emplace_back(std::move(msg.msg));
         }
         r.second.clear();
     }

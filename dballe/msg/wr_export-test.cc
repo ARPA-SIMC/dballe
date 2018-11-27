@@ -110,39 +110,38 @@ class Tests : public TestCase
         add_method("reproduce_temp", []() {
             // Export a well known TEMP which used to fail
             impl::Messages msgs = wcallchecked(read_msgs_csv("csv/temp1.csv"));
-            wassert(actual(msgs.size()) > 0);
+            wassert(actual(msgs.size()) == 1);
 
             // Replace with packed levels because comparison later happens against
             // packed levels
-            {
-                unique_ptr<impl::Message> msg(new impl::Message);
-                msg->sounding_pack_levels(*impl::Message::downcast(msgs[0]));
-                msgs.clear();
-                msgs.emplace_back(move(msg));
-            }
+            impl::Message::downcast(msgs[0])->sounding_pack_levels();
+
+            MessageTweakers tweak_first;
+            tweak_first.add(new RoundGeopotential);
+            tweak_first.add(new RemoveContext(Level(1), Trange::instant()));
+            tweak_first.add(new RemoveContext(Level(103, 2000), Trange::instant()));
+            tweak_first.add(new RemoveContext(Level(103, 10000), Trange::instant()));
+
+            MessageTweakers tweak_second;
+            tweak_second.add(new StripVars({WR_VAR(0, 10, 4)}));
+
+            impl::Messages msgs0;
+            msgs0.emplace_back(msgs[0]->clone());
+            tweak_first.apply(msgs0);
 
             // Export to BUFR
-            std::unique_ptr<Exporter> bufr_exporter(Exporter::create(Encoding::BUFR/*, const Options& opts=Options()*/));
+            auto export_opts = ExporterOptions::create();
+            export_opts->template_name = "temp-wmo";
+            std::unique_ptr<Exporter> bufr_exporter(Exporter::create(Encoding::BUFR, *export_opts));
             unique_ptr<Bulletin> bbulletin = bufr_exporter->to_bulletin(msgs);
 
             // Import and check the differences
             {
                 std::unique_ptr<Importer> bufr_importer(Importer::create(Encoding::BUFR/*, const Options& opts=Options()*/));
                 impl::Messages msgs1 = wcallchecked(bufr_importer->from_bulletin(*bbulletin));
+                tweak_second.apply(msgs1);
                 notes::Collect c(cerr);
-                wassert(actual(impl::msg::messages_diff(msgs, msgs1)) == 0);
-            }
-
-            // Export to CREX
-            std::unique_ptr<Exporter> crex_exporter(Exporter::create(Encoding::CREX/*, const Options& opts=Options()*/));
-            unique_ptr<Bulletin> cbulletin = crex_exporter->to_bulletin(msgs);
-
-            // Import and check the differences
-            {
-                std::unique_ptr<Importer> crex_importer(Importer::create(Encoding::CREX/*, const Options& opts=Options()*/));
-                impl::Messages msgs1 = wcallchecked(crex_importer->from_bulletin(*cbulletin));
-                notes::Collect c(cerr);
-                wassert(actual(impl::msg::messages_diff(msgs, msgs1)) == 0);
+                wassert(actual(impl::msg::messages_diff(msgs0, msgs1)) == 0);
             }
         });
 

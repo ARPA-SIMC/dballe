@@ -299,14 +299,14 @@ public:
 #endif
 
     /**
-     * Copy a Message, removing the sounding significance from the level
-     * descriptions and packing together the data at the same pressure level.
+     * Remove the sounding significance from the level descriptions and pack
+     * together the data at the same pressure level.
      *
      * This is used to postprocess data after decoding, where the l2 field of the
      * level description is temporarily used to store the vertical sounding
      * significance, to simplify decoding.
      */
-    void sounding_pack_levels(Message& dst) const;
+    void sounding_pack_levels();
 
     /**
      * Read data from a CSV input.

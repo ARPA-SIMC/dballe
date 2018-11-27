@@ -134,6 +134,19 @@ void ValuesBase<Value>::merge(const ValuesBase<Value>& vals)
 }
 
 template<typename Value>
+void ValuesBase<Value>::merge(ValuesBase<Value>&& vals)
+{
+    if (empty())
+        operator=(std::move(vals));
+    else
+    {
+        for (const auto& vi: vals)
+            set(std::move(*vi));
+        vals.clear();
+    }
+}
+
+template<typename Value>
 const Value& ValuesBase<Value>::value(wreport::Varcode code) const
 {
     auto i = find(code);

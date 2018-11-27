@@ -8,6 +8,7 @@
 #include <wreport/tableinfo.h>
 #include <wreport/conv.h>
 #include <wreport/notes.h>
+#include <wreport/codetables.h>
 #include <cstring>
 #include <cmath>
 #include <unistd.h>
@@ -488,11 +489,8 @@ void RoundGeopotential::tweak(impl::Messages& msgs)
             {
                 // Convert to B10009 (new GTS TEMP templates)
                 Var var2(table->query(WR_VAR(0, 10, 9)), *orig);
-                // Convert to B10008 (used for geopotential by DB-All.e)
-                Var var3(table->query(WR_VAR(0, 10, 8)), var2);
-                // Convert back to B10003
-                Var var4(table->query(WR_VAR(0, 10, 3)), var3);
-                orig->set(var4);
+                // Convert back to B10008 (used for geopotential by DB-All.e)
+                orig->set(var2);
             }
         }
     }
@@ -523,7 +521,13 @@ void RoundVSS::tweak(impl::Messages& msgs)
         auto m = impl::Message::downcast(mi);
         for (auto& ctx: m->data)
             if (Var* orig = ctx.values.maybe_var(WR_VAR(0, 8, 42)))
-                orig->seti(convert_BUFR08001_to_BUFR08042(convert_BUFR08042_to_BUFR08001(orig->enqi())));
+            {
+                int val = convert_BUFR08001_to_BUFR08042(convert_BUFR08042_to_BUFR08001(orig->enqi()));
+                if (val == wreport::BUFR08042::ALL_MISSING)
+                    orig->unset();
+                else
+                    orig->seti(val);
+            }
     }
 }
 

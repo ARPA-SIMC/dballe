@@ -64,6 +64,9 @@ public:
     /// Add all the variables from vals
     void merge(const ValuesBase<Value>& vals);
 
+    /// Add all the variables from vals
+    void merge(ValuesBase<Value>&& vals);
+
     /// Set a variable value, creating it if it does not exist
     template<typename C, typename T> void set(const C& code, const T& val) { this->set(newvar(code, val)); }
 
