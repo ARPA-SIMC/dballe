@@ -26,8 +26,8 @@ struct TestDataSet
     TestDataSet() {}
     virtual ~TestDataSet() {}
 
-    void populate_db(db::DB& db);
-    virtual void populate_transaction(db::Transaction& tr);
+    void populate_db(DB& db);
+    virtual void populate_transaction(Transaction& tr);
 };
 
 struct EmptyTestDataset

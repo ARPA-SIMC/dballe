@@ -252,14 +252,14 @@ std::shared_ptr<dballe::db::v7::DB> V7DB::create_db(const std::string& backend)
 }
 
 
-void TestDataSet::populate_db(db::DB& db)
+void TestDataSet::populate_db(DB& db)
 {
-    auto tr = dynamic_pointer_cast<db::Transaction>(db.transaction());
+    auto tr = db.transaction();
     populate_transaction(*tr);
     tr->commit();
 }
 
-void TestDataSet::populate_transaction(db::Transaction& tr)
+void TestDataSet::populate_transaction(Transaction& tr)
 {
     // TODO: do everything in a single batch
     impl::DBInsertOptions opts;
