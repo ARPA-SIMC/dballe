@@ -196,5 +196,12 @@ PyObject* enqpy(db::summary::Cursor<Station>& cur, const char* key, unsigned len
 template PyObject* enqpy(db::summary::Cursor<Station>& cur, const char* key, unsigned len);
 template PyObject* enqpy(db::summary::Cursor<DBStation>& cur, const char* key, unsigned len);
 
+PyObject* enqpy(CursorMessage& cur, const char* key, unsigned len)
+{
+    switch (key) { // mklookup
+        default:            PyErr_Format(PyExc_KeyError, "key %s not found", key); throw PythonException();
+    }
+}
+
 }
 }

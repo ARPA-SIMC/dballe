@@ -317,6 +317,21 @@ struct query_summary : MethQuery<query_summary<Impl>, Impl>
 };
 
 template<typename Impl>
+struct query_messages : MethQuery<query_messages<Impl>, Impl>
+{
+    constexpr static const char* name = "query_messages";
+    constexpr static const char* returns = "dballe.CursorMessage";
+    constexpr static const char* summary = "Query the database returning the matching data as Message objects";
+    static PyObject* run_query(Impl* self, dballe::Query& query)
+    {
+        ReleaseGIL gil;
+        auto res = self->db->query_messages(query);
+        gil.lock();
+        return (PyObject*)cursor_create(std::move(res));
+    }
+};
+
+template<typename Impl>
 struct query_attrs : MethKwargs<Impl>
 {
     constexpr static const char* name = "query_attrs";
@@ -1075,7 +1090,7 @@ Examples:
         transaction,
         insert_station_data<Impl>, insert_data<Impl>,
         remove_station_data<Impl>, remove_data<Impl>, remove_all<Impl>, remove<Impl>,
-        query_stations<Impl>, query_station_data<Impl>, query_data<Impl>, query_summary<Impl>, query_attrs<Impl>,
+        query_stations<Impl>, query_station_data<Impl>, query_data<Impl>, query_summary<Impl>, query_messages<Impl>, query_attrs<Impl>,
         attr_query_station<Impl>, attr_query_data<Impl>,
         attr_insert<Impl>, attr_insert_station<Impl>, attr_insert_data<Impl>,
         attr_remove<Impl>, attr_remove_station<Impl>, attr_remove_data<Impl>,
@@ -1195,7 +1210,7 @@ and running the dballe.Transaction method inside it.
     Methods<
         insert_station_data<Impl>, insert_data<Impl>,
         remove_station_data<Impl>, remove_data<Impl>, remove_all<Impl>, remove<Impl>,
-        query_stations<Impl>, query_station_data<Impl>, query_data<Impl>, query_summary<Impl>,
+        query_stations<Impl>, query_station_data<Impl>, query_data<Impl>, query_summary<Impl>, query_messages<Impl>,
         attr_query_station<Impl>, attr_query_data<Impl>,
         attr_insert_station<Impl>, attr_insert_data<Impl>,
         attr_remove_station<Impl>, attr_remove_data<Impl>,

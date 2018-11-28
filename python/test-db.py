@@ -166,6 +166,18 @@ class CommonDBTestMixin(DballeDBMixin):
                 res[(1, "synop", dballe.Level(10, 11, 15, 22), dballe.Trange(20, 111, 222), 'B01012')],
                 (datetime.datetime(1945, 4, 25, 8, 0), datetime.datetime(1945, 4, 25, 8, 0), 1))
 
+    def testQueryMessages(self):
+        cur = self.db.query_messages({"latmin": 10.0})
+        self.assertEqual(cur.remaining, 1)
+        for idx, result in enumerate(cur):
+            self.assertEqual(cur.remaining, 2-idx-1)
+            msg = cur.message
+            self.assertEqual(msg.type, "synop")
+            self.assertEqual(msg.datetime, datetime.datetime(1945, 4, 25, 8, 0, 0))
+            self.assertEqual(msg.coords, (Decimal("12.34560"), Decimal("76.54320")))
+            self.assertIsNone(msg.ident)
+            self.assertEqual(msg.report, "synop")
+
     def testAttrRemove(self):
         self.db.attr_remove_data(self.attr_ref, ("B33007",))
 

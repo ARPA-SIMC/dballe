@@ -1,23 +1,3 @@
-/*
- * python/cursor - DB-All.e DB cursor python bindings
- *
- * Copyright (C) 2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
 #ifndef DBALLE_PYTHON_CURSOR_H
 #define DBALLE_PYTHON_CURSOR_H
 
@@ -99,10 +79,25 @@ extern PyTypeObject* dpy_CursorSummarySummary_Type;
     (Py_TYPE(ob) == dpy_CursorSummaryDBSummary_Type || \
      PyType_IsSubtype(Py_TYPE(ob), dpy_CursorSummaryDBSummary_Type))
 
+
+typedef struct {
+    PyObject_HEAD
+    dballe::CursorMessage* cur;
+    PyObject* curmsg;
+} dpy_CursorMessage;
+
+extern PyTypeObject* dpy_CursorMessage_Type;
+
+#define dpy_CursorMessage_Check(ob) \
+    (Py_TYPE(ob) == dpy_CursorMessage_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_CursorMessage_Type))
+
 }
 
 namespace dballe {
 namespace python {
+
+void _update_curmsg(dpy_CursorMessage& cur);
 
 PyObject* enqpy(db::CursorStation& cur, const char* key, unsigned len);
 PyObject* enqpy(db::CursorStationData& cur, const char* key, unsigned len);
@@ -112,6 +107,7 @@ template<typename Station>
 PyObject* enqpy(db::summary::Cursor<Station>& cur, const char* key, unsigned len);
 extern template PyObject* enqpy(db::summary::Cursor<Station>& cur, const char* key, unsigned len);
 extern template PyObject* enqpy(db::summary::Cursor<DBStation>& cur, const char* key, unsigned len);
+PyObject* enqpy(CursorMessage& cur, const char* key, unsigned len);
 
 /**
  * Create a new dpy_Cursor, taking ownership of memory management
@@ -122,6 +118,7 @@ dpy_CursorDataDB* cursor_create(std::unique_ptr<db::CursorData> cur);
 dpy_CursorSummaryDB* cursor_create(std::unique_ptr<db::CursorSummary> cur);
 dpy_CursorSummarySummary* cursor_create(std::unique_ptr<db::summary::Cursor<Station>> cur);
 dpy_CursorSummaryDBSummary* cursor_create(std::unique_ptr<db::summary::Cursor<DBStation>> cur);
+dpy_CursorMessage* cursor_create(std::unique_ptr<CursorMessage> cur);
 
 void register_cursor(PyObject* m);
 

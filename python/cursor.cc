@@ -2,6 +2,7 @@
 #include "cursor.h"
 #include "types.h"
 #include "db.h"
+#include "message.h"
 #include "common.h"
 #include <algorithm>
 #include "impl-utils.h"
@@ -18,6 +19,7 @@ PyTypeObject* dpy_CursorDataDB_Type = nullptr;
 PyTypeObject* dpy_CursorSummaryDB_Type = nullptr;
 PyTypeObject* dpy_CursorSummarySummary_Type = nullptr;
 PyTypeObject* dpy_CursorSummaryDBSummary_Type = nullptr;
+PyTypeObject* dpy_CursorMessage_Type = nullptr;
 }
 
 namespace {
@@ -354,12 +356,69 @@ struct DefinitionSummaryDBSummary : public DefinitionBase<DefinitionSummaryDBSum
 };
 
 
+template<typename Impl>
+struct message : Getter<Impl>
+{
+    constexpr static const char* name = "message";
+    constexpr static const char* doc = "dballe.Message object with the current message";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            ensure_valid_cursor(self);
+            if (self->curmsg)
+            {
+                Py_INCREF(self->curmsg);
+                return self->curmsg;
+            }
+            Py_RETURN_NONE;
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct DefinitionMessage : public DefinitionBase<DefinitionMessage, dpy_CursorMessage>
+{
+    constexpr static const char* name = "CursorMessage";
+    constexpr static const char* qual_name = "dballe.CursorMessage";
+    constexpr static const char* summary = "cursor iterating Message results";
+
+    GetSetters<remaining<Impl>, message<Impl>> getsetters;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
+
+    static void _dealloc(Impl* self)
+    {
+        delete self->cur;
+        Py_XDECREF(self->curmsg);
+        Py_TYPE(self)->tp_free(self);
+    }
+
+    static PyObject* _iternext(Impl* self)
+    {
+        try {
+            ensure_valid_cursor(self);
+            if (self->cur->next())
+            {
+                std::unique_ptr<Message> msg = self->cur->detach_message();
+                Py_XDECREF(self->curmsg);
+                self->curmsg = nullptr;
+                self->curmsg = (PyObject*)message_create(std::move(msg));
+                Py_INCREF(self);
+                return (PyObject*)self;
+            } else {
+                PyErr_SetNone(PyExc_StopIteration);
+                return nullptr;
+            }
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+
 DefinitionStationDB*         definition_stationdb = nullptr;
 DefinitionStationDataDB*     definition_stationdatadb = nullptr;
 DefinitionDataDB*            definition_datadb = nullptr;
 DefinitionSummaryDB*         definition_summarydb = nullptr;
 DefinitionSummarySummary*    definition_summarysummary = nullptr;
 DefinitionSummaryDBSummary*  definition_summarydbsummary = nullptr;
+DefinitionMessage*           definition_message = nullptr;
 
 }
 
@@ -408,6 +467,14 @@ dpy_CursorSummaryDBSummary* cursor_create(std::unique_ptr<db::summary::Cursor<DB
     return result.release();
 }
 
+dpy_CursorMessage* cursor_create(std::unique_ptr<CursorMessage> cur)
+{
+    py_unique_ptr<dpy_CursorMessage> result(throw_ifnull(PyObject_New(dpy_CursorMessage, dpy_CursorMessage_Type)));
+    result->cur = cur.release();
+    result->curmsg = nullptr;
+    return result.release();
+}
+
 
 void register_cursor(PyObject* m)
 {
@@ -430,6 +497,9 @@ void register_cursor(PyObject* m)
 
     definition_summarydbsummary = new DefinitionSummaryDBSummary;
     dpy_CursorSummaryDBSummary_Type = definition_summarydbsummary->activate(m);
+
+    definition_message = new DefinitionMessage;
+    dpy_CursorMessage_Type = definition_message->activate(m);
 }
 
 }

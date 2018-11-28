@@ -249,6 +249,7 @@ volnd that allows to automatically export matrices of data out of the database.
     gen.document_class(dballe.CursorSummaryDB)
     gen.document_class(dballe.CursorSummarySummary)
     gen.document_class(dballe.CursorSummaryDBSummary)
+    gen.document_class(dballe.CursorMessage)
     gen.document_class(dballe.Explorer)
     gen.document_class(dballe.DBExplorer)
 
