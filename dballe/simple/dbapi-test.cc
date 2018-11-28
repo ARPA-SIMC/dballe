@@ -716,6 +716,7 @@ this->add_method("attr_reference_id", [](Fixture& f) {
 
 this->add_method("attrs_bug1", [](Fixture& f) {
     // Reproduce a bug when setting attributes
+    using namespace dballe::fortran;
     fortran::DbAPI dbapi0(f.tr, "write", "write", "write");
     dbapi0.scopa();
 
@@ -727,7 +728,7 @@ this->add_method("attrs_bug1", [](Fixture& f) {
     dbapi0.seti("mobile", 0);
     dbapi0.setc("rep_memo", "generic");
     dbapi0.setdate(2014, 1, 6, 18, 0, 0);
-    dbapi0.setlevel(105, 2000, 2147483647, 2147483647);
+    dbapi0.setlevel(105, 2000, API::missing_int, API::missing_int);
     dbapi0.settimerange(4, 3600, 7200);
     dbapi0.seti("B13003", 85);
     dbapi0.prendilo();
@@ -790,7 +791,7 @@ this->add_method("segfault1", [](Fixture& f) {
 });
 
 this->add_method("issue45", [](Fixture& f) {
-    // ** Execution begins **
+    using namespace dballe::fortran;
     fortran::DbAPI dbapi0(f.tr, "write", "write", "write");
     dbapi0.scopa();
     dbapi0.unsetall();
@@ -800,7 +801,7 @@ this->add_method("issue45", [](Fixture& f) {
     dbapi0.unset("mobile");
     dbapi0.setc("rep_memo", "generic");
     dbapi0.setdate(2014, 1, 6, 18, 0, 0);
-    dbapi0.setlevel(105, 2000, 2147483647, 2147483647);
+    dbapi0.setlevel(105, 2000, API::missing_int, API::missing_int);
     dbapi0.settimerange(4, 3600, 7200);
     dbapi0.seti("B13003", 85);
     dbapi0.prendilo();
@@ -1116,7 +1117,7 @@ this->add_method("query_attr_values", [](Fixture& f) {
     wassert(dbapi0.enqr("*B33193"));
     wassert(dbapi0.enqd("*B33193"));
     string sres;
-    bool val = dbapi0.enqc("*B33193", sres);
+    wassert(dbapi0.enqc("*B33193", sres));
     // error: cannot parse a Varcode out of '*B33193'
 });
 
@@ -1159,6 +1160,57 @@ this->add_method("set_varlist", [](Fixture& f) {
     auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
     fortran::DbAPI dbapi0(tr, "write", "write", "write");
     wassert(dbapi0.setc("*varlist", "*B33193,*B33194"));
+});
+
+this->add_method("issue137", [](Fixture& f) {
+    using namespace dballe::fortran;
+    auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
+    fortran::DbAPI dbapi0(tr, "write", "write", "write");
+    dbapi0.scopa();
+
+    // Insert two variables
+    dbapi0.unsetall();
+    dbapi0.seti("lat", 4500000);
+    dbapi0.seti("lon", 1300000);
+    dbapi0.setc("rep_memo", "generic");
+    dbapi0.setdate(2014, 1, 6, 18, 0, 0);
+    dbapi0.setlevel(105, 2000, API::missing_int, API::missing_int);
+    dbapi0.settimerange(4, 3600, 7200);
+    dbapi0.seti("B12102", 26312);
+    dbapi0.setd("B12101", 273.149994);
+    dbapi0.prendilo();
+
+    // Remove one. In a previous implementation, var and varlist both edited
+    // Query::varcodes, and unsetting one had the effect of unsetting the other
+    dbapi0.unsetall();
+    dbapi0.setc("var", "B12101");
+    dbapi0.unset("varlist");
+    dbapi0.dimenticami();
+
+    dbapi0.unsetall();
+    dbapi0.setc("var", "B12102");
+    dbapi0.unset("varlist");
+    dbapi0.seti("lat", 4500000);
+    dbapi0.seti("lon", 1100000);
+    dbapi0.setc("rep_memo", "generic");
+    dbapi0.setdate(2014, 1, 6, 18, 0, 0);
+    dbapi0.setlevel(105, 2000, API::missing_int, API::missing_int);
+    dbapi0.settimerange(4, 3600, 7200);
+    dbapi0.dimenticami();
+
+    dbapi0.unsetall();
+    dbapi0.setc("var", "B12102");
+    dbapi0.unset("varlist");
+    dbapi0.seti("lat", 4500000);
+    dbapi0.seti("lon", 1300000);
+    dbapi0.unset("ident");
+    dbapi0.unset("mobile");
+    dbapi0.setc("rep_memo", "generic");
+    dbapi0.setdate(2014, 1, 6, 18, 0, 0);
+    dbapi0.setlevel(105, 2000, API::missing_int, API::missing_int);
+    dbapi0.settimerange(4, 3600, 7200);
+    wassert(actual(dbapi0.voglioquesto()) == 1);
+    wassert(actual(dbapi0.dammelo()) == WR_VAR(0, 12, 102));;
 });
 
 }

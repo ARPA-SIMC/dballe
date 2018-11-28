@@ -160,8 +160,8 @@ bool CommonAPIImplementation::_setc(const char* key, unsigned len, const char* v
         case "pindicator":  input_query.trange.pind  = input_data.trange.pind  = strtol(val, nullptr, 10);
         case "p1":          input_query.trange.p1    = input_data.trange.p1    = strtol(val, nullptr, 10);
         case "p2":          input_query.trange.p2    = input_data.trange.p2    = strtol(val, nullptr, 10);
-        case "var":         input_query.varcodes.clear(); input_query.varcodes.insert(resolve_varcode(val));
-        case "varlist":     input_query.varcodes.clear(); resolve_varlist(val, input_query.varcodes);
+        case "var":         input_query_var = resolve_varcode(val);
+        case "varlist":     input_query_varlist.clear(); resolve_varlist(val, input_query.varcodes);
         case "context_id":  throw error_consistency("cannot set context_id");
         case "query":       input_query.query = val;
         case "ana_filter":  input_query.ana_filter = val;
@@ -216,8 +216,8 @@ bool CommonAPIImplementation::_unset(const char* key, unsigned len)
         case "pindicator":  input_query.trange.pind  = input_data.trange.pind  = MISSING_INT;
         case "p1":          input_query.trange.p1    = input_data.trange.p1    = MISSING_INT;
         case "p2":          input_query.trange.p2    = input_data.trange.p2    = MISSING_INT;
-        case "var":         input_query.varcodes.clear();
-        case "varlist":     input_query.varcodes.clear();
+        case "var":         input_query_var = 0;
+        case "varlist":     input_query_varlist.clear();
         case "context_id":  throw error_consistency("cannot set/unset context_id");
         case "query":       input_query.query.clear();
         case "ana_filter":  input_query.ana_filter.clear();

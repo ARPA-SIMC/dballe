@@ -118,6 +118,14 @@ unsigned CommonAPIImplementation::compute_permissions(const char* anaflag, const
     return perms;
 }
 
+void CommonAPIImplementation::validate_input_query()
+{
+    input_query.varcodes = input_query_varlist;
+    if (input_query_var != 0)
+        input_query.varcodes.insert(input_query_var);
+    input_query.validate();
+}
+
 int CommonAPIImplementation::enqi(const char* param)
 {
     if (param[0] == '*')
@@ -365,7 +373,11 @@ void CommonAPIImplementation::unset(const char* param)
 void CommonAPIImplementation::unsetall()
 {
     qcinput.clear();
+
     input_query.clear();
+    input_query_var = 0;
+    input_query_varlist.clear();
+
     input_data.clear();
     selected_attr_codes.clear();
     if (operation)

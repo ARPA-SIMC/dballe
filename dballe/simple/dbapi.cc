@@ -455,13 +455,13 @@ void DbAPI::seti(const char* param, int value)
 
 int DbAPI::quantesono()
 {
-    input_query.validate();
+    validate_input_query();
     return reset_operation(new QuantesonoOperation(*this));
 }
 
 int DbAPI::voglioquesto()
 {
-    input_query.validate();
+    validate_input_query();
     if (station_context)
         return reset_operation(new VoglioquestoOperation<db::CursorStationData>(*this));
     else
@@ -482,6 +482,8 @@ void DbAPI::dimenticami()
 {
     if (! (perms & PERM_DATA_WRITE))
         throw error_consistency("dimenticami must be called with the database open in data write mode");
+
+    validate_input_query();
 
     if (station_context)
         tr->remove_station_data(input_query);

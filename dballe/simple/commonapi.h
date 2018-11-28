@@ -163,7 +163,21 @@ public:
     static unsigned compute_permissions(const char* anaflag, const char* dataflag, const char* attrflag);
 
     unsigned perms = 0;
+
     core::Query input_query;
+    /*
+     * Fortran code wants to do something like set("var", …); unset("varlist").
+     *
+     * If both var and varlist edit input_query.varcodes, the unset of varlist
+     * will also unset the previous set of var, with unexpected results.
+     *
+     * To work around this, var and varlist are stored in the following
+     * members, and merged into input_query when validate_input_query() is
+     * called.
+     */
+    wreport::Varcode input_query_var = 0;
+    std::set<wreport::Varcode> input_query_varlist;
+
     core::Data input_data;
     /// Selected attribute varcodes (*varlist)
     std::vector<wreport::Varcode> selected_attr_codes;
@@ -182,6 +196,7 @@ protected:
     bool _setd(const char* key, unsigned len, double val);
     bool _setc(const char* key, unsigned len, const char* val);
     bool _unset(const char* key, unsigned len);
+    void validate_input_query();
 
 public:
     CommonAPIImplementation();
