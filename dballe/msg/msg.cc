@@ -600,16 +600,24 @@ void Message::print(FILE* out) const
 {
     fprintf(out, "%s message, ", format_message_type(type));
     get_coords().print(out, ", ");
+
     auto ident = get_ident();
-    fprintf(out, "ident: %s, dt: ", ident.is_missing() ? "" : (const char*)ident);
-    get_datetime().print_iso8601(out, 'T', ", ");
+    if (!ident.is_missing())
+        fprintf(out, "ident: %s, ", (const char*)ident);
+
+    auto dt = get_datetime();
+    if (dt.is_missing())
+        fprintf(out, "dt: missing, ");
+    else
+    {
+        fprintf(out, "dt: ");
+        dt.print_iso8601(out, 'T', ", ");
+    }
 
     if (data.empty())
-    {
-        fprintf(stderr, "(empty)\n");
-        return;
-    }
-    fprintf(out, "%zd contexts:\n", data.size() + 1);
+        fprintf(out, "(no data)\n");
+    else
+        fprintf(out, "%zd contexts:\n", data.size() + 1);
 
     fprintf(out, "Level ");
     Level().print(out, "-", " tr ");
