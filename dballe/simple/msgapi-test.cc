@@ -208,8 +208,6 @@ void Tests::register_tests()
         fortran::MsgAPI api(fname.c_str(), "r", "BUFR");
 
         wassert(actual(api.voglioquesto()) == 11);
-        //001011 SHIP OR MOBILE LAND STATION IDENTIFIER(CCITTIA5): EU3375
-        wassert(actual(api.dammelo()) == WR_VAR(0, 1, 11));
         // wassert(actual(api.dammelo()) == WR_VAR(0, 4, 1));
         // 004001 YEAR(YEAR): 2009
         // 004002 MONTH(MONTH): 2
@@ -228,6 +226,8 @@ void Tests::register_tests()
         wassert(actual(api.dammelo()) == WR_VAR(0, 11,   2));
         wassert(actual(api.dammelo()) == WR_VAR(0, 12, 101));
         wassert(actual(api.dammelo()) == WR_VAR(0, 13,   2));
+        //001011 SHIP OR MOBILE LAND STATION IDENTIFIER(CCITTIA5): EU3375
+        wassert(actual(api.dammelo()) == WR_VAR(0, 1, 11));
         wassert(actual(api.dammelo()) == 0);
         // Level 102,6260000,-,-, tr 254,0,0
         // 001006 AIRCRAFT FLIGHT NUMBER(CCITTIA5): LH968
@@ -244,6 +244,210 @@ void Tests::register_tests()
         wassert(actual(api.voglioquesto()) == api.missing_int);
 
     });
+
+add_method("message_ordering", [] {
+    using namespace wreport;
+    using namespace dballe::fortran;
+    sys::unlink_ifexists("dballe_test.bufr");
+
+    // Check the ordering of results when iterating message contents
+
+    {
+        MsgAPI msgapi1("dballe_test.bufr", "w", "bufr");
+        msgapi1.seti("lat", 4500000);
+        msgapi1.seti("lon", 1000000);
+        msgapi1.setc("rep_memo", "generic");
+        msgapi1.setdate(2014, 1, 6, 18, 0, 0);
+        msgapi1.setlevel(105, 2000, 2147483647, 2147483647);
+        msgapi1.settimerange(4, 3600, 7200);
+        msgapi1.seti("B13003", 85);
+        msgapi1.prendilo();
+        msgapi1.unsetb();
+        msgapi1.setd("*B33192", 30.000000);
+        msgapi1.seti("*B33193", 50);
+        msgapi1.setd("*B33194", 70.000000);
+        msgapi1.critica();
+        msgapi1.seti("B12101", 27315);
+        msgapi1.prendilo();
+        msgapi1.unsetb();
+        msgapi1.setd("*B33192", 30.000000);
+        msgapi1.seti("*B33193", 50);
+        msgapi1.critica();
+        msgapi1.setc("query", "message");
+        msgapi1.unsetb();
+        msgapi1.prendilo();
+
+        msgapi1.unsetall();
+        msgapi1.seti("lat", 4500000);
+        msgapi1.seti("lon", 1000000);
+        msgapi1.unset("ident");
+        msgapi1.unset("mobile");
+        msgapi1.setc("rep_memo", "generic");
+        msgapi1.setcontextana();
+        msgapi1.seti("B07030", 223);
+        msgapi1.prendilo();
+        msgapi1.unsetb();
+        msgapi1.setc("B01019", "My beautifull station");
+        msgapi1.prendilo();
+        msgapi1.unsetb();
+        msgapi1.setc("query", "message");
+        msgapi1.unsetb();
+        msgapi1.prendilo();
+
+        msgapi1.unsetall();
+        msgapi1.seti("lat", 4500000);
+        msgapi1.seti("lon", 1000000);
+        msgapi1.unset("ident");
+        msgapi1.unset("mobile");
+        msgapi1.setc("rep_memo", "generic");
+        msgapi1.setcontextana();
+        msgapi1.seti("B07030", 223);
+        msgapi1.prendilo();
+        msgapi1.unsetb();
+        msgapi1.setc("B01019", "My beautifull station");
+        msgapi1.prendilo();
+        msgapi1.unsetb();
+        msgapi1.setc("query", "message");
+        msgapi1.unsetb();
+        msgapi1.prendilo();
+
+        msgapi1.unsetall();
+        msgapi1.setlevel(105, 2000, 2147483647, 2147483647);
+        msgapi1.settimerange(4, 3600, 7200);
+        msgapi1.seti("lat", 4500000);
+        msgapi1.seti("lon", 1100000);
+        msgapi1.setc("rep_memo", "generic");
+        msgapi1.setdate(2014, 1, 6, 18, 0, 0);
+        msgapi1.setd("B12102", 265.329987);
+        msgapi1.setd("B12101", 273.149994);
+        msgapi1.prendilo();
+        msgapi1.setc("query", "message");
+        msgapi1.unsetb();
+        msgapi1.prendilo();
+
+        msgapi1.unsetall();
+        msgapi1.seti("lat", 4500000);
+        msgapi1.seti("lon", 1200000);
+        msgapi1.setc("rep_memo", "generic");
+        msgapi1.setdate(2014, 1, 6, 18, 0, 0);
+        msgapi1.setlevel(105, 2000, 2147483647, 2147483647);
+        msgapi1.settimerange(4, 3600, 7200);
+        msgapi1.seti("B12102", 26312);
+        msgapi1.setd("B12101", 273.149994);
+        msgapi1.prendilo();
+        msgapi1.setc("query", "message");
+        msgapi1.unsetb();
+        msgapi1.prendilo();
+
+        msgapi1.unsetall();
+        msgapi1.seti("lat", 4500000);
+        msgapi1.seti("lon", 1300000);
+        msgapi1.setc("rep_memo", "generic");
+        msgapi1.setdate(2014, 1, 6, 18, 0, 0);
+        msgapi1.setlevel(105, 2000, 2147483647, 2147483647);
+        msgapi1.settimerange(4, 3600, 7200);
+        msgapi1.seti("B12102", 26312);
+        msgapi1.prendilo();
+        msgapi1.unsetb();
+        msgapi1.seti("*B33192", 30);
+        msgapi1.setc("*B33193", "70");
+        msgapi1.setd("*B33194", 50.000000);
+        msgapi1.critica();
+        msgapi1.setd("B12101", 273.149994);
+        msgapi1.prendilo();
+        msgapi1.unsetb();
+        msgapi1.seti("lat", 4500000);
+        msgapi1.seti("lon", 1300000);
+        msgapi1.setc("rep_memo", "generic");
+        msgapi1.setcontextana();
+        msgapi1.seti("B12102", 26312);
+        msgapi1.prendilo();
+        msgapi1.unsetb();
+        msgapi1.seti("*B33192", 30);
+        msgapi1.setc("*B33193", "70");
+        msgapi1.setd("*B33194", 50.000000);
+        msgapi1.critica();
+        msgapi1.setd("B12101", 273.149994);
+        msgapi1.prendilo();
+        msgapi1.unsetb();
+        // msgapi1 not used anymore
+    }
+
+    {
+        MsgAPI msgapi4("dballe_test.bufr", "r", "bufr");
+        msgapi4.unsetall();
+        wassert(actual(msgapi4.voglioquesto()) == 3);
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 101));
+        wassert(actual(msgapi4.voglioancora()) == 2);
+        wassert(actual(msgapi4.ancora()) == "*B33192");
+        wassert(actual(msgapi4.ancora()) == "*B33193");
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 13, 3));
+        wassert(actual(msgapi4.voglioancora()) == 3);
+        wassert(actual(msgapi4.ancora()) == "*B33192");
+        wassert(actual(msgapi4.ancora()) == "*B33193");
+        wassert(actual(msgapi4.ancora()) == "*B33194");
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 1, 194));
+        wassert(actual(msgapi4.voglioancora()) == 0);
+
+        msgapi4.unsetall();
+        wassert(actual(msgapi4.voglioquesto()) == 3);
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 1, 19));
+        wassert(actual(msgapi4.voglioancora()) == 0);
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 1, 194));
+        wassert(actual(msgapi4.voglioancora()) == 0);
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 7, 30));
+        wassert(actual(msgapi4.voglioancora()) == 0);
+
+        msgapi4.unsetall();
+        wassert(actual(msgapi4.voglioquesto()) == 3);
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 1, 19));
+        wassert(actual(msgapi4.voglioancora()) == 0);
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 1, 194));
+        wassert(actual(msgapi4.voglioancora()) == 0);
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 7, 30));
+        wassert(actual(msgapi4.voglioancora()) == 0);
+
+        msgapi4.unsetall();
+        wassert(actual(msgapi4.voglioquesto()) == 3);
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 101));
+        wassert(actual(msgapi4.voglioancora()) == 0);
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 102));
+        wassert(actual(msgapi4.voglioancora()) == 0);
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 1, 194));
+        wassert(actual(msgapi4.voglioancora()) == 0);
+
+        msgapi4.unsetall();
+        wassert(actual(msgapi4.voglioquesto()) == 3);
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 101));
+        wassert(actual(msgapi4.voglioancora()) == 0);
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 102));
+        wassert(actual(msgapi4.voglioancora()) == 0);
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0,  1, 194));
+        wassert(actual(msgapi4.voglioancora()) == 0);
+
+        msgapi4.unsetall();
+        wassert(actual(msgapi4.voglioquesto()) == 5);
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 101));
+        wassert(actual(msgapi4.voglioancora()) == 0);
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 102));
+        wassert(actual(msgapi4.voglioancora()) == 3);
+        wassert(actual(msgapi4.ancora()) == "*B33192");
+        wassert(actual(msgapi4.ancora()) == "*B33193");
+        wassert(actual(msgapi4.ancora()) == "*B33194");
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 1, 194));
+        wassert(actual(msgapi4.voglioancora()) == 0);
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 101));
+        wassert(actual(msgapi4.voglioancora()) == 0);
+        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 102));
+        wassert(actual(msgapi4.voglioancora()) == 3);
+        wassert(actual(msgapi4.ancora()) == "*B33192");
+        wassert(actual(msgapi4.ancora()) == "*B33193");
+        wassert(actual(msgapi4.ancora()) == "*B33194");
+
+        msgapi4.unsetall();
+        wassert(actual(msgapi4.voglioquesto()) == API::missing_int);
+    }
+});
 
 }
 

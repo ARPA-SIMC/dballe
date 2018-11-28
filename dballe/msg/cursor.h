@@ -150,14 +150,14 @@ struct CursorData : public dballe::CursorData
         station.ident = msg.get_ident();
         datetime = msg.get_datetime();
 
+        for (const auto& ctx: msg.data)
+            for (Values::const_iterator cur = ctx.values.begin(); cur != ctx.values.end(); ++cur)
+                rows.emplace_back(ctx.level, ctx.trange, cur);
+
         if (merged)
             for (Values::const_iterator cur = msg.station_data.begin(); cur != msg.station_data.end(); ++cur)
                 if (WR_VAR_X((*cur)->code()) < 4 || WR_VAR_X((*cur)->code()) > 6)
                     rows.emplace_back(cur);
-
-        for (const auto& ctx: msg.data)
-            for (Values::const_iterator cur = ctx.values.begin(); cur != ctx.values.end(); ++cur)
-                rows.emplace_back(ctx.level, ctx.trange, cur);
     }
 
     int remaining() const override
