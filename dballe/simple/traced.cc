@@ -565,12 +565,7 @@ void TracedAPI::messages_open_input(const char* filename, const char* mode, Enco
 
 void TracedAPI::messages_open_output(const char* filename, const char* mode, Encoding format)
 {
-    std::string arg1 = str::encode_cstring(filename);
-    std::string arg2 = str::encode_cstring(mode);
-    std::string enc = File::encoding_name(format);
-    tracer.log_void("%s.messages_open_output(\"%s\", \"%s\", Encoding::%s)",
-            name.c_str(), arg1.c_str(), arg2.c_str(), enc.c_str());
-    api->messages_open_output(filename, mode, format);
+    RUN(messages_open_output, filename, mode, format);
 }
 
 bool TracedAPI::messages_read_next()
@@ -580,30 +575,28 @@ bool TracedAPI::messages_read_next()
 
 void TracedAPI::messages_write_next(const char* template_name)
 {
-    std::string arg = str::encode_cstring(template_name);
-    tracer.log_void("%s.messages_write_next(\"%s\")", name.c_str(), arg.c_str());
-    api->messages_write_next(template_name);
+    RUN(messages_write_next, template_name);
 }
 
 const char* TracedAPI::spiegal(int ltype1, int l1, int ltype2, int l2)
 {
-    return api->spiegal(ltype1, l1, ltype2, l2);
+    return RUN(spiegal, ltype1, l1, ltype2, l2);
 }
 
 const char* TracedAPI::spiegat(int ptype, int p1, int p2)
 {
-    return api->spiegat(ptype, p1, p2);
+    return RUN(spiegat, ptype, p1, p2);
 }
 
 const char* TracedAPI::spiegab(const char* varcode, const char* value)
 {
-    return api->spiegab(varcode, value);
+    return RUN(spiegab, varcode, value);
 }
 
 void TracedAPI::fatto()
 {
-    tracer.log_void("// %s not used anymore\n", name.c_str());
-    api->fatto();
+    RUN(fatto);
+    fprintf(tracer.trace_file, "// %s not used anymore\n", name.c_str());
 }
 
 }
