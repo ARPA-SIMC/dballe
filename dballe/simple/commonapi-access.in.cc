@@ -161,7 +161,7 @@ bool CommonAPIImplementation::_setc(const char* key, unsigned len, const char* v
         case "p1":          input_query.trange.p1    = input_data.trange.p1    = strtol(val, nullptr, 10);
         case "p2":          input_query.trange.p2    = input_data.trange.p2    = strtol(val, nullptr, 10);
         case "var":         input_query_var = resolve_varcode(val);
-        case "varlist":     input_query_varlist.clear(); resolve_varlist(val, input_query.varcodes);
+        case "varlist":     input_query_varlist.clear(); resolve_varlist(val, input_query_varlist);
         case "context_id":  throw error_consistency("cannot set context_id");
         case "query":       input_query.query = val;
         case "ana_filter":  input_query.ana_filter = val;
