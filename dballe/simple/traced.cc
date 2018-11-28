@@ -128,22 +128,34 @@ struct FuncLogger
 
     void _log_args(double arg)
     {
-        args << arg;
+        if (arg == API::missing_double)
+            args << "API::missing_double";
+        else
+            args << arg;
     }
 
     void _log_args(float arg)
     {
-        args << arg;
+        if (arg == API::missing_float)
+            args << "API::missing_float";
+        else
+            args << arg;
     }
 
     void _log_args(int arg)
     {
-        args << arg;
+        if (arg == API::missing_int)
+            args << "API::missing_int";
+        else
+            args << arg;
     }
 
     void _log_args(signed char arg)
     {
-        args << (int)arg;
+        if (arg == API::missing_byte)
+            args << "API::missing_byte";
+        else
+            args << (int)arg;
     }
 
     void _log_args(Encoding encoding)
