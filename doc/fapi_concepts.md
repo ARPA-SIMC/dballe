@@ -293,7 +293,7 @@ value".  This is a list of such special values:
 [idba_query_stations]: fapi_reference.md#idba_query_stations
 [idba_next_station]: fapi_reference.md#idba_next_station
 [idba_query_data]: fapi_reference.md#idba_query_data
-[idba_dammelo]: fapi_reference.md#idba_dammelo
+[idba_next_data]: fapi_reference.md#idba_next_data
 [idba_prendilo]: fapi_reference.md#idba_prendilo
 [idba_dimenticami]: fapi_reference.md#idba_dimenticami
 [idba_remove_all]: fapi_reference.md#idba_remove_all

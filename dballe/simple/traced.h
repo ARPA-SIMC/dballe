@@ -61,7 +61,7 @@ struct TracedAPI : public API
     int query_stations() override;
     void next_station() override;
     int query_data() override;
-    wreport::Varcode dammelo() override;
+    wreport::Varcode next_data() override;
     void prendilo() override;
     void dimenticami() override;
     int voglioancora() override;

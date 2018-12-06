@@ -523,9 +523,9 @@ int TracedAPI::query_data()
     return RUN(query_data);
 }
 
-wreport::Varcode TracedAPI::dammelo()
+wreport::Varcode TracedAPI::next_data()
 {
-    return RUN(dammelo);
+    return RUN(next_data);
 }
 
 void TracedAPI::prendilo()

@@ -160,7 +160,7 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
 {
     const DbAPI& api;
     bool valid_cached_attrs = false;
-    bool dammelo_ended = false;
+    bool next_data_ended = false;
 
     VoglioquestoOperation(const DbAPI& api)
         : api(api)
@@ -173,22 +173,22 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
         return this->cursor->remaining();
     }
 
-    wreport::Varcode dammelo() override
+    wreport::Varcode next_data() override
     {
-        if (dammelo_ended) return 0;
+        if (next_data_ended) return 0;
 
         if (this->cursor->next())
         {
             valid_cached_attrs = true;
             return this->cursor->get_varcode();
         } else {
-            dammelo_ended = true;
+            next_data_ended = true;
             return 0;
         }
     }
     void voglioancora(Attributes& dest) override
     {
-        if (dammelo_ended) throw error_consistency("voglioancora called after dammelo returned end of data");
+        if (next_data_ended) throw error_consistency("voglioancora called after next_data returned end of data");
         function<void(unique_ptr<Var>&&)> consumer;
         if (api.selected_attr_codes.empty())
         {
@@ -211,13 +211,13 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
     }
     void critica(Values& qcinput) override
     {
-        if (dammelo_ended) throw error_consistency("critica called after dammelo returned end of data");
+        if (next_data_ended) throw error_consistency("critica called after next_data returned end of data");
         CursorTraits<Cursor>::attr_insert(*api.tr, this->cursor->attr_reference_id(), qcinput);
         valid_cached_attrs = false;
     }
     void scusa() override
     {
-        if (dammelo_ended) throw error_consistency("scusa called after dammelo returned end of data");
+        if (next_data_ended) throw error_consistency("scusa called after next_data returned end of data");
         CursorTraits<Cursor>::attr_remove(*api.tr, this->cursor->attr_reference_id(), api.selected_attr_codes);
         valid_cached_attrs = false;
     }

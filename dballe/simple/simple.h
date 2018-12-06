@@ -48,7 +48,7 @@ struct API
     virtual int query_stations() = 0;
     virtual void next_station() = 0;
     virtual int query_data() = 0;
-    virtual wreport::Varcode dammelo() = 0;
+    virtual wreport::Varcode next_data() = 0;
     virtual void prendilo() = 0;
     virtual void dimenticami() = 0;
     virtual int voglioancora() = 0;

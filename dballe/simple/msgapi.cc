@@ -85,7 +85,7 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
 {
     MsgAPI& api;
     bool valid_cached_attrs = false;
-    bool dammelo_ended = false;
+    bool next_data_ended = false;
 
     VoglioquestoOperation(MsgAPI& api)
         : api(api)
@@ -102,23 +102,23 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
         return this->cursor->remaining();
     }
 
-    wreport::Varcode dammelo() override
+    wreport::Varcode next_data() override
     {
-        if (dammelo_ended) return 0;
+        if (next_data_ended) return 0;
 
         if (this->cursor->next())
         {
             valid_cached_attrs = true;
             return this->cursor->get_varcode();
         } else {
-            dammelo_ended = true;
+            next_data_ended = true;
             return 0;
         }
     }
 
     void voglioancora(Attributes& dest) override
     {
-        if (dammelo_ended) throw error_consistency("voglioancora called after dammelo returned end of data");
+        if (next_data_ended) throw error_consistency("voglioancora called after next_data returned end of data");
 
         wreport::Var var = this->cursor->get_var();
         api.qcoutput.values.clear();

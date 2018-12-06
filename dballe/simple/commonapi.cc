@@ -42,7 +42,7 @@ void Attributes::has_new_values()
 Operation::~Operation() {}
 void Operation::set_varcode(wreport::Varcode varcode) {}
 bool Operation::next_station() { throw error_consistency("next_station called without a previous query_stations"); }
-wreport::Varcode Operation::dammelo() { throw error_consistency("dammelo called without a previous query_data"); }
+wreport::Varcode Operation::next_data() { throw error_consistency("next_data called without a previous query_data"); }
 
 signed char Operation::enqb(const char* param) const
 {
@@ -271,7 +271,7 @@ void CommonAPIImplementation::setc(const char* param, const char* value)
         if (strcmp(param + 1, "var_related") == 0)
         {
             if (!operation)
-                throw error_consistency("*var_related set without context_id, or before any dammelo or prendilo");
+                throw error_consistency("*var_related set without context_id, or before any next_data or prendilo");
             operation->set_varcode(resolve_varcode(value));
         } else if (strcmp(param + 1, "var") == 0) {
             selected_attr_codes = std::vector<wreport::Varcode>{resolve_varcode(value + 1)};
@@ -355,7 +355,7 @@ void CommonAPIImplementation::unset(const char* param)
         if (strcmp(param + 1, "var_related") == 0)
         {
             if (!operation)
-                throw error_consistency("*var_related set without context_id, or before any dammelo or prendilo");
+                throw error_consistency("*var_related set without context_id, or before any next_data or prendilo");
             operation->set_varcode(0);
         } else if (strcmp(param + 1, "var") == 0) {
             selected_attr_codes.clear();
@@ -434,17 +434,17 @@ void CommonAPIImplementation::next_station()
         reset_operation();
 }
 
-wreport::Varcode CommonAPIImplementation::dammelo()
+wreport::Varcode CommonAPIImplementation::next_data()
 {
-    if (!operation) throw error_consistency("dammelo called without a previous query_data");
+    if (!operation) throw error_consistency("next_data called without a previous query_data");
     qcoutput.invalidate();
-    return operation->dammelo();
+    return operation->next_data();
 }
 
 int CommonAPIImplementation::voglioancora()
 {
     // Query attributes
-    if (!operation) throw error_consistency("voglioancora was not called after a dammelo, or was called with an invalid *context_id or *var_related");
+    if (!operation) throw error_consistency("voglioancora was not called after a next_data, or was called with an invalid *context_id or *var_related");
     operation->voglioancora(qcoutput);
     qcinput.clear();
     return qcoutput.values.size();
@@ -464,7 +464,7 @@ void CommonAPIImplementation::critica()
         throw error_consistency(
             "critica cannot be called with the database open in attribute readonly mode");
 
-    if (!operation) throw error_consistency("critica was not called after a dammelo or prendilo, or was called with an invalid *context_id or *var_related");
+    if (!operation) throw error_consistency("critica was not called after a next_data or prendilo, or was called with an invalid *context_id or *var_related");
     operation->critica(qcinput);
     qcinput.clear();
 }
@@ -477,7 +477,7 @@ void CommonAPIImplementation::scusa()
 
 
     // Retrieve the varcodes of the attributes we want to remove
-    if (!operation) throw error_consistency("scusa was not called after a dammelo, or was called with an invalid *context_id or *var_related");
+    if (!operation) throw error_consistency("scusa was not called after a next_data, or was called with an invalid *context_id or *var_related");
     operation->scusa();
     qcinput.clear();
 }

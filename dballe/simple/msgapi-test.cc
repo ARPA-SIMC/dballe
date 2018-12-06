@@ -122,7 +122,7 @@ void Tests::register_tests()
             for (unsigned i = 0; i < (unsigned)count; ++i)
             {
                 msgloop() << "Message " << msgi << " var " << i;
-                wassert(api.dammelo());
+                wassert(api.next_data());
             }
         }
     });
@@ -175,7 +175,7 @@ void Tests::register_tests()
         fortran::MsgAPI api(fname.c_str(), "r", "BUFR");
 
         wassert(actual(api.query_data()) == 11);
-        // wassert(actual(api.dammelo()) == WR_VAR(0, 4, 1));
+        // wassert(actual(api.next_data()) == WR_VAR(0, 4, 1));
         // 004001 YEAR(YEAR): 2009
         // 004002 MONTH(MONTH): 2
         // 004003 DAY(DAY): 24
@@ -183,19 +183,19 @@ void Tests::register_tests()
         // 004005 MINUTE(MINUTE): 31
         // 005001 LATITUDE (HIGH ACCURACY)(DEGREE): 48.90500
         // 006001 LONGITUDE (HIGH ACCURACY)(DEGREE): 10.63667
-        wassert(actual(api.dammelo()) == WR_VAR(0,  1,   6));
-        wassert(actual(api.dammelo()) == WR_VAR(0,  2,  61));
-        wassert(actual(api.dammelo()) == WR_VAR(0,  2,  62));
-        wassert(actual(api.dammelo()) == WR_VAR(0,  2,  64));
-        wassert(actual(api.dammelo()) == WR_VAR(0,  7,  30));
-        wassert(actual(api.dammelo()) == WR_VAR(0,  8,   4));
-        wassert(actual(api.dammelo()) == WR_VAR(0, 11,   1));
-        wassert(actual(api.dammelo()) == WR_VAR(0, 11,   2));
-        wassert(actual(api.dammelo()) == WR_VAR(0, 12, 101));
-        wassert(actual(api.dammelo()) == WR_VAR(0, 13,   2));
+        wassert(actual(api.next_data()) == WR_VAR(0,  1,   6));
+        wassert(actual(api.next_data()) == WR_VAR(0,  2,  61));
+        wassert(actual(api.next_data()) == WR_VAR(0,  2,  62));
+        wassert(actual(api.next_data()) == WR_VAR(0,  2,  64));
+        wassert(actual(api.next_data()) == WR_VAR(0,  7,  30));
+        wassert(actual(api.next_data()) == WR_VAR(0,  8,   4));
+        wassert(actual(api.next_data()) == WR_VAR(0, 11,   1));
+        wassert(actual(api.next_data()) == WR_VAR(0, 11,   2));
+        wassert(actual(api.next_data()) == WR_VAR(0, 12, 101));
+        wassert(actual(api.next_data()) == WR_VAR(0, 13,   2));
         //001011 SHIP OR MOBILE LAND STATION IDENTIFIER(CCITTIA5): EU3375
-        wassert(actual(api.dammelo()) == WR_VAR(0, 1, 11));
-        wassert(actual(api.dammelo()) == 0);
+        wassert(actual(api.next_data()) == WR_VAR(0, 1, 11));
+        wassert(actual(api.next_data()) == 0);
         // Level 102,6260000,-,-, tr 254,0,0
         // 001006 AIRCRAFT FLIGHT NUMBER(CCITTIA5): LH968
         // 002061 AIRCRAFT NAVIGATIONAL SYSTEM(CODE TABLE): 0
@@ -344,68 +344,68 @@ add_method("message_ordering", [] {
         MsgAPI msgapi4("dballe_test.bufr", "r", "bufr");
         msgapi4.unsetall();
         wassert(actual(msgapi4.query_data()) == 3);
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 101));
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0, 12, 101));
         wassert(actual(msgapi4.voglioancora()) == 2);
         wassert(actual(msgapi4.ancora()) == "*B33192");
         wassert(actual(msgapi4.ancora()) == "*B33193");
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 13, 3));
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0, 13, 3));
         wassert(actual(msgapi4.voglioancora()) == 3);
         wassert(actual(msgapi4.ancora()) == "*B33192");
         wassert(actual(msgapi4.ancora()) == "*B33193");
         wassert(actual(msgapi4.ancora()) == "*B33194");
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 1, 194));
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0, 1, 194));
         wassert(actual(msgapi4.voglioancora()) == 0);
 
         msgapi4.unsetall();
         wassert(actual(msgapi4.query_data()) == 3);
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 1, 19));
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0, 1, 19));
         wassert(actual(msgapi4.voglioancora()) == 0);
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 1, 194));
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0, 1, 194));
         wassert(actual(msgapi4.voglioancora()) == 0);
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 7, 30));
-        wassert(actual(msgapi4.voglioancora()) == 0);
-
-        msgapi4.unsetall();
-        wassert(actual(msgapi4.query_data()) == 3);
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 1, 19));
-        wassert(actual(msgapi4.voglioancora()) == 0);
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 1, 194));
-        wassert(actual(msgapi4.voglioancora()) == 0);
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 7, 30));
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0, 7, 30));
         wassert(actual(msgapi4.voglioancora()) == 0);
 
         msgapi4.unsetall();
         wassert(actual(msgapi4.query_data()) == 3);
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 101));
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0, 1, 19));
         wassert(actual(msgapi4.voglioancora()) == 0);
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 102));
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0, 1, 194));
         wassert(actual(msgapi4.voglioancora()) == 0);
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 1, 194));
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0, 7, 30));
         wassert(actual(msgapi4.voglioancora()) == 0);
 
         msgapi4.unsetall();
         wassert(actual(msgapi4.query_data()) == 3);
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 101));
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0, 12, 101));
         wassert(actual(msgapi4.voglioancora()) == 0);
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 102));
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0, 12, 102));
         wassert(actual(msgapi4.voglioancora()) == 0);
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0,  1, 194));
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0, 1, 194));
+        wassert(actual(msgapi4.voglioancora()) == 0);
+
+        msgapi4.unsetall();
+        wassert(actual(msgapi4.query_data()) == 3);
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0, 12, 101));
+        wassert(actual(msgapi4.voglioancora()) == 0);
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0, 12, 102));
+        wassert(actual(msgapi4.voglioancora()) == 0);
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0,  1, 194));
         wassert(actual(msgapi4.voglioancora()) == 0);
 
         msgapi4.unsetall();
         wassert(actual(msgapi4.query_data()) == 5);
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 101));
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0, 12, 101));
         wassert(actual(msgapi4.voglioancora()) == 0);
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 102));
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0, 12, 102));
         wassert(actual(msgapi4.voglioancora()) == 3);
         wassert(actual(msgapi4.ancora()) == "*B33192");
         wassert(actual(msgapi4.ancora()) == "*B33193");
         wassert(actual(msgapi4.ancora()) == "*B33194");
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 1, 194));
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0, 1, 194));
         wassert(actual(msgapi4.voglioancora()) == 0);
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 101));
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0, 12, 101));
         wassert(actual(msgapi4.voglioancora()) == 0);
-        wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 102));
+        wassert(actual(msgapi4.next_data()) == WR_VAR(0, 12, 102));
         wassert(actual(msgapi4.voglioancora()) == 3);
         wassert(actual(msgapi4.ancora()) == "*B33192");
         wassert(actual(msgapi4.ancora()) == "*B33193");

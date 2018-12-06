@@ -180,5 +180,5 @@ The variable value can be queried using the code in `var`
 | `*Bxxyyy`     | depends   | depends    | Value of the attribute      | required  | ignored  | present    |                                 |
 | `*var`        | Character | 7 chars    | Acoderibute queried         | ignored   | optional | present, indicates the name of the last attribute returned |                                 |
 | `*varlist`    | Character | 255 chars  | List of attributes to query | ignored   | optional | absent     | Comma-separated list of attribute B codes wanted on output |
-| `*var_related` | Character | 6 chars    | Variable related to the attribute to query | required  | required | absent     | It is automatically set by `idba_dammelo` and `idba_prendilo` (when `idba_prendilo` inserts a single variable) |
-| `*context_id` | Numeric   | 10 digits  | Context ID of the variable related to the attribute to query | required  | required | absent     | It is automatically set by `idba_dammelo` and `idba_prendilo` |
+| `*var_related` | Character | 6 chars    | Variable related to the attribute to query | required  | required | absent     | It is automatically set by `idba_next_data` and `idba_prendilo` (when `idba_prendilo` inserts a single variable) |
+| `*context_id` | Numeric   | 10 digits  | Context ID of the variable related to the attribute to query | required  | required | absent     | It is automatically set by `idba_next_data` and `idba_prendilo` |

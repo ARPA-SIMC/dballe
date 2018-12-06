@@ -111,9 +111,9 @@ this->add_method("query_basic", [](Fixture& f) {
     // Query variables
     api.unsetall();
     wassert(actual(api.query_data()) == 2);
-    wassert(actual(api.dammelo()) == WR_VAR(0, 12, 101));
+    wassert(actual(api.next_data()) == WR_VAR(0, 12, 101));
     wassert(actual(api.enqd("B12101")) == 21.5);
-    wassert(actual(api.dammelo()) == WR_VAR(0, 11,   2));
+    wassert(actual(api.next_data()) == WR_VAR(0, 11,   2));
     wassert(actual(api.enqd("lat")) == 44.5);
     wassert(actual(api.enqd("lon")) == 11.5);
     wassert(actual(api.enqd("B11002")) == 2.4);
@@ -141,7 +141,7 @@ this->add_method("query_attrs", [](Fixture& f) {
         api.setc("var", "B12101");
         api.setc("query", query);
         wassert(actual(api.query_data()) == 1);
-        wassert(api.dammelo());
+        wassert(api.next_data());
 
         wassert(actual(api.test_get_operation()).istrue());
 
@@ -152,7 +152,7 @@ this->add_method("query_attrs", [](Fixture& f) {
         wassert(actual(api.voglioancora()) == 0);
         wassert(actual(api.test_get_operation()).istrue());
 
-        // Set one attribute after a dammelo
+        // Set one attribute after a next_data
         api.seti("*B33007", 50);
         wassert(api.critica());
         wassert(actual(api.test_get_operation()).istrue());
@@ -167,7 +167,7 @@ this->add_method("query_attrs", [](Fixture& f) {
         api.setc("var", "B12101");
         api.setc("query", query);
         wassert(actual(api.query_data()) == 1);
-        wassert(api.dammelo());
+        wassert(api.next_data());
         wassert(actual(api.voglioancora()) == 1);
         wassert(actual(api.enqi("*B33007")) == 50);
 
@@ -175,7 +175,7 @@ this->add_method("query_attrs", [](Fixture& f) {
         api.setc("var", "B11002");
         api.setc("query", query);
         wassert(actual(api.query_data()) == 1);
-        wassert(api.dammelo());
+        wassert(api.next_data());
         wassert(actual(api.voglioancora()) == 0);
 
         // Query the first variable using its stored reference id
@@ -212,7 +212,7 @@ this->add_method("insert_attrs_prendilo", [](Fixture& f) {
     api.unsetall();
     api.setc("var", "B10004");
     wassert(actual(api.query_data()) == 1);
-    wassert(actual(api.dammelo()) == WR_VAR(0, 10, 4));
+    wassert(actual(api.next_data()) == WR_VAR(0, 10, 4));
     wassert(actual(api.voglioancora()) == 1);
     wassert(actual(api.enqi("*B33007")) == 60);
     wassert(actual(api.enqd("*B33007")) == 60.0);
@@ -244,7 +244,7 @@ this->add_method("insert_attrs_prendilo_anaid", [](Fixture& f) {
     api.seti("ana_id", anaid);
     api.setc("var", "B10004");
     wassert(actual(api.query_data()) == 1);
-    wassert(actual(api.dammelo()) == WR_VAR(0, 10, 4));
+    wassert(actual(api.next_data()) == WR_VAR(0, 10, 4));
 
     // Querying the variable of the other station with the same ana_id has no
     // results
@@ -252,7 +252,7 @@ this->add_method("insert_attrs_prendilo_anaid", [](Fixture& f) {
     api.seti("ana_id", anaid);
     api.setc("var", "B12101");
     wassert(actual(api.query_data()) == 0);
-    wassert(actual(api.dammelo()) == 0);
+    wassert(actual(api.next_data()) == 0);
 });
 
 this->add_method("insert_auto_repmemo", [](Fixture& f) {
@@ -273,7 +273,7 @@ this->add_method("insert_auto_repmemo", [](Fixture& f) {
     api.unsetall();
     api.setc("rep_memo", "insert_auto_repmemo");
     wassert(actual(api.query_data()) == 1);
-    wassert(actual(api.dammelo()) == WR_VAR(0, 12, 101));
+    wassert(actual(api.next_data()) == WR_VAR(0, 12, 101));
 });
 
 this->add_method("undefined_level2", [](Fixture& f) {
@@ -293,7 +293,7 @@ this->add_method("undefined_level2", [](Fixture& f) {
     api.seti("leveltype1", 103);
     wassert(actual(api.query_data()) == 1);
 
-    wassert(actual(api.dammelo()) == WR_VAR(0, 12, 101));
+    wassert(actual(api.next_data()) == WR_VAR(0, 12, 101));
     wassert(actual(api.enqi("leveltype1")) == 103);
     wassert(actual(api.enqi("l1")) == 2000);
     wassert(actual(api.enqi("leveltype2")) == fortran::DbAPI::missing_int);
@@ -303,45 +303,45 @@ this->add_method("undefined_level2", [](Fixture& f) {
     wassert(actual(api.enqi("p2")) == fortran::DbAPI::missing_int);
 });
 
-this->add_method("delete_attrs_dammelo", [](Fixture& f) {
-    // Test deleting attributes after a dammelo
+this->add_method("delete_attrs_next_data", [](Fixture& f) {
+    // Test deleting attributes after a next_data
     fortran::DbAPI api(f.tr, "write", "write", "write");
     populate_variables(api);
 
     // Query all variables and add attributes
     api.unsetall();
     wassert(actual(api.query_data()) == 2);
-    wassert(actual(api.dammelo()) == WR_VAR(0, 12, 101));
+    wassert(actual(api.next_data()) == WR_VAR(0, 12, 101));
     api.seti("*B33007", 50);
     api.critica();
-    wassert(actual(api.dammelo()) == WR_VAR(0, 11,   2));
+    wassert(actual(api.next_data()) == WR_VAR(0, 11,   2));
     api.seti("*B33007", 60);
     api.critica();
 
     // Query all variables again and check that attributes are there
     api.unsetall();
     wassert(actual(api.query_data()) == 2);
-    wassert(actual(api.dammelo()) == WR_VAR(0, 12, 101));
+    wassert(actual(api.next_data()) == WR_VAR(0, 12, 101));
     wassert(actual(api.voglioancora()) == 1);
     wassert(actual(api.enqi("*B33007")) == 50);
-    wassert(actual(api.dammelo()) == WR_VAR(0, 11,   2));
+    wassert(actual(api.next_data()) == WR_VAR(0, 11,   2));
     wassert(actual(api.voglioancora()) == 1);
     wassert(actual(api.enqi("*B33007")) == 60);
 
     // Query all variables and delete all attributes
     api.unsetall();
     wassert(actual(api.query_data()) == 2);
-    wassert(actual(api.dammelo()) == WR_VAR(0, 12, 101));
+    wassert(actual(api.next_data()) == WR_VAR(0, 12, 101));
     api.scusa();
-    wassert(actual(api.dammelo()) == WR_VAR(0, 11,   2));
+    wassert(actual(api.next_data()) == WR_VAR(0, 11,   2));
     api.scusa();
 
     // Query again and check that the attributes are gone
     api.unsetall();
     wassert(actual(api.query_data()) == 2);
-    wassert(actual(api.dammelo()) == WR_VAR(0, 12, 101));
+    wassert(actual(api.next_data()) == WR_VAR(0, 12, 101));
     wassert(actual(api.voglioancora()) == 0);
-    wassert(actual(api.dammelo()) == WR_VAR(0, 11,   2));
+    wassert(actual(api.next_data()) == WR_VAR(0, 11,   2));
     wassert(actual(api.voglioancora()) == 0);
 
     // The QC attrs record should be cleaned
@@ -543,9 +543,9 @@ this->add_method("messages_write", [](Fixture& f) {
 
         wassert(actual(api.messages_read_next()).istrue());
         wassert(actual(api.query_data()) == 2);
-        wassert(actual(api.dammelo()) == WR_VAR(0, 12, 101));
+        wassert(actual(api.next_data()) == WR_VAR(0, 12, 101));
         wassert(actual(api.enqd("B12101")) == 21.5);
-        wassert(actual(api.dammelo()) == WR_VAR(0, 11,   2));
+        wassert(actual(api.next_data()) == WR_VAR(0, 11,   2));
         wassert(actual(api.enqd("B11002")) == 2.4);
 
         wassert(actual(api.messages_read_next()).isfalse());
@@ -591,9 +591,9 @@ this->add_method("messages_write_stdout", [](Fixture& f) {
 
         wassert(actual(api.messages_read_next()).istrue());
         wassert(actual(api.query_data()) == 2);
-        wassert(actual(api.dammelo()) == WR_VAR(0, 12, 101));
+        wassert(actual(api.next_data()) == WR_VAR(0, 12, 101));
         wassert(actual(api.enqd("B12101")) == 21.5);
-        wassert(actual(api.dammelo()) == WR_VAR(0, 11,   2));
+        wassert(actual(api.next_data()) == WR_VAR(0, 11,   2));
         wassert(actual(api.enqd("B11002")) == 2.4);
 
         wassert(actual(api.messages_read_next()).isfalse());
@@ -609,9 +609,9 @@ this->add_method("messages_bug1", [](Fixture& f) {
     api.setcontextana();
     wassert(actual(api.query_data()) == 3);
     // bug with mem DB: message: "enqi: B00000 (Context ID of the variable) is not defined"
-    wassert(actual(api.dammelo()) == WR_VAR(0, 1, 194));
-    wassert(actual(api.dammelo()) == WR_VAR(0, 5,   1));
-    wassert(actual(api.dammelo()) == WR_VAR(0, 6,   1));
+    wassert(actual(api.next_data()) == WR_VAR(0, 1, 194));
+    wassert(actual(api.next_data()) == WR_VAR(0, 5,   1));
+    wassert(actual(api.next_data()) == WR_VAR(0, 6,   1));
 });
 this->add_method("messages_bug2", [](Fixture& f) {
     // Reproduce an issue reported by Paolo
@@ -622,7 +622,7 @@ this->add_method("messages_bug2", [](Fixture& f) {
     api.unsetall();
     api.setcontextana();
     wassert(actual(api.query_data()) == 5);
-    wassert(actual(api.dammelo()) == WR_VAR(0, 1, 19));
+    wassert(actual(api.next_data()) == WR_VAR(0, 1, 19));
     // Bug: missing variable 000000 in table dballe
     wassert(actual(api.voglioancora()) == 0);
 });
@@ -634,7 +634,7 @@ this->add_method("attr_reference_id", [](Fixture& f) {
     // Try setting a context with a missing context_id
     {
         auto e = wassert_throws(wreport::error_consistency, api.setc("*var_related", "B07030"));
-        wassert(actual(e.what()).matches("\\*var_related set without context_id, or before any dammelo or prendilo"));
+        wassert(actual(e.what()).matches("\\*var_related set without context_id, or before any next_data or prendilo"));
     }
 
     // Initial data
@@ -657,7 +657,7 @@ this->add_method("attr_reference_id", [](Fixture& f) {
     api.setcontextana();
     api.setc("var", "B07030");
     wassert(actual(api.query_data()) == 1);
-    api.dammelo();
+    api.next_data();
     // Get its reference id
     int id_B07030 = wcallchecked(api.enqi("context_id"));
     wassert(actual(id_B07030) != MISSING_INT);
@@ -671,7 +671,7 @@ this->add_method("attr_reference_id", [](Fixture& f) {
     api.setcontextana();
     api.setc("var", "B07030");
     wassert(actual(api.query_data()) == 1);
-    wassert(api.dammelo());
+    wassert(api.next_data());
     // Read its attrs (ok)
     wassert(actual(api.voglioancora()) == 1);
     // Cannot manipulate station attrs setting *context_id
@@ -680,7 +680,7 @@ this->add_method("attr_reference_id", [](Fixture& f) {
     api.unsetall();
     api.setc("var", "B12101");
     wassert(actual(api.query_data()) == 1);
-    api.dammelo();
+    api.next_data();
     int ref_id = api.enqi("context_id");
     // Save its ref id (ok)
     wassert(actual(ref_id) != MISSING_INT);
@@ -693,7 +693,7 @@ this->add_method("attr_reference_id", [](Fixture& f) {
     api.unsetall();
     api.setc("var", "B12101");
     wassert(actual(api.query_data()) == 1);
-    api.dammelo();
+    api.next_data();
     // Read its attrs (ok)
     wassert(actual(api.voglioancora()) == 1);
     // Set *context_id and *varid
@@ -705,7 +705,7 @@ this->add_method("attr_reference_id", [](Fixture& f) {
     api.unsetall();
     api.setc("var", "B12101");
     wassert(actual(api.query_data()) == 1);
-    api.dammelo();
+    api.next_data();
     api.scusa();
     wassert(actual(api.voglioancora()) == 0);
     // Try to delete by *context_id and *varid: it works
@@ -744,7 +744,7 @@ this->add_method("attrs_bug1", [](Fixture& f) {
     dbapi0.unsetall();
     dbapi0.setc("var", "B13003");
     wassert(actual(dbapi0.query_data()) == 1);
-    wassert(actual(dbapi0.dammelo()) == WR_VAR(0, 13, 3));
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 13, 3));
     wassert(actual(dbapi0.voglioancora()) == 3);
 });
 
@@ -884,7 +884,7 @@ this->add_method("perf_read_attrs", [](Fixture& f) {
     api.unsetall();
     api.setcontextana();
     wassert(actual(api.query_data()) == 7);
-    while (api.dammelo())
+    while (api.next_data())
         wassert(api.voglioancora());
 
     // Check number of queries
@@ -896,7 +896,7 @@ this->add_method("perf_read_attrs", [](Fixture& f) {
     f.tr->trc->clear();
     api.unsetall();
     wassert(actual(api.query_data()) == 550);
-    while (api.dammelo())
+    while (api.next_data())
         wassert(api.voglioancora());
 
     // Check number of queries
@@ -912,7 +912,7 @@ this->add_method("perf_read_attrs", [](Fixture& f) {
     api.setcontextana();
     api.setc("query", "attrs");
     wassert(actual(api.query_data()) == 7);
-    while (api.dammelo())
+    while (api.next_data())
         wassert(api.voglioancora());
 
     // Check number of queries
@@ -925,7 +925,7 @@ this->add_method("perf_read_attrs", [](Fixture& f) {
     api.unsetall();
     api.setc("query", "attrs");
     wassert(actual(api.query_data()) == 550);
-    while (api.dammelo())
+    while (api.next_data())
         wassert(api.voglioancora());
 
     // Check number of queries
@@ -1108,7 +1108,7 @@ this->add_method("query_attr_values", [](Fixture& f) {
     dbapi0.unsetall();
     dbapi0.setc("varlist", "B12101");
     wassert(actual(dbapi0.query_data()) == 1);
-    wassert(actual(dbapi0.dammelo()) == WR_VAR(0, 12, 101));
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 12, 101));
     dbapi0.setc("*varlist", "*B33193,*B33194");
     wassert(actual(dbapi0.voglioancora()) == 2);
     wassert(actual(dbapi0.ancora()) == "*B33193");
@@ -1150,7 +1150,7 @@ this->add_method("query_attr_filtered", [](Fixture& f) {
     dbapi0.setc("varlist", "B12101");
     dbapi0.setc("*varlist", "*B33193,*B33194");
     wassert(actual(dbapi0.query_data()) == 1);
-    wassert(actual(dbapi0.dammelo()) == WR_VAR(0, 12, 101));
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 12, 101));
     wassert(actual(dbapi0.voglioancora()) == 2);
     wassert(actual(dbapi0.ancora()) == "*B33193");
     wassert(actual(dbapi0.ancora()) == "*B33194");
@@ -1210,7 +1210,7 @@ this->add_method("issue137", [](Fixture& f) {
     dbapi0.setlevel(105, 2000, API::missing_int, API::missing_int);
     dbapi0.settimerange(4, 3600, 7200);
     wassert(actual(dbapi0.query_data()) == 1);
-    wassert(actual(dbapi0.dammelo()) == WR_VAR(0, 12, 102));;
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 12, 102));;
 });
 
 }

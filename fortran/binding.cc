@@ -1091,7 +1091,7 @@ int idba_elencamele(int handle)
 /**
  * Query the data in the database.
  *
- * Results are retrieved using idba_dammelo().
+ * Results are retrieved using idba_next_data().
  *
  * Results are sorted by (in order): ana_id, datetime, level, time range,
  * varcode. The ana_id changes slowest, and the varcode changes fastest.
@@ -1143,11 +1143,11 @@ int idba_voglioquesto(int handle, int* count)
  * @return
  *   The error indicator for the function
  */
-int idba_dammelo(int handle, char* parameter, int parameter_len)
+int idba_next_data(int handle, char* parameter, int parameter_len)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        wreport::Varcode res = h.api->dammelo();
+        wreport::Varcode res = h.api->next_data();
         char buf[8];
         format_bcode(res, buf);
         fortran::cstring_to_fortran(buf, parameter, parameter_len);
@@ -1155,6 +1155,12 @@ int idba_dammelo(int handle, char* parameter, int parameter_len)
     } catch (error& e) {
         return fortran::error(e);
     }
+}
+
+/// Deprecated compatibility version of idba_next_data()
+int idba_dammelo(int handle, char* parameter, int parameter_len)
+{
+    return idba_next_data(handle, parameter, parameter_len);
 }
 
 /**
@@ -1235,7 +1241,7 @@ int idba_remove_all(int handle)
  *
  * The variable queried is either:
  *
- * @li the last variable returned by `idba_dammelo()`
+ * @li the last variable returned by `idba_next_data()`
  * @li the last variable inserted by `idba_prendilo()`
  * @li the variable selected by settings `*context_id` and `*var_related`.
  *
@@ -1286,7 +1292,7 @@ int idba_ancora(int handle, char* parameter, unsigned parameter_len)
  *
  * The variable is either:
  *
- * @li the last variable returned by `idba_dammelo()`
+ * @li the last variable returned by `idba_next_data()`
  * @li the last variable inserted by `idba_prendilo()`
  * @li the variable selected by settings `*context_id` and `*var_related`.
  *
@@ -1323,7 +1329,7 @@ int idba_critica(int handle)
  *
  * The variable is either:
  *
- * @li the last variable returned by `idba_dammelo()`
+ * @li the last variable returned by `idba_next_data()`
  * @li the last variable inserted by `idba_prendilo()`
  * @li the variable selected by settings `*context_id` and `*var_related`.
  *

@@ -449,7 +449,7 @@ Example code to query all the values in a given area and time:
       ierr = idba_seti(handle, "yearmax", 2004)
       ierr = idba_query_data(handle, count)
       do while (count.gt.0)
-        ierr = idba_dammelo(handle, param)
+        ierr = idba_next_data(handle, param)
         ! get the value of this variable
         ierr = idba_enqc(handle, param, cvalue)
         ierr = idba_enqd(handle, "lat", dlat)
@@ -463,7 +463,7 @@ This code introduces two new functions:
 
 * [idba_query_data][]: performs the query and returns the number of values it
   finds.
-* [idba_dammelo][]: gets a value out of the result of [idba_query_data][].  If
+* [idba_next_data][]: gets a value out of the result of [idba_query_data][].  If
   there are no more stations, the function fails.
 
 ## Clearing the database
@@ -585,7 +585,7 @@ Attributes are read using [idba_ancora][]:
       ! ...setup a query...
       idba_query_data(handle, count)
       do while (count.gt.0)
-        ierr = idba_dammelo(handle, param)
+        ierr = idba_next_data(handle, param)
 
         ! Read QC informations about the last value read
         ierr = idba_voglioancora(handle, qc_count)
@@ -604,7 +604,7 @@ This code introduces two new functions:
 
 * [idba_voglioancora][]:
   Performs a query to retrieve attributes for the last variable read by
-  [idba_dammelo][].  It returns the number of attributes available.
+  [idba_next_data][].  It returns the number of attributes available.
 * [idba_ancora][]:
   Retrieves one by one the values queried by [idba_voglioancora][] if
   there are no more items available, the function will fail.
@@ -616,7 +616,7 @@ It is possible to read attributes at a later time giving a context ID and a B
 table value:
 
 ```fortran
-      ! Read the context ID after a prendilo or a dammelo
+      ! Read the context ID after a prendilo or a next_data
       idba_enqi(handle, "context_id", id)
 
       ! ...a while later...
@@ -644,18 +644,18 @@ table value:
 ## Writing attributes
 
 Attributes are written using [idba_critica][], which can be used after an
-[idba_dammelo][], after an [idba_prendilo][] or at any time using a stored data
+[idba_next_data][], after an [idba_prendilo][] or at any time using a stored data
 id.  These three case differ on how to communicate to [idba_critica][] what is
 the data about which to write attributes.
 
-When used after [idba_dammelo][], [idba_critica][] can refer directly to the
+When used after [idba_next_data][], [idba_critica][] can refer directly to the
 last data retrieved:
 
 ```fortran
       ! ...setup a query...
       ierr = idba_query_data(handle, count)
       do while (count.gt.0)
-        ierr = idba_dammelo(handle, param)
+        ierr = idba_next_data(handle, param)
         ! ...process data...
 
         ! Set the attributes
@@ -691,7 +691,7 @@ referring to:
 ```fortran
       ! ...perform a query with idba_query_data...
       do while (count.gt.0)
-        ierr = idba_dammelo(handle, param)
+        ierr = idba_next_data(handle, param)
         ! ...process data...
 
         ! This variable is interesting: save the context ID
@@ -721,7 +721,7 @@ This code introduces a new function:
   
   The variable can be identified directly by using `idba_seti(handle,
   "*context_id", id)` and `idba_seti(handle, "*var_related", name)`.
-  These parameters are automatically set by the [idba_dammelo][] and
+  These parameters are automatically set by the [idba_next_data][] and
   [idba_prendilo][] action routines.
 
   The attributes and values are set as input to [idba_critica][] using the
@@ -784,7 +784,7 @@ close all connections and release all resources:
 
 DB-All.e offers two shortcuts to represent pseudoana entries and data in the
 database: the `ana_id` and the `data_id` keys, that are set in the
-output of every [idba_dammelo][].
+output of every [idba_next_data][].
 
 `ana_id` represents a pseudoana entry.  Every time one needs to specify a
 set of latitude, longitude, fixed/mobile, one could use the corresponding
@@ -904,7 +904,7 @@ ierr = idba_query_data (handle, N)
 
 ! Iterate the results
 do i=1,N
-  ierr = idba_dammelo (handle, varname)
+  ierr = idba_next_data (handle, varname)
 
   ! Read data about the variable we just had
   ierr = idba_enqlevel (handle, ltype, l1, l2)
@@ -951,13 +951,13 @@ among the results of [idba_next_station][]:
 
 If you want to see all the extra station data available, you can make an
 explicit query for the extra station data using [idba_query_data][] and
-[idba_dammelo][]:
+[idba_next_data][]:
 
 ```fortran
       ierr = idba_seti("ana_id", id)
       ierr = idba_query_data(handle, count)
       do i=1,count
-        ierr = idba_dammelo(handle, param)
+        ierr = idba_next_data(handle, param)
         ! get the value of this variable
         ierr = idba_enqc(handle, param, cvalue)
         print*,param,": ",cvalue
@@ -1005,7 +1005,7 @@ explicit query for the extra station data using [idba_query_data][] and
 [idba_query_stations]: fapi_reference.md#idba_query_stations
 [idba_next_station]: fapi_reference.md#idba_next_station
 [idba_query_data]: fapi_reference.md#idba_query_data
-[idba_dammelo]: fapi_reference.md#idba_dammelo
+[idba_next_data]: fapi_reference.md#idba_next_data
 [idba_prendilo]: fapi_reference.md#idba_prendilo
 [idba_dimenticami]: fapi_reference.md#idba_dimenticami
 [idba_remove_all]: fapi_reference.md#idba_remove_all
