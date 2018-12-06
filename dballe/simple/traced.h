@@ -13,12 +13,12 @@ struct Tracer
 
     virtual std::unique_ptr<API> wrap_api(int handle, std::unique_ptr<API> api) = 0;
 
-    std::unique_ptr<API> preparati(int dbahandle, int handle, const char* url, const char* anaflag, const char* dataflag, const char* attrflag);
+    std::unique_ptr<API> begin(int dbahandle, int handle, const char* url, const char* anaflag, const char* dataflag, const char* attrflag);
     std::unique_ptr<API> messaggi(int handle, const char* filename, const char* mode, const char* type);
 
-    virtual void log_presentati_url(int handle, const char* chosen_dsn) = 0;
-    virtual void log_arrivederci(int handle) = 0;
-    virtual void log_preparati(int dbahandle, int handle, const char* anaflag, const char* dataflag, const char* attrflag) = 0;
+    virtual void log_connect_url(int handle, const char* chosen_dsn) = 0;
+    virtual void log_disconnect(int handle) = 0;
+    virtual void log_begin(int dbahandle, int handle, const char* anaflag, const char* dataflag, const char* attrflag) = 0;
     virtual void log_messaggi(int handle, const char* filename, const char* mode, const char* type) = 0;
 
     static std::unique_ptr<Tracer> create();

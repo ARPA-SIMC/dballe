@@ -31,7 +31,7 @@ Errors can be handled by checking the return value of every function:
 
 ```fortran
       ! Example error handling
-      ierr = idba_presentati(dbhandle, "dburl")
+      ierr = idba_connect(dbhandle, "dburl")
       if (ierr.ne.0) then
            ! handle the error...
       end if
@@ -149,24 +149,24 @@ This code will open a connection with DB-All.e, then it will start a session:
 
 ```fortran
       ! Connect to the database and get a handle to work with it
-      ierr = idba_presentati(dbhandle, "url")
-      ierr = idba_preparati(dbhandle, handle, "read", "read", "read")
+      ierr = idba_connect(dbhandle, "url")
+      ierr = idba_begin(dbhandle, handle, "read", "read", "read")
 
       ! ...do your work...
 
       ! End of the work
       ierr = idba_fatto(handle)
-      ierr = idba_arrivederci(dbhandle)
+      ierr = idba_disconnect(dbhandle)
 ```
 
-You call [idba_presentati][] to connect to the databse. The parameters are
+You call [idba_connect][] to connect to the databse. The parameters are
 the [database connection URL](fapi_connect.md), and two parameters that were
 used in the past and are now ignored.
 
-You can call [idba_preparati][] many times and get more handles.  This allows
+You can call [idba_begin][] many times and get more handles.  This allows
 to perform many operations on the database at the same time.
 
-[idba_preparati][] has three extra parameters that can be used to limit
+[idba_begin][] has three extra parameters that can be used to limit
 write operations on the database, as a limited protection against programming
 errors.
 
@@ -203,8 +203,8 @@ attributes are deleted as well.
 Instead of connecting to a database, you can use the DB-All.e API to read and
 write message reports in BUFR and CREX format.
 
-To do that, use [idba_messaggi][] instead of both [idba_presentati][] and
-[idba_preparati][].  To write a message, your code will look like:
+To do that, use [idba_messaggi][] instead of both [idba_connect][] and
+[idba_begin][].  To write a message, your code will look like:
 
 ```fortran
       ! Connect to the database and get a handle to work with it
@@ -536,7 +536,7 @@ This code introduces a new function:
 
   When data of the same kind and with the same characteristics already exists,
   the behaviour of [idba_prendilo][] is defined by the parameter passed to
-  [idba_preparati][] when creating the handle.  See [Starting the
+  [idba_begin][] when creating the handle.  See [Starting the
   work](#ch_work_start) for more informations.
 
 [idba_prendilo][] will work in different ways according to the data opening
@@ -771,12 +771,12 @@ When you are finished working with a handle, you release it with
       ierr = idba_fatto(handle)
 ```
 
-When you are finished working with DB-ALLe, you use [idba_arrivederci][] to
+When you are finished working with DB-ALLe, you use [idba_disconnect][] to
 close all connections and release all resources:
 
 ```fortran
       ! We do not need to work with dballe anymore
-      ierr = idba_arrivederci(dbh)
+      ierr = idba_disconnect(dbh)
 ```
 
 
@@ -832,7 +832,7 @@ parameter.  The available options are:
 This is a list of the differences between working with files and working with
 databases:
 
-* You do not need to call [idba_presentati][] and [idba_arrivederci][]: the work
+* You do not need to call [idba_connect][] and [idba_disconnect][]: the work
   session starts at [idba_messaggi][] and ends at [idba_fatto][]
 * When reading, performing [idba_quantesono][] or [idba_voglioquesto][] a second
   time advances to the next message in the file.
@@ -862,7 +862,7 @@ databases:
 ### Insert station data, then insert data
 
 ```fortran
-ierr = idba_preparati(dbhandle, handle, "write", "add", "write")
+ierr = idba_begin(dbhandle, handle, "write", "add", "write")
 
 ! Insert data about a station
 ierr = idba_setr (handle, "lat", 11.345)
@@ -891,8 +891,8 @@ ierr = idba_prendilo (handle)
 ### Query data, then query station data
 
 ```fortran
-ierr = idba_preparati(dbhandle, handle, "read", "read", "read")
-ierr = idba_preparati(dbhandle, handleana, "read", "read", "read")
+ierr = idba_begin(dbhandle, handle, "read", "read", "read")
+ierr = idba_begin(dbhandle, handleana, "read", "read", "read")
 
 ! Prepare a query
 ierr = idba_setd (handle, "latmin", 10)
@@ -974,9 +974,9 @@ explicit query for the extra station data using [idba_voglioquesto][] and
 [idba_error_remove_callback]: fapi_reference.md#idba_error_remove_callback
 [idba_default_error_handler]: fapi_reference.md#idba_default_error_handler
 [idba_error_handle_tolerating_overflows]: fapi_reference.md#idba_error_handle_tolerating_overflows
-[idba_presentati]: fapi_reference.md#idba_presentati
-[idba_arrivederci]: fapi_reference.md#idba_arrivederci
-[idba_preparati]: fapi_reference.md#idba_preparati
+[idba_connect]: fapi_reference.md#idba_connect
+[idba_disconnect]: fapi_reference.md#idba_disconnect
+[idba_begin]: fapi_reference.md#idba_begin
 [idba_messaggi]: fapi_reference.md#idba_messaggi
 [idba_fatto]: fapi_reference.md#idba_fatto
 [idba_seti]: fapi_reference.md#idba_seti

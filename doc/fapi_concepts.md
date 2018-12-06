@@ -262,9 +262,9 @@ value".  This is a list of such special values:
 [idba_error_remove_callback]: fapi_reference.md#idba_error_remove_callback
 [idba_default_error_handler]: fapi_reference.md#idba_default_error_handler
 [idba_error_handle_tolerating_overflows]: fapi_reference.md#idba_error_handle_tolerating_overflows
-[idba_presentati]: fapi_reference.md#idba_presentati
-[idba_arrivederci]: fapi_reference.md#idba_arrivederci
-[idba_preparati]: fapi_reference.md#idba_preparati
+[idba_connect]: fapi_reference.md#idba_connect
+[idba_disconnect]: fapi_reference.md#idba_disconnect
+[idba_begin]: fapi_reference.md#idba_begin
 [idba_messaggi]: fapi_reference.md#idba_messaggi
 [idba_fatto]: fapi_reference.md#idba_fatto
 [idba_seti]: fapi_reference.md#idba_seti

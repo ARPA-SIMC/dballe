@@ -12,9 +12,9 @@ using namespace wreport;
 namespace dballe {
 namespace fortran {
 
-std::unique_ptr<API> Tracer::preparati(int dbahandle, int handle, const char* url, const char* anaflag, const char* dataflag, const char* attrflag)
+std::unique_ptr<API> Tracer::begin(int dbahandle, int handle, const char* url, const char* anaflag, const char* dataflag, const char* attrflag)
 {
-    log_preparati(dbahandle, handle, anaflag, dataflag, attrflag);
+    log_begin(dbahandle, handle, anaflag, dataflag, attrflag);
     return wrap_api(handle, fortran::DbAPI::fortran_connect(url, anaflag, dataflag, attrflag));
 }
 
@@ -29,10 +29,10 @@ namespace {
 struct NullTracer : public Tracer
 {
     std::unique_ptr<API> wrap_api(int handle, std::unique_ptr<API> api) { return std::move(api); }
-    void log_presentati_url(int handle, const char* chosen_dsn) override {}
-    void log_preparati(int dbahandle, int handle, const char* anaflag, const char* dataflag, const char* attrflag) override {}
+    void log_connect_url(int handle, const char* chosen_dsn) override {}
+    void log_begin(int dbahandle, int handle, const char* anaflag, const char* dataflag, const char* attrflag) override {}
     void log_messaggi(int handle, const char* filename, const char* mode, const char* type) override {}
-    void log_arrivederci(int handle) override {}
+    void log_disconnect(int handle) override {}
 };
 
 }
@@ -65,13 +65,13 @@ struct FileTracer : public Tracer
         return std::unique_ptr<API>(new TracedAPI(*this, trace_tag, std::move(api)));
     }
 
-    void log_presentati_url(int handle, const char* chosen_dsn) override
+    void log_connect_url(int handle, const char* chosen_dsn) override
     {
         std::string arg1 = str::encode_cstring(chosen_dsn);
         fprintf(trace_file, "auto db%d(DB::connect_from_url(\"%s\"));\n", handle, arg1.c_str());
     }
 
-    void log_preparati(int dbahandle, int handle, const char* anaflag, const char* dataflag, const char* attrflag) override
+    void log_begin(int dbahandle, int handle, const char* anaflag, const char* dataflag, const char* attrflag) override
     {
         fprintf(trace_file, "DbAPI dbapi%d(*db%d, \"%s\", \"%s\", \"%s\");\n",
                 handle, dbahandle, anaflag, dataflag, attrflag);
@@ -84,7 +84,7 @@ struct FileTracer : public Tracer
                 handle, arg1.c_str(), mode, type);
     }
 
-    void log_arrivederci(int handle) override
+    void log_disconnect(int handle) override
     {
         fprintf(trace_file, "// db%d not used anymore\n", handle);
     }

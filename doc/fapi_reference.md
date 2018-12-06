@@ -35,6 +35,7 @@ DB-All.e.
 </th>
 </thead>
 <tbody>
+<tr><td><code><a href='#idba_connect'>idba_connect(dbahandle, url)</a></code></td><td>Connect to the database.</td></tr>
 <tr><td><code><a href='#idba_presentati'>idba_presentati(dbahandle, url)</a></code></td><td>Connect to the database.</td></tr>
 <tr><td><code><a href='#idba_arrivederci'>idba_arrivederci(dbahandle)</a></code></td><td>Disconnect from the database.</td></tr>
 <tr><td><code><a href='#idba_preparati'>idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)</a></code></td><td>Open a new session.</td></tr>
@@ -268,6 +269,28 @@ case of overflow errors.
 In case of overflows it prints a warning and continues execution
 ### Session routines
 
+<a name='idba_connect'></a>
+#### idba_connect(dbahandle, url)
+
+Parameters:
+
+* `url`: The URL of the database to use
+* `user`: Used in the past, now it is ignored.
+* `password`: Used in the past, now it is ignored.
+* `dbahandle`: The database handle that can be passed to
+  [idba_preparati()](#idba_preparati) to work with the database.
+
+Return value:
+
+The error indication for the function.
+Connect to the database.
+
+This function can be called more than once to connect to different
+databases at the same time.
+The function expects to find a properly initialised DB-All.e database.
+Append `&wipe=true` to the end of the url to wipe any existing
+DB-All.e information from the database if it exists, then recreate it
+from scratch.
 <a name='idba_presentati'></a>
 #### idba_presentati(dbahandle, url)
 

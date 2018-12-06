@@ -133,12 +133,12 @@ extern "C" {
  * @param password
  *   Used in the past, now it is ignored.
  * @retval dbahandle
- *   The database handle that can be passed to idba_preparati to work with the
+ *   The database handle that can be passed to idba_begin to work with the
  *   database.
  * @return
  *   The error indication for the function.
  */
-int idba_presentati(int* dbahandle, const char* url)
+int idba_connect(int* dbahandle, const char* url)
 {
     try {
         /* Initialize the library if needed */
@@ -157,7 +157,7 @@ int idba_presentati(int* dbahandle, const char* url)
             if (url == NULL) url = "";
         }
 
-        tracer->log_presentati_url(*dbahandle, url);
+        tracer->log_connect_url(*dbahandle, url);
 
         hs.url = url;
 
@@ -179,15 +179,20 @@ int idba_presentati(int* dbahandle, const char* url)
     }
 }
 
+int idba_presentati(int* dbahandle, const char* url)
+{
+    return idba_connect(dbahandle, url);
+}
+
 /**
  * Disconnect from the database.
  *
  * @param dbahandle
  *   The database handle to close.
  */
-int idba_arrivederci(int *dbahandle)
+int idba_disconnect(int *dbahandle)
 {
-    tracer->log_arrivederci(*dbahandle);
+    tracer->log_disconnect(*dbahandle);
 
     // try {
         hsess.release(*dbahandle);
@@ -208,14 +213,19 @@ int idba_arrivederci(int *dbahandle)
     return fortran::success();
 }
 
+int idba_arrivederci(int *dbahandle)
+{
+    return idba_disconnect(dbahandle);
+}
+
 
 /**
  * Open a new session.
  *
- * You can call idba_preparati() many times and get more handles.  This allows
+ * You can call idba_begin() many times and get more handles.  This allows
  * to perform many operations on the database at the same time.
  *
- * idba_preparati() has three extra parameters that can be used to limit
+ * idba_begin() has three extra parameters that can be used to limit
  * write operations on the database, as a limited protection against
  * programming errors:
  *
@@ -252,21 +262,15 @@ int idba_arrivederci(int *dbahandle)
  * @return
  *   The error indication for the function.
  */
-int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* dataflag, const char* attrflag)
+int idba_begin(int dbahandle, int* handle, const char* anaflag, const char* dataflag, const char* attrflag)
 {
     try {
-        /* Check here to warn users of the introduction of idba_presentati */
-        /*
-        if (session == NULL)
-            return dba_error_consistency("idba_presentati should be called before idba_preparati");
-        */
-
         /* Allocate and initialize a new handle */
         *handle = hsimp.request();
         HSession& hs = hsess.get(dbahandle);
         HSimple& h = hsimp.get(*handle);
 
-        std::unique_ptr<dballe::fortran::API> api = tracer->preparati(dbahandle, *handle, hs.url.c_str(), anaflag, dataflag, attrflag);
+        std::unique_ptr<dballe::fortran::API> api = tracer->begin(dbahandle, *handle, hs.url.c_str(), anaflag, dataflag, attrflag);
         h.api = api.release();
 
         return fortran::success();
@@ -274,6 +278,11 @@ int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* 
         hsimp.release(*handle);
         return fortran::error(e);
     }
+}
+
+int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* dataflag, const char* attrflag)
+{
+    return idba_begin(dbahandle, handle, anaflag, dataflag, attrflag);
 }
 
 /**
