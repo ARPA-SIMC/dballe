@@ -1543,19 +1543,28 @@ int idba_messages_write_next(int handle, const char* template_name)
  * @return
  *   The error indication for the function.
  */
-int idba_spiegal(
+int idba_describe_level(
         int handle,
         int ltype1, int l1, int ltype2, int l2,
         char* result, unsigned result_len)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        const char* res = h.api->spiegal(ltype1, l1, ltype2, l2);
+        const char* res = h.api->describe_level(ltype1, l1, ltype2, l2);
         fortran::cstring_to_fortran(res, result, result_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
     }
+}
+
+/// Deprecated compatibility version of idba_describe_level()
+int idba_spiegal(
+        int handle,
+        int ltype1, int l1, int ltype2, int l2,
+        char* result, unsigned result_len)
+{
+    return idba_describe_level(handle, ltype1, l1, ltype2, l2, result, result_len);
 }
 
 /**
@@ -1574,19 +1583,28 @@ int idba_spiegal(
  * @return
  *   The error indication for the function.
  */
-int idba_spiegat(
+int idba_describe_timerange(
         int handle,
         int ptype, int p1, int p2,
         char* result, unsigned result_len)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        const char* res = h.api->spiegat(ptype, p1, p2);
+        const char* res = h.api->describe_timerange(ptype, p1, p2);
         fortran::cstring_to_fortran(res, result, result_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
     }
+}
+
+/// Deprecated compatibility version of idba_describe_timerange()
+int idba_spiegat(
+        int handle,
+        int ptype, int p1, int p2,
+        char* result, unsigned result_len)
+{
+    return idba_describe_timerange(handle, ptype, p1, p2, result, result_len);
 }
 
 /**
@@ -1603,7 +1621,7 @@ int idba_spiegat(
  * @return
  *   The error indication for the function.
  */
-int idba_spiegab(
+int idba_describe_var(
         int handle,
         const char* varcode,
         const char* value,
@@ -1611,12 +1629,22 @@ int idba_spiegab(
 {
     try {
         HSimple& h = hsimp.get(handle);
-        const char* res = h.api->spiegab(varcode, value);
+        const char* res = h.api->describe_var(varcode, value);
         fortran::cstring_to_fortran(res, result, result_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
     }
+}
+
+/// Deprecated compatibility version of idba_describe_var()
+int idba_spiegab(
+        int handle,
+        const char* varcode,
+        const char* value,
+        char* result, unsigned result_len)
+{
+    return idba_describe_var(handle, varcode, value, result, result_len);
 }
 
 /*@}*/

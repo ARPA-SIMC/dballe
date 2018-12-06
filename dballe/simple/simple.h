@@ -59,9 +59,9 @@ struct API
     virtual void messages_open_output(const char* filename, const char* mode, Encoding format) = 0;
     virtual bool messages_read_next() = 0;
     virtual void messages_write_next(const char* template_name=0) = 0;
-    virtual const char* spiegal(int ltype1, int l1, int ltype2, int l2) = 0;
-    virtual const char* spiegat(int ptype, int p1, int p2) = 0;
-    virtual const char* spiegab(const char* varcode, const char* value) = 0;
+    virtual const char* describe_level(int ltype1, int l1, int ltype2, int l2) = 0;
+    virtual const char* describe_timerange(int ptype, int p1, int p2) = 0;
+    virtual const char* describe_var(const char* varcode, const char* value) = 0;
     virtual void commit() = 0;
 };
 

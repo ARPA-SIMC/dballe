@@ -244,9 +244,9 @@ public:
     void unset(const char* param) override;
     void unsetall() override;
     void unsetb() override;
-    const char* spiegal(int ltype1, int l1, int ltype2, int l2) override;
-    const char* spiegat(int ptype, int p1, int p2) override;
-    const char* spiegab(const char* varcode, const char* value) override;
+    const char* describe_level(int ltype1, int l1, int ltype2, int l2) override;
+    const char* describe_timerange(int ptype, int p1, int p2) override;
+    const char* describe_var(const char* varcode, const char* value) override;
     void next_station() override;
     wreport::Varcode next_data() override;
     int query_attributes() override;

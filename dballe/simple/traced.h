@@ -72,9 +72,9 @@ struct TracedAPI : public API
     void messages_open_output(const char* filename, const char* mode, Encoding format) override;
     bool messages_read_next() override;
     void messages_write_next(const char* template_name=0) override;
-    const char* spiegal(int ltype1, int l1, int ltype2, int l2) override;
-    const char* spiegat(int ptype, int p1, int p2) override;
-    const char* spiegab(const char* varcode, const char* value) override;
+    const char* describe_level(int ltype1, int l1, int ltype2, int l2) override;
+    const char* describe_timerange(int ptype, int p1, int p2) override;
+    const char* describe_var(const char* varcode, const char* value) override;
     void commit() override;
 };
 

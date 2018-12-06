@@ -805,16 +805,16 @@ proper description of the values into the string.
 
 The functions are:
 
-* `idba_spiegal(handle,ltype1,l1,ltype2,l2,string)`:
-  Describes a level.  For example, `idba_spiegal(handle,106,10,106,20,string)`
+* `idba_describe_level(handle,ltype1,l1,ltype2,l2,string)`:
+  Describes a level.  For example, `idba_describe_level(handle,106,10,106,20,string)`
   will store in `string` something like: *"Layer between 10hm and
   20hm above ground"*.
-* `idba_spiegat(handle,ptype,p1,p2,string)`:
-  Describes a time range.  For example, `idba_spiegat(handle,3,0,600,string)`
+* `idba_describe_timerange(handle,ptype,p1,p2,string)`:
+  Describes a time range.  For example, `idba_describe_timerange(handle,3,0,600,string)`
   will store in `string` something like: *"Average between reference
   time+0s to reference time+600s"*.
-* `idba_spiegab(handle,varcode,value,string)`:
-  Describe a value.  For example, `idba_spiegab(handle,"B12001","280",string)`
+* `idba_describe_var(handle,varcode,value,string)`:
+  Describe a value.  For example, `idba_describe_var(handle,"B12001","280",string)`
   will store in `string` something like: *"280 (K) TEMPERATURE/DRY-BULB
   TEMPERATURE"*.
 
@@ -1017,6 +1017,6 @@ explicit query for the extra station data using [idba_query_data][] and
 [idba_messages_open_output]: fapi_reference.md#idba_messages_open_output
 [idba_messages_read_next]: fapi_reference.md#idba_messages_read_next
 [idba_messages_write_next]: fapi_reference.md#idba_messages_write_next
-[idba_spiegal]: fapi_reference.md#idba_spiegal
-[idba_spiegat]: fapi_reference.md#idba_spiegat
-[idba_spiegab]: fapi_reference.md#idba_spiegab
+[idba_describe_level]: fapi_reference.md#idba_describe_level
+[idba_describe_timerange]: fapi_reference.md#idba_describe_timerange
+[idba_describe_var]: fapi_reference.md#idba_describe_var

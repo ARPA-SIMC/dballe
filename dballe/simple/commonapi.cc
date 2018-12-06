@@ -391,19 +391,19 @@ void CommonAPIImplementation::unsetb()
     input_data.clear_vars();
 }
 
-const char* CommonAPIImplementation::spiegal(int ltype1, int l1, int ltype2, int l2)
+const char* CommonAPIImplementation::describe_level(int ltype1, int l1, int ltype2, int l2)
 {
     cached_spiega = Level(ltype1, l1, ltype2, l2).describe();
     return cached_spiega.c_str();
 }
 
-const char* CommonAPIImplementation::spiegat(int ptype, int p1, int p2)
+const char* CommonAPIImplementation::describe_timerange(int ptype, int p1, int p2)
 {
     cached_spiega = Trange(ptype, p1, p2).describe();
     return cached_spiega.c_str();
 }
 
-const char* CommonAPIImplementation::spiegab(const char* varcode, const char* value)
+const char* CommonAPIImplementation::describe_var(const char* varcode, const char* value)
 {
     Varinfo info = varinfo(WR_STRING_TO_VAR(varcode + 1));
     Var var(info, value);

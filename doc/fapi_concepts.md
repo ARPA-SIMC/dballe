@@ -305,6 +305,6 @@ value".  This is a list of such special values:
 [idba_messages_open_output]: fapi_reference.md#idba_messages_open_output
 [idba_messages_read_next]: fapi_reference.md#idba_messages_read_next
 [idba_messages_write_next]: fapi_reference.md#idba_messages_write_next
-[idba_spiegal]: fapi_reference.md#idba_spiegal
-[idba_spiegat]: fapi_reference.md#idba_spiegat
-[idba_spiegab]: fapi_reference.md#idba_spiegab
+[idba_describe_level]: fapi_reference.md#idba_describe_level
+[idba_describe_timerange]: fapi_reference.md#idba_describe_timerange
+[idba_describe_var]: fapi_reference.md#idba_describe_var

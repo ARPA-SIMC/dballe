@@ -578,19 +578,19 @@ void TracedAPI::messages_write_next(const char* template_name)
     RUN(messages_write_next, template_name);
 }
 
-const char* TracedAPI::spiegal(int ltype1, int l1, int ltype2, int l2)
+const char* TracedAPI::describe_level(int ltype1, int l1, int ltype2, int l2)
 {
-    return RUN(spiegal, ltype1, l1, ltype2, l2);
+    return RUN(describe_level, ltype1, l1, ltype2, l2);
 }
 
-const char* TracedAPI::spiegat(int ptype, int p1, int p2)
+const char* TracedAPI::describe_timerange(int ptype, int p1, int p2)
 {
-    return RUN(spiegat, ptype, p1, p2);
+    return RUN(describe_timerange, ptype, p1, p2);
 }
 
-const char* TracedAPI::spiegab(const char* varcode, const char* value)
+const char* TracedAPI::describe_var(const char* varcode, const char* value)
 {
-    return RUN(spiegab, varcode, value);
+    return RUN(describe_var, varcode, value);
 }
 
 void TracedAPI::commit()
