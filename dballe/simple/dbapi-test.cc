@@ -154,7 +154,7 @@ this->add_method("query_attrs", [](Fixture& f) {
 
         // Set one attribute after a next_data
         api.seti("*B33007", 50);
-        wassert(api.critica());
+        wassert(api.insert_attribute());
         wassert(actual(api.test_get_operation()).istrue());
 
         // It now has one attribute
@@ -206,7 +206,7 @@ this->add_method("insert_attrs_insert_data", [](Fixture& f) {
     api.insert_data(); // Pressure at ground level
     wassert(actual(api.enqi("ana_id")) != 0);
     api.seti("*B33007", 60);
-    api.critica();
+    api.insert_attribute();
 
     // Query it again
     api.unsetall();
@@ -313,10 +313,10 @@ this->add_method("delete_attrs_next_data", [](Fixture& f) {
     wassert(actual(api.query_data()) == 2);
     wassert(actual(api.next_data()) == WR_VAR(0, 12, 101));
     api.seti("*B33007", 50);
-    api.critica();
+    api.insert_attribute();
     wassert(actual(api.next_data()) == WR_VAR(0, 11,   2));
     api.seti("*B33007", 60);
-    api.critica();
+    api.insert_attribute();
 
     // Query all variables again and check that attributes are there
     api.unsetall();
@@ -665,7 +665,7 @@ this->add_method("attr_reference_id", [](Fixture& f) {
     wassert(actual(api.query_attributes()) == 0);
     // Set an attr
     api.seti("*B33007", 50);
-    api.critica();
+    api.insert_attribute();
     // Query the variable again
     api.unsetall();
     api.setcontextana();
@@ -688,7 +688,7 @@ this->add_method("attr_reference_id", [](Fixture& f) {
     wassert(actual(api.query_attributes()) == 0);
     // Set an attr
     api.seti("*B33007", 50);
-    api.critica();
+    api.insert_attribute();
     // Query the variable again
     api.unsetall();
     api.setc("var", "B12101");
@@ -738,7 +738,7 @@ this->add_method("attrs_bug1", [](Fixture& f) {
     dbapi0.seti("*B33193", 50);
     dbapi0.setd("*B33194", 70.000000);
     dbapi0.setc("*var_related", "B13003");
-    dbapi0.critica();
+    dbapi0.insert_attribute();
 
     // Read them back
     dbapi0.unsetall();
@@ -787,7 +787,7 @@ this->add_method("segfault1", [](Fixture& f) {
     dbapi0.setc("B12102", "26312");
     wassert(dbapi0.insert_data());
     dbapi0.setc("*B33194", "50");
-    wassert(dbapi0.critica());
+    wassert(dbapi0.insert_attribute());
 });
 
 this->add_method("issue45", [](Fixture& f) {
@@ -808,12 +808,12 @@ this->add_method("issue45", [](Fixture& f) {
     dbapi0.setd("*B33192", 30.000000);
     dbapi0.seti("*B33193", 50);
     dbapi0.setd("*B33194", 70.000000);
-    dbapi0.critica();
+    dbapi0.insert_attribute();
     dbapi0.seti("B12101", 27315);
     dbapi0.insert_data();
     dbapi0.setd("*B33192", 30.000000);
     dbapi0.seti("*B33193", 50);
-    dbapi0.critica();
+    dbapi0.insert_attribute();
     // error: cannot insert attributes for variable 000000: no data id given or found from last insert_data()
 });
 
@@ -975,7 +975,7 @@ this->add_method("attr_insert", [](Fixture& f) {
         dbapi0.insert_data();
         dbapi0.seti("*B33192", 0);
         dbapi0.setc("*var_related", "B12101");
-        dbapi0.critica();
+        dbapi0.insert_attribute();
     }
 });
 
@@ -1097,14 +1097,14 @@ this->add_method("query_attr_values", [](Fixture& f) {
     dbapi0.setd("*B33192", 30.000000);
     dbapi0.seti("*B33193", 50);
     dbapi0.setd("*B33194", 70.000000);
-    dbapi0.critica();
+    dbapi0.insert_attribute();
     dbapi0.seti("B12101", 27315);
     dbapi0.insert_data();
     dbapi0.unsetb();
     dbapi0.setd("*B33192", 30.000000);
     dbapi0.seti("*B33193", 50);
     dbapi0.setd("*B33194", 70.000000);
-    dbapi0.critica();
+    dbapi0.insert_attribute();
     dbapi0.unsetall();
     dbapi0.setc("varlist", "B12101");
     wassert(actual(dbapi0.query_data()) == 1);
@@ -1138,14 +1138,14 @@ this->add_method("query_attr_filtered", [](Fixture& f) {
     dbapi0.setd("*B33192", 30.000000);
     dbapi0.seti("*B33193", 50);
     dbapi0.setd("*B33194", 70.000000);
-    dbapi0.critica();
+    dbapi0.insert_attribute();
     dbapi0.seti("B12101", 27315);
     dbapi0.insert_data();
     dbapi0.unsetb();
     dbapi0.setd("*B33192", 30.000000);
     dbapi0.seti("*B33193", 50);
     dbapi0.setd("*B33194", 70.000000);
-    dbapi0.critica();
+    dbapi0.insert_attribute();
     dbapi0.unsetall();
     dbapi0.setc("varlist", "B12101");
     dbapi0.setc("*varlist", "*B33193,*B33194");

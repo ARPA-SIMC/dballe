@@ -114,7 +114,7 @@ struct QuantesonoOperation : public CursorOperation<CursorStation>
     }
 
     void query_attributes(Attributes& dest) override { throw error_consistency("query_attributes cannot be called after query_stations/next_station"); }
-    void critica(Values& qcinput) override { throw error_consistency("critica cannot be called after query_stations/next_station"); }
+    void insert_attribute(Values& qcinput) override { throw error_consistency("insert_attribute cannot be called after query_stations/next_station"); }
     void scusa() override { throw error_consistency("scusa cannot be called after query_stations/next_station"); }
 };
 
@@ -209,9 +209,9 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
         this->cursor->attr_query(consumer, !valid_cached_attrs);
         dest.has_new_values();
     }
-    void critica(Values& qcinput) override
+    void insert_attribute(Values& qcinput) override
     {
-        if (next_data_ended) throw error_consistency("critica called after next_data returned end of data");
+        if (next_data_ended) throw error_consistency("insert_attribute called after next_data returned end of data");
         CursorTraits<Cursor>::attr_insert(*api.tr, this->cursor->attr_reference_id(), qcinput);
         valid_cached_attrs = false;
     }
@@ -276,7 +276,7 @@ struct PrendiloOperation : public Operation
     {
         throw error_consistency("query_attributes cannot be called after a insert_data");
     }
-    void critica(Values& qcinput) override
+    void insert_attribute(Values& qcinput) override
     {
         int data_id = MISSING_INT;
         bool is_station = false;
@@ -287,7 +287,7 @@ struct PrendiloOperation : public Operation
             is_station = last_inserted_varids[0].station;
         } else {
             if (varcode == 0)
-                throw error_consistency("please set *var_related before calling critica after setting multiple variables in a single insert_data");
+                throw error_consistency("please set *var_related before calling insert_attribute after setting multiple variables in a single insert_data");
             for (const auto& i: last_inserted_varids)
                 if (i.code == varcode)
                 {
@@ -362,7 +362,7 @@ struct VaridOperation : public Operation
         api.tr->attr_query_data(varid, consumer);
         dest.has_new_values();
     }
-    void critica(Values& qcinput) override
+    void insert_attribute(Values& qcinput) override
     {
         api.tr->attr_insert_data(varid, qcinput);
     }

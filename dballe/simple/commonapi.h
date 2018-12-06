@@ -45,7 +45,7 @@ public:
     virtual ~Operation();
     virtual void set_varcode(wreport::Varcode varcode);
     virtual void query_attributes(Attributes& dest) = 0;
-    virtual void critica(Values& qcinput) = 0;
+    virtual void insert_attribute(Values& qcinput) = 0;
     virtual void scusa() = 0;
     virtual bool next_station();
     virtual wreport::Varcode next_data();
@@ -251,7 +251,7 @@ public:
     wreport::Varcode next_data() override;
     int query_attributes() override;
     const char* next_attribute() override;
-    void critica() override;
+    void insert_attribute() override;
     void scusa() override;
     void commit() override;
 

@@ -1337,15 +1337,21 @@ int idba_ancora(int handle, char* parameter, unsigned parameter_len)
  * @return
  *   The error indicator for the function
  */
-int idba_critica(int handle)
+int idba_insert_attribute(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        h.api->critica();
+        h.api->insert_attribute();
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
     }
+}
+
+/// Deprecated compatibility version of idba_insert_attribute()
+int idba_critica(int handle)
+{
+    return idba_insert_attribute(handle);
 }
 
 /**

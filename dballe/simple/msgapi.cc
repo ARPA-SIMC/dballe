@@ -43,7 +43,7 @@ struct QuantesonoOperation : public CursorOperation<CursorStation>
     }
 
     void query_attributes(Attributes& dest) override { throw error_consistency("query_attributes cannot be called after query_stations/next_station"); }
-    void critica(Values& qcinput) override { throw error_consistency("critica cannot be called after query_stations/next_station"); }
+    void insert_attribute(Values& qcinput) override { throw error_consistency("insert_attribute cannot be called after query_stations/next_station"); }
     void scusa() override { throw error_consistency("scusa cannot be called after query_stations/next_station"); }
 };
 
@@ -128,9 +128,9 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
         api.qcinput.clear();
     }
 
-    void critica(Values& qcinput) override
+    void insert_attribute(Values& qcinput) override
     {
-        throw error_consistency("critica has been called without a previous insert_data");
+        throw error_consistency("insert_attribute has been called without a previous insert_data");
     }
 
     void scusa() override
@@ -235,12 +235,12 @@ struct PrendiloOperation : public Operation
     {
         throw error_consistency("query_attributes cannot be called after a insert_data");
     }
-    void critica(Values& qcinput) override
+    void insert_attribute(Values& qcinput) override
     {
         if (vars.empty())
-            throw error_consistency("critica has been called without a previous insert_data");
+            throw error_consistency("insert_attribute has been called without a previous insert_data");
         if (vars.size() > 1)
-            throw error_consistency("critica has been called after setting many variables with a single insert_data, so I do not know which one should get the attributes");
+            throw error_consistency("insert_attribute has been called after setting many variables with a single insert_data, so I do not know which one should get the attributes");
 
         qcinput.move_to_attributes(**vars.begin());
     }

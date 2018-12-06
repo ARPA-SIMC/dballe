@@ -548,9 +548,9 @@ const char* TracedAPI::next_attribute()
     return RUN(next_attribute);
 }
 
-void TracedAPI::critica()
+void TracedAPI::insert_attribute()
 {
-    RUN(critica);
+    RUN(insert_attribute);
 }
 
 void TracedAPI::scusa()

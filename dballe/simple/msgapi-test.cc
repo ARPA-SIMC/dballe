@@ -233,13 +233,13 @@ add_method("message_ordering", [] {
         msgapi1.setd("*B33192", 30.000000);
         msgapi1.seti("*B33193", 50);
         msgapi1.setd("*B33194", 70.000000);
-        msgapi1.critica();
+        msgapi1.insert_attribute();
         msgapi1.seti("B12101", 27315);
         msgapi1.insert_data();
         msgapi1.unsetb();
         msgapi1.setd("*B33192", 30.000000);
         msgapi1.seti("*B33193", 50);
-        msgapi1.critica();
+        msgapi1.insert_attribute();
         msgapi1.setc("query", "message");
         msgapi1.unsetb();
         msgapi1.insert_data();
@@ -319,7 +319,7 @@ add_method("message_ordering", [] {
         msgapi1.seti("*B33192", 30);
         msgapi1.setc("*B33193", "70");
         msgapi1.setd("*B33194", 50.000000);
-        msgapi1.critica();
+        msgapi1.insert_attribute();
         msgapi1.setd("B12101", 273.149994);
         msgapi1.insert_data();
         msgapi1.unsetb();
@@ -333,7 +333,7 @@ add_method("message_ordering", [] {
         msgapi1.seti("*B33192", 30);
         msgapi1.setc("*B33193", "70");
         msgapi1.setd("*B33194", 50.000000);
-        msgapi1.critica();
+        msgapi1.insert_attribute();
         msgapi1.setd("B12101", 273.149994);
         msgapi1.insert_data();
         msgapi1.unsetb();
