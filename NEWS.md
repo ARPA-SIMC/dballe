@@ -8,3 +8,5 @@
 * Added Message, Importer, Exporter, File, Explorer to the Python API
 * Dropped support for Python 2
 * Dropped support for unused AOF format
+* Renamed fortran API functions with self-explanatory English names. The old
+  names are kept as aliases for compatibility with existing/old Fortran code
