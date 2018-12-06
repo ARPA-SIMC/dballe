@@ -291,7 +291,7 @@ value".  This is a list of such special values:
 [idba_enqdate]: fapi_reference.md#idba_enqdate
 [idba_reinit_db]: fapi_reference.md#idba_reinit_db
 [idba_query_stations]: fapi_reference.md#idba_query_stations
-[idba_elencamele]: fapi_reference.md#idba_elencamele
+[idba_next_station]: fapi_reference.md#idba_next_station
 [idba_voglioquesto]: fapi_reference.md#idba_voglioquesto
 [idba_dammelo]: fapi_reference.md#idba_dammelo
 [idba_prendilo]: fapi_reference.md#idba_prendilo

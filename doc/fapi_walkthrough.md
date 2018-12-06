@@ -249,7 +249,7 @@ is read with the functions `idba_enq*` (see [the introduction](fapi_concepts.md#
 
       ! Get the informations about a station
       do while (count.gt.0)
-        ierr = idba_elencamele(handle)
+        ierr = idba_next_station(handle)
         ierr = idba_enqc(handle, "name", cname)
         ierr = idba_enqi(handle, "ana_id", id)
         ierr = idba_enqd(handle, "lat", lat)
@@ -412,7 +412,7 @@ Example code to query all the stations in a given area:
       ierr = idba_setd(handle, "lonmax", 20.D0)
       ierr = idba_query_stations(handle, count)
       do while (count.gt.0)
-        ierr = idba_elencamele(handle)
+        ierr = idba_next_station(handle)
         ierr = idba_enqi(handle, "ana_id", id)
         ! Pseudoana values can be read as well:
         ierr = idba_enqc(handle, "name", cname)
@@ -426,13 +426,13 @@ This code introduces two new functions:
 
 * [idba_query_stations][]: performs the query and returns the number of stations it
   finds.
-* [idba_elencamele][]: gets a station out of the results of [idba_query_stations][].
+* [idba_next_station][]: gets a station out of the results of [idba_query_stations][].
   If there are no more stations, the function fails.
 
-After [idba_elencamele][], the output record will also contain all the pseudoana
+After [idba_next_station][], the output record will also contain all the pseudoana
 values available for the station.  If `rep_cod` or `rep_memo` are specified as
 query parameters, the pseudoana values of that network will be used.  Else,
-[idba_elencamele][] will use all available pseudoana values, choosing the one in
+[idba_next_station][] will use all available pseudoana values, choosing the one in
 the network with the highest priority in case the same pseudoana value is
 available on more than one network.
 
@@ -918,7 +918,7 @@ do i=1,N
   ierr = idba_query_stations (handleana, Nstaz)
 
   ! Fetch the data
-  ierr = idba_elencamele (handleana)
+  ierr = idba_next_station (handleana)
 
   ! Read the data about the station
   ! All the data inserted with setcontextana is available here
@@ -934,7 +934,7 @@ enddo
 There are two ways:
 
 If you know in advances what variables you want to read, you can find them
-among the results of [idba_elencamele][]:
+among the results of [idba_next_station][]:
 
 ```fortran
       ! Query station data
@@ -942,7 +942,7 @@ among the results of [idba_elencamele][]:
 
       ! Get the informations about a station
       do i=1,count
-        ierr = idba_elencamele(handle)
+        ierr = idba_next_station(handle)
         ierr = idba_enqc(handle, "name", cname)
         ierr = idba_enqi(handle, "B02001", type)
         ! ....
@@ -1003,7 +1003,7 @@ explicit query for the extra station data using [idba_voglioquesto][] and
 [idba_enqdate]: fapi_reference.md#idba_enqdate
 [idba_reinit_db]: fapi_reference.md#idba_reinit_db
 [idba_query_stations]: fapi_reference.md#idba_query_stations
-[idba_elencamele]: fapi_reference.md#idba_elencamele
+[idba_next_station]: fapi_reference.md#idba_next_station
 [idba_voglioquesto]: fapi_reference.md#idba_voglioquesto
 [idba_dammelo]: fapi_reference.md#idba_dammelo
 [idba_prendilo]: fapi_reference.md#idba_prendilo

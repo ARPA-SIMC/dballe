@@ -108,14 +108,14 @@ struct QuantesonoOperation : public CursorOperation<CursorStation>
         return cursor->remaining();
     }
 
-    bool elencamele() override
+    bool next_station() override
     {
         return cursor->next();
     }
 
-    void voglioancora(Attributes& dest) override { throw error_consistency("voglioancora cannot be called after query_stations/elencamele"); }
-    void critica(Values& qcinput) override { throw error_consistency("critica cannot be called after query_stations/elencamele"); }
-    void scusa() override { throw error_consistency("scusa cannot be called after query_stations/elencamele"); }
+    void voglioancora(Attributes& dest) override { throw error_consistency("voglioancora cannot be called after query_stations/next_station"); }
+    void critica(Values& qcinput) override { throw error_consistency("critica cannot be called after query_stations/next_station"); }
+    void scusa() override { throw error_consistency("scusa cannot be called after query_stations/next_station"); }
 };
 
 template<typename Cursor>

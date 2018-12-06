@@ -1022,9 +1022,9 @@ int idba_scopa(int handle, const char* repinfofile)
 /**
  * Query the stations in the database.
  *
- * Results are retrieved using idba_elencamele().
+ * Results are retrieved using idba_next_station().
  *
- * There is no guarantee on the ordering of results of query_stations/elencamele.
+ * There is no guarantee on the ordering of results of query_stations/next_station.
  *
  * @param handle
  *   Handle to a DB-All.e session
@@ -1063,16 +1063,21 @@ int idba_query_stations(int handle, int* count)
  * @return
  *   The error indicator for the function
  */
-int idba_elencamele(int handle)
+int idba_next_station(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        h.api->elencamele();
+        h.api->next_station();
 
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
     }
+}
+
+int idba_elencamele(int handle)
+{
+    return idba_next_station(handle);
 }
 
 /**

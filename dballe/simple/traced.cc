@@ -513,9 +513,9 @@ int TracedAPI::query_stations()
     return RUN(query_stations);
 }
 
-void TracedAPI::elencamele()
+void TracedAPI::next_station()
 {
-    RUN(elencamele);
+    RUN(next_station);
 }
 
 int TracedAPI::voglioquesto()

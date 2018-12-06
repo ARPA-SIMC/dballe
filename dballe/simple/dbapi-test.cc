@@ -104,7 +104,7 @@ this->add_method("query_basic", [](Fixture& f) {
     // Query stations
     api.unsetall();
     wassert(actual(api.query_stations()) == 1);
-    api.elencamele();
+    api.next_station();
     wassert(actual(api.enqd("lat")) == 44.5);
     wassert(actual(api.enqd("lon")) == 11.5);
 

@@ -13,7 +13,7 @@ struct APITest : public CommonAPIImplementation
      void reinit_db(const char* repinfofile=0) override {}
      void remove_all() override {}
      int query_stations() override { return 0; }
-     void elencamele() override {}
+     void next_station() override {}
      int voglioquesto() override { return 0; }
      wreport::Varcode dammelo() override { return 0; }
      void prendilo() override {}

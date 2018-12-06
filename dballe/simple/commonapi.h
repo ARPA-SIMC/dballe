@@ -47,7 +47,7 @@ public:
     virtual void voglioancora(Attributes& dest) = 0;
     virtual void critica(Values& qcinput) = 0;
     virtual void scusa() = 0;
-    virtual bool elencamele();
+    virtual bool next_station();
     virtual wreport::Varcode dammelo();
 
     virtual int enqi(const char* param) const = 0;
@@ -247,7 +247,7 @@ public:
     const char* spiegal(int ltype1, int l1, int ltype2, int l2) override;
     const char* spiegat(int ptype, int p1, int p2) override;
     const char* spiegab(const char* varcode, const char* value) override;
-    void elencamele() override;
+    void next_station() override;
     wreport::Varcode dammelo() override;
     int voglioancora() override;
     const char* ancora() override;

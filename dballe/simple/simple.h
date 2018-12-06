@@ -46,7 +46,7 @@ struct API
     virtual void unsetall() = 0;
     virtual void unsetb() = 0;
     virtual int query_stations() = 0;
-    virtual void elencamele() = 0;
+    virtual void next_station() = 0;
     virtual int voglioquesto() = 0;
     virtual wreport::Varcode dammelo() = 0;
     virtual void prendilo() = 0;
