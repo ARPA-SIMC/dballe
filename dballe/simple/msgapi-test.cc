@@ -131,7 +131,7 @@ void Tests::register_tests()
         sys::unlink_ifexists("tmp.bufr");
         {
             MsgAPI msgapi0("tmp.bufr", "w", "BUFR");
-            msgapi0.setcontextana();
+            msgapi0.set_station_context();
             msgapi0.setc("rep_memo", "temp");
             msgapi0.setd("lat", 45.027700);
             msgapi0.setd("lon", 9.666700);
@@ -158,7 +158,7 @@ void Tests::register_tests()
         sys::unlink_ifexists("tmp.bufr");
         {
             MsgAPI msgapi0("tmp.bufr", "w", "BUFR");
-            msgapi0.setcontextana();
+            msgapi0.set_station_context();
             msgapi0.setc("rep_memo", "temp");
             msgapi0.setd("lat", 45.027700);
             msgapi0.setd("lon", 9.666700);
@@ -250,7 +250,7 @@ add_method("message_ordering", [] {
         msgapi1.unset("ident");
         msgapi1.unset("mobile");
         msgapi1.setc("rep_memo", "generic");
-        msgapi1.setcontextana();
+        msgapi1.set_station_context();
         msgapi1.seti("B07030", 223);
         msgapi1.insert_data();
         msgapi1.unsetb();
@@ -267,7 +267,7 @@ add_method("message_ordering", [] {
         msgapi1.unset("ident");
         msgapi1.unset("mobile");
         msgapi1.setc("rep_memo", "generic");
-        msgapi1.setcontextana();
+        msgapi1.set_station_context();
         msgapi1.seti("B07030", 223);
         msgapi1.insert_data();
         msgapi1.unsetb();
@@ -326,7 +326,7 @@ add_method("message_ordering", [] {
         msgapi1.seti("lat", 4500000);
         msgapi1.seti("lon", 1300000);
         msgapi1.setc("rep_memo", "generic");
-        msgapi1.setcontextana();
+        msgapi1.set_station_context();
         msgapi1.seti("B12102", 26312);
         msgapi1.insert_data();
         msgapi1.unsetb();

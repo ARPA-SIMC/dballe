@@ -711,11 +711,11 @@ int idba_unsetall(int handle)
  * @return
  *   The error indicator for the function
  */
-int idba_setcontextana(int handle)
+int idba_set_station_context(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        h.api->setcontextana();
+        h.api->set_station_context();
 
         return fortran::success();
     } catch (error& e) {
@@ -723,6 +723,11 @@ int idba_setcontextana(int handle)
     }
 }
 
+/// Deprecated compatibility version of idba_set_station_context()
+int idba_setcontextana(int handle)
+{
+    return idba_set_station_context(handle);
+}
 
 /// @}
 

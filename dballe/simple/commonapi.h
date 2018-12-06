@@ -232,7 +232,7 @@ public:
     void setr(const char* param, float value) override;
     void setd(const char* param, double value) override;
     void setc(const char* param, const char* value) override;
-    void setcontextana() override;
+    void set_station_context() override;
     void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) override;
     void setlevel(int ltype1, int l1, int ltype2, int l2) override;
     void enqtimerange(int& ptype, int& p1, int& p2) override;

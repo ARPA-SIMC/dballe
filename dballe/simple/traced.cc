@@ -390,9 +390,9 @@ void TracedAPI::setc(const char* param, const char* value)
     RUN(setc, param, value);
 }
 
-void TracedAPI::setcontextana()
+void TracedAPI::set_station_context()
 {
-    RUN(setcontextana);
+    RUN(set_station_context);
 }
 
 namespace {

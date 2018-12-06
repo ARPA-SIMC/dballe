@@ -606,7 +606,7 @@ this->add_method("messages_bug1", [](Fixture& f) {
     api.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140312.bufr").c_str(), "r", Encoding::BUFR);
     wassert(actual(api.messages_read_next()) == 1);
     api.unsetall();
-    api.setcontextana();
+    api.set_station_context();
     wassert(actual(api.query_data()) == 3);
     // bug with mem DB: message: "enqi: B00000 (Context ID of the variable) is not defined"
     wassert(actual(api.next_data()) == WR_VAR(0, 1, 194));
@@ -620,7 +620,7 @@ this->add_method("messages_bug2", [](Fixture& f) {
     api.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140326.bufr").c_str(), "r", Encoding::BUFR);
     wassert(actual(api.messages_read_next()) == 1);
     api.unsetall();
-    api.setcontextana();
+    api.set_station_context();
     wassert(actual(api.query_data()) == 5);
     wassert(actual(api.next_data()) == WR_VAR(0, 1, 19));
     // Bug: missing variable 000000 in table dballe
@@ -642,7 +642,7 @@ this->add_method("attr_reference_id", [](Fixture& f) {
     api.setd("lon", 11.5);
     api.setc("rep_memo", "synop");
     // One station variable
-    api.setcontextana();
+    api.set_station_context();
     api.setd("B07030", 100.0);
     api.insert_data();
     // One data variable
@@ -654,7 +654,7 @@ this->add_method("attr_reference_id", [](Fixture& f) {
     api.unsetall();
 
     // Query the station variable
-    api.setcontextana();
+    api.set_station_context();
     api.setc("var", "B07030");
     wassert(actual(api.query_data()) == 1);
     api.next_data();
@@ -668,7 +668,7 @@ this->add_method("attr_reference_id", [](Fixture& f) {
     api.insert_attribute();
     // Query the variable again
     api.unsetall();
-    api.setcontextana();
+    api.set_station_context();
     api.setc("var", "B07030");
     wassert(actual(api.query_data()) == 1);
     wassert(api.next_data());
@@ -757,11 +757,11 @@ this->add_method("stationdata_bug1", [](Fixture& f) {
         dbapi0.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140403.bufr").c_str(), "r", Encoding::BUFR);
         dbapi0.messages_open_output("test.bufr", "w", Encoding::BUFR);
         wassert(actual(dbapi0.messages_read_next()) == 1);
-        //dbapi0.setcontextana();
+        //dbapi0.set_station_context();
         dbapi0.messages_write_next("generic");
         dbapi0.remove_all();
         wassert(actual(dbapi0.messages_read_next()) == 1);
-        //dbapi0.setcontextana();
+        //dbapi0.set_station_context();
         dbapi0.messages_write_next("generic");
         dbapi0.remove_all();
         wassert(actual(dbapi0.messages_read_next()) == 0);
@@ -783,7 +783,7 @@ this->add_method("segfault1", [](Fixture& f) {
     dbapi0.seti("lat", 4500000);
     dbapi0.seti("lon", 1300000);
     dbapi0.setc("rep_memo", "generic");
-    dbapi0.setcontextana();
+    dbapi0.set_station_context();
     dbapi0.setc("B12102", "26312");
     wassert(dbapi0.insert_data());
     dbapi0.setc("*B33194", "50");
@@ -882,7 +882,7 @@ this->add_method("perf_read_attrs", [](Fixture& f) {
     // Read all station data and their attributes
     f.tr->trc->clear();
     api.unsetall();
-    api.setcontextana();
+    api.set_station_context();
     wassert(actual(api.query_data()) == 7);
     while (api.next_data())
         wassert(api.query_attributes());
@@ -909,7 +909,7 @@ this->add_method("perf_read_attrs", [](Fixture& f) {
     // Read all station data and their attributes
     f.tr->trc->clear();
     api.unsetall();
-    api.setcontextana();
+    api.set_station_context();
     api.setc("query", "attrs");
     wassert(actual(api.query_data()) == 7);
     while (api.next_data())
@@ -1016,7 +1016,7 @@ this->add_method("issue75", [](Fixture& f) {
         auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
         fortran::DbAPI dbapi(tr, "read", "read", "read");
         dbapi.setc("rep_memo", "temp");
-        dbapi.setcontextana();
+        dbapi.set_station_context();
         dbapi.setc("varlist", "B07001");
         wassert(actual(dbapi.query_data()) == 0);
         dbapi.setc("varlist", "B07030");
@@ -1075,7 +1075,7 @@ this->add_method("insert_block", [](Fixture& f) {
     dbapi0.setd("lon", -12.345600);
     dbapi0.setc("rep_memo", "synop");
     dbapi0.seti("block", 1);
-    dbapi0.setcontextana();
+    dbapi0.set_station_context();
     dbapi0.insert_data();
     wassert(actual(dbapi0.query_stations()) == 1);
 });

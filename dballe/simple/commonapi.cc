@@ -301,7 +301,7 @@ void CommonAPIImplementation::setc(const char* param, const char* value)
         input_data.values.set(resolve_varcode(param), value);
 }
 
-void CommonAPIImplementation::setcontextana()
+void CommonAPIImplementation::set_station_context()
 {
     input_query.dtrange = DatetimeRange();
     input_data.datetime = Datetime();

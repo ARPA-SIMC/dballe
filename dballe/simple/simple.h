@@ -33,7 +33,7 @@ struct API
     virtual void setr(const char* param, float value) = 0;
     virtual void setd(const char* param, double value) = 0;
     virtual void setc(const char* param, const char* value) = 0;
-    virtual void setcontextana() = 0;
+    virtual void set_station_context() = 0;
     virtual void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) = 0;
     virtual void setlevel(int ltype1, int l1, int ltype2, int l2) = 0;
     virtual void enqtimerange(int& ptype, int& p1, int& p2) = 0;

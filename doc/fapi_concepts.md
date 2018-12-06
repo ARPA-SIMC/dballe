@@ -68,7 +68,7 @@ above sea level, or the center operating it.
 The interface to work with station values is the same as the interface to work
 with normal values, except that date, time, level, and timerange information
 are not set when inserting or querying data, and
-[[idba_setcontextana][]](fapi_reference.md#idba_setcontextana) is called instead, to signal the
+[[idba_set_station_context][]](fapi_reference.md#idba_set_station_context) is called instead, to signal the
 intention of working with station values.
 
 See section \ref{sec-querying} for examples on how to work with values.
@@ -167,8 +167,8 @@ You can set the input parameters using the `idba_set*` functions:
   Set the input parameter to the real value `realvalue`
 * `idba_setd(handle, "param", doublevalue)`:
   Set the input parameter to the `real*8` value `doublevalue`
-* `idba_setcontextana(handle)`:
-  <a name="fun_setcontextana"></a>
+* `idba_set_station_context(handle)`:
+  <a name="fun_set_station_context"></a>
   Sets the date, time, level and time range in the input record to some magic
   values, to signal that we are going to work with station attributes instead
   of normal values.
@@ -280,7 +280,7 @@ value".  This is a list of such special values:
 [idba_unset]: fapi_reference.md#idba_unset
 [idba_unsetb]: fapi_reference.md#idba_unsetb
 [idba_unsetall]: fapi_reference.md#idba_unsetall
-[idba_setcontextana]: fapi_reference.md#idba_setcontextana
+[idba_set_station_context]: fapi_reference.md#idba_set_station_context
 [idba_setlevel]: fapi_reference.md#idba_setlevel
 [idba_settimerange]: fapi_reference.md#idba_settimerange
 [idba_setdate]: fapi_reference.md#idba_setdate

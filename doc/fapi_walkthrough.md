@@ -921,7 +921,7 @@ do i=1,N
   ierr = idba_next_station (handleana)
 
   ! Read the data about the station
-  ! All the data inserted with setcontextana is available here
+  ! All the data inserted with set_station_context is available here
   ierr = idba_enqi (handleana, "height", height)
 enddo
 ```
@@ -992,7 +992,7 @@ explicit query for the extra station data using [idba_query_data][] and
 [idba_unset]: fapi_reference.md#idba_unset
 [idba_unsetb]: fapi_reference.md#idba_unsetb
 [idba_unsetall]: fapi_reference.md#idba_unsetall
-[idba_setcontextana]: fapi_reference.md#idba_setcontextana
+[idba_set_station_context]: fapi_reference.md#idba_set_station_context
 [idba_setlevel]: fapi_reference.md#idba_setlevel
 [idba_settimerange]: fapi_reference.md#idba_settimerange
 [idba_setdate]: fapi_reference.md#idba_setdate
