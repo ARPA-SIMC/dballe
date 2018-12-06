@@ -36,11 +36,15 @@ DB-All.e.
 </thead>
 <tbody>
 <tr><td><code><a href='#idba_connect'>idba_connect(dbahandle, url)</a></code></td><td>Connect to the database.</td></tr>
-<tr><td><code><a href='#idba_presentati'>idba_presentati(dbahandle, url)</a></code></td><td>Connect to the database.</td></tr>
-<tr><td><code><a href='#idba_arrivederci'>idba_arrivederci(dbahandle)</a></code></td><td>Disconnect from the database.</td></tr>
-<tr><td><code><a href='#idba_preparati'>idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)</a></code></td><td>Open a new session.</td></tr>
-<tr><td><code><a href='#idba_messaggi'>idba_messaggi(handle, filename, mode, type)</a></code></td><td>Start working with a message file.</td></tr>
-<tr><td><code><a href='#idba_fatto'>idba_fatto(handle)</a></code></td><td>Close a session.</td></tr>
+<tr><td><code><a href='#idba_presentati'>idba_presentati(dbahandle, url)</a></code></td><td>Deprecated compatibility version of idba_connect()</td></tr>
+<tr><td><code><a href='#idba_disconnect'>idba_disconnect(dbahandle)</a></code></td><td>Disconnect from the database.</td></tr>
+<tr><td><code><a href='#idba_arrivederci'>idba_arrivederci(dbahandle)</a></code></td><td>Deprecated compatibility version of idba_disconnect()</td></tr>
+<tr><td><code><a href='#idba_begin'>idba_begin(dbahandle, handle, anaflag, dataflag, attrflag)</a></code></td><td>Open a new session.</td></tr>
+<tr><td><code><a href='#idba_preparati'>idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)</a></code></td><td>Deprecated compatibility version of idba_begin()</td></tr>
+<tr><td><code><a href='#idba_begin_messages'>idba_begin_messages(handle, filename, mode, type)</a></code></td><td>Start working with a message file.</td></tr>
+<tr><td><code><a href='#idba_messaggi'>idba_messaggi(handle, filename, mode, type)</a></code></td><td>Deprecated compatibility version of idba_begin_messages()</td></tr>
+<tr><td><code><a href='#idba_commit'>idba_commit(handle)</a></code></td><td>Close a session.</td></tr>
+<tr><td><code><a href='#idba_fatto'>idba_fatto(handle)</a></code></td><td>Deprecated compatibility version of idba_commit()</td></tr>
 </tbody>
 </table>
 
@@ -106,10 +110,14 @@ Input/Output routines.
 </th>
 </thead>
 <tbody>
-<tr><td><code><a href='#idba_scopa'>idba_scopa(handle, repinfofile)</a></code></td><td>Reinitialize the database, removing all data and loading report information.</td></tr>
-<tr><td><code><a href='#idba_quantesono'>idba_quantesono(handle, count)</a></code></td><td>Query the stations in the database.</td></tr>
-<tr><td><code><a href='#idba_elencamele'>idba_elencamele(handle)</a></code></td><td>Retrieve the data about one station.</td></tr>
-<tr><td><code><a href='#idba_voglioquesto'>idba_voglioquesto(handle, count)</a></code></td><td>Query the data in the database.</td></tr>
+<tr><td><code><a href='#idba_reinit_db'>idba_reinit_db(handle, repinfofile)</a></code></td><td>Reinitialize the database, removing all data and loading report information.</td></tr>
+<tr><td><code><a href='#idba_scopa'>idba_scopa(handle, repinfofile)</a></code></td><td>Deprecated compatibility version of idba_reinit_db()</td></tr>
+<tr><td><code><a href='#idba_query_stations'>idba_query_stations(handle, count)</a></code></td><td>Query the stations in the database.</td></tr>
+<tr><td><code><a href='#idba_quantesono'>idba_quantesono(handle, count)</a></code></td><td>Deprecated compatibility version of idba_query_stations()</td></tr>
+<tr><td><code><a href='#idba_next_station'>idba_next_station(handle)</a></code></td><td>Retrieve the data about one station.</td></tr>
+<tr><td><code><a href='#idba_elencamele'>idba_elencamele(handle)</a></code></td><td>Deprecated compatibility version of idba_next_station()</td></tr>
+<tr><td><code><a href='#idba_query_data'>idba_query_data(handle, count)</a></code></td><td>Query the data in the database.</td></tr>
+<tr><td><code><a href='#idba_voglioquesto'>idba_voglioquesto(handle, count)</a></code></td><td>Deprecated compatibility version of idba_query_data()</td></tr>
 <tr><td><code><a href='#idba_dammelo'>idba_dammelo(handle, parameter, parameter_len)</a></code></td><td>Retrieve the data about one value.</td></tr>
 <tr><td><code><a href='#idba_prendilo'>idba_prendilo(handle)</a></code></td><td>Insert a new value in the database.</td></tr>
 <tr><td><code><a href='#idba_dimenticami'>idba_dimenticami(handle)</a></code></td><td>Remove from the database all values that match the query.</td></tr>
@@ -278,7 +286,7 @@ Parameters:
 * `user`: Used in the past, now it is ignored.
 * `password`: Used in the past, now it is ignored.
 * `dbahandle`: The database handle that can be passed to
-  [idba_preparati()](#idba_preparati) to work with the database.
+  [idba_begin()](#idba_begin) to work with the database.
 
 Return value:
 
@@ -294,27 +302,10 @@ from scratch.
 <a name='idba_presentati'></a>
 #### idba_presentati(dbahandle, url)
 
-Parameters:
+Deprecated compatibility version of idba_connect()
 
-* `url`: The URL of the database to use
-* `user`: Used in the past, now it is ignored.
-* `password`: Used in the past, now it is ignored.
-* `dbahandle`: The database handle that can be passed to
-  [idba_preparati()](#idba_preparati) to work with the database.
-
-Return value:
-
-The error indication for the function.
-Connect to the database.
-
-This function can be called more than once to connect to different
-databases at the same time.
-The function expects to find a properly initialised DB-All.e database.
-Append `&wipe=true` to the end of the url to wipe any existing
-DB-All.e information from the database if it exists, then recreate it
-from scratch.
-<a name='idba_arrivederci'></a>
-#### idba_arrivederci(dbahandle)
+<a name='idba_disconnect'></a>
+#### idba_disconnect(dbahandle)
 
 Parameters:
 
@@ -322,8 +313,13 @@ Parameters:
 
 Disconnect from the database.
 
-<a name='idba_preparati'></a>
-#### idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)
+<a name='idba_arrivederci'></a>
+#### idba_arrivederci(dbahandle)
+
+Deprecated compatibility version of idba_disconnect()
+
+<a name='idba_begin'></a>
+#### idba_begin(dbahandle, handle, anaflag, dataflag, attrflag)
 
 Parameters:
 
@@ -338,11 +334,11 @@ Return value:
 The error indication for the function.
 Open a new session.
 
-You can call [idba_preparati()](#idba_preparati) many times and get
-more handles. This allows to perform many operations on the database
-at the same time.
-[idba_preparati()](#idba_preparati) has three extra parameters that
-can be used to limit write operations on the database, as a limited
+You can call [idba_begin()](#idba_begin) many times and get more
+handles. This allows to perform many operations on the database at the
+same time.
+[idba_begin()](#idba_begin) has three extra parameters that can be
+used to limit write operations on the database, as a limited
 protection against programming errors:
 `anaflag` controls access to station value records and can have these
 values:
@@ -370,8 +366,13 @@ anaflag=read and dataflag=add (when adding a new data, it's sometimes
 necessary to insert new pseudoana records), or dataflag=rewrite and
 attrflag=read (when deleting data, their attributes are deleted as
 well).
-<a name='idba_messaggi'></a>
-#### idba_messaggi(handle, filename, mode, type)
+<a name='idba_preparati'></a>
+#### idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)
+
+Deprecated compatibility version of idba_begin()
+
+<a name='idba_begin_messages'></a>
+#### idba_begin_messages(handle, filename, mode, type)
 
 Parameters:
 
@@ -387,14 +388,24 @@ Return value:
 The error indication for the function.
 Start working with a message file.
 
-<a name='idba_fatto'></a>
-#### idba_fatto(handle)
+<a name='idba_messaggi'></a>
+#### idba_messaggi(handle, filename, mode, type)
+
+Deprecated compatibility version of idba_begin_messages()
+
+<a name='idba_commit'></a>
+#### idba_commit(handle)
 
 Parameters:
 
 * `handle`: Handle to the session to be closed.
 
 Close a session.
+
+<a name='idba_fatto'></a>
+#### idba_fatto(handle)
+
+Deprecated compatibility version of idba_commit()
 
 ### Input/output routines
 
@@ -753,8 +764,8 @@ Read all date information.
 
 ### Action routines
 
-<a name='idba_scopa'></a>
-#### idba_scopa(handle, repinfofile)
+<a name='idba_reinit_db'></a>
+#### idba_reinit_db(handle, repinfofile)
 
 Parameters:
 
@@ -769,8 +780,13 @@ Reinitialize the database, removing all data and loading report
 information.
 
 It requires the database to be opened in rewrite mode.
-<a name='idba_quantesono'></a>
-#### idba_quantesono(handle, count)
+<a name='idba_scopa'></a>
+#### idba_scopa(handle, repinfofile)
+
+Deprecated compatibility version of idba_reinit_db()
+
+<a name='idba_query_stations'></a>
+#### idba_query_stations(handle, count)
 
 Parameters:
 
@@ -782,11 +798,16 @@ Return value:
 The error indicator for the function
 Query the stations in the database.
 
-Results are retrieved using [idba_elencamele()](#idba_elencamele).
+Results are retrieved using [idba_next_station()](#idba_next_station).
 There is no guarantee on the ordering of results of
-quantesono/elencamele.
-<a name='idba_elencamele'></a>
-#### idba_elencamele(handle)
+query_stations/next_station.
+<a name='idba_quantesono'></a>
+#### idba_quantesono(handle, count)
+
+Deprecated compatibility version of idba_query_stations()
+
+<a name='idba_next_station'></a>
+#### idba_next_station(handle)
 
 Parameters:
 
@@ -801,8 +822,13 @@ After invocation, the output record is filled with information about
 the station and its station values.
 If there are no more stations to read, the function will fail with
 DBA_ERR_NOTFOUND.
-<a name='idba_voglioquesto'></a>
-#### idba_voglioquesto(handle, count)
+<a name='idba_elencamele'></a>
+#### idba_elencamele(handle)
+
+Deprecated compatibility version of idba_next_station()
+
+<a name='idba_query_data'></a>
+#### idba_query_data(handle, count)
 
 Parameters:
 
@@ -822,6 +848,11 @@ ordering.
 Sort order can change in the future, with the invariant that the
 slowest to change remains ana_id, followed by datetime, and the
 fastest to change remains the varcode.
+<a name='idba_voglioquesto'></a>
+#### idba_voglioquesto(handle, count)
+
+Deprecated compatibility version of idba_query_data()
+
 <a name='idba_dammelo'></a>
 #### idba_dammelo(handle, parameter, parameter_len)
 
@@ -886,8 +917,8 @@ Return value:
 The error indicator for the function
 Remove all values from the database.
 
-The difference with [idba_scopa()](#idba_scopa) is that it preserves
-the existing report information.
+The difference with [idba_reinit_db()](#idba_reinit_db) is that it
+preserves the existing report information.
 <a name='idba_voglioancora'></a>
 #### idba_voglioancora(handle, count)
 
