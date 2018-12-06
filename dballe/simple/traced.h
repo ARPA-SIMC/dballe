@@ -75,7 +75,7 @@ struct TracedAPI : public API
     const char* spiegal(int ltype1, int l1, int ltype2, int l2) override;
     const char* spiegat(int ptype, int p1, int p2) override;
     const char* spiegab(const char* varcode, const char* value) override;
-    void fatto() override;
+    void commit() override;
 };
 
 }

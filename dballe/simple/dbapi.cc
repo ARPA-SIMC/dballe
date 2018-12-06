@@ -412,7 +412,7 @@ void DbAPI::shutdown(bool commit)
         tr->commit();
 }
 
-void DbAPI::fatto()
+void DbAPI::commit()
 {
     shutdown(true);
 }

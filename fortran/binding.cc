@@ -331,16 +331,21 @@ int idba_messaggi(int* handle, const char* filename, const char* mode, const cha
  * @param handle
  *   Handle to the session to be closed.
  */
-int idba_fatto(int* handle)
+int idba_commit(int* handle)
 {
     try {
         HSimple& h = hsimp.get(*handle);
-        h.api->fatto();
+        h.api->commit();
         hsimp.release(*handle);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
     }
+}
+
+int idba_fatto(int* handle)
+{
+    return idba_commit(handle);
 }
 
 /*@}*/

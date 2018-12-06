@@ -956,7 +956,7 @@ this->add_method("attr_insert", [](Fixture& f) {
         pre.settimerange(254, 0, 0);
         pre.setd("B12101", 273.149994);
         pre.prendilo();
-        pre.fatto();
+        pre.commit();
     }
 
     {
@@ -986,7 +986,7 @@ this->add_method("issue73", [](Fixture& f) {
         auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
         fortran::DbAPI dbapi(tr, "write", "write", "write");
         wassert(populate_variables(dbapi));
-        wassert(dbapi.fatto());
+        wassert(dbapi.commit());
     }
 
     {
@@ -1009,7 +1009,7 @@ this->add_method("issue75", [](Fixture& f) {
         wassert(actual(dbapi.messages_read_next()).istrue());
         wassert(actual(dbapi.messages_read_next()).istrue());
         wassert(actual(dbapi.messages_read_next()).istrue());
-        wassert(dbapi.fatto());
+        wassert(dbapi.commit());
     }
 
     {
@@ -1056,7 +1056,7 @@ this->add_method("transactions", [](Fixture& f) {
         api.setd("B12101", 21.5);
         api.prendilo();
         wassert(actual(api.voglioquesto()) == 1);
-        wassert(api.fatto());
+        wassert(api.commit());
     }
 
     // This time, data was written

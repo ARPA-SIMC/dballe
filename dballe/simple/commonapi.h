@@ -253,7 +253,7 @@ public:
     const char* ancora() override;
     void critica() override;
     void scusa() override;
-    void fatto() override;
+    void commit() override;
 
     const Operation* test_get_operation() const { return operation; }
 

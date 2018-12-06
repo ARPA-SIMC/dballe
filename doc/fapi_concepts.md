@@ -28,8 +28,8 @@ handle that you will later use to refer to it.
 
 Sessions run with their own database transaction, which means that the changes
 they perform on data are handled in an all-or-nothing fashion. If you close a
-session with [idba_fatto][], then all the changes made will be preserved. If
-you do not call [idba_fatto][], such as if your program unexpectedly
+session with [idba_commit][], then all the changes made will be preserved. If
+you do not call [idba_commit][], such as if your program unexpectedly
 terminates, then all the changes made will be undone.
 
 <a name="report"></a>
@@ -266,7 +266,7 @@ value".  This is a list of such special values:
 [idba_disconnect]: fapi_reference.md#idba_disconnect
 [idba_begin]: fapi_reference.md#idba_begin
 [idba_begin_messages]: fapi_reference.md#idba_begin_messages
-[idba_fatto]: fapi_reference.md#idba_fatto
+[idba_commit]: fapi_reference.md#idba_commit
 [idba_seti]: fapi_reference.md#idba_seti
 [idba_setb]: fapi_reference.md#idba_setb
 [idba_setr]: fapi_reference.md#idba_setr

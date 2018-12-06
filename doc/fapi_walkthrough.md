@@ -155,7 +155,7 @@ This code will open a connection with DB-All.e, then it will start a session:
       ! ...do your work...
 
       ! End of the work
-      ierr = idba_fatto(handle)
+      ierr = idba_commit(handle)
       ierr = idba_disconnect(dbhandle)
 ```
 
@@ -213,7 +213,7 @@ To do that, use [idba_begin_messages][] instead of both [idba_connect][] and
       ! ...do your work...
 
       ! End of the work
-      ierr = idba_fatto(handle)
+      ierr = idba_commit(handle)
 ```
 
 [idba_begin_messages][] has three parameters:
@@ -764,11 +764,11 @@ attribute `rewrite` mode.
 ## Ending the work
 
 When you are finished working with a handle, you release it with
-[idba_fatto][]:
+[idba_commit][]:
 
 ```fortran
       ! We are finished with this handle
-      ierr = idba_fatto(handle)
+      ierr = idba_commit(handle)
 ```
 
 When you are finished working with DB-ALLe, you use [idba_disconnect][] to
@@ -833,7 +833,7 @@ This is a list of the differences between working with files and working with
 databases:
 
 * You do not need to call [idba_connect][] and [idba_disconnect][]: the work
-  session starts at [idba_begin_messages][] and ends at [idba_fatto][]
+  session starts at [idba_begin_messages][] and ends at [idba_commit][]
 * When reading, performing [idba_quantesono][] or [idba_voglioquesto][] a second
   time advances to the next message in the file.
 * Query parameters set before an [idba_voglioquesto][] have no effect: filtering
@@ -978,7 +978,7 @@ explicit query for the extra station data using [idba_voglioquesto][] and
 [idba_disconnect]: fapi_reference.md#idba_disconnect
 [idba_begin]: fapi_reference.md#idba_begin
 [idba_begin_messages]: fapi_reference.md#idba_begin_messages
-[idba_fatto]: fapi_reference.md#idba_fatto
+[idba_commit]: fapi_reference.md#idba_commit
 [idba_seti]: fapi_reference.md#idba_seti
 [idba_setb]: fapi_reference.md#idba_setb
 [idba_setr]: fapi_reference.md#idba_setr

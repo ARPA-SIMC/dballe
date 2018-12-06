@@ -38,7 +38,7 @@ public:
     int voglioquesto() override;
     void prendilo() override;
     void dimenticami() override;
-    void fatto() override;
+    void commit() override;
     void messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified=true) override;
     void messages_open_output(const char* filename, const char* mode, Encoding format) override;
     bool messages_read_next() override;

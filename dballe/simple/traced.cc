@@ -593,9 +593,9 @@ const char* TracedAPI::spiegab(const char* varcode, const char* value)
     return RUN(spiegab, varcode, value);
 }
 
-void TracedAPI::fatto()
+void TracedAPI::commit()
 {
-    RUN(fatto);
+    RUN(commit);
     fprintf(tracer.trace_file, "// %s not used anymore\n", name.c_str());
 }
 

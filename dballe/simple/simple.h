@@ -62,7 +62,7 @@ struct API
     virtual const char* spiegal(int ltype1, int l1, int ltype2, int l2) = 0;
     virtual const char* spiegat(int ptype, int p1, int p2) = 0;
     virtual const char* spiegab(const char* varcode, const char* value) = 0;
-    virtual void fatto() = 0;
+    virtual void commit() = 0;
 };
 
 }

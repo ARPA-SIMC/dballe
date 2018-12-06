@@ -482,7 +482,7 @@ void CommonAPIImplementation::scusa()
     qcinput.clear();
 }
 
-void CommonAPIImplementation::fatto()
+void CommonAPIImplementation::commit()
 {
 }
 
