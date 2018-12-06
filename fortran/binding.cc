@@ -300,7 +300,7 @@ int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* 
  * @return
  *   The error indication for the function.
  */
-int idba_messaggi(int* handle, const char* filename, const char* mode, const char* type)
+int idba_begin_messages(int* handle, const char* filename, const char* mode, const char* type)
 {
     try {
         lib_init();
@@ -309,7 +309,7 @@ int idba_messaggi(int* handle, const char* filename, const char* mode, const cha
         //HSession& hs = hsess.get(*dbahandle);
         HSimple& h = hsimp.get(*handle);
 
-        std::unique_ptr<dballe::fortran::API> api = tracer->messaggi(*handle, filename, mode, type);
+        std::unique_ptr<dballe::fortran::API> api = tracer->begin_messages(*handle, filename, mode, type);
         h.api = api.release();
 
         return fortran::success();
@@ -317,6 +317,11 @@ int idba_messaggi(int* handle, const char* filename, const char* mode, const cha
         hsimp.release(*handle);
         return fortran::error(e);
     }
+}
+
+int idba_messaggi(int* handle, const char* filename, const char* mode, const char* type)
+{
+    return idba_begin_messages(handle, filename, mode, type);
 }
 
 

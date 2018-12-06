@@ -78,5 +78,5 @@ This should make execution faster at least on PostgreSQL and MySQL, and if
 then the partial work is rolled back rather than kept in the database.
 
 [idba_begin]: fapi_reference.md#idba_begin
-[idba_messaggi]: fapi_reference.md#idba_messaggi
+[idba_begin_messages]: fapi_reference.md#idba_begin_messages
 [idba_fatto]: fapi_reference.md#idba_fatto

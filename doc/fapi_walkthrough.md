@@ -203,12 +203,12 @@ attributes are deleted as well.
 Instead of connecting to a database, you can use the DB-All.e API to read and
 write message reports in BUFR and CREX format.
 
-To do that, use [idba_messaggi][] instead of both [idba_connect][] and
+To do that, use [idba_begin_messages][] instead of both [idba_connect][] and
 [idba_begin][].  To write a message, your code will look like:
 
 ```fortran
       ! Connect to the database and get a handle to work with it
-      ierr = idba_messaggi(handle, "file.bufr", "r", "auto")
+      ierr = idba_begin_messages(handle, "file.bufr", "r", "auto")
 
       ! ...do your work...
 
@@ -216,7 +216,7 @@ To do that, use [idba_messaggi][] instead of both [idba_connect][] and
       ierr = idba_fatto(handle)
 ```
 
-[idba_messaggi][] has three parameters:
+[idba_begin_messages][] has three parameters:
 
 1. the name of the file to open
 2. the open mode ("r" for read, "w" for write or create, "a" for append).
@@ -225,8 +225,8 @@ To do that, use [idba_messaggi][] instead of both [idba_connect][] and
    DB-All.e to autodetect the file format, but it only works when reading
    files, not when writing new one.
 
-You can call [idba_messaggi][] many times and read or write many files.  You
-can even call [idba_messaggi][] many time on the same file as long as you
+You can call [idba_begin_messages][] many times and read or write many files.  You
+can even call [idba_begin_messages][] many time on the same file as long as you
 open it read only.
 
 Once you open a file, you can use the other DB-All.e functions on it.  There
@@ -833,7 +833,7 @@ This is a list of the differences between working with files and working with
 databases:
 
 * You do not need to call [idba_connect][] and [idba_disconnect][]: the work
-  session starts at [idba_messaggi][] and ends at [idba_fatto][]
+  session starts at [idba_begin_messages][] and ends at [idba_fatto][]
 * When reading, performing [idba_quantesono][] or [idba_voglioquesto][] a second
   time advances to the next message in the file.
 * Query parameters set before an [idba_voglioquesto][] have no effect: filtering
@@ -977,7 +977,7 @@ explicit query for the extra station data using [idba_voglioquesto][] and
 [idba_connect]: fapi_reference.md#idba_connect
 [idba_disconnect]: fapi_reference.md#idba_disconnect
 [idba_begin]: fapi_reference.md#idba_begin
-[idba_messaggi]: fapi_reference.md#idba_messaggi
+[idba_begin_messages]: fapi_reference.md#idba_begin_messages
 [idba_fatto]: fapi_reference.md#idba_fatto
 [idba_seti]: fapi_reference.md#idba_seti
 [idba_setb]: fapi_reference.md#idba_setb

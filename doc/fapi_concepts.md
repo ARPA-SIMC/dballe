@@ -265,7 +265,7 @@ value".  This is a list of such special values:
 [idba_connect]: fapi_reference.md#idba_connect
 [idba_disconnect]: fapi_reference.md#idba_disconnect
 [idba_begin]: fapi_reference.md#idba_begin
-[idba_messaggi]: fapi_reference.md#idba_messaggi
+[idba_begin_messages]: fapi_reference.md#idba_begin_messages
 [idba_fatto]: fapi_reference.md#idba_fatto
 [idba_seti]: fapi_reference.md#idba_seti
 [idba_setb]: fapi_reference.md#idba_setb

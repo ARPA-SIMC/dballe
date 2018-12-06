@@ -18,9 +18,9 @@ std::unique_ptr<API> Tracer::begin(int dbahandle, int handle, const char* url, c
     return wrap_api(handle, fortran::DbAPI::fortran_connect(url, anaflag, dataflag, attrflag));
 }
 
-std::unique_ptr<API> Tracer::messaggi(int handle, const char* filename, const char* mode, const char* type)
+std::unique_ptr<API> Tracer::begin_messages(int handle, const char* filename, const char* mode, const char* type)
 {
-    log_messaggi(handle, filename, mode, type);
+    log_begin_messages(handle, filename, mode, type);
     return wrap_api(handle, std::unique_ptr<API>(new fortran::MsgAPI(filename, mode, type)));
 }
 
@@ -31,7 +31,7 @@ struct NullTracer : public Tracer
     std::unique_ptr<API> wrap_api(int handle, std::unique_ptr<API> api) { return std::move(api); }
     void log_connect_url(int handle, const char* chosen_dsn) override {}
     void log_begin(int dbahandle, int handle, const char* anaflag, const char* dataflag, const char* attrflag) override {}
-    void log_messaggi(int handle, const char* filename, const char* mode, const char* type) override {}
+    void log_begin_messages(int handle, const char* filename, const char* mode, const char* type) override {}
     void log_disconnect(int handle) override {}
 };
 
@@ -77,7 +77,7 @@ struct FileTracer : public Tracer
                 handle, dbahandle, anaflag, dataflag, attrflag);
     }
 
-    void log_messaggi(int handle, const char* filename, const char* mode, const char* type) override
+    void log_begin_messages(int handle, const char* filename, const char* mode, const char* type) override
     {
         std::string arg1(str::encode_cstring(filename));
         fprintf(trace_file, "MsgAPI msgapi%d(\"%s\", \"%s\", \"%s\");\n",
