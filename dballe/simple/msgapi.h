@@ -79,7 +79,7 @@ public:
     void set_exporter(const char* template_name);
 
     void reinit_db(const char* repinfofile=0) override;
-    int quantesono() override;
+    int query_stations() override;
     int voglioquesto() override;
     void prendilo() override;
     void dimenticami() override;

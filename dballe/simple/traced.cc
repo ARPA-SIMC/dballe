@@ -508,9 +508,9 @@ void TracedAPI::unsetb()
     RUN(unsetb);
 }
 
-int TracedAPI::quantesono()
+int TracedAPI::query_stations()
 {
-    return RUN(quantesono);
+    return RUN(query_stations);
 }
 
 void TracedAPI::elencamele()

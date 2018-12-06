@@ -26,7 +26,7 @@ void Tests::register_tests()
         wassert(actual(api.voglioquesto()) == 4);
         wassert(actual(api.voglioquesto()) == 4);
         wassert(actual(api.voglioquesto()) == 4);
-        wassert(actual(api.quantesono()) == 1);
+        wassert(actual(api.query_stations()) == 1);
     });
     add_method("resume", []() {
         // Test resuming after a broken BUFR

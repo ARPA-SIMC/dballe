@@ -1024,7 +1024,7 @@ int idba_scopa(int handle, const char* repinfofile)
  *
  * Results are retrieved using idba_elencamele().
  *
- * There is no guarantee on the ordering of results of quantesono/elencamele.
+ * There is no guarantee on the ordering of results of query_stations/elencamele.
  *
  * @param handle
  *   Handle to a DB-All.e session
@@ -1037,11 +1037,16 @@ int idba_quantesono(int handle, int* count)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        *count = h.api->quantesono();
+        *count = h.api->query_stations();
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
     }
+}
+
+int idba_query_stations(int handle, int* count)
+{
+    return idba_query_stations(handle, count);
 }
 
 /**

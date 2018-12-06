@@ -58,7 +58,7 @@ struct TracedAPI : public API
     void unset(const char* param) override;
     void unsetall() override;
     void unsetb() override;
-    int quantesono() override;
+    int query_stations() override;
     void elencamele() override;
     int voglioquesto() override;
     wreport::Varcode dammelo() override;

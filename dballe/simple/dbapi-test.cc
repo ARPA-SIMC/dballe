@@ -103,7 +103,7 @@ this->add_method("query_basic", [](Fixture& f) {
 
     // Query stations
     api.unsetall();
-    wassert(actual(api.quantesono()) == 1);
+    wassert(actual(api.query_stations()) == 1);
     api.elencamele();
     wassert(actual(api.enqd("lat")) == 44.5);
     wassert(actual(api.enqd("lon")) == 11.5);
@@ -865,7 +865,7 @@ this->add_method("perf_data", [](Fixture& f) {
     // Query stations only
     f.tr->trc->clear();
     api.unsetall();
-    wassert(actual(api.quantesono()) == 1);
+    wassert(actual(api.query_stations()) == 1);
     stats = f.tr->trc->aggregate("select");
     wassert(actual(stats.count) == 1);
     wassert(actual(stats.rows) == 1);
@@ -1077,7 +1077,7 @@ this->add_method("insert_block", [](Fixture& f) {
     dbapi0.seti("block", 1);
     dbapi0.setcontextana();
     dbapi0.prendilo();
-    wassert(actual(dbapi0.quantesono()) == 1);
+    wassert(actual(dbapi0.query_stations()) == 1);
 });
 
 this->add_method("query_attr_values", [](Fixture& f) {

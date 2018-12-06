@@ -245,7 +245,7 @@ is read with the functions `idba_enq*` (see [the introduction](fapi_concepts.md#
       ierr = idba_setd(handle, "latmax", 50.D0)
       ierr = idba_setd(handle, "lonmin", 10.D0)
       ierr = idba_setd(handle, "lonmax", 20.D0)
-      ierr = idba_quantesono(handle, count)
+      ierr = idba_query_stations(handle, count)
 
       ! Get the informations about a station
       do while (count.gt.0)
@@ -410,7 +410,7 @@ Example code to query all the stations in a given area:
       ierr = idba_setd(handle, "latmax", 50.D0)
       ierr = idba_setd(handle, "lonmin", 10.D0)
       ierr = idba_setd(handle, "lonmax", 20.D0)
-      ierr = idba_quantesono(handle, count)
+      ierr = idba_query_stations(handle, count)
       do while (count.gt.0)
         ierr = idba_elencamele(handle)
         ierr = idba_enqi(handle, "ana_id", id)
@@ -424,9 +424,9 @@ Example code to query all the stations in a given area:
 
 This code introduces two new functions:
 
-* [idba_quantesono][]: performs the query and returns the number of stations it
+* [idba_query_stations][]: performs the query and returns the number of stations it
   finds.
-* [idba_elencamele][]: gets a station out of the results of [idba_quantesono][].
+* [idba_elencamele][]: gets a station out of the results of [idba_query_stations][].
   If there are no more stations, the function fails.
 
 After [idba_elencamele][], the output record will also contain all the pseudoana
@@ -834,7 +834,7 @@ databases:
 
 * You do not need to call [idba_connect][] and [idba_disconnect][]: the work
   session starts at [idba_begin_messages][] and ends at [idba_commit][]
-* When reading, performing [idba_quantesono][] or [idba_voglioquesto][] a second
+* When reading, performing [idba_query_stations][] or [idba_voglioquesto][] a second
   time advances to the next message in the file.
 * Query parameters set before an [idba_voglioquesto][] have no effect: filtering
   data is not implemented for files. Since it may be implemented in the future,
@@ -842,7 +842,7 @@ databases:
   [idba_voglioquesto][] to avoid unexpected changes of behaviour with future
   versions of DB-All.e.
 * When reading, you will see that there are no more messages because
-  [idba_quantesono][] or [idba_voglioquesto][] will return 0.
+  [idba_query_stations][] or [idba_voglioquesto][] will return 0.
 * When writing, you can use the `query` input parameter to [idba_prendilo][] to
   control when a new message is started.  If you set it to `subset`, then the
   data will be inserted in a new BUFR or CREX subset.  If you set it to
@@ -910,12 +910,12 @@ do i=1,N
   ierr = idba_enqlevel (handle, ltype, l1, l2)
 
   ! Read pseudoana data about the variable we just had
-  ! Setup a query for the station with 'quantesono'
+  ! Setup a query for the station with 'query_stations'
   ierr = idba_enqi (handle, "ana_id", anaid)
   ierr = idba_seti (handleana, "ana_id", anaid)
 
   ! Query.  Nstaz should always be 1 because we query a specific station
-  ierr = idba_quantesono (handleana, Nstaz)
+  ierr = idba_query_stations (handleana, Nstaz)
 
   ! Fetch the data
   ierr = idba_elencamele (handleana)
@@ -938,7 +938,7 @@ among the results of [idba_elencamele][]:
 
 ```fortran
       ! Query station data
-      ierr = idba_quantesono(handle, count)
+      ierr = idba_query_stations(handle, count)
 
       ! Get the informations about a station
       do i=1,count
@@ -1002,7 +1002,7 @@ explicit query for the extra station data using [idba_voglioquesto][] and
 [idba_enqtimerange]: fapi_reference.md#idba_enqtimerange
 [idba_enqdate]: fapi_reference.md#idba_enqdate
 [idba_reinit_db]: fapi_reference.md#idba_reinit_db
-[idba_quantesono]: fapi_reference.md#idba_quantesono
+[idba_query_stations]: fapi_reference.md#idba_query_stations
 [idba_elencamele]: fapi_reference.md#idba_elencamele
 [idba_voglioquesto]: fapi_reference.md#idba_voglioquesto
 [idba_dammelo]: fapi_reference.md#idba_dammelo

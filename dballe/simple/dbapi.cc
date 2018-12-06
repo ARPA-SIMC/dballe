@@ -113,9 +113,9 @@ struct QuantesonoOperation : public CursorOperation<CursorStation>
         return cursor->next();
     }
 
-    void voglioancora(Attributes& dest) override { throw error_consistency("voglioancora cannot be called after quantesono/elencamele"); }
-    void critica(Values& qcinput) override { throw error_consistency("critica cannot be called after quantesono/elencamele"); }
-    void scusa() override { throw error_consistency("scusa cannot be called after quantesono/elencamele"); }
+    void voglioancora(Attributes& dest) override { throw error_consistency("voglioancora cannot be called after query_stations/elencamele"); }
+    void critica(Values& qcinput) override { throw error_consistency("critica cannot be called after query_stations/elencamele"); }
+    void scusa() override { throw error_consistency("scusa cannot be called after query_stations/elencamele"); }
 };
 
 template<typename Cursor>
@@ -453,7 +453,7 @@ void DbAPI::seti(const char* param, int value)
     return CommonAPIImplementation::seti(param, value);
 }
 
-int DbAPI::quantesono()
+int DbAPI::query_stations()
 {
     validate_input_query();
     return reset_operation(new QuantesonoOperation(*this));

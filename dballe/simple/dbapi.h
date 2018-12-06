@@ -34,7 +34,7 @@ public:
     void seti(const char* param, int value) override;
     void reinit_db(const char* repinfofile=nullptr) override;
     void remove_all() override;
-    int quantesono() override;
+    int query_stations() override;
     int voglioquesto() override;
     void prendilo() override;
     void dimenticami() override;

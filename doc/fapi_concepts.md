@@ -290,7 +290,7 @@ value".  This is a list of such special values:
 [idba_enqtimerange]: fapi_reference.md#idba_enqtimerange
 [idba_enqdate]: fapi_reference.md#idba_enqdate
 [idba_reinit_db]: fapi_reference.md#idba_reinit_db
-[idba_quantesono]: fapi_reference.md#idba_quantesono
+[idba_query_stations]: fapi_reference.md#idba_query_stations
 [idba_elencamele]: fapi_reference.md#idba_elencamele
 [idba_voglioquesto]: fapi_reference.md#idba_voglioquesto
 [idba_dammelo]: fapi_reference.md#idba_dammelo

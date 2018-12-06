@@ -32,7 +32,7 @@ struct QuantesonoOperation : public CursorOperation<CursorStation>
     {
         const impl::Message* curmsg = api.curmsg();
         if (!curmsg)
-            throw error_consistency("quantesono called without a current message");
+            throw error_consistency("query_stations called without a current message");
         cursor = curmsg->query_stations(api.input_query);
         return cursor->remaining();
     }
@@ -42,9 +42,9 @@ struct QuantesonoOperation : public CursorOperation<CursorStation>
         return cursor->next();
     }
 
-    void voglioancora(Attributes& dest) override { throw error_consistency("voglioancora cannot be called after quantesono/elencamele"); }
-    void critica(Values& qcinput) override { throw error_consistency("critica cannot be called after quantesono/elencamele"); }
-    void scusa() override { throw error_consistency("scusa cannot be called after quantesono/elencamele"); }
+    void voglioancora(Attributes& dest) override { throw error_consistency("voglioancora cannot be called after query_stations/elencamele"); }
+    void critica(Values& qcinput) override { throw error_consistency("critica cannot be called after query_stations/elencamele"); }
+    void scusa() override { throw error_consistency("scusa cannot be called after query_stations/elencamele"); }
 };
 
 template<typename Cursor>
@@ -380,7 +380,7 @@ void MsgAPI::reinit_db(const char* repinfofile)
     // FIXME: In practice, we could reset all buffered data and ftruncate the file
 }
 
-int MsgAPI::quantesono()
+int MsgAPI::query_stations()
 {
     if (state & (STATE_BLANK | STATE_QUANTESONO))
         readNextMessage();
