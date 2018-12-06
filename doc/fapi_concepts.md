@@ -300,7 +300,7 @@ value".  This is a list of such special values:
 [idba_query_attributes]: fapi_reference.md#idba_query_attributes
 [idba_next_attribute]: fapi_reference.md#idba_next_attribute
 [idba_insert_attribute]: fapi_reference.md#idba_insert_attribute
-[idba_scusa]: fapi_reference.md#idba_scusa
+[idba_remove_attributes]: fapi_reference.md#idba_remove_attributes
 [idba_messages_open_input]: fapi_reference.md#idba_messages_open_input
 [idba_messages_open_output]: fapi_reference.md#idba_messages_open_output
 [idba_messages_read_next]: fapi_reference.md#idba_messages_read_next

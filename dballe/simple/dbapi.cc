@@ -115,7 +115,7 @@ struct QuantesonoOperation : public CursorOperation<CursorStation>
 
     void query_attributes(Attributes& dest) override { throw error_consistency("query_attributes cannot be called after query_stations/next_station"); }
     void insert_attribute(Values& qcinput) override { throw error_consistency("insert_attribute cannot be called after query_stations/next_station"); }
-    void scusa() override { throw error_consistency("scusa cannot be called after query_stations/next_station"); }
+    void remove_attributes() override { throw error_consistency("remove_attributes cannot be called after query_stations/next_station"); }
 };
 
 template<typename Cursor>
@@ -215,9 +215,9 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
         CursorTraits<Cursor>::attr_insert(*api.tr, this->cursor->attr_reference_id(), qcinput);
         valid_cached_attrs = false;
     }
-    void scusa() override
+    void remove_attributes() override
     {
-        if (next_data_ended) throw error_consistency("scusa called after next_data returned end of data");
+        if (next_data_ended) throw error_consistency("remove_attributes called after next_data returned end of data");
         CursorTraits<Cursor>::attr_remove(*api.tr, this->cursor->attr_reference_id(), api.selected_attr_codes);
         valid_cached_attrs = false;
     }
@@ -303,9 +303,9 @@ struct PrendiloOperation : public Operation
         else
             api.tr->attr_insert_data(data_id, qcinput);
     }
-    void scusa() override
+    void remove_attributes() override
     {
-        throw error_consistency("scusa cannot be called after a insert_data");
+        throw error_consistency("remove_attributes cannot be called after a insert_data");
     }
     int enqi(const char* param) const override
     {
@@ -366,7 +366,7 @@ struct VaridOperation : public Operation
     {
         api.tr->attr_insert_data(varid, qcinput);
     }
-    void scusa() override
+    void remove_attributes() override
     {
         api.tr->attr_remove_data(varid, api.selected_attr_codes);
     }

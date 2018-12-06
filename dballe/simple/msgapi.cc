@@ -44,7 +44,7 @@ struct QuantesonoOperation : public CursorOperation<CursorStation>
 
     void query_attributes(Attributes& dest) override { throw error_consistency("query_attributes cannot be called after query_stations/next_station"); }
     void insert_attribute(Values& qcinput) override { throw error_consistency("insert_attribute cannot be called after query_stations/next_station"); }
-    void scusa() override { throw error_consistency("scusa cannot be called after query_stations/next_station"); }
+    void remove_attributes() override { throw error_consistency("remove_attributes cannot be called after query_stations/next_station"); }
 };
 
 template<typename Cursor>
@@ -133,9 +133,9 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
         throw error_consistency("insert_attribute has been called without a previous insert_data");
     }
 
-    void scusa() override
+    void remove_attributes() override
     {
-        throw error_consistency("scusa does not make sense when writing messages");
+        throw error_consistency("remove_attributes does not make sense when writing messages");
     }
 };
 
@@ -245,9 +245,9 @@ struct PrendiloOperation : public Operation
         qcinput.move_to_attributes(**vars.begin());
     }
 
-    void scusa() override
+    void remove_attributes() override
     {
-        throw error_consistency("scusa does not make sense when writing messages");
+        throw error_consistency("remove_attributes does not make sense when writing messages");
     }
     int enqi(const char* param) const override { wreport::error_consistency::throwf("enqi %s cannot be called after a insert_data", param); }
     double enqd(const char* param) const override { throw wreport::error_consistency("enqd cannot be called after a insert_data"); }

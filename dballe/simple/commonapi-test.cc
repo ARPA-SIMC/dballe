@@ -20,7 +20,7 @@ struct APITest : public CommonAPIImplementation
      void remove_data() override {}
      int query_attributes() override { return 0; }
      void insert_attribute() override {}
-     void scusa() override {}
+     void remove_attributes() override {}
      void messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified=true) override {}
      void messages_open_output(const char* filename, const char* mode, Encoding format) override {}
      bool messages_read_next() override { return false; }

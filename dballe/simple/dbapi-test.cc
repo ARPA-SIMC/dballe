@@ -186,7 +186,7 @@ this->add_method("query_attrs", [](Fixture& f) {
         wassert(actual(api.enqi("*B33007")) == 50);
 
         // Delete all attributes
-        wassert(api.scusa());
+        wassert(api.remove_attributes());
         wassert(actual(api.query_attributes()) == 0);
     }
 });
@@ -332,9 +332,9 @@ this->add_method("delete_attrs_next_data", [](Fixture& f) {
     api.unsetall();
     wassert(actual(api.query_data()) == 2);
     wassert(actual(api.next_data()) == WR_VAR(0, 12, 101));
-    api.scusa();
+    api.remove_attributes();
     wassert(actual(api.next_data()) == WR_VAR(0, 11,   2));
-    api.scusa();
+    api.remove_attributes();
 
     // Query again and check that the attributes are gone
     api.unsetall();
@@ -706,12 +706,12 @@ this->add_method("attr_reference_id", [](Fixture& f) {
     api.setc("var", "B12101");
     wassert(actual(api.query_data()) == 1);
     api.next_data();
-    api.scusa();
+    api.remove_attributes();
     wassert(actual(api.query_attributes()) == 0);
     // Try to delete by *context_id and *varid: it works
     api.seti("*context_id", ref_id);
     api.setc("*var_related", "B12101");
-    api.scusa();
+    api.remove_attributes();
 });
 
 this->add_method("attrs_bug1", [](Fixture& f) {

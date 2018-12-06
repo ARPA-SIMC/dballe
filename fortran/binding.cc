@@ -1373,15 +1373,21 @@ int idba_critica(int handle)
  * @return
  *   The error indicator for the function
  */
-int idba_scusa(int handle)
+int idba_remove_attributes(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        h.api->scusa();
+        h.api->remove_attributes();
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
     }
+}
+
+/// Deprecated compatibility version of idba_remove_attributes()
+int idba_scusa(int handle)
+{
+    return idba_remove_attributes(handle);
 }
 
 /// @}

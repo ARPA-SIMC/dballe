@@ -469,16 +469,16 @@ void CommonAPIImplementation::insert_attribute()
     qcinput.clear();
 }
 
-void CommonAPIImplementation::scusa()
+void CommonAPIImplementation::remove_attributes()
 {
     if (! (perms & PERM_ATTR_WRITE))
         throw error_consistency(
-            "scusa must be called with the database open in attribute write mode");
+            "remove_attributes must be called with the database open in attribute write mode");
 
 
     // Retrieve the varcodes of the attributes we want to remove
-    if (!operation) throw error_consistency("scusa was not called after a next_data, or was called with an invalid *context_id or *var_related");
-    operation->scusa();
+    if (!operation) throw error_consistency("remove_attributes was not called after a next_data, or was called with an invalid *context_id or *var_related");
+    operation->remove_attributes();
     qcinput.clear();
 }
 

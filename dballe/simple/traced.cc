@@ -553,9 +553,9 @@ void TracedAPI::insert_attribute()
     RUN(insert_attribute);
 }
 
-void TracedAPI::scusa()
+void TracedAPI::remove_attributes()
 {
-    RUN(scusa);
+    RUN(remove_attributes);
 }
 
 void TracedAPI::messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified)

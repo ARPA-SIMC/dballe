@@ -737,7 +737,7 @@ opening mode of the database:
 
 ## Deleting attributes
 
-Attributes are deleted using [[idba_scusa][]](fapi_reference.md#idba_scusa):
+Attributes are deleted using [[idba_remove_attributes][]](fapi_reference.md#idba_remove_attributes):
 
 ```fortran
       ! Delete the confidence interval from the wind speed
@@ -749,15 +749,15 @@ Attributes are deleted using [[idba_scusa][]](fapi_reference.md#idba_scusa):
 
       ! The attributes to delete are selected by setting "*varlist":
       ierr = idba_setc(handle, "*varlist", "*B33007")
-      ierr = idba_scusa(handle)
+      ierr = idba_remove_attributes(handle)
 ```
 
 This code introduces a new function:
 
-* [idba_scusa][]:
+* [idba_remove_attributes][]:
   Delete attributes from a variable identified in the same way as with
 
-[idba_scusa][] will not work unless the database has been opened in
+[idba_remove_attributes][] will not work unless the database has been opened in
 attribute `rewrite` mode.
 
 
@@ -1012,7 +1012,7 @@ explicit query for the extra station data using [idba_query_data][] and
 [idba_query_attributes]: fapi_reference.md#idba_query_attributes
 [idba_next_attribute]: fapi_reference.md#idba_next_attribute
 [idba_insert_attribute]: fapi_reference.md#idba_insert_attribute
-[idba_scusa]: fapi_reference.md#idba_scusa
+[idba_remove_attributes]: fapi_reference.md#idba_remove_attributes
 [idba_messages_open_input]: fapi_reference.md#idba_messages_open_input
 [idba_messages_open_output]: fapi_reference.md#idba_messages_open_output
 [idba_messages_read_next]: fapi_reference.md#idba_messages_read_next

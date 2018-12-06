@@ -67,7 +67,7 @@ struct TracedAPI : public API
     int query_attributes() override;
     const char* next_attribute() override;
     void insert_attribute() override;
-    void scusa() override;
+    void remove_attributes() override;
     void messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified=true) override;
     void messages_open_output(const char* filename, const char* mode, Encoding format) override;
     bool messages_read_next() override;
