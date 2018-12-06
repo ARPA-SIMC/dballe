@@ -1254,11 +1254,11 @@ int idba_next_attribute(int handle, char* parameter, unsigned parameter_len)
  * @return
  *   The error indicator for the function
  */
-int idba_insert_attribute(int handle)
+int idba_insert_attributes(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        h.api->insert_attribute();
+        h.api->insert_attributes();
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1622,10 +1622,10 @@ int idba_ancora(int handle, char* parameter, unsigned parameter_len)
     return idba_next_attribute(handle, parameter, parameter_len);
 }
 
-/// Deprecated compatibility version of idba_insert_attribute()
+/// Deprecated compatibility version of idba_insert_attributes()
 int idba_critica(int handle)
 {
-    return idba_insert_attribute(handle);
+    return idba_insert_attributes(handle);
 }
 
 /// Deprecated compatibility version of idba_remove_attributes()

@@ -392,7 +392,7 @@ For example:
       ! in the last 'idba_insert_data'
       ierr = idba_setr(handle, "*B33007", 75.0)
       ierr = idba_setc(handle, "*var_related", "B11002")
-      ierr = idba_insert_attribute(handle)
+      ierr = idba_insert_attributes(handle)
 ```
 
 ## Querying the database
@@ -643,12 +643,12 @@ table value:
 
 ## Writing attributes
 
-Attributes are written using [idba_insert_attribute][], which can be used after an
+Attributes are written using [idba_insert_attributes][], which can be used after an
 [idba_next_data][], after an [idba_insert_data][] or at any time using a stored data
-id.  These three case differ on how to communicate to [idba_insert_attribute][] what is
+id.  These three case differ on how to communicate to [idba_insert_attributes][] what is
 the data about which to write attributes.
 
-When used after [idba_next_data][], [idba_insert_attribute][] can refer directly to the
+When used after [idba_next_data][], [idba_insert_attributes][] can refer directly to the
 last data retrieved:
 
 ```fortran
@@ -661,14 +661,14 @@ last data retrieved:
         ! Set the attributes
         ierr = idba_seti(handle, "*B33007", 75)
         ierr = idba_seti(handle, "*B33006", 42)
-        ierr = idba_insert_attribute(handle)
+        ierr = idba_insert_attributes(handle)
 
         count = count - 1
       enddo
 ```
 
 After an [idba_insert_data][] instead, since [idba_insert_data][] can write more than
-one data at a time, we need to tell [idba_insert_attribute][] which of them we are
+one data at a time, we need to tell [idba_insert_attributes][] which of them we are
 referring to:
 
 ```fortran
@@ -683,10 +683,10 @@ referring to:
       ! Use "*var_related" to indicate which of the two variables we are annotating
       ierr = idba_setc(handle, "*var_related", "B11002")
 
-      ierr = idba_insert_attribute(handle)
+      ierr = idba_insert_attributes(handle)
 ```
 
-[idba_insert_attribute][] can also be called at any time using a previously stored data it:
+[idba_insert_attributes][] can also be called at any time using a previously stored data it:
 
 ```fortran
       ! ...perform a query with idba_query_data...
@@ -711,12 +711,12 @@ referring to:
       ! and variable code
       ierr = idba_seti(handle, "*context_id", saved_id)
       ierr = idba_seti(handle, "*var_related", "B11001")
-      ierr = idba_insert_attribute(handle)
+      ierr = idba_insert_attributes(handle)
 ```
 
 This code introduces a new function:
 
-* [idba_insert_attribute][]
+* [idba_insert_attributes][]
   Set one or more attributes about a variable.
   
   The variable can be identified directly by using `idba_seti(handle,
@@ -724,10 +724,10 @@ This code introduces a new function:
   These parameters are automatically set by the [idba_next_data][] and
   [idba_insert_data][] action routines.
 
-  The attributes and values are set as input to [idba_insert_attribute][] using the
+  The attributes and values are set as input to [idba_insert_attributes][] using the
   `idba_set*` functions with an asterisk in front of the variable name.
 
-[idba_insert_attribute][] will work in different ways according to the attributes
+[idba_insert_attributes][] will work in different ways according to the attributes
 opening mode of the database:
 
 * `"read"`: attributes cannot be modified in any way.
@@ -743,7 +743,7 @@ Attributes are deleted using [[idba_remove_attributes][]](fapi_reference.md#idba
       ! Delete the confidence interval from the wind speed
 
       ! The referring variable is identified in the same way as with
-      ! idba_insert_attribute:
+      ! idba_insert_attributes:
       ierr = idba_seti(handle, "*context_id", saved_id)
       ierr = idba_seti(handle, "*var_related", "B11002")
 
@@ -1011,7 +1011,7 @@ explicit query for the extra station data using [idba_query_data][] and
 [idba_remove_all]: fapi_reference.md#idba_remove_all
 [idba_query_attributes]: fapi_reference.md#idba_query_attributes
 [idba_next_attribute]: fapi_reference.md#idba_next_attribute
-[idba_insert_attribute]: fapi_reference.md#idba_insert_attribute
+[idba_insert_attributes]: fapi_reference.md#idba_insert_attributes
 [idba_remove_attributes]: fapi_reference.md#idba_remove_attributes
 [idba_messages_open_input]: fapi_reference.md#idba_messages_open_input
 [idba_messages_open_output]: fapi_reference.md#idba_messages_open_output

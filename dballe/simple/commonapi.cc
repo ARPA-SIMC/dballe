@@ -458,14 +458,14 @@ const char* CommonAPIImplementation::next_attribute()
     return parm;
 }
 
-void CommonAPIImplementation::insert_attribute()
+void CommonAPIImplementation::insert_attributes()
 {
     if (perms & PERM_ATTR_RO)
         throw error_consistency(
-            "insert_attribute cannot be called with the database open in attribute readonly mode");
+            "insert_attributes cannot be called with the database open in attribute readonly mode");
 
-    if (!operation) throw error_consistency("insert_attribute was not called after a next_data or insert_data, or was called with an invalid *context_id or *var_related");
-    operation->insert_attribute(qcinput);
+    if (!operation) throw error_consistency("insert_attributes was not called after a next_data or insert_data, or was called with an invalid *context_id or *var_related");
+    operation->insert_attributes(qcinput);
     qcinput.clear();
 }
 

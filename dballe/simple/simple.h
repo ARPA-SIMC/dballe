@@ -53,7 +53,7 @@ struct API
     virtual void remove_data() = 0;
     virtual int query_attributes() = 0;
     virtual const char* next_attribute() = 0;
-    virtual void insert_attribute() = 0;
+    virtual void insert_attributes() = 0;
     virtual void remove_attributes() = 0;
     virtual void messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified=true) = 0;
     virtual void messages_open_output(const char* filename, const char* mode, Encoding format) = 0;
