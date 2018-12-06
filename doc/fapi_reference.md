@@ -36,15 +36,10 @@ DB-All.e.
 </thead>
 <tbody>
 <tr><td><code><a href='#idba_connect'>idba_connect(dbahandle, url)</a></code></td><td>Connect to the database.</td></tr>
-<tr><td><code><a href='#idba_presentati'>idba_presentati(dbahandle, url)</a></code></td><td>Deprecated compatibility version of idba_connect()</td></tr>
 <tr><td><code><a href='#idba_disconnect'>idba_disconnect(dbahandle)</a></code></td><td>Disconnect from the database.</td></tr>
-<tr><td><code><a href='#idba_arrivederci'>idba_arrivederci(dbahandle)</a></code></td><td>Deprecated compatibility version of idba_disconnect()</td></tr>
 <tr><td><code><a href='#idba_begin'>idba_begin(dbahandle, handle, anaflag, dataflag, attrflag)</a></code></td><td>Open a new session.</td></tr>
-<tr><td><code><a href='#idba_preparati'>idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)</a></code></td><td>Deprecated compatibility version of idba_begin()</td></tr>
 <tr><td><code><a href='#idba_begin_messages'>idba_begin_messages(handle, filename, mode, type)</a></code></td><td>Start working with a message file.</td></tr>
-<tr><td><code><a href='#idba_messaggi'>idba_messaggi(handle, filename, mode, type)</a></code></td><td>Deprecated compatibility version of idba_begin_messages()</td></tr>
 <tr><td><code><a href='#idba_commit'>idba_commit(handle)</a></code></td><td>Close a session.</td></tr>
-<tr><td><code><a href='#idba_fatto'>idba_fatto(handle)</a></code></td><td>Deprecated compatibility version of idba_commit()</td></tr>
 </tbody>
 </table>
 
@@ -73,7 +68,7 @@ routines.
 <tr><td><code><a href='#idba_unset'>idba_unset(handle, parameter)</a></code></td><td>Remove one value from the input.</td></tr>
 <tr><td><code><a href='#idba_unsetb'>idba_unsetb(handle)</a></code></td><td>Remove all Bxxyyy values from the input.</td></tr>
 <tr><td><code><a href='#idba_unsetall'>idba_unsetall(handle)</a></code></td><td>Completely clear the input, removing all values.</td></tr>
-<tr><td><code><a href='#idba_setcontextana'>idba_setcontextana(handle)</a></code></td><td>Signal that the input values that are set are related to station values instead of normal variables.</td></tr>
+<tr><td><code><a href='#idba_set_station_context'>idba_set_station_context(handle)</a></code></td><td>Signal that the input values that are set are related to station values instead of normal variables.</td></tr>
 </tbody>
 </table>
 
@@ -111,21 +106,17 @@ Input/Output routines.
 </thead>
 <tbody>
 <tr><td><code><a href='#idba_reinit_db'>idba_reinit_db(handle, repinfofile)</a></code></td><td>Reinitialize the database, removing all data and loading report information.</td></tr>
-<tr><td><code><a href='#idba_scopa'>idba_scopa(handle, repinfofile)</a></code></td><td>Deprecated compatibility version of idba_reinit_db()</td></tr>
 <tr><td><code><a href='#idba_query_stations'>idba_query_stations(handle, count)</a></code></td><td>Query the stations in the database.</td></tr>
-<tr><td><code><a href='#idba_quantesono'>idba_quantesono(handle, count)</a></code></td><td>Deprecated compatibility version of idba_query_stations()</td></tr>
 <tr><td><code><a href='#idba_next_station'>idba_next_station(handle)</a></code></td><td>Retrieve the data about one station.</td></tr>
-<tr><td><code><a href='#idba_elencamele'>idba_elencamele(handle)</a></code></td><td>Deprecated compatibility version of idba_next_station()</td></tr>
 <tr><td><code><a href='#idba_query_data'>idba_query_data(handle, count)</a></code></td><td>Query the data in the database.</td></tr>
-<tr><td><code><a href='#idba_voglioquesto'>idba_voglioquesto(handle, count)</a></code></td><td>Deprecated compatibility version of idba_query_data()</td></tr>
-<tr><td><code><a href='#idba_dammelo'>idba_dammelo(handle, parameter, parameter_len)</a></code></td><td>Retrieve the data about one value.</td></tr>
-<tr><td><code><a href='#idba_prendilo'>idba_prendilo(handle)</a></code></td><td>Insert a new value in the database.</td></tr>
-<tr><td><code><a href='#idba_dimenticami'>idba_dimenticami(handle)</a></code></td><td>Remove from the database all values that match the query.</td></tr>
+<tr><td><code><a href='#idba_next_data'>idba_next_data(handle, parameter, parameter_len)</a></code></td><td>Retrieve the data about one value.</td></tr>
+<tr><td><code><a href='#idba_insert_data'>idba_insert_data(handle)</a></code></td><td>Insert a new value in the database.</td></tr>
+<tr><td><code><a href='#idba_remove_data'>idba_remove_data(handle)</a></code></td><td>Remove from the database all values that match the query.</td></tr>
 <tr><td><code><a href='#idba_remove_all'>idba_remove_all(handle)</a></code></td><td>Remove all values from the database.</td></tr>
-<tr><td><code><a href='#idba_voglioancora'>idba_voglioancora(handle, count)</a></code></td><td>Query attributes about a variable.</td></tr>
-<tr><td><code><a href='#idba_ancora'>idba_ancora(handle, parameter, parameter_len)</a></code></td><td>Retrieve one attribute from the result of idba_voglioancora().</td></tr>
-<tr><td><code><a href='#idba_critica'>idba_critica(handle)</a></code></td><td>Insert new attributes for a variable.</td></tr>
-<tr><td><code><a href='#idba_scusa'>idba_scusa(handle)</a></code></td><td>Remove attribute information for a variable.</td></tr>
+<tr><td><code><a href='#idba_query_attributes'>idba_query_attributes(handle, count)</a></code></td><td>Query attributes about a variable.</td></tr>
+<tr><td><code><a href='#idba_next_attribute'>idba_next_attribute(handle, parameter, parameter_len)</a></code></td><td>Retrieve one attribute from the result of idba_query_attributes().</td></tr>
+<tr><td><code><a href='#idba_insert_attribute'>idba_insert_attribute(handle)</a></code></td><td>Insert new attributes for a variable.</td></tr>
+<tr><td><code><a href='#idba_remove_attributes'>idba_remove_attributes(handle)</a></code></td><td>Remove attribute information for a variable.</td></tr>
 </tbody>
 </table>
 
@@ -156,9 +147,44 @@ Input/Output routines.
 </th>
 </thead>
 <tbody>
-<tr><td><code><a href='#idba_spiegal'>idba_spiegal(handle, ltype1, l1, ltype2, l2, result, result_len)</a></code></td><td>Format the description of a level given its value.</td></tr>
-<tr><td><code><a href='#idba_spiegat'>idba_spiegat(handle, ptype, p1, p2, result, result_len)</a></code></td><td>Format the description of a time range given its value.</td></tr>
-<tr><td><code><a href='#idba_spiegab'>idba_spiegab(handle, varcode, value, result, result_len)</a></code></td><td>Format the description of a variable given its varcode and its value.</td></tr>
+<tr><td><code><a href='#idba_describe_level'>idba_describe_level(handle, ltype1, l1, ltype2, l2, result, result_len)</a></code></td><td>Format the description of a level given its value.</td></tr>
+<tr><td><code><a href='#idba_describe_timerange'>idba_describe_timerange(handle, ptype, p1, p2, result, result_len)</a></code></td><td>Format the description of a time range given its value.</td></tr>
+<tr><td><code><a href='#idba_describe_var'>idba_describe_var(handle, varcode, value, result, result_len)</a></code></td><td>Format the description of a variable given its varcode and its value.</td></tr>
+</tbody>
+</table>
+
+### Deprecated aliases
+
+The following routines are deprecated compatibility aliases for other
+API functions.
+<table class="table">
+<thead>
+<tr>
+    <th>Name</th>
+    <th>Description</th>
+</th>
+</thead>
+<tbody>
+<tr><td><code><a href='#idba_presentati'>idba_presentati(dbahandle, url)</a></code></td><td>Deprecated compatibility version of idba_connect()</td></tr>
+<tr><td><code><a href='#idba_arrivederci'>idba_arrivederci(dbahandle)</a></code></td><td>Deprecated compatibility version of idba_disconnect()</td></tr>
+<tr><td><code><a href='#idba_preparati'>idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)</a></code></td><td>Deprecated compatibility version of idba_begin()</td></tr>
+<tr><td><code><a href='#idba_messaggi'>idba_messaggi(handle, filename, mode, type)</a></code></td><td>Deprecated compatibility version of idba_begin_messages()</td></tr>
+<tr><td><code><a href='#idba_fatto'>idba_fatto(handle)</a></code></td><td>Deprecated compatibility version of idba_commit()</td></tr>
+<tr><td><code><a href='#idba_setcontextana'>idba_setcontextana(handle)</a></code></td><td>Deprecated compatibility version of idba_set_station_context()</td></tr>
+<tr><td><code><a href='#idba_scopa'>idba_scopa(handle, repinfofile)</a></code></td><td>Deprecated compatibility version of idba_reinit_db()</td></tr>
+<tr><td><code><a href='#idba_quantesono'>idba_quantesono(handle, count)</a></code></td><td>Deprecated compatibility version of idba_query_stations()</td></tr>
+<tr><td><code><a href='#idba_elencamele'>idba_elencamele(handle)</a></code></td><td>Deprecated compatibility version of idba_next_station()</td></tr>
+<tr><td><code><a href='#idba_voglioquesto'>idba_voglioquesto(handle, count)</a></code></td><td>Deprecated compatibility version of idba_query_data()</td></tr>
+<tr><td><code><a href='#idba_dammelo'>idba_dammelo(handle, parameter, parameter_len)</a></code></td><td>Deprecated compatibility version of idba_next_data()</td></tr>
+<tr><td><code><a href='#idba_prendilo'>idba_prendilo(handle)</a></code></td><td>Deprecated compatibility version of idba_insert_data()</td></tr>
+<tr><td><code><a href='#idba_dimenticami'>idba_dimenticami(handle)</a></code></td><td>Deprecated compatibility version of idba_remove_data()</td></tr>
+<tr><td><code><a href='#idba_voglioancora'>idba_voglioancora(handle, count)</a></code></td><td>Deprecated compatibility version of idba_query_attributes()</td></tr>
+<tr><td><code><a href='#idba_ancora'>idba_ancora(handle, parameter, parameter_len)</a></code></td><td>Deprecated compatibility version of idba_next_attribute()</td></tr>
+<tr><td><code><a href='#idba_critica'>idba_critica(handle)</a></code></td><td>Deprecated compatibility version of idba_insert_attribute()</td></tr>
+<tr><td><code><a href='#idba_scusa'>idba_scusa(handle)</a></code></td><td>Deprecated compatibility version of idba_remove_attributes()</td></tr>
+<tr><td><code><a href='#idba_spiegal'>idba_spiegal(handle, ltype1, l1, ltype2, l2, result, result_len)</a></code></td><td>Deprecated compatibility version of idba_describe_level()</td></tr>
+<tr><td><code><a href='#idba_spiegat'>idba_spiegat(handle, ptype, p1, p2, result, result_len)</a></code></td><td>Deprecated compatibility version of idba_describe_timerange()</td></tr>
+<tr><td><code><a href='#idba_spiegab'>idba_spiegab(handle, varcode, value, result, result_len)</a></code></td><td>Deprecated compatibility version of idba_describe_var()</td></tr>
 </tbody>
 </table>
 
@@ -299,11 +325,6 @@ The function expects to find a properly initialised DB-All.e database.
 Append `&wipe=true` to the end of the url to wipe any existing
 DB-All.e information from the database if it exists, then recreate it
 from scratch.
-<a name='idba_presentati'></a>
-#### idba_presentati(dbahandle, url)
-
-Deprecated compatibility version of idba_connect()
-
 <a name='idba_disconnect'></a>
 #### idba_disconnect(dbahandle)
 
@@ -312,11 +333,6 @@ Parameters:
 * `dbahandle`: The database handle to close.
 
 Disconnect from the database.
-
-<a name='idba_arrivederci'></a>
-#### idba_arrivederci(dbahandle)
-
-Deprecated compatibility version of idba_disconnect()
 
 <a name='idba_begin'></a>
 #### idba_begin(dbahandle, handle, anaflag, dataflag, attrflag)
@@ -366,11 +382,6 @@ anaflag=read and dataflag=add (when adding a new data, it's sometimes
 necessary to insert new pseudoana records), or dataflag=rewrite and
 attrflag=read (when deleting data, their attributes are deleted as
 well).
-<a name='idba_preparati'></a>
-#### idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)
-
-Deprecated compatibility version of idba_begin()
-
 <a name='idba_begin_messages'></a>
 #### idba_begin_messages(handle, filename, mode, type)
 
@@ -388,11 +399,6 @@ Return value:
 The error indication for the function.
 Start working with a message file.
 
-<a name='idba_messaggi'></a>
-#### idba_messaggi(handle, filename, mode, type)
-
-Deprecated compatibility version of idba_begin_messages()
-
 <a name='idba_commit'></a>
 #### idba_commit(handle)
 
@@ -401,11 +407,6 @@ Parameters:
 * `handle`: Handle to the session to be closed.
 
 Close a session.
-
-<a name='idba_fatto'></a>
-#### idba_fatto(handle)
-
-Deprecated compatibility version of idba_commit()
 
 ### Input/output routines
 
@@ -613,8 +614,8 @@ Parameters:
 
 Completely clear the input, removing all values.
 
-<a name='idba_setcontextana'></a>
-#### idba_setcontextana(handle)
+<a name='idba_set_station_context'></a>
+#### idba_set_station_context(handle)
 
 Parameters:
 
@@ -780,11 +781,6 @@ Reinitialize the database, removing all data and loading report
 information.
 
 It requires the database to be opened in rewrite mode.
-<a name='idba_scopa'></a>
-#### idba_scopa(handle, repinfofile)
-
-Deprecated compatibility version of idba_reinit_db()
-
 <a name='idba_query_stations'></a>
 #### idba_query_stations(handle, count)
 
@@ -801,11 +797,6 @@ Query the stations in the database.
 Results are retrieved using [idba_next_station()](#idba_next_station).
 There is no guarantee on the ordering of results of
 query_stations/next_station.
-<a name='idba_quantesono'></a>
-#### idba_quantesono(handle, count)
-
-Deprecated compatibility version of idba_query_stations()
-
 <a name='idba_next_station'></a>
 #### idba_next_station(handle)
 
@@ -822,11 +813,6 @@ After invocation, the output record is filled with information about
 the station and its station values.
 If there are no more stations to read, the function will fail with
 DBA_ERR_NOTFOUND.
-<a name='idba_elencamele'></a>
-#### idba_elencamele(handle)
-
-Deprecated compatibility version of idba_next_station()
-
 <a name='idba_query_data'></a>
 #### idba_query_data(handle, count)
 
@@ -840,7 +826,7 @@ Return value:
 The error indicator for the function
 Query the data in the database.
 
-Results are retrieved using [idba_dammelo()](#idba_dammelo).
+Results are retrieved using [idba_next_data()](#idba_next_data).
 Results are sorted by (in order): ana_id, datetime, level, time range,
 varcode. The ana_id changes slowest, and the varcode changes fastest.
 Ordering by ana_id effectively does grouping by station rather than
@@ -848,13 +834,8 @@ ordering.
 Sort order can change in the future, with the invariant that the
 slowest to change remains ana_id, followed by datetime, and the
 fastest to change remains the varcode.
-<a name='idba_voglioquesto'></a>
-#### idba_voglioquesto(handle, count)
-
-Deprecated compatibility version of idba_query_data()
-
-<a name='idba_dammelo'></a>
-#### idba_dammelo(handle, parameter, parameter_len)
+<a name='idba_next_data'></a>
+#### idba_next_data(handle, parameter, parameter_len)
 
 Parameters:
 
@@ -871,8 +852,8 @@ After invocation, the output record is filled with information about
 the value.
 If there are no more values to read, the function will fail with
 DBA_ERR_NOTFOUND.
-<a name='idba_prendilo'></a>
-#### idba_prendilo(handle)
+<a name='idba_insert_data'></a>
+#### idba_insert_data(handle)
 
 Parameters:
 
@@ -891,8 +872,8 @@ provided on input will be used to create a station record if it is
 missing, but will be ignored if it is already present. If it is open
 in station rewrite mode instead, the station values on input will be
 used to replace all the existing station values.
-<a name='idba_dimenticami'></a>
-#### idba_dimenticami(handle)
+<a name='idba_remove_data'></a>
+#### idba_remove_data(handle)
 
 Parameters:
 
@@ -919,8 +900,8 @@ Remove all values from the database.
 
 The difference with [idba_reinit_db()](#idba_reinit_db) is that it
 preserves the existing report information.
-<a name='idba_voglioancora'></a>
-#### idba_voglioancora(handle, count)
+<a name='idba_query_attributes'></a>
+#### idba_query_attributes(handle, count)
 
 Parameters:
 
@@ -938,9 +919,10 @@ The variable queried is either:
 * the last variable inserted by `None`
 * the variable selected by settings `*context_id` and `*var_related`.
 
-Results are retrieved using [idba_ancora()](#idba_ancora).
-<a name='idba_ancora'></a>
-#### idba_ancora(handle, parameter, parameter_len)
+Results are retrieved using
+[idba_next_attribute()](#idba_next_attribute).
+<a name='idba_next_attribute'></a>
+#### idba_next_attribute(handle, parameter, parameter_len)
 
 Parameters:
 
@@ -951,10 +933,10 @@ Parameters:
 Return value:
 
 The error indicator for the function
-Retrieve one attribute from the result of idba_voglioancora().
+Retrieve one attribute from the result of idba_query_attributes().
 
-<a name='idba_critica'></a>
-#### idba_critica(handle)
+<a name='idba_insert_attribute'></a>
+#### idba_insert_attribute(handle)
 
 Parameters:
 
@@ -975,15 +957,15 @@ The attributes that will be inserted are all those set by the
 functions [idba_seti()](#idba_seti), [idba_setc()](#idba_setc),
 [idba_setr()](#idba_setr), [idba_setd()](#idba_setd), using an
 asterisk in front of the variable name.
-Contrarily to [idba_prendilo()](#idba_prendilo), this function resets
-all the attribute information (and only attribute information)
+Contrarily to [idba_insert_data()](#idba_insert_data), this function
+resets all the attribute information (and only attribute information)
 previously set in input, so the values to be inserted need to be
 explicitly set every time.
 This function will fail if the database is open in attribute readonly
 mode, and it will refuse to overwrite existing values if the database
 is open in attribute add mode.
-<a name='idba_scusa'></a>
-#### idba_scusa(handle)
+<a name='idba_remove_attributes'></a>
+#### idba_remove_attributes(handle)
 
 Parameters:
 
@@ -1086,8 +1068,8 @@ them to the current message.
 
 ### Pretty-printing routines
 
-<a name='idba_spiegal'></a>
-#### idba_spiegal(handle, ltype1, l1, ltype2, l2, result, result_len)
+<a name='idba_describe_level'></a>
+#### idba_describe_level(handle, ltype1, l1, ltype2, l2, result, result_len)
 
 Parameters:
 
@@ -1103,8 +1085,8 @@ Return value:
 The error indication for the function.
 Format the description of a level given its value.
 
-<a name='idba_spiegat'></a>
-#### idba_spiegat(handle, ptype, p1, p2, result, result_len)
+<a name='idba_describe_timerange'></a>
+#### idba_describe_timerange(handle, ptype, p1, p2, result, result_len)
 
 Parameters:
 
@@ -1119,8 +1101,8 @@ Return value:
 The error indication for the function.
 Format the description of a time range given its value.
 
-<a name='idba_spiegab'></a>
-#### idba_spiegab(handle, varcode, value, result, result_len)
+<a name='idba_describe_var'></a>
+#### idba_describe_var(handle, varcode, value, result, result_len)
 
 Parameters:
 
@@ -1134,4 +1116,106 @@ Return value:
 
 The error indication for the function.
 Format the description of a variable given its varcode and its value.
+
+### Deprecated aliases
+
+<a name='idba_presentati'></a>
+#### idba_presentati(dbahandle, url)
+
+Deprecated compatibility version of idba_connect()
+
+<a name='idba_arrivederci'></a>
+#### idba_arrivederci(dbahandle)
+
+Deprecated compatibility version of idba_disconnect()
+
+<a name='idba_preparati'></a>
+#### idba_preparati(dbahandle, handle, anaflag, dataflag, attrflag)
+
+Deprecated compatibility version of idba_begin()
+
+<a name='idba_messaggi'></a>
+#### idba_messaggi(handle, filename, mode, type)
+
+Deprecated compatibility version of idba_begin_messages()
+
+<a name='idba_fatto'></a>
+#### idba_fatto(handle)
+
+Deprecated compatibility version of idba_commit()
+
+<a name='idba_setcontextana'></a>
+#### idba_setcontextana(handle)
+
+Deprecated compatibility version of idba_set_station_context()
+
+<a name='idba_scopa'></a>
+#### idba_scopa(handle, repinfofile)
+
+Deprecated compatibility version of idba_reinit_db()
+
+<a name='idba_quantesono'></a>
+#### idba_quantesono(handle, count)
+
+Deprecated compatibility version of idba_query_stations()
+
+<a name='idba_elencamele'></a>
+#### idba_elencamele(handle)
+
+Deprecated compatibility version of idba_next_station()
+
+<a name='idba_voglioquesto'></a>
+#### idba_voglioquesto(handle, count)
+
+Deprecated compatibility version of idba_query_data()
+
+<a name='idba_dammelo'></a>
+#### idba_dammelo(handle, parameter, parameter_len)
+
+Deprecated compatibility version of idba_next_data()
+
+<a name='idba_prendilo'></a>
+#### idba_prendilo(handle)
+
+Deprecated compatibility version of idba_insert_data()
+
+<a name='idba_dimenticami'></a>
+#### idba_dimenticami(handle)
+
+Deprecated compatibility version of idba_remove_data()
+
+<a name='idba_voglioancora'></a>
+#### idba_voglioancora(handle, count)
+
+Deprecated compatibility version of idba_query_attributes()
+
+<a name='idba_ancora'></a>
+#### idba_ancora(handle, parameter, parameter_len)
+
+Deprecated compatibility version of idba_next_attribute()
+
+<a name='idba_critica'></a>
+#### idba_critica(handle)
+
+Deprecated compatibility version of idba_insert_attribute()
+
+<a name='idba_scusa'></a>
+#### idba_scusa(handle)
+
+Deprecated compatibility version of idba_remove_attributes()
+
+<a name='idba_spiegal'></a>
+#### idba_spiegal(handle, ltype1, l1, ltype2, l2, result, result_len)
+
+Deprecated compatibility version of idba_describe_level()
+
+<a name='idba_spiegat'></a>
+#### idba_spiegat(handle, ptype, p1, p2, result, result_len)
+
+Deprecated compatibility version of idba_describe_timerange()
+
+<a name='idba_spiegab'></a>
+#### idba_spiegab(handle, varcode, value, result, result_len)
+
+Deprecated compatibility version of idba_describe_var()
 

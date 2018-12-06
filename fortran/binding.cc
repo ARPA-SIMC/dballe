@@ -179,12 +179,6 @@ int idba_connect(int* dbahandle, const char* url)
     }
 }
 
-/// Deprecated compatibility version of idba_connect()
-int idba_presentati(int* dbahandle, const char* url)
-{
-    return idba_connect(dbahandle, url);
-}
-
 /**
  * Disconnect from the database.
  *
@@ -212,12 +206,6 @@ int idba_disconnect(int *dbahandle)
     //  return fortran::error(e);
     // }
     return fortran::success();
-}
-
-/// Deprecated compatibility version of idba_disconnect()
-int idba_arrivederci(int *dbahandle)
-{
-    return idba_disconnect(dbahandle);
 }
 
 
@@ -282,12 +270,6 @@ int idba_begin(int dbahandle, int* handle, const char* anaflag, const char* data
     }
 }
 
-/// Deprecated compatibility version of idba_begin()
-int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* dataflag, const char* attrflag)
-{
-    return idba_begin(dbahandle, handle, anaflag, dataflag, attrflag);
-}
-
 /**
  * Start working with a message file.
  *
@@ -322,12 +304,6 @@ int idba_begin_messages(int* handle, const char* filename, const char* mode, con
     }
 }
 
-/// Deprecated compatibility version of idba_begin_messages()
-int idba_messaggi(int* handle, const char* filename, const char* mode, const char* type)
-{
-    return idba_begin_messages(handle, filename, mode, type);
-}
-
 
 /**
  * Close a session.
@@ -345,12 +321,6 @@ int idba_commit(int* handle)
     } catch (error& e) {
         return fortran::error(e);
     }
-}
-
-/// Deprecated compatibility version of idba_commit()
-int idba_fatto(int* handle)
-{
-    return idba_commit(handle);
 }
 
 /*@}*/
@@ -723,12 +693,6 @@ int idba_set_station_context(int handle)
     }
 }
 
-/// Deprecated compatibility version of idba_set_station_context()
-int idba_setcontextana(int handle)
-{
-    return idba_set_station_context(handle);
-}
-
 /// @}
 
 
@@ -1024,12 +988,6 @@ int idba_reinit_db(int handle, const char* repinfofile)
     }
 }
 
-/// Deprecated compatibility version of idba_reinit_db()
-int idba_scopa(int handle, const char* repinfofile)
-{
-    return idba_reinit_db(handle, repinfofile);
-}
-
 /**
  * Query the stations in the database.
  *
@@ -1053,12 +1011,6 @@ int idba_query_stations(int handle, int* count)
     } catch (error& e) {
         return fortran::error(e);
     }
-}
-
-/// Deprecated compatibility version of idba_query_stations()
-int idba_quantesono(int handle, int* count)
-{
-    return idba_query_stations(handle, count);
 }
 
 /**
@@ -1087,11 +1039,6 @@ int idba_next_station(int handle)
     }
 }
 
-/// Deprecated compatibility version of idba_next_station()
-int idba_elencamele(int handle)
-{
-    return idba_next_station(handle);
-}
 
 /**
  * Query the data in the database.
@@ -1126,12 +1073,6 @@ int idba_query_data(int handle, int* count)
     }
 }
 
-/// Deprecated compatibility version of idba_query_data()
-int idba_voglioquesto(int handle, int* count)
-{
-    return idba_query_data(handle, count);
-}
-
 /**
  * Retrieve the data about one value.
  *
@@ -1160,12 +1101,6 @@ int idba_next_data(int handle, char* parameter, int parameter_len)
     } catch (error& e) {
         return fortran::error(e);
     }
-}
-
-/// Deprecated compatibility version of idba_next_data()
-int idba_dammelo(int handle, char* parameter, int parameter_len)
-{
-    return idba_next_data(handle, parameter, parameter_len);
 }
 
 /**
@@ -1197,12 +1132,6 @@ int idba_insert_data(int handle)
     }
 }
 
-/// Deprecated compatibility version of idba_insert_data()
-int idba_prendilo(int handle)
-{
-    return idba_insert_data(handle);
-}
-
 /**
  * Remove from the database all values that match the query.
  *
@@ -1222,12 +1151,6 @@ int idba_remove_data(int handle)
     } catch (error& e) {
         return fortran::error(e);
     }
-}
-
-/// Deprecated compatibility version of idba_remove_data()
-int idba_dimenticami(int handle)
-{
-    return idba_remove_data(handle);
 }
 
 /**
@@ -1282,12 +1205,6 @@ int idba_query_attributes(int handle, int* count)
     }
 }
 
-/// Deprecated compatibility version of idba_query_attributes()
-int idba_voglioancora(int handle, int* count)
-{
-    return idba_query_attributes(handle, count);
-}
-
 /**
  * Retrieve one attribute from the result of idba_query_attributes().
  *
@@ -1310,11 +1227,6 @@ int idba_next_attribute(int handle, char* parameter, unsigned parameter_len)
     }
 }
 
-/// Deprecated compatibility version of idba_next_attribute()
-int idba_ancora(int handle, char* parameter, unsigned parameter_len)
-{
-    return idba_next_attribute(handle, parameter, parameter_len);
-}
 
 /**
  * Insert new attributes for a variable.
@@ -1353,12 +1265,6 @@ int idba_insert_attribute(int handle)
     }
 }
 
-/// Deprecated compatibility version of idba_insert_attribute()
-int idba_critica(int handle)
-{
-    return idba_insert_attribute(handle);
-}
-
 /**
  * Remove attribute information for a variable.
  *
@@ -1387,12 +1293,6 @@ int idba_remove_attributes(int handle)
     } catch (error& e) {
         return fortran::error(e);
     }
-}
-
-/// Deprecated compatibility version of idba_remove_attributes()
-int idba_scusa(int handle)
-{
-    return idba_remove_attributes(handle);
 }
 
 /// @}
@@ -1563,15 +1463,6 @@ int idba_describe_level(
     }
 }
 
-/// Deprecated compatibility version of idba_describe_level()
-int idba_spiegal(
-        int handle,
-        int ltype1, int l1, int ltype2, int l2,
-        char* result, unsigned result_len)
-{
-    return idba_describe_level(handle, ltype1, l1, ltype2, l2, result, result_len);
-}
-
 /**
  * Format the description of a time range given its value.
  *
@@ -1603,15 +1494,6 @@ int idba_describe_timerange(
     }
 }
 
-/// Deprecated compatibility version of idba_describe_timerange()
-int idba_spiegat(
-        int handle,
-        int ptype, int p1, int p2,
-        char* result, unsigned result_len)
-{
-    return idba_describe_timerange(handle, ptype, p1, p2, result, result_len);
-}
-
 /**
  * Format the description of a variable given its varcode and its value.
  *
@@ -1640,6 +1522,134 @@ int idba_describe_var(
     } catch (error& e) {
         return fortran::error(e);
     }
+}
+
+/*@}*/
+
+
+/**@name Deprecated aliases
+ *
+ * The following routines are deprecated compatibility aliases for other API functions.
+ * @{
+ */
+
+/// Deprecated compatibility version of idba_connect()
+int idba_presentati(int* dbahandle, const char* url)
+{
+    return idba_connect(dbahandle, url);
+}
+
+/// Deprecated compatibility version of idba_disconnect()
+int idba_arrivederci(int *dbahandle)
+{
+    return idba_disconnect(dbahandle);
+}
+
+/// Deprecated compatibility version of idba_begin()
+int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* dataflag, const char* attrflag)
+{
+    return idba_begin(dbahandle, handle, anaflag, dataflag, attrflag);
+}
+
+/// Deprecated compatibility version of idba_begin_messages()
+int idba_messaggi(int* handle, const char* filename, const char* mode, const char* type)
+{
+    return idba_begin_messages(handle, filename, mode, type);
+}
+
+/// Deprecated compatibility version of idba_commit()
+int idba_fatto(int* handle)
+{
+    return idba_commit(handle);
+}
+
+/// Deprecated compatibility version of idba_set_station_context()
+int idba_setcontextana(int handle)
+{
+    return idba_set_station_context(handle);
+}
+
+/// Deprecated compatibility version of idba_reinit_db()
+int idba_scopa(int handle, const char* repinfofile)
+{
+    return idba_reinit_db(handle, repinfofile);
+}
+
+/// Deprecated compatibility version of idba_query_stations()
+int idba_quantesono(int handle, int* count)
+{
+    return idba_query_stations(handle, count);
+}
+
+/// Deprecated compatibility version of idba_next_station()
+int idba_elencamele(int handle)
+{
+    return idba_next_station(handle);
+}
+/// Deprecated compatibility version of idba_query_data()
+int idba_voglioquesto(int handle, int* count)
+{
+    return idba_query_data(handle, count);
+}
+
+/// Deprecated compatibility version of idba_next_data()
+int idba_dammelo(int handle, char* parameter, int parameter_len)
+{
+    return idba_next_data(handle, parameter, parameter_len);
+}
+
+/// Deprecated compatibility version of idba_insert_data()
+int idba_prendilo(int handle)
+{
+    return idba_insert_data(handle);
+}
+
+/// Deprecated compatibility version of idba_remove_data()
+int idba_dimenticami(int handle)
+{
+    return idba_remove_data(handle);
+}
+
+/// Deprecated compatibility version of idba_query_attributes()
+int idba_voglioancora(int handle, int* count)
+{
+    return idba_query_attributes(handle, count);
+}
+
+/// Deprecated compatibility version of idba_next_attribute()
+int idba_ancora(int handle, char* parameter, unsigned parameter_len)
+{
+    return idba_next_attribute(handle, parameter, parameter_len);
+}
+
+/// Deprecated compatibility version of idba_insert_attribute()
+int idba_critica(int handle)
+{
+    return idba_insert_attribute(handle);
+}
+
+/// Deprecated compatibility version of idba_remove_attributes()
+int idba_scusa(int handle)
+{
+    return idba_remove_attributes(handle);
+}
+
+/// Deprecated compatibility version of idba_describe_level()
+int idba_spiegal(
+        int handle,
+        int ltype1, int l1, int ltype2, int l2,
+        char* result, unsigned result_len)
+{
+    return idba_describe_level(handle, ltype1, l1, ltype2, l2, result, result_len);
+}
+
+/// Deprecated compatibility version of idba_describe_timerange()
+int idba_spiegat(
+        int handle,
+        int ptype, int p1, int p2,
+        char* result, unsigned result_len)
+{
+    return idba_describe_timerange(handle, ptype, p1, p2, result, result_len);
 }
 
 /// Deprecated compatibility version of idba_describe_var()
