@@ -138,16 +138,16 @@ void Tests::register_tests()
             msgapi0.seti("mobile", 0);
             msgapi0.seti("block", 0);
             msgapi0.seti("station", 101);
-            wassert(msgapi0.prendilo());
+            wassert(msgapi0.insert_data());
 
             msgapi0.setlevel(1, 0, API::missing_int, API::missing_int);
             msgapi0.settimerange(254, 0, 0);
             msgapi0.setdate(2018, 6, 1, 0, 0, 0);
             msgapi0.setd("B12101", 25.5);
-            wassert(msgapi0.prendilo());
+            wassert(msgapi0.insert_data());
 
             msgapi0.setc("query", "message");
-            wassert(msgapi0.prendilo());
+            wassert(msgapi0.insert_data());
         }
 
         wassert(actual_file("tmp.bufr").startswith("BUFR"));
@@ -165,7 +165,7 @@ void Tests::register_tests()
             msgapi0.seti("mobile", 0);
             msgapi0.seti("block", 0);
             msgapi0.seti("station", 101);
-            wassert(msgapi0.prendilo());
+            wassert(msgapi0.insert_data());
         }
         // error: no year information found in message to import
     });
@@ -228,21 +228,21 @@ add_method("message_ordering", [] {
         msgapi1.setlevel(105, 2000, 2147483647, 2147483647);
         msgapi1.settimerange(4, 3600, 7200);
         msgapi1.seti("B13003", 85);
-        msgapi1.prendilo();
+        msgapi1.insert_data();
         msgapi1.unsetb();
         msgapi1.setd("*B33192", 30.000000);
         msgapi1.seti("*B33193", 50);
         msgapi1.setd("*B33194", 70.000000);
         msgapi1.critica();
         msgapi1.seti("B12101", 27315);
-        msgapi1.prendilo();
+        msgapi1.insert_data();
         msgapi1.unsetb();
         msgapi1.setd("*B33192", 30.000000);
         msgapi1.seti("*B33193", 50);
         msgapi1.critica();
         msgapi1.setc("query", "message");
         msgapi1.unsetb();
-        msgapi1.prendilo();
+        msgapi1.insert_data();
 
         msgapi1.unsetall();
         msgapi1.seti("lat", 4500000);
@@ -252,14 +252,14 @@ add_method("message_ordering", [] {
         msgapi1.setc("rep_memo", "generic");
         msgapi1.setcontextana();
         msgapi1.seti("B07030", 223);
-        msgapi1.prendilo();
+        msgapi1.insert_data();
         msgapi1.unsetb();
         msgapi1.setc("B01019", "My beautifull station");
-        msgapi1.prendilo();
+        msgapi1.insert_data();
         msgapi1.unsetb();
         msgapi1.setc("query", "message");
         msgapi1.unsetb();
-        msgapi1.prendilo();
+        msgapi1.insert_data();
 
         msgapi1.unsetall();
         msgapi1.seti("lat", 4500000);
@@ -269,14 +269,14 @@ add_method("message_ordering", [] {
         msgapi1.setc("rep_memo", "generic");
         msgapi1.setcontextana();
         msgapi1.seti("B07030", 223);
-        msgapi1.prendilo();
+        msgapi1.insert_data();
         msgapi1.unsetb();
         msgapi1.setc("B01019", "My beautifull station");
-        msgapi1.prendilo();
+        msgapi1.insert_data();
         msgapi1.unsetb();
         msgapi1.setc("query", "message");
         msgapi1.unsetb();
-        msgapi1.prendilo();
+        msgapi1.insert_data();
 
         msgapi1.unsetall();
         msgapi1.setlevel(105, 2000, 2147483647, 2147483647);
@@ -287,10 +287,10 @@ add_method("message_ordering", [] {
         msgapi1.setdate(2014, 1, 6, 18, 0, 0);
         msgapi1.setd("B12102", 265.329987);
         msgapi1.setd("B12101", 273.149994);
-        msgapi1.prendilo();
+        msgapi1.insert_data();
         msgapi1.setc("query", "message");
         msgapi1.unsetb();
-        msgapi1.prendilo();
+        msgapi1.insert_data();
 
         msgapi1.unsetall();
         msgapi1.seti("lat", 4500000);
@@ -301,10 +301,10 @@ add_method("message_ordering", [] {
         msgapi1.settimerange(4, 3600, 7200);
         msgapi1.seti("B12102", 26312);
         msgapi1.setd("B12101", 273.149994);
-        msgapi1.prendilo();
+        msgapi1.insert_data();
         msgapi1.setc("query", "message");
         msgapi1.unsetb();
-        msgapi1.prendilo();
+        msgapi1.insert_data();
 
         msgapi1.unsetall();
         msgapi1.seti("lat", 4500000);
@@ -314,28 +314,28 @@ add_method("message_ordering", [] {
         msgapi1.setlevel(105, 2000, 2147483647, 2147483647);
         msgapi1.settimerange(4, 3600, 7200);
         msgapi1.seti("B12102", 26312);
-        msgapi1.prendilo();
+        msgapi1.insert_data();
         msgapi1.unsetb();
         msgapi1.seti("*B33192", 30);
         msgapi1.setc("*B33193", "70");
         msgapi1.setd("*B33194", 50.000000);
         msgapi1.critica();
         msgapi1.setd("B12101", 273.149994);
-        msgapi1.prendilo();
+        msgapi1.insert_data();
         msgapi1.unsetb();
         msgapi1.seti("lat", 4500000);
         msgapi1.seti("lon", 1300000);
         msgapi1.setc("rep_memo", "generic");
         msgapi1.setcontextana();
         msgapi1.seti("B12102", 26312);
-        msgapi1.prendilo();
+        msgapi1.insert_data();
         msgapi1.unsetb();
         msgapi1.seti("*B33192", 30);
         msgapi1.setc("*B33193", "70");
         msgapi1.setd("*B33194", 50.000000);
         msgapi1.critica();
         msgapi1.setd("B12101", 273.149994);
-        msgapi1.prendilo();
+        msgapi1.insert_data();
         msgapi1.unsetb();
         // msgapi1 not used anymore
     }

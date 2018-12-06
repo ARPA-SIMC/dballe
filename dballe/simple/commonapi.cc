@@ -271,7 +271,7 @@ void CommonAPIImplementation::setc(const char* param, const char* value)
         if (strcmp(param + 1, "var_related") == 0)
         {
             if (!operation)
-                throw error_consistency("*var_related set without context_id, or before any next_data or prendilo");
+                throw error_consistency("*var_related set without context_id, or before any next_data or insert_data");
             operation->set_varcode(resolve_varcode(value));
         } else if (strcmp(param + 1, "var") == 0) {
             selected_attr_codes = std::vector<wreport::Varcode>{resolve_varcode(value + 1)};
@@ -355,7 +355,7 @@ void CommonAPIImplementation::unset(const char* param)
         if (strcmp(param + 1, "var_related") == 0)
         {
             if (!operation)
-                throw error_consistency("*var_related set without context_id, or before any next_data or prendilo");
+                throw error_consistency("*var_related set without context_id, or before any next_data or insert_data");
             operation->set_varcode(0);
         } else if (strcmp(param + 1, "var") == 0) {
             selected_attr_codes.clear();
@@ -464,7 +464,7 @@ void CommonAPIImplementation::critica()
         throw error_consistency(
             "critica cannot be called with the database open in attribute readonly mode");
 
-    if (!operation) throw error_consistency("critica was not called after a next_data or prendilo, or was called with an invalid *context_id or *var_related");
+    if (!operation) throw error_consistency("critica was not called after a next_data or insert_data, or was called with an invalid *context_id or *var_related");
     operation->critica(qcinput);
     qcinput.clear();
 }

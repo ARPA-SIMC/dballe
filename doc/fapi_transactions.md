@@ -24,7 +24,7 @@ idba_connect(dbhandle, "dbtype://info?wipe=true")
 ! Write some data
 idba_begin(dbhandle, handle_write, "write", "write", "write")
 …
-idba_prendilo(handle_write)
+idba_insert_data(handle_write)
 
 ! Read it before calling idba_commit: the modifications are not yet visible
 ! outside the session that is writing them

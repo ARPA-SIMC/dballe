@@ -130,7 +130,7 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
 
     void critica(Values& qcinput) override
     {
-        throw error_consistency("critica has been called without a previous prendilo");
+        throw error_consistency("critica has been called without a previous insert_data");
     }
 
     void scusa() override
@@ -148,7 +148,7 @@ struct PrendiloOperation : public Operation
     Level vars_level;
     /// Time range for vars
     Trange vars_trange;
-    /// Last variables written with prendilo
+    /// Last variables written with insert_data
     Values vars;
 
     PrendiloOperation(MsgAPI& api)
@@ -165,7 +165,7 @@ struct PrendiloOperation : public Operation
 
     void flushVars()
     {
-        // Acquire the variables still around from the last prendilo
+        // Acquire the variables still around from the last insert_data
         vars.move_to([&](std::unique_ptr<wreport::Var> var) {
             api.wmsg->set(vars_level, vars_trange, std::move(var));
         });
@@ -233,14 +233,14 @@ struct PrendiloOperation : public Operation
     }
     void voglioancora(Attributes& dest) override
     {
-        throw error_consistency("voglioancora cannot be called after a prendilo");
+        throw error_consistency("voglioancora cannot be called after a insert_data");
     }
     void critica(Values& qcinput) override
     {
         if (vars.empty())
-            throw error_consistency("critica has been called without a previous prendilo");
+            throw error_consistency("critica has been called without a previous insert_data");
         if (vars.size() > 1)
-            throw error_consistency("critica has been called after setting many variables with a single prendilo, so I do not know which one should get the attributes");
+            throw error_consistency("critica has been called after setting many variables with a single insert_data, so I do not know which one should get the attributes");
 
         qcinput.move_to_attributes(**vars.begin());
     }
@@ -249,12 +249,12 @@ struct PrendiloOperation : public Operation
     {
         throw error_consistency("scusa does not make sense when writing messages");
     }
-    int enqi(const char* param) const override { wreport::error_consistency::throwf("enqi %s cannot be called after a prendilo", param); }
-    double enqd(const char* param) const override { throw wreport::error_consistency("enqd cannot be called after a prendilo"); }
-    bool enqc(const char* param, std::string& res) const override { throw wreport::error_consistency("enqc cannot be called after a prendilo"); }
-    void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const override { throw wreport::error_consistency("enqlevel cannot be called after a prendilo"); }
-    void enqtimerange(int& ptype, int& p1, int& p2) const override { throw wreport::error_consistency("enqtimerange cannot be called after a prendilo"); }
-    void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) const override { throw wreport::error_consistency("enqdate cannot be called after a prendilo"); }
+    int enqi(const char* param) const override { wreport::error_consistency::throwf("enqi %s cannot be called after a insert_data", param); }
+    double enqd(const char* param) const override { throw wreport::error_consistency("enqd cannot be called after a insert_data"); }
+    bool enqc(const char* param, std::string& res) const override { throw wreport::error_consistency("enqc cannot be called after a insert_data"); }
+    void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const override { throw wreport::error_consistency("enqlevel cannot be called after a insert_data"); }
+    void enqtimerange(int& ptype, int& p1, int& p2) const override { throw wreport::error_consistency("enqtimerange cannot be called after a insert_data"); }
+    void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) const override { throw wreport::error_consistency("enqdate cannot be called after a insert_data"); }
 };
 
 }
@@ -419,10 +419,10 @@ void MsgAPI::set_exporter(const char* template_name)
     exporter_template = template_name;
 }
 
-void MsgAPI::prendilo()
+void MsgAPI::insert_data()
 {
     if (perms & PERM_DATA_RO)
-        error_consistency("prendilo cannot be called with the file open in read mode");
+        error_consistency("insert_data cannot be called with the file open in read mode");
 
     input_data.datetime.set_lower_bound();
     reset_operation(new PrendiloOperation(*this));

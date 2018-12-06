@@ -274,20 +274,20 @@ struct PrendiloOperation : public Operation
     }
     void voglioancora(Attributes& dest) override
     {
-        throw error_consistency("voglioancora cannot be called after a prendilo");
+        throw error_consistency("voglioancora cannot be called after a insert_data");
     }
     void critica(Values& qcinput) override
     {
         int data_id = MISSING_INT;
         bool is_station = false;
-        // Lookup the variable we act on from the results of last prendilo
+        // Lookup the variable we act on from the results of last insert_data
         if (last_inserted_varids.size() == 1)
         {
             data_id = last_inserted_varids[0].id;
             is_station = last_inserted_varids[0].station;
         } else {
             if (varcode == 0)
-                throw error_consistency("please set *var_related before calling critica after setting multiple variables in a single prendilo");
+                throw error_consistency("please set *var_related before calling critica after setting multiple variables in a single insert_data");
             for (const auto& i: last_inserted_varids)
                 if (i.code == varcode)
                 {
@@ -296,7 +296,7 @@ struct PrendiloOperation : public Operation
                     break;
                 }
             if (data_id == MISSING_INT)
-                error_consistency::throwf("cannot insert attributes for *var_related=%01d%02d%03d: the last prendilo inserted %zd variables, none of which match *var_related", WR_VAR_FXY(varcode), last_inserted_varids.size());
+                error_consistency::throwf("cannot insert attributes for *var_related=%01d%02d%03d: the last insert_data inserted %zd variables, none of which match *var_related", WR_VAR_FXY(varcode), last_inserted_varids.size());
         }
         if (is_station)
             api.tr->attr_insert_station(data_id, qcinput);
@@ -305,7 +305,7 @@ struct PrendiloOperation : public Operation
     }
     void scusa() override
     {
-        throw error_consistency("scusa cannot be called after a prendilo");
+        throw error_consistency("scusa cannot be called after a insert_data");
     }
     int enqi(const char* param) const override
     {
@@ -315,13 +315,13 @@ struct PrendiloOperation : public Operation
         } else if (strcmp(param, "context_id") == 0) {
             return last_inserted_data_id;
         } else
-            wreport::error_consistency::throwf("enqi %s cannot be called after a prendilo", param);
+            wreport::error_consistency::throwf("enqi %s cannot be called after a insert_data", param);
     }
-    double enqd(const char* param) const override { throw wreport::error_consistency("enqd cannot be called after a prendilo"); }
-    bool enqc(const char* param, std::string& res) const override { throw wreport::error_consistency("enqc cannot be called after a prendilo"); }
-    void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const override { throw wreport::error_consistency("enqlevel cannot be called after a prendilo"); }
-    void enqtimerange(int& ptype, int& p1, int& p2) const override { throw wreport::error_consistency("enqtimerange cannot be called after a prendilo"); }
-    void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) const override { throw wreport::error_consistency("enqdate cannot be called after a prendilo"); }
+    double enqd(const char* param) const override { throw wreport::error_consistency("enqd cannot be called after a insert_data"); }
+    bool enqc(const char* param, std::string& res) const override { throw wreport::error_consistency("enqc cannot be called after a insert_data"); }
+    void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const override { throw wreport::error_consistency("enqlevel cannot be called after a insert_data"); }
+    void enqtimerange(int& ptype, int& p1, int& p2) const override { throw wreport::error_consistency("enqtimerange cannot be called after a insert_data"); }
+    void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) const override { throw wreport::error_consistency("enqdate cannot be called after a insert_data"); }
 };
 
 struct VaridOperation : public Operation
@@ -468,11 +468,11 @@ int DbAPI::query_data()
         return reset_operation(new VoglioquestoOperation<db::CursorData>(*this));
 }
 
-void DbAPI::prendilo()
+void DbAPI::insert_data()
 {
     if (perms & PERM_DATA_RO)
         throw error_consistency(
-            "idba_prendilo cannot be called with the database open in data readonly mode");
+            "idba_insert_data cannot be called with the database open in data readonly mode");
     input_data.datetime.set_lower_bound();
     reset_operation(new PrendiloOperation(*this));
     unsetb();

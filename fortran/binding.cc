@@ -1181,15 +1181,21 @@ int idba_dammelo(int handle, char* parameter, int parameter_len)
  * @return
  *   The error indicator for the function
  */
-int idba_prendilo(int handle)
+int idba_insert_data(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        h.api->prendilo();
+        h.api->insert_data();
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
     }
+}
+
+/// Deprecated compatibility version of idba_insert_data()
+int idba_prendilo(int handle)
+{
+    return idba_insert_data(handle);
 }
 
 /**
@@ -1242,7 +1248,7 @@ int idba_remove_all(int handle)
  * The variable queried is either:
  *
  * @li the last variable returned by `idba_next_data()`
- * @li the last variable inserted by `idba_prendilo()`
+ * @li the last variable inserted by `idba_insert_data()`
  * @li the variable selected by settings `*context_id` and `*var_related`.
  *
  * Results are retrieved using idba_ancora().
@@ -1293,14 +1299,14 @@ int idba_ancora(int handle, char* parameter, unsigned parameter_len)
  * The variable is either:
  *
  * @li the last variable returned by `idba_next_data()`
- * @li the last variable inserted by `idba_prendilo()`
+ * @li the last variable inserted by `idba_insert_data()`
  * @li the variable selected by settings `*context_id` and `*var_related`.
  *
  * The attributes that will be inserted are all those set by the functions
  * idba_seti(), idba_setc(), idba_setr(), idba_setd(), using an asterisk in
  * front of the variable name.
  *
- * Contrarily to idba_prendilo(), this function resets all the attribute
+ * Contrarily to idba_insert_data(), this function resets all the attribute
  * information (and only attribute information) previously set in input, so the
  * values to be inserted need to be explicitly set every time.
  *
@@ -1330,7 +1336,7 @@ int idba_critica(int handle)
  * The variable is either:
  *
  * @li the last variable returned by `idba_next_data()`
- * @li the last variable inserted by `idba_prendilo()`
+ * @li the last variable inserted by `idba_insert_data()`
  * @li the variable selected by settings `*context_id` and `*var_related`.
  *
  * The attribute informations to be removed are selected with:

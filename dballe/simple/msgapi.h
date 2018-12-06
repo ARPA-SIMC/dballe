@@ -81,7 +81,7 @@ public:
     void reinit_db(const char* repinfofile=0) override;
     int query_stations() override;
     int query_data() override;
-    void prendilo() override;
+    void insert_data() override;
     void dimenticami() override;
     void remove_all() override;
     void messages_open_input(const char* filename, const char* mode, Encoding format, bool) override;

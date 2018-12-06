@@ -48,13 +48,13 @@ void populate_variables(fortran::DbAPI& api)
     // Instant temperature, 2 meters above ground
     api.setlevel(103, 2000, MISSING_INT, MISSING_INT);
     api.setd("B12101", 21.5);
-    api.prendilo();
+    api.insert_data();
 
     // Instant wind speed, 10 meters above ground
     api.unsetb();
     api.setlevel(103, 10000, MISSING_INT, MISSING_INT);
     api.setd("B11002", 2.4);
-    api.prendilo();
+    api.insert_data();
 
     api.unsetall();
 }
@@ -191,11 +191,11 @@ this->add_method("query_attrs", [](Fixture& f) {
     }
 });
 
-this->add_method("insert_attrs_prendilo", [](Fixture& f) {
-    // Test attrs prendilo
+this->add_method("insert_attrs_insert_data", [](Fixture& f) {
+    // Test attrs insert_data
     fortran::DbAPI api(f.tr, "write", "write", "write");
 
-    // Set one attribute after a prendilo
+    // Set one attribute after a insert_data
     api.setd("lat", 44.5);
     api.setd("lon", 11.5);
     api.setc("rep_memo", "synop");
@@ -203,7 +203,7 @@ this->add_method("insert_attrs_prendilo", [](Fixture& f) {
     api.setlevel(1, MISSING_INT, MISSING_INT, MISSING_INT);
     api.settimerange(254, 0, 0);
     api.setd("B10004", 100000.0);
-    api.prendilo(); // Pressure at ground level
+    api.insert_data(); // Pressure at ground level
     wassert(actual(api.enqi("ana_id")) != 0);
     api.seti("*B33007", 60);
     api.critica();
@@ -221,12 +221,12 @@ this->add_method("insert_attrs_prendilo", [](Fixture& f) {
     wassert(actual(res) == "60");
 });
 
-this->add_method("insert_attrs_prendilo_anaid", [](Fixture& f) {
-    // Test prendilo anaid
+this->add_method("insert_attrs_insert_data", [](Fixture& f) {
+    // Test insert_data anaid
     fortran::DbAPI api(f.tr, "write", "write", "write");
     populate_variables(api);
 
-    // Run a prendilo
+    // Run a insert_data
     api.setd("lat", 44.6);
     api.setd("lon", 11.6);
     api.setc("rep_memo", "synop");
@@ -234,7 +234,7 @@ this->add_method("insert_attrs_prendilo_anaid", [](Fixture& f) {
     api.setlevel(1, MISSING_INT, MISSING_INT, MISSING_INT);
     api.settimerange(254, 0, 0);
     api.setd("B10004", 100000.0);
-    api.prendilo(); // Pressure at ground level
+    api.insert_data(); // Pressure at ground level
 
     int anaid = api.enqi("ana_id");
     wassert(actual(anaid) != MISSING_INT);
@@ -267,7 +267,7 @@ this->add_method("insert_auto_repmemo", [](Fixture& f) {
     api.settimerange(254, MISSING_INT, MISSING_INT);
     api.setdate(2015, 4, 25, 12, 30, 45);
     api.setd("B12101", 286.4);
-    api.prendilo();
+    api.insert_data();
 
     // Query it back
     api.unsetall();
@@ -286,7 +286,7 @@ this->add_method("undefined_level2", [](Fixture& f) {
     api.settimerange(254, MISSING_INT, MISSING_INT);
     api.setdate(2013, 4, 25, 12, 0, 0);
     api.setd("B12101", 21.5);
-    api.prendilo();
+    api.insert_data();
     api.unsetall();
 
     // Query it back
@@ -525,12 +525,12 @@ this->add_method("messages_write", [](Fixture& f) {
         // Instant temperature, 2 meters above ground
         api.setlevel(103, 2000, MISSING_INT, MISSING_INT);
         api.setd("B12101", 21.5);
-        api.prendilo();
+        api.insert_data();
         // Instant wind speed, 10 meters above ground
         api.unsetb();
         api.setlevel(103, 10000, MISSING_INT, MISSING_INT);
         api.setd("B11002", 2.4);
-        api.prendilo();
+        api.insert_data();
 
         api.unsetall();
         api.messages_write_next("wmo");
@@ -570,12 +570,12 @@ this->add_method("messages_write_stdout", [](Fixture& f) {
             // Instant temperature, 2 meters above ground
             api.setlevel(103, 2000, MISSING_INT, MISSING_INT);
             api.setd("B12101", 21.5);
-            api.prendilo();
+            api.insert_data();
             // Instant wind speed, 10 meters above ground
             api.unsetb();
             api.setlevel(103, 10000, MISSING_INT, MISSING_INT);
             api.setd("B11002", 2.4);
-            api.prendilo();
+            api.insert_data();
 
             api.unsetall();
             api.messages_write_next("wmo");
@@ -634,7 +634,7 @@ this->add_method("attr_reference_id", [](Fixture& f) {
     // Try setting a context with a missing context_id
     {
         auto e = wassert_throws(wreport::error_consistency, api.setc("*var_related", "B07030"));
-        wassert(actual(e.what()).matches("\\*var_related set without context_id, or before any next_data or prendilo"));
+        wassert(actual(e.what()).matches("\\*var_related set without context_id, or before any next_data or insert_data"));
     }
 
     // Initial data
@@ -644,13 +644,13 @@ this->add_method("attr_reference_id", [](Fixture& f) {
     // One station variable
     api.setcontextana();
     api.setd("B07030", 100.0);
-    api.prendilo();
+    api.insert_data();
     // One data variable
     api.settimerange(254, 0, 0);
     api.setdate(2013, 4, 25, 12, 0, 0);
     api.setlevel(103, 2000, MISSING_INT, MISSING_INT);
     api.setd("B12101", 21.5);
-    api.prendilo();
+    api.insert_data();
     api.unsetall();
 
     // Query the station variable
@@ -731,7 +731,7 @@ this->add_method("attrs_bug1", [](Fixture& f) {
     dbapi0.setlevel(105, 2000, API::missing_int, API::missing_int);
     dbapi0.settimerange(4, 3600, 7200);
     dbapi0.seti("B13003", 85);
-    dbapi0.prendilo();
+    dbapi0.insert_data();
 
     // Add attributes
     dbapi0.setd("*B33192", 30.000000);
@@ -785,7 +785,7 @@ this->add_method("segfault1", [](Fixture& f) {
     dbapi0.setc("rep_memo", "generic");
     dbapi0.setcontextana();
     dbapi0.setc("B12102", "26312");
-    wassert(dbapi0.prendilo());
+    wassert(dbapi0.insert_data());
     dbapi0.setc("*B33194", "50");
     wassert(dbapi0.critica());
 });
@@ -804,17 +804,17 @@ this->add_method("issue45", [](Fixture& f) {
     dbapi0.setlevel(105, 2000, API::missing_int, API::missing_int);
     dbapi0.settimerange(4, 3600, 7200);
     dbapi0.seti("B13003", 85);
-    dbapi0.prendilo();
+    dbapi0.insert_data();
     dbapi0.setd("*B33192", 30.000000);
     dbapi0.seti("*B33193", 50);
     dbapi0.setd("*B33194", 70.000000);
     dbapi0.critica();
     dbapi0.seti("B12101", 27315);
-    dbapi0.prendilo();
+    dbapi0.insert_data();
     dbapi0.setd("*B33192", 30.000000);
     dbapi0.seti("*B33193", 50);
     dbapi0.critica();
-    // error: cannot insert attributes for variable 000000: no data id given or found from last prendilo()
+    // error: cannot insert attributes for variable 000000: no data id given or found from last insert_data()
 });
 
 this->add_method("issue52", [](Fixture& f) {
@@ -830,10 +830,10 @@ this->add_method("issue52", [](Fixture& f) {
 });
 
 this->add_method("perf_data", [](Fixture& f) {
-    // Test prendilo anaid
+    // Test insert_data anaid
     fortran::DbAPI api(f.tr, "write", "write", "write");
 
-    // Run a prendilo
+    // Run a insert_data
     f.tr->trc->clear();
     api.setd("lat", 44.5);
     api.setd("lon", 11.5);
@@ -842,7 +842,7 @@ this->add_method("perf_data", [](Fixture& f) {
     api.setlevel(1, MISSING_INT, MISSING_INT, MISSING_INT);
     api.settimerange(254, 0, 0);
     api.setd("B10004", 100000.0);
-    api.prendilo(); // Pressure at ground level
+    api.insert_data(); // Pressure at ground level
     v7::trace::Aggregate stats = f.tr->trc->aggregate("select");
     wassert(actual(stats.count) == 2);
     wassert(actual(stats.rows) == 0);
@@ -955,7 +955,7 @@ this->add_method("attr_insert", [](Fixture& f) {
         pre.setlevel(103, 2000, 2147483647, 2147483647);
         pre.settimerange(254, 0, 0);
         pre.setd("B12101", 273.149994);
-        pre.prendilo();
+        pre.insert_data();
         pre.commit();
     }
 
@@ -972,7 +972,7 @@ this->add_method("attr_insert", [](Fixture& f) {
         dbapi0.setlevel(103, 2000, 2147483647, 2147483647);
         dbapi0.settimerange(254, 0, 0);
         dbapi0.setd("B12101", 273.149994);
-        dbapi0.prendilo();
+        dbapi0.insert_data();
         dbapi0.seti("*B33192", 0);
         dbapi0.setc("*var_related", "B12101");
         dbapi0.critica();
@@ -1038,7 +1038,7 @@ this->add_method("transactions", [](Fixture& f) {
         api.setdate(2013, 4, 25, 12, 0, 0);
         api.setlevel(103, 2000, MISSING_INT, MISSING_INT);
         api.setd("B12101", 21.5);
-        api.prendilo();
+        api.insert_data();
         wassert(actual(api.query_data()) == 1);
     }
 
@@ -1054,7 +1054,7 @@ this->add_method("transactions", [](Fixture& f) {
         api.setdate(2013, 4, 25, 12, 0, 0);
         api.setlevel(103, 2000, MISSING_INT, MISSING_INT);
         api.setd("B12101", 21.5);
-        api.prendilo();
+        api.insert_data();
         wassert(actual(api.query_data()) == 1);
         wassert(api.commit());
     }
@@ -1076,7 +1076,7 @@ this->add_method("insert_block", [](Fixture& f) {
     dbapi0.setc("rep_memo", "synop");
     dbapi0.seti("block", 1);
     dbapi0.setcontextana();
-    dbapi0.prendilo();
+    dbapi0.insert_data();
     wassert(actual(dbapi0.query_stations()) == 1);
 });
 
@@ -1092,14 +1092,14 @@ this->add_method("query_attr_values", [](Fixture& f) {
     dbapi0.setlevel(105, 2000, 2147483647, 2147483647);
     dbapi0.settimerange(4, 3600, 7200);
     dbapi0.seti("B13003", 85);
-    dbapi0.prendilo();
+    dbapi0.insert_data();
     dbapi0.unsetb();
     dbapi0.setd("*B33192", 30.000000);
     dbapi0.seti("*B33193", 50);
     dbapi0.setd("*B33194", 70.000000);
     dbapi0.critica();
     dbapi0.seti("B12101", 27315);
-    dbapi0.prendilo();
+    dbapi0.insert_data();
     dbapi0.unsetb();
     dbapi0.setd("*B33192", 30.000000);
     dbapi0.seti("*B33193", 50);
@@ -1133,14 +1133,14 @@ this->add_method("query_attr_filtered", [](Fixture& f) {
     dbapi0.setlevel(105, 2000, 2147483647, 2147483647);
     dbapi0.settimerange(4, 3600, 7200);
     dbapi0.seti("B13003", 85);
-    dbapi0.prendilo();
+    dbapi0.insert_data();
     dbapi0.unsetb();
     dbapi0.setd("*B33192", 30.000000);
     dbapi0.seti("*B33193", 50);
     dbapi0.setd("*B33194", 70.000000);
     dbapi0.critica();
     dbapi0.seti("B12101", 27315);
-    dbapi0.prendilo();
+    dbapi0.insert_data();
     dbapi0.unsetb();
     dbapi0.setd("*B33192", 30.000000);
     dbapi0.seti("*B33193", 50);
@@ -1178,7 +1178,7 @@ this->add_method("issue137", [](Fixture& f) {
     dbapi0.settimerange(4, 3600, 7200);
     dbapi0.seti("B12102", 26312);
     dbapi0.setd("B12101", 273.149994);
-    dbapi0.prendilo();
+    dbapi0.insert_data();
 
     // Remove one. In a previous implementation, var and varlist both edited
     // Query::varcodes, and unsetting one had the effect of unsetting the other

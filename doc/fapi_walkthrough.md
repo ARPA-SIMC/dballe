@@ -375,7 +375,7 @@ For example:
       ierr = idba_setr(handle, "B11002", 1.8)
       ! Also set the temperature
       ierr = idba_setr(handle, "B12001", 21.8)
-      ierr = idba_prendilo(handle)
+      ierr = idba_insert_data(handle)
 ```
 
 ## Attributes
@@ -389,7 +389,7 @@ For example:
 
 ```fortran
       ! Set the confidence of the wind speed value we inserted
-      ! in the last 'idba_prendilo'
+      ! in the last 'idba_insert_data'
       ierr = idba_setr(handle, "*B33007", 75.0)
       ierr = idba_setc(handle, "*var_related", "B11002")
       ierr = idba_critica(handle)
@@ -512,7 +512,7 @@ data when opening the database.
 
 ## Inserting data
 
-Data is inserted using [idba_prendilo][]:
+Data is inserted using [idba_insert_data][]:
 
 ```fortran
       ! Insert a new data in the database
@@ -525,21 +525,21 @@ Data is inserted using [idba_prendilo][]:
       ierr = idba_setr(handle, "day", 26)
       ...
       ierr = idba_setr(handle, "B11002", 1.8)
-      ierr = idba_prendilo(handle)
+      ierr = idba_insert_data(handle)
 ```
 
 This code introduces a new function:
 
-* [idba_prendilo][]:
+* [idba_insert_data][]:
   inserts a new value in the database.  All the information about the parameter
   to insert is taken from the input previously set by `idba_set*` functions.
 
   When data of the same kind and with the same characteristics already exists,
-  the behaviour of [idba_prendilo][] is defined by the parameter passed to
+  the behaviour of [idba_insert_data][] is defined by the parameter passed to
   [idba_begin][] when creating the handle.  See [Starting the
   work](#ch_work_start) for more informations.
 
-[idba_prendilo][] will work in different ways according to the data opening
+[idba_insert_data][] will work in different ways according to the data opening
 mode of the database:
 
 * `read`: causes an error, because the data cannot be read.
@@ -616,7 +616,7 @@ It is possible to read attributes at a later time giving a context ID and a B
 table value:
 
 ```fortran
-      ! Read the context ID after a prendilo or a next_data
+      ! Read the context ID after a insert_data or a next_data
       idba_enqi(handle, "context_id", id)
 
       ! ...a while later...
@@ -644,7 +644,7 @@ table value:
 ## Writing attributes
 
 Attributes are written using [idba_critica][], which can be used after an
-[idba_next_data][], after an [idba_prendilo][] or at any time using a stored data
+[idba_next_data][], after an [idba_insert_data][] or at any time using a stored data
 id.  These three case differ on how to communicate to [idba_critica][] what is
 the data about which to write attributes.
 
@@ -667,7 +667,7 @@ last data retrieved:
       enddo
 ```
 
-After an [idba_prendilo][] instead, since [idba_prendilo][] can write more than
+After an [idba_insert_data][] instead, since [idba_insert_data][] can write more than
 one data at a time, we need to tell [idba_critica][] which of them we are
 referring to:
 
@@ -675,7 +675,7 @@ referring to:
       ! Insert wind speed and temperature
       ierr = idba_setr(handle, "B11002", 1.8)
       ierr = idba_setr(handle, "B12001", 22)
-      ierr = idba_prendilo(handle)
+      ierr = idba_insert_data(handle)
 
       ! Set the attributes
       ierr = idba_seti(handle, "*B33007", 75)
@@ -722,7 +722,7 @@ This code introduces a new function:
   The variable can be identified directly by using `idba_seti(handle,
   "*context_id", id)` and `idba_seti(handle, "*var_related", name)`.
   These parameters are automatically set by the [idba_next_data][] and
-  [idba_prendilo][] action routines.
+  [idba_insert_data][] action routines.
 
   The attributes and values are set as input to [idba_critica][] using the
   `idba_set*` functions with an asterisk in front of the variable name.
@@ -843,7 +843,7 @@ databases:
   versions of DB-All.e.
 * When reading, you will see that there are no more messages because
   [idba_query_stations][] or [idba_query_data][] will return 0.
-* When writing, you can use the `query` input parameter to [idba_prendilo][] to
+* When writing, you can use the `query` input parameter to [idba_insert_data][] to
   control when a new message is started.  If you set it to `subset`, then the
   data will be inserted in a new BUFR or CREX subset.  If you set it to
   `message`, you will start a new message.
@@ -868,10 +868,10 @@ ierr = idba_begin(dbhandle, handle, "write", "add", "write")
 ierr = idba_setr (handle, "lat", 11.345)
 ierr = idba_setr (handle, "lon", 44.678)
 ierr = idba_setr (handle, "height", 23)
-ierr = idba_prendilo (handle)
+ierr = idba_insert_data (handle)
 
 ! Read the station ID for the station we just inserted
-! Use *ana_id instead of ana_id after an idba_prendilo
+! Use *ana_id instead of ana_id after an idba_insert_data
 ierr = idba_enqi (handle, "*ana_id", anaid)
 
 ! Reset the input data
@@ -884,7 +884,7 @@ ierr = idba_settimerange (handle, 0, 0, 0)
 ierr = idba_setdate (handle, 2006, 06, 20, 19, 30, 0)
 ierr = idba_seti (handle, "t", 21)
 ierr = idba_setc (handle, "B12345", "ciao")
-ierr = idba_prendilo (handle)
+ierr = idba_insert_data (handle)
 ```
 
 
@@ -1006,7 +1006,7 @@ explicit query for the extra station data using [idba_query_data][] and
 [idba_next_station]: fapi_reference.md#idba_next_station
 [idba_query_data]: fapi_reference.md#idba_query_data
 [idba_next_data]: fapi_reference.md#idba_next_data
-[idba_prendilo]: fapi_reference.md#idba_prendilo
+[idba_insert_data]: fapi_reference.md#idba_insert_data
 [idba_dimenticami]: fapi_reference.md#idba_dimenticami
 [idba_remove_all]: fapi_reference.md#idba_remove_all
 [idba_voglioancora]: fapi_reference.md#idba_voglioancora

@@ -528,9 +528,9 @@ wreport::Varcode TracedAPI::next_data()
     return RUN(next_data);
 }
 
-void TracedAPI::prendilo()
+void TracedAPI::insert_data()
 {
-    RUN(prendilo);
+    RUN(insert_data);
 }
 
 void TracedAPI::dimenticami()

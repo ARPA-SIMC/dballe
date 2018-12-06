@@ -150,7 +150,7 @@ See section [Attributes](#sec_attrs) for examples on how to handle attributes.
 Work with DB-All.e happens using *action routines*.  An action routine
 typically reads some input, performs an action and produces some output.
 Example of action routines are [idba_query_data][] to query data from a
-database and [idba_prendilo][] to write data into the database.
+database and [idba_insert_data][] to write data into the database.
 
 The input and the output of action routines are collections of parameters which
 have a name and a value.  A list of parameters can be found [in the
@@ -294,7 +294,7 @@ value".  This is a list of such special values:
 [idba_next_station]: fapi_reference.md#idba_next_station
 [idba_query_data]: fapi_reference.md#idba_query_data
 [idba_next_data]: fapi_reference.md#idba_next_data
-[idba_prendilo]: fapi_reference.md#idba_prendilo
+[idba_insert_data]: fapi_reference.md#idba_insert_data
 [idba_dimenticami]: fapi_reference.md#idba_dimenticami
 [idba_remove_all]: fapi_reference.md#idba_remove_all
 [idba_voglioancora]: fapi_reference.md#idba_voglioancora
