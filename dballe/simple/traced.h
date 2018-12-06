@@ -64,8 +64,8 @@ struct TracedAPI : public API
     wreport::Varcode next_data() override;
     void insert_data() override;
     void remove_data() override;
-    int voglioancora() override;
-    const char* ancora() override;
+    int query_attributes() override;
+    const char* next_attribute() override;
     void critica() override;
     void scusa() override;
     void messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified=true) override;

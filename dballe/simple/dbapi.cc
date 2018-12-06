@@ -113,7 +113,7 @@ struct QuantesonoOperation : public CursorOperation<CursorStation>
         return cursor->next();
     }
 
-    void voglioancora(Attributes& dest) override { throw error_consistency("voglioancora cannot be called after query_stations/next_station"); }
+    void query_attributes(Attributes& dest) override { throw error_consistency("query_attributes cannot be called after query_stations/next_station"); }
     void critica(Values& qcinput) override { throw error_consistency("critica cannot be called after query_stations/next_station"); }
     void scusa() override { throw error_consistency("scusa cannot be called after query_stations/next_station"); }
 };
@@ -186,9 +186,9 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
             return 0;
         }
     }
-    void voglioancora(Attributes& dest) override
+    void query_attributes(Attributes& dest) override
     {
-        if (next_data_ended) throw error_consistency("voglioancora called after next_data returned end of data");
+        if (next_data_ended) throw error_consistency("query_attributes called after next_data returned end of data");
         function<void(unique_ptr<Var>&&)> consumer;
         if (api.selected_attr_codes.empty())
         {
@@ -272,9 +272,9 @@ struct PrendiloOperation : public Operation
         else
             last_inserted_data_id = API::missing_int;
     }
-    void voglioancora(Attributes& dest) override
+    void query_attributes(Attributes& dest) override
     {
-        throw error_consistency("voglioancora cannot be called after a insert_data");
+        throw error_consistency("query_attributes cannot be called after a insert_data");
     }
     void critica(Values& qcinput) override
     {
@@ -337,10 +337,10 @@ struct VaridOperation : public Operation
     {
     }
     void set_varcode(wreport::Varcode varcode) override { this->varcode = varcode; }
-    void voglioancora(Attributes& dest) override
+    void query_attributes(Attributes& dest) override
     {
         if (!varid)
-            throw error_consistency("voglioancora called with an invalid *context_id");
+            throw error_consistency("query_attributes called with an invalid *context_id");
         // Retrieve the varcodes of the attributes that we want
         function<void(unique_ptr<Var>&&)> consumer;
         if (api.selected_attr_codes.empty())

@@ -297,8 +297,8 @@ value".  This is a list of such special values:
 [idba_insert_data]: fapi_reference.md#idba_insert_data
 [idba_remove_data]: fapi_reference.md#idba_remove_data
 [idba_remove_all]: fapi_reference.md#idba_remove_all
-[idba_voglioancora]: fapi_reference.md#idba_voglioancora
-[idba_ancora]: fapi_reference.md#idba_ancora
+[idba_query_attributes]: fapi_reference.md#idba_query_attributes
+[idba_next_attribute]: fapi_reference.md#idba_next_attribute
 [idba_critica]: fapi_reference.md#idba_critica
 [idba_scusa]: fapi_reference.md#idba_scusa
 [idba_messages_open_input]: fapi_reference.md#idba_messages_open_input

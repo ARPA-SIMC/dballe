@@ -18,9 +18,9 @@ namespace fortran {
 wreport::Varcode Attributes::next()
 {
     if (!valid)
-        throw error_consistency("ancora called without a previous voglioancora");
+        throw error_consistency("next_attribute called without a previous query_attributes");
     if (current == values.end())
-        throw error_notfound("ancora called with no (or no more) results available");
+        throw error_notfound("next_attribute called with no (or no more) results available");
 
     Varcode res = current->code();
     ++current;
@@ -136,7 +136,7 @@ int CommonAPIImplementation::enqi(const char* param)
         else
         {
             if (!qcoutput.valid)
-                error_consistency::throwf("enqi %s can only be called after a voglioancora", param);
+                error_consistency::throwf("enqi %s can only be called after a query_attributes", param);
             wreport::Varcode code = resolve_varcode(param + 1);
             return qcoutput.values.enq(code, API::missing_int);
         }
@@ -150,7 +150,7 @@ signed char CommonAPIImplementation::enqb(const char* param)
     if (param[0] == '*')
     {
         if (!qcoutput.valid)
-            error_consistency::throwf("enqb %s can only be called after a voglioancora", param);
+            error_consistency::throwf("enqb %s can only be called after a query_attributes", param);
         wreport::Varcode code = resolve_varcode(param + 1);
         if (const wreport::Var* var = qcoutput.values.maybe_var(code))
             if (var->isset())
@@ -166,7 +166,7 @@ float CommonAPIImplementation::enqr(const char* param)
     if (param[0] == '*')
     {
         if (!qcoutput.valid)
-            error_consistency::throwf("enqb %s can only be called after a voglioancora", param);
+            error_consistency::throwf("enqb %s can only be called after a query_attributes", param);
         wreport::Varcode code = resolve_varcode(param + 1);
         if (const wreport::Var* var = qcoutput.values.maybe_var(code))
             if (var->isset())
@@ -182,7 +182,7 @@ double CommonAPIImplementation::enqd(const char* param)
     if (param[0] == '*')
     {
         if (!qcoutput.valid)
-            error_consistency::throwf("enqd %s can only be called after a voglioancora", param);
+            error_consistency::throwf("enqd %s can only be called after a query_attributes", param);
         wreport::Varcode code = resolve_varcode(param + 1);
         return qcoutput.values.enq(code, API::missing_double);
     }
@@ -195,7 +195,7 @@ bool CommonAPIImplementation::enqc(const char* param, std::string& res)
     if (param[0] == '*')
     {
         if (!qcoutput.valid)
-            error_consistency::throwf("enqc %s can only be called after a voglioancora", param);
+            error_consistency::throwf("enqc %s can only be called after a query_attributes", param);
         wreport::Varcode code = resolve_varcode(param + 1);
         const Var* var = qcoutput.values.maybe_var(code);
         if (!var) return false;
@@ -441,16 +441,16 @@ wreport::Varcode CommonAPIImplementation::next_data()
     return operation->next_data();
 }
 
-int CommonAPIImplementation::voglioancora()
+int CommonAPIImplementation::query_attributes()
 {
     // Query attributes
-    if (!operation) throw error_consistency("voglioancora was not called after a next_data, or was called with an invalid *context_id or *var_related");
-    operation->voglioancora(qcoutput);
+    if (!operation) throw error_consistency("query_attributes was not called after a next_data, or was called with an invalid *context_id or *var_related");
+    operation->query_attributes(qcoutput);
     qcinput.clear();
     return qcoutput.values.size();
 }
 
-const char* CommonAPIImplementation::ancora()
+const char* CommonAPIImplementation::next_attribute()
 {
     static char parm[10] = "*";
     Varcode code = qcoutput.next();

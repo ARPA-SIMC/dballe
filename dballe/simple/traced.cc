@@ -538,14 +538,14 @@ void TracedAPI::remove_data()
     RUN(remove_data);
 }
 
-int TracedAPI::voglioancora()
+int TracedAPI::query_attributes()
 {
-    return RUN(voglioancora);
+    return RUN(query_attributes);
 }
 
-const char* TracedAPI::ancora()
+const char* TracedAPI::next_attribute()
 {
-    return RUN(ancora);
+    return RUN(next_attribute);
 }
 
 void TracedAPI::critica()

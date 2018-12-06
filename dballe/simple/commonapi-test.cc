@@ -18,7 +18,7 @@ struct APITest : public CommonAPIImplementation
      wreport::Varcode next_data() override { return 0; }
      void insert_data() override {}
      void remove_data() override {}
-     int voglioancora() override { return 0; }
+     int query_attributes() override { return 0; }
      void critica() override {}
      void scusa() override {}
      void messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified=true) override {}

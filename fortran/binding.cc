@@ -1257,7 +1257,7 @@ int idba_remove_all(int handle)
  * @li the last variable inserted by `idba_insert_data()`
  * @li the variable selected by settings `*context_id` and `*var_related`.
  *
- * Results are retrieved using idba_ancora().
+ * Results are retrieved using idba_next_attribute().
  *
  * @param handle
  *   Handle to a DB-All.e session
@@ -1266,19 +1266,25 @@ int idba_remove_all(int handle)
  * @return
  *   The error indicator for the function
  */
-int idba_voglioancora(int handle, int* count)
+int idba_query_attributes(int handle, int* count)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        *count = h.api->voglioancora();
+        *count = h.api->query_attributes();
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
     }
 }
 
+/// Deprecated compatibility version of idba_query_attributes()
+int idba_voglioancora(int handle, int* count)
+{
+    return idba_query_attributes(handle, count);
+}
+
 /**
- * Retrieve one attribute from the result of idba_voglioancora().
+ * Retrieve one attribute from the result of idba_query_attributes().
  *
  * @param handle
  *   Handle to a DB-All.e session
@@ -1287,16 +1293,22 @@ int idba_voglioancora(int handle, int* count)
  * @return
  *   The error indicator for the function
  */
-int idba_ancora(int handle, char* parameter, unsigned parameter_len)
+int idba_next_attribute(int handle, char* parameter, unsigned parameter_len)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        const char* res = h.api->ancora();
+        const char* res = h.api->next_attribute();
         fortran::cstring_to_fortran(res, parameter, parameter_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
     }
+}
+
+/// Deprecated compatibility version of idba_next_attribute()
+int idba_ancora(int handle, char* parameter, unsigned parameter_len)
+{
+    return idba_next_attribute(handle, parameter, parameter_len);
 }
 
 /**

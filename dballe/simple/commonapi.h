@@ -44,7 +44,7 @@ class Operation
 public:
     virtual ~Operation();
     virtual void set_varcode(wreport::Varcode varcode);
-    virtual void voglioancora(Attributes& dest) = 0;
+    virtual void query_attributes(Attributes& dest) = 0;
     virtual void critica(Values& qcinput) = 0;
     virtual void scusa() = 0;
     virtual bool next_station();
@@ -249,8 +249,8 @@ public:
     const char* spiegab(const char* varcode, const char* value) override;
     void next_station() override;
     wreport::Varcode next_data() override;
-    int voglioancora() override;
-    const char* ancora() override;
+    int query_attributes() override;
+    const char* next_attribute() override;
     void critica() override;
     void scusa() override;
     void commit() override;

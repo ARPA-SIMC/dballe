@@ -579,7 +579,7 @@ the data when opening the database.
 
 ## Reading attributes
 
-Attributes are read using [idba_ancora][]:
+Attributes are read using [idba_next_attribute][]:
 
 ```fortran
       ! ...setup a query...
@@ -588,9 +588,9 @@ Attributes are read using [idba_ancora][]:
         ierr = idba_next_data(handle, param)
 
         ! Read QC informations about the last value read
-        ierr = idba_voglioancora(handle, qc_count)
+        ierr = idba_query_attributes(handle, qc_count)
         do while (qc_count.gt.0)
-            ierr = idba_ancora(handle, param) 
+            ierr = idba_next_attribute(handle, param) 
             ierr = idba_enqc(handle, param, value)
             ! ...process the value...
             qc_count = qc_count - 1
@@ -602,11 +602,11 @@ Attributes are read using [idba_ancora][]:
 
 This code introduces two new functions:
 
-* [idba_voglioancora][]:
+* [idba_query_attributes][]:
   Performs a query to retrieve attributes for the last variable read by
   [idba_next_data][].  It returns the number of attributes available.
-* [idba_ancora][]:
-  Retrieves one by one the values queried by [idba_voglioancora][] if
+* [idba_next_attribute][]:
+  Retrieves one by one the values queried by [idba_query_attributes][] if
   there are no more items available, the function will fail.
 
   The parameter `param` will be set to the name (in the form `*Bxxyyy`) of
@@ -632,9 +632,9 @@ table value:
       ! by default, all attributes are returned
 
       ! Read QC informations about the last value read
-      ierr = idba_voglioancora(handle, qc_count)
+      ierr = idba_query_attributes(handle, qc_count)
       do while (qc_count.gt.0)
-          ierr = idba_ancora(handle, param) 
+          ierr = idba_next_attribute(handle, param) 
           ierr = idba_enqc(handle, param, value)
           ! ...process the value...
           qc_count = qc_count - 1
@@ -1009,8 +1009,8 @@ explicit query for the extra station data using [idba_query_data][] and
 [idba_insert_data]: fapi_reference.md#idba_insert_data
 [idba_remove_data]: fapi_reference.md#idba_remove_data
 [idba_remove_all]: fapi_reference.md#idba_remove_all
-[idba_voglioancora]: fapi_reference.md#idba_voglioancora
-[idba_ancora]: fapi_reference.md#idba_ancora
+[idba_query_attributes]: fapi_reference.md#idba_query_attributes
+[idba_next_attribute]: fapi_reference.md#idba_next_attribute
 [idba_critica]: fapi_reference.md#idba_critica
 [idba_scusa]: fapi_reference.md#idba_scusa
 [idba_messages_open_input]: fapi_reference.md#idba_messages_open_input

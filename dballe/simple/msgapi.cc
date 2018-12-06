@@ -42,7 +42,7 @@ struct QuantesonoOperation : public CursorOperation<CursorStation>
         return cursor->next();
     }
 
-    void voglioancora(Attributes& dest) override { throw error_consistency("voglioancora cannot be called after query_stations/next_station"); }
+    void query_attributes(Attributes& dest) override { throw error_consistency("query_attributes cannot be called after query_stations/next_station"); }
     void critica(Values& qcinput) override { throw error_consistency("critica cannot be called after query_stations/next_station"); }
     void scusa() override { throw error_consistency("scusa cannot be called after query_stations/next_station"); }
 };
@@ -116,9 +116,9 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
         }
     }
 
-    void voglioancora(Attributes& dest) override
+    void query_attributes(Attributes& dest) override
     {
-        if (next_data_ended) throw error_consistency("voglioancora called after next_data returned end of data");
+        if (next_data_ended) throw error_consistency("query_attributes called after next_data returned end of data");
 
         wreport::Var var = this->cursor->get_var();
         api.qcoutput.values.clear();
@@ -231,9 +231,9 @@ struct PrendiloOperation : public Operation
             api.input_query.query.clear();
         }
     }
-    void voglioancora(Attributes& dest) override
+    void query_attributes(Attributes& dest) override
     {
-        throw error_consistency("voglioancora cannot be called after a insert_data");
+        throw error_consistency("query_attributes cannot be called after a insert_data");
     }
     void critica(Values& qcinput) override
     {
