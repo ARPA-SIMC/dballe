@@ -391,7 +391,7 @@ int MsgAPI::query_stations()
     return reset_operation(new QuantesonoOperation(*this));
 }
 
-int MsgAPI::voglioquesto()
+int MsgAPI::query_data()
 {
     if (state & (STATE_BLANK | STATE_VOGLIOQUESTO))
         readNextMessage();

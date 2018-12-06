@@ -23,9 +23,9 @@ void Tests::register_tests()
         std::string fname = tests::datafile("bufr/simple-generic-group.bufr");
         fortran::MsgAPI api(fname.c_str(), "r", "BUFR");
 
-        wassert(actual(api.voglioquesto()) == 4);
-        wassert(actual(api.voglioquesto()) == 4);
-        wassert(actual(api.voglioquesto()) == 4);
+        wassert(actual(api.query_data()) == 4);
+        wassert(actual(api.query_data()) == 4);
+        wassert(actual(api.query_data()) == 4);
         wassert(actual(api.query_stations()) == 1);
     });
     add_method("resume", []() {
@@ -45,10 +45,10 @@ void Tests::register_tests()
             fortran::MsgAPI api("test-simple-concat.bufr", "r", "BUFR");
 
             // The first one fails
-            wassert(actual_function([&]() { api.voglioquesto(); }).throws(""));
+            wassert(actual_function([&]() { api.query_data(); }).throws(""));
 
             // The second one should be read
-            wassert(actual(api.voglioquesto()) == 555);
+            wassert(actual(api.query_data()) == 555);
         }
 
         // Good + broken + good
@@ -60,9 +60,9 @@ void Tests::register_tests()
 
             fortran::MsgAPI api("test-simple-concat.bufr", "r", "BUFR");
 
-            wassert(actual(api.voglioquesto()) == 555);
-            wassert(actual_function([&]() { api.voglioquesto(); }).throws(""));
-            wassert(actual(api.voglioquesto()) == 555);
+            wassert(actual(api.query_data()) == 555);
+            wassert(actual_function([&]() { api.query_data(); }).throws(""));
+            wassert(actual(api.query_data()) == 555);
         }
 
         // Good + broken + broken + good
@@ -74,11 +74,11 @@ void Tests::register_tests()
 
             fortran::MsgAPI api("test-simple-concat.bufr", "r", "BUFR");
 
-            wassert(actual(api.voglioquesto()) == 555);
+            wassert(actual(api.query_data()) == 555);
 
-            wassert(actual_function([&]() { api.voglioquesto(); }).throws(""));
-            wassert(actual_function([&]() { api.voglioquesto(); }).throws(""));
-            wassert(actual(api.voglioquesto()) == 555);
+            wassert(actual_function([&]() { api.query_data(); }).throws(""));
+            wassert(actual_function([&]() { api.query_data(); }).throws(""));
+            wassert(actual(api.query_data()) == 555);
         }
     });
     add_method("read", []() {
@@ -86,10 +86,10 @@ void Tests::register_tests()
         std::string fname = tests::datafile("bufr/dbapi-emptymsg.bufr");
         fortran::MsgAPI api(fname.c_str(), "r", "BUFR");
 
-        wassert(actual(api.voglioquesto()) == 99);
-        wassert(actual(api.voglioquesto()) == 0);
-        wassert(actual(api.voglioquesto()) == 90);
-        wassert(actual(api.voglioquesto()) == api.missing_int);
+        wassert(actual(api.query_data()) == 99);
+        wassert(actual(api.query_data()) == 0);
+        wassert(actual(api.query_data()) == 90);
+        wassert(actual(api.query_data()) == api.missing_int);
     });
     add_method("missing", []() {
         // Try reading 'missing' values
@@ -115,7 +115,7 @@ void Tests::register_tests()
             WREPORT_TEST_INFO(msgloop);
             msgloop() << "Message " << msgi;
 
-            int count = wcallchecked(api.voglioquesto());
+            int count = wcallchecked(api.query_data());
             if (count == API::missing_int) break;
             wassert(actual(count) > 0);
 
@@ -174,7 +174,7 @@ void Tests::register_tests()
         std::string fname = tests::datafile("bufr/gts-acars-uk1.bufr");
         fortran::MsgAPI api(fname.c_str(), "r", "BUFR");
 
-        wassert(actual(api.voglioquesto()) == 11);
+        wassert(actual(api.query_data()) == 11);
         // wassert(actual(api.dammelo()) == WR_VAR(0, 4, 1));
         // 004001 YEAR(YEAR): 2009
         // 004002 MONTH(MONTH): 2
@@ -208,7 +208,7 @@ void Tests::register_tests()
         // 012101 TEMPERATURE/DRY-BULB TEMPERATURE(K): 240.00
         // 013002 MIXING RATIO(KG/KG): 0.00000
 
-        wassert(actual(api.voglioquesto()) == api.missing_int);
+        wassert(actual(api.query_data()) == api.missing_int);
 
     });
 
@@ -343,7 +343,7 @@ add_method("message_ordering", [] {
     {
         MsgAPI msgapi4("dballe_test.bufr", "r", "bufr");
         msgapi4.unsetall();
-        wassert(actual(msgapi4.voglioquesto()) == 3);
+        wassert(actual(msgapi4.query_data()) == 3);
         wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 101));
         wassert(actual(msgapi4.voglioancora()) == 2);
         wassert(actual(msgapi4.ancora()) == "*B33192");
@@ -357,7 +357,7 @@ add_method("message_ordering", [] {
         wassert(actual(msgapi4.voglioancora()) == 0);
 
         msgapi4.unsetall();
-        wassert(actual(msgapi4.voglioquesto()) == 3);
+        wassert(actual(msgapi4.query_data()) == 3);
         wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 1, 19));
         wassert(actual(msgapi4.voglioancora()) == 0);
         wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 1, 194));
@@ -366,7 +366,7 @@ add_method("message_ordering", [] {
         wassert(actual(msgapi4.voglioancora()) == 0);
 
         msgapi4.unsetall();
-        wassert(actual(msgapi4.voglioquesto()) == 3);
+        wassert(actual(msgapi4.query_data()) == 3);
         wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 1, 19));
         wassert(actual(msgapi4.voglioancora()) == 0);
         wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 1, 194));
@@ -375,7 +375,7 @@ add_method("message_ordering", [] {
         wassert(actual(msgapi4.voglioancora()) == 0);
 
         msgapi4.unsetall();
-        wassert(actual(msgapi4.voglioquesto()) == 3);
+        wassert(actual(msgapi4.query_data()) == 3);
         wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 101));
         wassert(actual(msgapi4.voglioancora()) == 0);
         wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 102));
@@ -384,7 +384,7 @@ add_method("message_ordering", [] {
         wassert(actual(msgapi4.voglioancora()) == 0);
 
         msgapi4.unsetall();
-        wassert(actual(msgapi4.voglioquesto()) == 3);
+        wassert(actual(msgapi4.query_data()) == 3);
         wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 101));
         wassert(actual(msgapi4.voglioancora()) == 0);
         wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 102));
@@ -393,7 +393,7 @@ add_method("message_ordering", [] {
         wassert(actual(msgapi4.voglioancora()) == 0);
 
         msgapi4.unsetall();
-        wassert(actual(msgapi4.voglioquesto()) == 5);
+        wassert(actual(msgapi4.query_data()) == 5);
         wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 101));
         wassert(actual(msgapi4.voglioancora()) == 0);
         wassert(actual(msgapi4.dammelo()) == WR_VAR(0, 12, 102));
@@ -412,7 +412,7 @@ add_method("message_ordering", [] {
         wassert(actual(msgapi4.ancora()) == "*B33194");
 
         msgapi4.unsetall();
-        wassert(actual(msgapi4.voglioquesto()) == API::missing_int);
+        wassert(actual(msgapi4.query_data()) == API::missing_int);
     }
 });
 

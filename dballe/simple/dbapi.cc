@@ -459,7 +459,7 @@ int DbAPI::query_stations()
     return reset_operation(new QuantesonoOperation(*this));
 }
 
-int DbAPI::voglioquesto()
+int DbAPI::query_data()
 {
     validate_input_query();
     if (station_context)

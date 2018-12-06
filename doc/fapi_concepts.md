@@ -149,7 +149,7 @@ See section [Attributes](#sec_attrs) for examples on how to handle attributes.
 
 Work with DB-All.e happens using *action routines*.  An action routine
 typically reads some input, performs an action and produces some output.
-Example of action routines are [idba_voglioquesto][] to query data from a
+Example of action routines are [idba_query_data][] to query data from a
 database and [idba_prendilo][] to write data into the database.
 
 The input and the output of action routines are collections of parameters which
@@ -210,7 +210,7 @@ To reset one input parameter you can use [idba_unset][]:
       ! We do not want to limit results by latitude this time
       ierr = idba_unset(handle, "latmin")
       ierr = idba_unset(handle, "latmax")
-      ierr = idba_voglioquesto(handle, count)
+      ierr = idba_query_data(handle, count)
 ```
 
 Alternatively, you can reset an input parameter by setting it to one of the
@@ -292,7 +292,7 @@ value".  This is a list of such special values:
 [idba_reinit_db]: fapi_reference.md#idba_reinit_db
 [idba_query_stations]: fapi_reference.md#idba_query_stations
 [idba_next_station]: fapi_reference.md#idba_next_station
-[idba_voglioquesto]: fapi_reference.md#idba_voglioquesto
+[idba_query_data]: fapi_reference.md#idba_query_data
 [idba_dammelo]: fapi_reference.md#idba_dammelo
 [idba_prendilo]: fapi_reference.md#idba_prendilo
 [idba_dimenticami]: fapi_reference.md#idba_dimenticami

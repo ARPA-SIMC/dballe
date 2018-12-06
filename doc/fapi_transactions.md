@@ -29,14 +29,14 @@ idba_prendilo(handle_write)
 ! Read it before calling idba_commit: the modifications are not yet visible
 ! outside the session that is writing them
 idba_begin(dbhandle, handle_read, "read", "read", "read")
-idba_voglioquesto(handle_read, count)
+idba_query_data(handle_read, count)
 print*, count
 idba_commit(handle_read)
 idba_commit(handle_write)
 
 ! Read if after calling idba_commit: the modifications are visible now
 idba_begin(dbhandle, handle_read, "read", "read", "read")
-idba_voglioquesto(handle_read, count)
+idba_query_data(handle_read, count)
 print*, count
 idba_commit(handle_read)
 ```

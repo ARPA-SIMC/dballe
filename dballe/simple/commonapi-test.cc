@@ -14,7 +14,7 @@ struct APITest : public CommonAPIImplementation
      void remove_all() override {}
      int query_stations() override { return 0; }
      void next_station() override {}
-     int voglioquesto() override { return 0; }
+     int query_data() override { return 0; }
      wreport::Varcode dammelo() override { return 0; }
      void prendilo() override {}
      void dimenticami() override {}

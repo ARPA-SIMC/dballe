@@ -447,7 +447,7 @@ Example code to query all the values in a given area and time:
       ierr = idba_seti(handle, "lonmax", 20)
       ierr = idba_seti(handle, "yearmin", 2004)
       ierr = idba_seti(handle, "yearmax", 2004)
-      ierr = idba_voglioquesto(handle, count)
+      ierr = idba_query_data(handle, count)
       do while (count.gt.0)
         ierr = idba_dammelo(handle, param)
         ! get the value of this variable
@@ -461,9 +461,9 @@ Example code to query all the values in a given area and time:
 
 This code introduces two new functions:
 
-* [idba_voglioquesto][]: performs the query and returns the number of values it
+* [idba_query_data][]: performs the query and returns the number of values it
   finds.
-* [idba_dammelo][]: gets a value out of the result of [idba_voglioquesto][].  If
+* [idba_dammelo][]: gets a value out of the result of [idba_query_data][].  If
   there are no more stations, the function fails.
 
 ## Clearing the database
@@ -583,7 +583,7 @@ Attributes are read using [idba_ancora][]:
 
 ```fortran
       ! ...setup a query...
-      idba_voglioquesto(handle, count)
+      idba_query_data(handle, count)
       do while (count.gt.0)
         ierr = idba_dammelo(handle, param)
 
@@ -653,7 +653,7 @@ last data retrieved:
 
 ```fortran
       ! ...setup a query...
-      ierr = idba_voglioquesto(handle, count)
+      ierr = idba_query_data(handle, count)
       do while (count.gt.0)
         ierr = idba_dammelo(handle, param)
         ! ...process data...
@@ -689,7 +689,7 @@ referring to:
 [idba_critica][] can also be called at any time using a previously stored data it:
 
 ```fortran
-      ! ...perform a query with idba_voglioquesto...
+      ! ...perform a query with idba_query_data...
       do while (count.gt.0)
         ierr = idba_dammelo(handle, param)
         ! ...process data...
@@ -834,15 +834,15 @@ databases:
 
 * You do not need to call [idba_connect][] and [idba_disconnect][]: the work
   session starts at [idba_begin_messages][] and ends at [idba_commit][]
-* When reading, performing [idba_query_stations][] or [idba_voglioquesto][] a second
+* When reading, performing [idba_query_stations][] or [idba_query_data][] a second
   time advances to the next message in the file.
-* Query parameters set before an [idba_voglioquesto][] have no effect: filtering
+* Query parameters set before an [idba_query_data][] have no effect: filtering
   data is not implemented for files. Since it may be implemented in the future,
   it is suggested to avoid setting query parameters before an
-  [idba_voglioquesto][] to avoid unexpected changes of behaviour with future
+  [idba_query_data][] to avoid unexpected changes of behaviour with future
   versions of DB-All.e.
 * When reading, you will see that there are no more messages because
-  [idba_query_stations][] or [idba_voglioquesto][] will return 0.
+  [idba_query_stations][] or [idba_query_data][] will return 0.
 * When writing, you can use the `query` input parameter to [idba_prendilo][] to
   control when a new message is started.  If you set it to `subset`, then the
   data will be inserted in a new BUFR or CREX subset.  If you set it to
@@ -900,7 +900,7 @@ ierr = idba_setd (handle, "latmin", 10)
 ierr = idba_setd (handle, "lonmax", 60)
 
 ! Make the query
-ierr = idba_voglioquesto (handle, N)
+ierr = idba_query_data (handle, N)
 
 ! Iterate the results
 do i=1,N
@@ -950,12 +950,12 @@ among the results of [idba_next_station][]:
 ```
 
 If you want to see all the extra station data available, you can make an
-explicit query for the extra station data using [idba_voglioquesto][] and
+explicit query for the extra station data using [idba_query_data][] and
 [idba_dammelo][]:
 
 ```fortran
       ierr = idba_seti("ana_id", id)
-      ierr = idba_voglioquesto(handle, count)
+      ierr = idba_query_data(handle, count)
       do i=1,count
         ierr = idba_dammelo(handle, param)
         ! get the value of this variable
@@ -1004,7 +1004,7 @@ explicit query for the extra station data using [idba_voglioquesto][] and
 [idba_reinit_db]: fapi_reference.md#idba_reinit_db
 [idba_query_stations]: fapi_reference.md#idba_query_stations
 [idba_next_station]: fapi_reference.md#idba_next_station
-[idba_voglioquesto]: fapi_reference.md#idba_voglioquesto
+[idba_query_data]: fapi_reference.md#idba_query_data
 [idba_dammelo]: fapi_reference.md#idba_dammelo
 [idba_prendilo]: fapi_reference.md#idba_prendilo
 [idba_dimenticami]: fapi_reference.md#idba_dimenticami

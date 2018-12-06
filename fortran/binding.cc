@@ -179,6 +179,7 @@ int idba_connect(int* dbahandle, const char* url)
     }
 }
 
+/// Deprecated compatibility version of idba_connect()
 int idba_presentati(int* dbahandle, const char* url)
 {
     return idba_connect(dbahandle, url);
@@ -213,6 +214,7 @@ int idba_disconnect(int *dbahandle)
     return fortran::success();
 }
 
+/// Deprecated compatibility version of idba_disconnect()
 int idba_arrivederci(int *dbahandle)
 {
     return idba_disconnect(dbahandle);
@@ -280,6 +282,7 @@ int idba_begin(int dbahandle, int* handle, const char* anaflag, const char* data
     }
 }
 
+/// Deprecated compatibility version of idba_begin()
 int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* dataflag, const char* attrflag)
 {
     return idba_begin(dbahandle, handle, anaflag, dataflag, attrflag);
@@ -319,6 +322,7 @@ int idba_begin_messages(int* handle, const char* filename, const char* mode, con
     }
 }
 
+/// Deprecated compatibility version of idba_begin_messages()
 int idba_messaggi(int* handle, const char* filename, const char* mode, const char* type)
 {
     return idba_begin_messages(handle, filename, mode, type);
@@ -343,6 +347,7 @@ int idba_commit(int* handle)
     }
 }
 
+/// Deprecated compatibility version of idba_commit()
 int idba_fatto(int* handle)
 {
     return idba_commit(handle);
@@ -1014,6 +1019,7 @@ int idba_reinit_db(int handle, const char* repinfofile)
     }
 }
 
+/// Deprecated compatibility version of idba_reinit_db()
 int idba_scopa(int handle, const char* repinfofile)
 {
     return idba_reinit_db(handle, repinfofile);
@@ -1033,7 +1039,7 @@ int idba_scopa(int handle, const char* repinfofile)
  * @return
  *   The error indicator for the function
  */
-int idba_quantesono(int handle, int* count)
+int idba_query_stations(int handle, int* count)
 {
     try {
         HSimple& h = hsimp.get(handle);
@@ -1044,7 +1050,8 @@ int idba_quantesono(int handle, int* count)
     }
 }
 
-int idba_query_stations(int handle, int* count)
+/// Deprecated compatibility version of idba_query_stations()
+int idba_quantesono(int handle, int* count)
 {
     return idba_query_stations(handle, count);
 }
@@ -1075,6 +1082,7 @@ int idba_next_station(int handle)
     }
 }
 
+/// Deprecated compatibility version of idba_next_station()
 int idba_elencamele(int handle)
 {
     return idba_next_station(handle);
@@ -1102,15 +1110,21 @@ int idba_elencamele(int handle)
  * @return
  *   The error indicator for the function
  */
-int idba_voglioquesto(int handle, int* count)
+int idba_query_data(int handle, int* count)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        *count = h.api->voglioquesto();
+        *count = h.api->query_data();
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
     }
+}
+
+/// Deprecated compatibility version of idba_query_data()
+int idba_voglioquesto(int handle, int* count)
+{
+    return idba_query_data(handle, count);
 }
 
 /**

@@ -518,9 +518,9 @@ void TracedAPI::next_station()
     RUN(next_station);
 }
 
-int TracedAPI::voglioquesto()
+int TracedAPI::query_data()
 {
-    return RUN(voglioquesto);
+    return RUN(query_data);
 }
 
 wreport::Varcode TracedAPI::dammelo()

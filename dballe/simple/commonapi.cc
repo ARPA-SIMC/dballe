@@ -42,7 +42,7 @@ void Attributes::has_new_values()
 Operation::~Operation() {}
 void Operation::set_varcode(wreport::Varcode varcode) {}
 bool Operation::next_station() { throw error_consistency("next_station called without a previous query_stations"); }
-wreport::Varcode Operation::dammelo() { throw error_consistency("dammelo called without a previous voglioquesto"); }
+wreport::Varcode Operation::dammelo() { throw error_consistency("dammelo called without a previous query_data"); }
 
 signed char Operation::enqb(const char* param) const
 {
@@ -436,7 +436,7 @@ void CommonAPIImplementation::next_station()
 
 wreport::Varcode CommonAPIImplementation::dammelo()
 {
-    if (!operation) throw error_consistency("dammelo called without a previous voglioquesto");
+    if (!operation) throw error_consistency("dammelo called without a previous query_data");
     qcoutput.invalidate();
     return operation->dammelo();
 }

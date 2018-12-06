@@ -35,7 +35,7 @@ public:
     void reinit_db(const char* repinfofile=nullptr) override;
     void remove_all() override;
     int query_stations() override;
-    int voglioquesto() override;
+    int query_data() override;
     void prendilo() override;
     void dimenticami() override;
     void commit() override;
