@@ -309,9 +309,9 @@ TracedAPI::TracedAPI(FileTracer& tracer, const std::string& name, std::unique_pt
 
 #define RUN(name, ...) run_and_log(*this, #name, &API::name, ## __VA_ARGS__);
 
-void TracedAPI::scopa(const char* repinfofile)
+void TracedAPI::reinit_db(const char* repinfofile)
 {
-    RUN(scopa, repinfofile);
+    RUN(reinit_db, repinfofile);
 }
 
 void TracedAPI::remove_all()

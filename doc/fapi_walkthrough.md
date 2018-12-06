@@ -468,14 +468,14 @@ This code introduces two new functions:
 
 ## Clearing the database
 
-You can initialise or reinitialise the database using [idba_scopa][]:
+You can initialise or reinitialise the database using [idba_reinit_db][]:
 
 ```fortran
       ! Start the work with a clean database
-      ierr = idba_scopa(handle, "repinfo.csv")
+      ierr = idba_reinit_db(handle, "repinfo.csv")
 ```
 
-[idba_scopa][] clears the database if it exists, then recreates all the
+[idba_reinit_db][] clears the database if it exists, then recreates all the
 needed tables.  Finally, it populates the informations about the reports (such
 as the available report types, their mnemonics and their priority) using the
 data in the file given as argument.
@@ -489,7 +489,7 @@ The file is in CSV format, with 6 columns:
 5. Ignored
 6. Ignored
 
-If `""` is given instead of the file name, [idba_scopa][] will read the
+If `""` is given instead of the file name, [idba_reinit_db][] will read the
 data from `/etc/repinfo.csv`.
 
 This is an example of the contents of the file:
@@ -506,7 +506,7 @@ This is an example of the contents of the file:
 09,boe,dati omdametrici,100,oss,31
 ```
 
-[idba_scopa][] will not work unless `rewrite` has been enabled for the
+[idba_reinit_db][] will not work unless `rewrite` has been enabled for the
 data when opening the database.
 
 
@@ -1001,7 +1001,7 @@ explicit query for the extra station data using [idba_voglioquesto][] and
 [idba_enqlevel]: fapi_reference.md#idba_enqlevel
 [idba_enqtimerange]: fapi_reference.md#idba_enqtimerange
 [idba_enqdate]: fapi_reference.md#idba_enqdate
-[idba_scopa]: fapi_reference.md#idba_scopa
+[idba_reinit_db]: fapi_reference.md#idba_reinit_db
 [idba_quantesono]: fapi_reference.md#idba_quantesono
 [idba_elencamele]: fapi_reference.md#idba_elencamele
 [idba_voglioquesto]: fapi_reference.md#idba_voglioquesto

@@ -45,7 +45,7 @@ stations are preferred over values measured by a satellite, which in turn is
 preferred over a value computed by a forecast model.
 
 Priorities associated to the report type can be customized when creating the
-database (see [[idba_scopa][]](fapi_reference.md#idba_scopa)).
+database (see [[idba_reinit_db][]](fapi_reference.md#idba_reinit_db)).
 
 <a name="station"></a>
 ### Station
@@ -289,7 +289,7 @@ value".  This is a list of such special values:
 [idba_enqlevel]: fapi_reference.md#idba_enqlevel
 [idba_enqtimerange]: fapi_reference.md#idba_enqtimerange
 [idba_enqdate]: fapi_reference.md#idba_enqdate
-[idba_scopa]: fapi_reference.md#idba_scopa
+[idba_reinit_db]: fapi_reference.md#idba_reinit_db
 [idba_quantesono]: fapi_reference.md#idba_quantesono
 [idba_elencamele]: fapi_reference.md#idba_elencamele
 [idba_voglioquesto]: fapi_reference.md#idba_voglioquesto

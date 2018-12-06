@@ -10,7 +10,7 @@ namespace {
 
 struct APITest : public CommonAPIImplementation
 {
-     void scopa(const char* repinfofile=0) override {}
+     void reinit_db(const char* repinfofile=0) override {}
      void remove_all() override {}
      int quantesono() override { return 0; }
      void elencamele() override {}

@@ -21,7 +21,7 @@ struct API
 
     virtual ~API() {}
 
-    virtual void scopa(const char* repinfofile=nullptr) = 0;
+    virtual void reinit_db(const char* repinfofile=nullptr) = 0;
     virtual void remove_all() = 0;
     virtual int enqi(const char* param) = 0;
     virtual signed char enqb(const char* param) = 0;

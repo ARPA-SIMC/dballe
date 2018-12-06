@@ -370,11 +370,11 @@ bool MsgAPI::readNextMessage()
     return false;
 }
 
-void MsgAPI::scopa(const char* repinfofile)
+void MsgAPI::reinit_db(const char* repinfofile)
 {
     if (!(perms & PERM_DATA_WRITE))
         throw error_consistency(
-            "scopa must be run with the database open in data write mode");
+            "reinit_db must be run with the database open in data write mode");
 
     // FIXME: In theory, nothing to do
     // FIXME: In practice, we could reset all buffered data and ftruncate the file

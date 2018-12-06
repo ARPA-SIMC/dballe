@@ -417,11 +417,11 @@ void DbAPI::commit()
     shutdown(true);
 }
 
-void DbAPI::scopa(const char* repinfofile)
+void DbAPI::reinit_db(const char* repinfofile)
 {
     if (!(perms & PERM_DATA_WRITE))
         error_consistency::throwf(
-            "scopa must be run with the database open in data write mode");
+            "reinit_db must be run with the database open in data write mode");
     tr->remove_all();
     delete operation;
     operation = nullptr;

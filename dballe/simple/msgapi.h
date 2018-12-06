@@ -78,7 +78,7 @@ public:
     void flushMessage();
     void set_exporter(const char* template_name);
 
-    void scopa(const char* repinfofile=0) override;
+    void reinit_db(const char* repinfofile=0) override;
     int quantesono() override;
     int voglioquesto() override;
     void prendilo() override;

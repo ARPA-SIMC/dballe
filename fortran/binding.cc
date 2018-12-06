@@ -1000,18 +1000,23 @@ int idba_enqdate(int handle,
  * @return
  *   The error indicator for the function
  */
-int idba_scopa(int handle, const char* repinfofile)
+int idba_reinit_db(int handle, const char* repinfofile)
 {
     try {
         HSimple& h = hsimp.get(handle);
         if (repinfofile[0] == 0)
-            h.api->scopa(nullptr);
+            h.api->reinit_db(nullptr);
         else
-            h.api->scopa(repinfofile);
+            h.api->reinit_db(repinfofile);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
     }
+}
+
+int idba_scopa(int handle, const char* repinfofile)
+{
+    return idba_reinit_db(handle, repinfofile);
 }
 
 /**
@@ -1181,7 +1186,7 @@ int idba_dimenticami(int handle)
 /**
  * Remove all values from the database.
  *
- * The difference with idba_scopa() is that it preserves the existing report
+ * The difference with idba_reinit_db() is that it preserves the existing report
  * information.
  *
  * @param handle

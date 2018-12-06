@@ -718,7 +718,7 @@ this->add_method("attrs_bug1", [](Fixture& f) {
     // Reproduce a bug when setting attributes
     using namespace dballe::fortran;
     fortran::DbAPI dbapi0(f.tr, "write", "write", "write");
-    dbapi0.scopa();
+    dbapi0.reinit_db();
 
     // Add a value
     dbapi0.unsetall();
@@ -752,7 +752,7 @@ this->add_method("stationdata_bug1", [](Fixture& f) {
     // Reproduce a bug handling station data
     {
         fortran::DbAPI dbapi0(f.tr, "write", "write", "write");
-        dbapi0.scopa();
+        dbapi0.reinit_db();
         // Copy a message using the API
         dbapi0.messages_open_input(dballe::tests::datafile("bufr/generic-bug20140403.bufr").c_str(), "r", Encoding::BUFR);
         dbapi0.messages_open_output("test.bufr", "w", Encoding::BUFR);
@@ -793,7 +793,7 @@ this->add_method("segfault1", [](Fixture& f) {
 this->add_method("issue45", [](Fixture& f) {
     using namespace dballe::fortran;
     fortran::DbAPI dbapi0(f.tr, "write", "write", "write");
-    dbapi0.scopa();
+    dbapi0.reinit_db();
     dbapi0.unsetall();
     dbapi0.seti("lat", 4500000);
     dbapi0.seti("lon", 1000000);
@@ -1070,7 +1070,7 @@ this->add_method("transactions", [](Fixture& f) {
 this->add_method("insert_block", [](Fixture& f) {
     auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
     fortran::DbAPI dbapi0(tr, "write", "write", "write");
-    dbapi0.scopa();
+    dbapi0.reinit_db();
     dbapi0.setd("lat", -45.678902);
     dbapi0.setd("lon", -12.345600);
     dbapi0.setc("rep_memo", "synop");
@@ -1083,7 +1083,7 @@ this->add_method("insert_block", [](Fixture& f) {
 this->add_method("query_attr_values", [](Fixture& f) {
     auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
     fortran::DbAPI dbapi0(tr, "write", "write", "write");
-    dbapi0.scopa();
+    dbapi0.reinit_db();
     dbapi0.unsetall();
     dbapi0.seti("lat", 4500000);
     dbapi0.seti("lon", 1000000);
@@ -1124,7 +1124,7 @@ this->add_method("query_attr_values", [](Fixture& f) {
 this->add_method("query_attr_filtered", [](Fixture& f) {
     auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
     fortran::DbAPI dbapi0(tr, "write", "write", "write");
-    dbapi0.scopa();
+    dbapi0.reinit_db();
     dbapi0.unsetall();
     dbapi0.seti("lat", 4500000);
     dbapi0.seti("lon", 1000000);
@@ -1166,7 +1166,7 @@ this->add_method("issue137", [](Fixture& f) {
     using namespace dballe::fortran;
     auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
     fortran::DbAPI dbapi0(tr, "write", "write", "write");
-    dbapi0.scopa();
+    dbapi0.reinit_db();
 
     // Insert two variables
     dbapi0.unsetall();

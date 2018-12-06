@@ -34,7 +34,7 @@ struct TracedAPI : public API
 
     TracedAPI(FileTracer& tracer, const std::string& name, std::unique_ptr<API> api);
 
-    void scopa(const char* repinfofile=0) override;
+    void reinit_db(const char* repinfofile=0) override;
     void remove_all() override;
     int enqi(const char* param) override;
     signed char enqb(const char* param) override;
