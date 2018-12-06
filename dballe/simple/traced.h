@@ -63,7 +63,7 @@ struct TracedAPI : public API
     int query_data() override;
     wreport::Varcode next_data() override;
     void insert_data() override;
-    void dimenticami() override;
+    void remove_data() override;
     int voglioancora() override;
     const char* ancora() override;
     void critica() override;

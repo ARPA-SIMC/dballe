@@ -1208,15 +1208,21 @@ int idba_prendilo(int handle)
  * @return
  *   The error indicator for the function
  */
-int idba_dimenticami(int handle)
+int idba_remove_data(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        h.api->dimenticami();
+        h.api->remove_data();
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
     }
+}
+
+/// Deprecated compatibility version of idba_remove_data()
+int idba_dimenticami(int handle)
+{
+    return idba_remove_data(handle);
 }
 
 /**

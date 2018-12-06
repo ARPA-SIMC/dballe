@@ -429,9 +429,9 @@ void MsgAPI::insert_data()
     unsetb();
 }
 
-void MsgAPI::dimenticami()
+void MsgAPI::remove_data()
 {
-    throw error_consistency("dimenticami does not make sense when writing messages");
+    throw error_consistency("remove_data does not make sense when writing messages");
 }
 
 void MsgAPI::messages_open_input(const char* filename, const char* mode, Encoding format, bool)

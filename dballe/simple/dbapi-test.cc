@@ -121,7 +121,7 @@ this->add_method("query_basic", [](Fixture& f) {
     // Delete variables
     api.unsetall();
     api.setc("var", "B12101");
-    api.dimenticami();
+    api.remove_data();
     wassert(actual(api.query_data()) == 0);
 });
 
@@ -1185,7 +1185,7 @@ this->add_method("issue137", [](Fixture& f) {
     dbapi0.unsetall();
     dbapi0.setc("var", "B12101");
     dbapi0.unset("varlist");
-    dbapi0.dimenticami();
+    dbapi0.remove_data();
 
     dbapi0.unsetall();
     dbapi0.setc("var", "B12102");
@@ -1196,7 +1196,7 @@ this->add_method("issue137", [](Fixture& f) {
     dbapi0.setdate(2014, 1, 6, 18, 0, 0);
     dbapi0.setlevel(105, 2000, API::missing_int, API::missing_int);
     dbapi0.settimerange(4, 3600, 7200);
-    dbapi0.dimenticami();
+    dbapi0.remove_data();
 
     dbapi0.unsetall();
     dbapi0.setc("var", "B12102");

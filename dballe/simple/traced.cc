@@ -533,9 +533,9 @@ void TracedAPI::insert_data()
     RUN(insert_data);
 }
 
-void TracedAPI::dimenticami()
+void TracedAPI::remove_data()
 {
-    RUN(dimenticami);
+    RUN(remove_data);
 }
 
 int TracedAPI::voglioancora()

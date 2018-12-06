@@ -50,7 +50,7 @@ struct API
     virtual int query_data() = 0;
     virtual wreport::Varcode next_data() = 0;
     virtual void insert_data() = 0;
-    virtual void dimenticami() = 0;
+    virtual void remove_data() = 0;
     virtual int voglioancora() = 0;
     virtual const char* ancora() = 0;
     virtual void critica() = 0;

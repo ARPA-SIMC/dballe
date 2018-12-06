@@ -478,10 +478,10 @@ void DbAPI::insert_data()
     unsetb();
 }
 
-void DbAPI::dimenticami()
+void DbAPI::remove_data()
 {
     if (! (perms & PERM_DATA_WRITE))
-        throw error_consistency("dimenticami must be called with the database open in data write mode");
+        throw error_consistency("remove_data must be called with the database open in data write mode");
 
     validate_input_query();
 

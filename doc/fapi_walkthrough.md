@@ -560,21 +560,21 @@ is `add` or `rewrite`.
 
 ## Deleting data
 
-Data is deleted using [idba_dimenticami][]:
+Data is deleted using [idba_remove_data][]:
 
 ```fortran
       ! Delete all data from the station with id 4 in year 2002
       ierr = idba_seti(handle, "ana_id", 4)
       ierr = idba_seti(handle, "year", 2002)
-      ierr = idba_dimenticami(handle)
+      ierr = idba_remove_data(handle)
 ```
 
 This code introduces a new function:
 
-* [idba_dimenticami][]: deletes all the data found in the extremes specified in
+* [idba_remove_data][]: deletes all the data found in the extremes specified in
   input.
 
-[idba_dimenticami][] will not work unless `rewrite` has been enabled for
+[idba_remove_data][] will not work unless `rewrite` has been enabled for
 the data when opening the database.
 
 ## Reading attributes
@@ -1007,7 +1007,7 @@ explicit query for the extra station data using [idba_query_data][] and
 [idba_query_data]: fapi_reference.md#idba_query_data
 [idba_next_data]: fapi_reference.md#idba_next_data
 [idba_insert_data]: fapi_reference.md#idba_insert_data
-[idba_dimenticami]: fapi_reference.md#idba_dimenticami
+[idba_remove_data]: fapi_reference.md#idba_remove_data
 [idba_remove_all]: fapi_reference.md#idba_remove_all
 [idba_voglioancora]: fapi_reference.md#idba_voglioancora
 [idba_ancora]: fapi_reference.md#idba_ancora
