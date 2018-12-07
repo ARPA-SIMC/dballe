@@ -42,7 +42,7 @@ BuildRequires: gcc-gfortran
 BuildRequires: numpy
 BuildRequires: %{python3_vers}-numpy
 
-Requires: python3-%{name} = %{?epoch:%epoch:}%{version}-%{release}
+Requires: %{python3_vers}-dballe = %{?epoch:%epoch:}%{version}-%{release}
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
 
 %description
@@ -197,7 +197,6 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
 Requires: %{python3_vers}-numpy
 Requires: %{python3_vers}-wreport3
 Obsoletes: python-dballe < 8.0
-%{?python_provide:%python_provide python3-%{name}}
 
 %description -n %{python3_vers}-dballe
  DB-ALL.e Python library for weather research
