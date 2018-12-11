@@ -1,345 +1,280 @@
-#!/usr/bin/python
-# coding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+#!/usr/bin/python3
 
 import os
-os.environ["DBALLE_BUILDING_DOCS"] ="true"  # noqa
-
+os.environ["DBALLE_BUILDING_DOCS"] = "true"  # noqa
 import sys
+import re
 import inspect
+from contextlib import contextmanager
+import argparse
+import logging
 import dballe
 import dballe.volnd
 
+log = logging.getLogger("doc-dballe")
 
-def print_indented(spaces, *args):
-    "Print a string, indented by the given number of spaces"
-    for s in args:
-        for line in s.split("\n"):
-            for i in range(1, spaces):
-                sys.stdout.write(" ")
-            sys.stdout.write(line.replace("wreport.", "dballe."))
-            sys.stdout.write("\n")
+re_docparsep = re.compile(r"\n(?:\s*\n)+")
+re_signature = re.compile(r"\S+\(.*\)")
+re_linebreak = re.compile(r"\s*\n\s*")
 
 
-c_argspecs = {
-    "dballe.varinfo": "(varcode)",
-    "dballe.var": "(varcode[, default])",
-    "dballe.describe_level": "(ltype1=None, l1=None, ltype2=None, l2=None)",
-    "dballe.describe_trange": "(pind=None, p1=None, p2=None)",
-    "Var.enqi": "()",
-    "Var.enqc": "()",
-    "Var.enqd": "()",
-    "Var.enq": "()",
-    "Var.get": "(default=None)",
-    "Var.format": "(default='')",
-    "Record.to_dict": "()",
-    "Record.clear": "()",
-    "Record.clear_vars": "()",
-    "Record.get": "(key, default=None)",
-    "Record.copy": "()",
-    "Record.key": "(key)",
-    "Record.var": "(key)",
-    "Record.keys": "()",
-    "Record.items": "()",
-    "Record.varitems": "()",
-    "Record.vars": "()",
-    "Record.update": "(\*\*kwargs)",
-    "Record.date_extremes": "()",
-    "Record.set_from_string": "(str)",
-    "Transaction.commit": "()",
-    "Transaction.rollback": "()",
-    "DB.get_default_format": "()",
-    "DB.set_default_format": "(fmt: str)",
-    "DB.connect_from_file": "(filename: str)",
-    "DB.connect_from_url": "(url: str)",
-    "DB.connect_test": "()",
-    "DB.is_url": "(url: str)",
-    "DB.transaction": "()",
-    "DB.disappear": "()",
-    "DB.reset": "(repinfo_filename: str=None)",
-    "DB.insert": "(record: Union[dballe.Record, dict], can_replace: bool=False, can_add_stations: bool=False)",
-    "DB.remove": "(query: Union[dballe.Record, dict])",
-    "DB.vacuum": "()",
-    "DB.query_attrs": "(query: Union[dballe.Record, dict])",
-    "Cursor.attr_query": "()",
-}
-
-for meth, args in [
-            ("attr_insert_data", "(data_id: int, attrs: Union[dballe.Record, dict])"),
-            ("attr_insert_station", "(data_id: int, attrs: Union[dballe.Record, dict])"),
-            ("attr_query_data", "(data_id: int)"),
-            ("attr_query_station", "(data_id: int)"),
-            ("attr_remove_data", "(data_id: int, attrs: Union[dballe.Record, dict]=None)"),
-            ("attr_remove_station", "(data_id: int, attrs: Union[dballe.Record, dict]=None)"),
-            ("export_to_file", "(query: Union[dballe.Record, dict], format: str, filename: str, generic: bool=False)"),
-            ("insert_data", "(record: Union[dballe.Record, dict], can_replace: bool=False, can_add_stations:bool=False)"),
-            ("insert_station_data", "(record: Union[dballe.Record, dict], can_replace: bool=False, can_add_stations:bool=False)"),
-            ("load", "(file: str)"),
-            ("query_data", "(query: Union[dballe.Record, dict])"),
-            ("query_station_data", "(query: Union[dballe.Record, dict])"),
-            ("query_stations", "(query: Union[dballe.Record, dict])"),
-            ("query_summary", "(query: Union[dballe.Record, dict])"),
-            ("remove", "(query: Union[dballe.Record, dict])"),
-            ("remove_all", "()"),
-            ("remove_station_data", "(query: Union[dballe.Record, dict])"),
-        ]:
-    c_argspecs["Transaction." + meth] = args
-    c_argspecs["DB." + meth] = args
+class Fail(Exception):
+    pass
 
 
-def document_class(cls):
-    name = cls.__name__
-    print()
-    print("dballe.{}".format(name))
-    print("-" * (len(name) + 7))
-    print()
-    print(inspect.getdoc(cls).replace("wreport.", "dballe."))
-    print()
-    print("Members")
-    print("```````")
-    document_members(cls)
-
-
-def document(obj):
-    if obj.__doc__ is None:
-        return
-
-    if inspect.ismodule(obj):
-        print_indented(0, inspect.getdoc(obj))
-        print
-    elif inspect.isroutine(obj) and inspect.isfunction(obj):
-        # A Python function
-        print_indented(2, '``'+obj.__name__ + inspect.formatargspec(*inspect.getargspec(obj))+"``")
-        print_indented(4, inspect.getdoc(obj))
-    else:
-        print_indented(2, obj.__name__)
-        print_indented(4, inspect.getdoc(obj))
-
-
-def document_members(cls, include=None, exclude=None):
-    # List and classify members
-    member_vars = []
-    member_funcs = []
-
-    for name, m in inspect.getmembers(cls):
-        if name[0] == '_':
-            continue
-        if include is not None and name not in include:
-            continue
-        if exclude is not None and name in exclude:
-            continue
-        fullname = cls.__name__ + "." + name
-        if inspect.isroutine(m) and (inspect.isfunction(m) or fullname in c_argspecs):
-            member_funcs.append((fullname, name, m))
-        elif inspect.isclass(m) or inspect.ismodule(m):
-            pass
-        elif m.__class__.__name__ == "_Feature":
-            pass
+def split_doc_summary(doc):
+    res = re_docparsep.split(doc, maxsplit=1)
+    if len(res) == 1:
+        dstrip = doc.strip()
+        if "\n" in dstrip:
+            return None, doc
         else:
-            member_vars.append((fullname, name, m))
+            return doc, None
+    else:
+        summary = re_linebreak.sub(" ", res[0])
+        return summary, res[1]
 
-    member_vars.sort()
-    member_funcs.sort()
 
-    # Document vars and get/setters
-    for fullname, name, m in member_vars:
-        print(".. _{}.{}:".format(cls.__name__, name))
-    for fullname, name, m in member_funcs:
-        print(".. _{}.{}():".format(cls.__name__, name))
-    print()
-    for fullname, name, m in member_vars:
-        print_indented(2, "{}.{}".format(cls.__name__, name))
-        print_indented(4, inspect.getdoc(m))
+class Generator:
+    def __init__(self, file=sys.stdout):
+        self.whitespace = True
+        self.file = file
 
-    # Document functions
-    for fullname, name, m in member_funcs:
-        argspec = c_argspecs.get(fullname, None)
-        if argspec is None:
-            if inspect.isfunction(m):
-                argspec = inspect.formatargspec(*inspect.getargspec(m))
+    def spacer(self):
+        if self.whitespace:
+            return
+        print(file=self.file)
+        self.whitespace = True
+
+    def print(self, *args, **kw):
+        self.whitespace = False
+        kw["file"] = self.file
+        print(*args, **kw)
+
+    def print_indented(self, spaces, *args):
+        "Print a string, indented by the given number of spaces"
+        self.whitespace = False
+        for s in args:
+            for line in s.split("\n"):
+                for i in range(1, spaces):
+                    self.file.write(" ")
+                self.file.write(line.replace("wreport.", "dballe."))
+                self.file.write("\n")
+
+    def text(self, text: str):
+        self.print(text.lstrip())
+
+    def para(self, text: str):
+        if not self.whitespace:
+            print(file=self.file)
+        print(text.lstrip(), file=self.file)
+        print(file=self.file)
+        self.whitespace = True
+
+    def title(self, line, char='-', over=False):
+        self.spacer()
+        if over:
+            print(char * len(line), file=self.file)
+        print(line, file=self.file)
+        print(char * len(line), file=self.file)
+        print(file=self.file)
+
+    def document_class(self, cls, **kw):
+        name = cls.__name__
+        self.title("dballe.{}".format(name))
+        self.print(inspect.getdoc(cls).replace("wreport.", "dballe."))
+        if self.has_members(cls, **kw):
+            self.title("Members", char="`")
+            self.document_members(cls, **kw)
+        self.spacer()
+
+    def document(self, obj):
+        if obj.__doc__ is None:
+            return
+
+        if inspect.ismodule(obj):
+            self.print_indented(0, inspect.getdoc(obj))
+            self.spacer()
+        elif inspect.isroutine(obj) and inspect.isfunction(obj):
+            # A Python function
+            self.print_indented(2, '``'+obj.__name__ + inspect.formatargspec(*inspect.getargspec(obj))+"``")
+            self.print_indented(4, inspect.getdoc(obj))
+        else:
+            self.print_indented(2, obj.__name__)
+            self.print_indented(4, inspect.getdoc(obj))
+
+    def document_getsetter(self, cls, name, obj):
+        doc = inspect.getdoc(obj)
+
+        summary, rest = split_doc_summary(doc)
+        if summary:
+            if rest:
+                self.print_indented(2, "{}.{}: {}".format(cls.__name__, name, summary))
+                self.print_indented(4, rest)
             else:
-                argspec = ""
-        print_indented(2, "{}.{}{}".format(cls.__name__, name, argspec))
-        print_indented(4, inspect.getdoc(m))
+                self.print_indented(2, "{}.{}".format(cls.__name__, name))
+                self.print_indented(4, summary)
+        else:
+            self.print_indented(2, "{}.{}".format(cls.__name__, name))
+            self.print_indented(4, doc)
+
+    def document_cfunction(self, cls, name, obj):
+        # Split signature and summary
+        doc = inspect.getdoc(obj)
+
+        signature, rest = split_doc_summary(doc)
+        if signature and re_signature.search(signature):
+            if signature.startswith(cls.__name__ + "."):
+                signature = signature[len(cls.__name__) + 1:]
+            self.print_indented(2, "{}.{}".format(cls.__name__, signature))
+            if rest:
+                self.print_indented(4, rest)
+        else:
+            self.print_indented(2, "{}.{}(…)".format(cls.__name__, name))
+            self.print_indented(4, doc)
+
+    def document_function(self, cls, name, obj):
+        argspec = inspect.formatargspec(*inspect.getargspec(obj))
+        self.print_indented(2, "{}.{}{}".format(cls.__name__, name, argspec))
+        self.print_indented(4, inspect.getdoc(obj))
+
+    def has_members(self, cls, include=None, exclude=None):
+        for name, m in inspect.getmembers(cls):
+            if name[0] == '_':
+                continue
+            if include is not None and name not in include:
+                continue
+            if exclude is not None and name in exclude:
+                continue
+            if inspect.isroutine(m):
+                return True
+            elif inspect.isfunction(m):
+                return True
+            elif inspect.isclass(m) or inspect.ismodule(m):
+                pass
+            elif m.__class__.__name__ == "_Feature":
+                pass
+            else:
+                return True
+
+    def document_members(self, cls, include=None, exclude=None):
+        # List and classify members
+        member_vars = []
+        member_cfuncs = []
+        member_funcs = []
+
+        for name, m in inspect.getmembers(cls):
+            if name[0] == '_':
+                continue
+            if include is not None and name not in include:
+                continue
+            if exclude is not None and name in exclude:
+                continue
+            if inspect.isroutine(m):
+                member_cfuncs.append((name, m))
+            elif inspect.isfunction(m):
+                member_funcs.append((name, m))
+            elif inspect.isclass(m) or inspect.ismodule(m):
+                pass
+            elif m.__class__.__name__ == "_Feature":
+                pass
+            else:
+                member_vars.append((name, m))
+
+        member_vars.sort()
+        member_cfuncs.sort()
+        member_funcs.sort()
+
+        # Hyperlink destinations
+        for name, m in member_vars:
+            self.print(".. _{}.{}:".format(cls.__name__, name))
+        for name, m in member_cfuncs:
+            self.print(".. _{}.{}():".format(cls.__name__, name))
+        for name, m in member_funcs:
+            self.print(".. _{}.{}():".format(cls.__name__, name))
+
+        # Document vars and get/setters
+        self.spacer()
+        for name, m in member_vars:
+            self.document_getsetter(cls, name, m)
+
+        # Document C functions
+        for name, m in member_cfuncs:
+            self.document_cfunction(cls, name, m)
+
+        # Document functions
+        for name, m in member_funcs:
+            self.document_function(cls, name, m)
+
+        self.spacer()
 
 
-print("""===================================
-README for DB-All.e Python bindings
-===================================
+def print_docs(file):
+    gen = Generator(file=file)
 
+    gen.title("README for DB-All.e Python bindings", char="=", over=True)
+    gen.para("""
 The DB-All.e Python bindings provide 2 levels of access to a DB-All.e database:
 a complete API similar to the Fortran and C++ API, and a high-level API called
 volnd that allows to automatically export matrices of data out of the database.
 
 .. contents::
-
-The DB-All.e API
-================
-
-The 'dballe' module has a few global methods:
 """)
 
-document_members(dballe)
+    gen.title("The DB-All.e API", char="=")
 
-print("""
-and several classes, documented in their own sections.
-""")
+    gen.para("The 'dballe' module has a few global methods:") 
+    gen.document_members(dballe)
 
-document_class(dballe.Var)
-document_class(dballe.Varinfo)
-document_class(dballe.Vartable)
-document_class(dballe.Record)
+    gen.para("and several classes, documented in their own sections.")
 
-print("""
-Note that all the functions that take a dballe.Record, can also take a Python dict.
-""")
+    gen.document_class(dballe.Var)
+    gen.document_class(dballe.Varinfo)
+    gen.document_class(dballe.Vartable)
+    gen.document_class(dballe.Level)
+    gen.document_class(dballe.Trange)
+    gen.document_class(dballe.Station)
+    gen.document_class(dballe.DBStation)
+    gen.document_class(dballe.BinaryMessage)
+    gen.document_class(dballe.File)
+    gen.document_class(dballe.Message)
+    gen.document_class(dballe.Importer)
+    gen.document_class(dballe.ImporterFile)
+    gen.document_class(dballe.Exporter)
+    gen.document_class(dballe.DB, exclude=("attr_insert", "attr_remove", "query_attrs", "load", "export_to_file"))
+    gen.document_class(dballe.Transaction, exclude=("load", "export_to_file"))
+    gen.document_class(dballe.CursorStationDB)
+    gen.document_class(dballe.CursorStationDataDB, exclude=("query_attrs"))
+    gen.document_class(dballe.CursorDataDB, exclude=("query_attrs"))
+    gen.document_class(dballe.CursorSummaryDB)
+    gen.document_class(dballe.CursorSummarySummary)
+    gen.document_class(dballe.CursorSummaryDBSummary)
+    gen.document_class(dballe.CursorMessage)
+    gen.document_class(dballe.Explorer)
+    gen.document_class(dballe.DBExplorer)
 
-print("""
-dballe.DB
----------
+    gen.title("The volnd API", char="=")
 
-a DB is used to access the database.
+    gen.document(dballe.volnd)
 
-Its members are:
-""")
+    gen.para("This is the list of dimensions supported by dballe.volnd:")
 
-db_transaction_methods = [
-        "attr_insert_data", "attr_insert_station", "attr_query_data",
-        "attr_query_station", "attr_remove_data", "attr_remove_station",
-        "export_to_file", "insert_data", "insert_station_data", "load",
-        "query_data", "query_station_data", "query_stations", "query_summary",
-        "remove", "remove_all", "remove_station_data"]
-db_deprecated_methods = ["attr_insert", "attr_remove", "query_attrs"]
+    gen.document(dballe.volnd.AnaIndex)
+    gen.document(dballe.volnd.NetworkIndex)
+    gen.document(dballe.volnd.LevelIndex)
+    gen.document(dballe.volnd.TimeRangeIndex)
+    gen.document(dballe.volnd.DateTimeIndex)
+    gen.document(dballe.volnd.IntervalIndex)
 
-document_members(dballe.DB, exclude=db_transaction_methods + db_deprecated_methods)
+    gen.para("The data object used by ``AnaIndex`` is:")
 
-print("""
-These methods are the same in dballe.DB and dballe.Transaction. The version in
-dballe.DB is implemented by automatically creating a temporary transaction and
-running the dballe.Transaction method inside it.
-""")
+    gen.document(dballe.volnd.AnaIndexEntry)
 
-document_members(dballe.DB, include=db_transaction_methods)
+    gen.para("The extraction is done using the dballe.volnd.read function:")
 
-print("""
-dballe.Transaction
-------------------
+    gen.document(dballe.volnd.read)
 
-A Transaction is used to execute DB operations in an all-or-nothing fashion. In
-fact, most DB methods are implemented using a short-lived temporary
-transaction.
-
-You cannot have more than one active dballe.Transaction for each dballe.DB. An
-attempt to start a second one will result in an exception being raised. Note
-that dballe.DB functions like `insert_data` or `export_to_file` create a
-temporary transaction to run, and so they will also fail if a transaction is
-currently open. The general idea is that all database work should be done
-inside a transaction.
-
-Transactions run using the `REPEATABLE READ` isolation level of the underlying
-database. This usually means that modifications performed inside a transaction
-are not visible to other database connections until the transaction is
-committed. If a transaction is rolled back, all changes done with it are
-undone.
-
-Transactions can also be used as context managers, like this:
-
-::
-
-    with db.transaction() as t:
-        for i in range(10):
-            t.insert({
-                "lat": 44.5 + i, "lon": 11.4 + i, "level": (1,),
-                "trange": (254,), "date": datetime.datetime(2013, 4, 25, 12, 0, 0),
-                "B11101": 22.4 + i, "B12103": 17.2
-            })
-
-Its members are:
-
-""")
-
-document_members(dballe.Transaction, exclude=db_transaction_methods)
-
-print("""
-The dballe.Transaction methods are the same as those in dballe.DB. The version
-in dballe.DB is implemented by automatically creating a temporary transaction
-and running the dballe.Transaction method inside it.
-""")
-document_members(dballe.Transaction, include=db_transaction_methods)
-
-print("""
-
-Examples:
-
-::
-
-    # Connect to a database and run a query
-    db = dballe.DB.connect_from_file("db.sqlite")
-    query = dballe.Record(latmin=44.0, latmax=45.0, lonmin=11.0, lonmax=12.0)
-
-    # The result is a dballe.Cursor, which can be iterated to get results as
-    # dballe.Record objects.
-    # The results always point to the same Record to avoid creating a new one
-    # for every iteration: if you need to store them, use Record.copy()
-    for rec in db.query_data(query):
-        print(rec["lat"], rec["lon"], rec["var"], rec.var().format("undefined"))
-
-    # Insert 2 new variables in the database
-    db.insert({
-        "lat": 44.5, "lon": 11.4,
-        "level": (1,),
-        "trange": (254,),
-        "date": datetime.datetime(2013, 4, 25, 12, 0, 0),
-        "B11101": 22.4,
-        "B12103": 17.2,
-    })
-""")
-
-
-print("""
-dballe.Cursor
--------------
-
-a Cursor is the result of database queries. It is generally not used explicitly
-and just iterated, but it does have a few members:
-""")
-
-document_members(dballe.Cursor)
-
-print("""
-The volnd API
-=============
-""")
-
-document(dballe.volnd)
-
-print("""
-This is the list of dimensions supported by dballe.volnd:
-""")
-
-document(dballe.volnd.AnaIndex)
-document(dballe.volnd.NetworkIndex)
-document(dballe.volnd.LevelIndex)
-document(dballe.volnd.TimeRangeIndex)
-document(dballe.volnd.DateTimeIndex)
-document(dballe.volnd.IntervalIndex)
-
-print("""
-The data object used by ``AnaIndex`` is:
-""")
-
-document(dballe.volnd.AnaIndexEntry)
-
-print("""
-The extraction is done using the dballe.volnd.read function:
-""")
-
-document(dballe.volnd.read)
-
-print("""
+    gen.para("""
 The result of dballe.volnd.read is a dict mapping output variable names to a
 dballe.volnd.Data object with the results.  All the Data objects share their
 indexes unless the *xxx*-Index definitions have been created with
@@ -348,10 +283,51 @@ indexes unless the *xxx*-Index definitions have been created with
 This is the dballe.volnd.Data class documentation:
 """)
 
-document(dballe.volnd.Data)
+    gen.document(dballe.volnd.Data)
 
-print("""
-The methods of dballe.volnd.Data are:
-""")
+    gen.para("The methods of dballe.volnd.Data are:")
 
-document_members(dballe.volnd.Data)
+    gen.document_members(dballe.volnd.Data)
+
+
+@contextmanager
+def outfile(args):
+    if args.outfile:
+        with open(args.outfile, "wt", encoding="utf8") as fd:
+            try:
+                yield fd
+            except Exception as e:
+                if os.path.exists(args.outfile):
+                    os.unlink(args.outfile)
+                raise e
+    else:
+        yield sys.stdout
+
+
+def main():
+    parser = argparse.ArgumentParser(
+            description="build documentation for DB-All.e Python bindings")
+    parser.add_argument("--verbose", "-v", action="store_true", help="verbose output")
+    parser.add_argument("--debug", action="store_true", help="debug output")
+    parser.add_argument("-o", "--outfile", action="store", help="output file (default: stdout)")
+    parser.add_argument("pathname", nargs="?", help="source file with the lookup table description")
+    args = parser.parse_args()
+
+    log_format = "%(asctime)-15s %(levelname)s %(message)s"
+    level = logging.WARN
+    if args.debug:
+        level = logging.DEBUG
+    elif args.verbose:
+        level = logging.INFO
+    logging.basicConfig(level=level, stream=sys.stderr, format=log_format)
+
+    with outfile(args) as out:
+        print_docs(out)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Fail as e:
+        log.error("%s", e)
+        sys.exit(1)

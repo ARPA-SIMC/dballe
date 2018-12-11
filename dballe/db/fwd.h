@@ -3,9 +3,12 @@
 
 namespace dballe {
 namespace db {
+class CursorStation;
+class CursorStationData;
+class CursorData;
+class CursorSummary;
 class DB;
 class Transaction;
-class Explorer;
 }
 }
 

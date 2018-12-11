@@ -1,9 +1,4 @@
-#!/usr/bin/python
-# coding: utf-8
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-from __future__ import unicode_literals
+#!/usr/bin/python3
 import argparse
 import logging
 import os
@@ -31,29 +26,27 @@ def setup_logging(args):
 
 
 def get_db(args):
-    if not args.dsn:
-        dsn = os.environ.get("DBA_DB", "")
+    if not args.url:
+        url = os.environ.get("DBA_DB", "")
     else:
-        dsn = args.dsn
+        url = args.url
 
-    if not dsn:
-        raise CommandError("Cannot find a database to connect to: --dsn is not specified and $DBA_DB is not set")
+    if not url:
+        raise CommandError("Cannot find a database to connect to: --url is not specified and $DBA_DB is not set")
 
-    elif dballe.DB.is_url(dsn):
-        return dballe.DB.connect_from_url(dsn)
+    elif dballe.DB.is_url(url):
+        return dballe.DB.connect_from_url(url)
     else:
-        return dballe.DB.connect(dsn, args.user, args.password)
+        return dballe.DB.connect(url, args.user, args.password)
 
 
 def get_query(args):
-    query = dballe.Record()
-    for q in args.query:
-        query.set_from_string(q)
-    return query
+    return dict(q.split("=", 1) for q in args.query)
 
 
 def get_outfd(args, text=False):
     """
+from __future__ import unicode_literals
     Get the output file descriptor
     """
     if args.outfile:
@@ -85,18 +78,21 @@ if __name__ == "__main__":
     subparsers = parser.add_subparsers(dest="format", help="output formats")
     # Use a byte-string for subparser name to avoid seeing u'csv' in output.
     # Remove in python3
-    parser_csv = subparsers.add_parser(b"csv", help="export data as CSV")
+    parser_csv = subparsers.add_parser("csv", help="export data as CSV")
     parser_csv.add_argument("query", nargs="*", metavar="key=val",
                             help="DB-All.e query to select data to export")
-    parser_gnur = subparsers.add_parser(b"gnur", help="export data as GNU R workspace")
+
+    parser_gnur = subparsers.add_parser("gnur", help="export data as GNU R workspace")
     parser_gnur.add_argument("query", nargs="*", metavar="key=val",
                              help="DB-All.e query to select data to export")
-    parser_bufr = subparsers.add_parser(b"bufr", help="export data as BUFR")
+
+    parser_bufr = subparsers.add_parser("bufr", help="export data as BUFR")
     parser_bufr.add_argument("query", nargs="*", metavar="key=val",
                              help="DB-All.e query to select data to export")
     parser_bufr.add_argument("--generic", action="store_true",
                              help="export generic BUFR messages")
-    parser_crex = subparsers.add_parser(b"crex", help="export data as CREX")
+
+    parser_crex = subparsers.add_parser("crex", help="export data as CREX")
     parser_crex.add_argument("query", nargs="*", metavar="key=val",
                              help="DB-All.e query to select data to export")
     parser_crex.add_argument("--generic", action="store_true",

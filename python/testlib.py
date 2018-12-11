@@ -1,25 +1,30 @@
-# coding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 import dballe
 import shlex
 import os
 import sys
 import unittest
 
+
 def main(testname):
     args = os.environ.get("ARGS", None)
     if args is None:
         return unittest.main()
 
-    args = shlex.split(args);
+    args = shlex.split(args)
     if args[0] != testname:
         return 0
 
     argv = [sys.argv[0]] + args[1:]
     unittest.main(argv=argv)
+
+
+def test_pathname(fname):
+    if fname.startswith("."):
+        return fname
+
+    envdir = os.environ.get("DBA_TESTDATA", ".")
+    return os.path.normpath(os.path.join(envdir, fname))
+
 
 def not_so_random(seed):
     """
@@ -35,7 +40,6 @@ def not_so_random(seed):
 
 
 def fill_volnd(db):
-    import dballe
     import datetime
 
     # We want a predictable dataset
@@ -45,8 +49,8 @@ def fill_volnd(db):
     # Wipe the test database
     db.remove_all()
 
-    attrs = dballe.Record()
-    rec = dballe.Record(mobile=0)
+    attrs = {}
+    rec = {}
 
     def contexts():
         # 2 networks
@@ -68,12 +72,14 @@ def fill_volnd(db):
                 datetime.timedelta(0, x * 3600, 0))
 
     def maybe_insert(rec, aname):
-        if next(rdata) > 0.9: return
+        if next(rdata) > 0.9:
+            return
         ids = db.insert_data(rec, False, True)
         attrs.clear()
         attrs[aname] = next(rattr) * 100.
         for code in rec:
-            if not code.startswith("B"): continue
+            if not code.startswith("B"):
+                continue
             db.attr_insert_data(ids[code], attrs)
 
     # Enter some sample data
@@ -130,9 +136,9 @@ def fill_volnd(db):
     db.insert_station_data(rec, False, True)
 
 
-class DballeDBMixin(object):
+class DballeDBMixin:
     def __init__(self, *args, **kw):
-        super(DballeDBMixin, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         if not hasattr(self, "assertCountEqual"):
             self.assertCountEqual = self.assertItemsEqual
 
@@ -142,6 +148,7 @@ class DballeDBMixin(object):
         return db
 
     def setUp(self):
+        super().setUp()
         if os.path.exists("test.sqlite"):
             os.unlink("test.sqlite")
         self.orig_db_format = dballe.DB.get_default_format()
@@ -151,3 +158,4 @@ class DballeDBMixin(object):
     def tearDown(self):
         self.db = None
         dballe.DB.set_default_format(self.orig_db_format)
+        super().tearDown()

@@ -1,5 +1,5 @@
-#include "core/tests.h"
-#include "sql/querybuf.h"
+#include "dballe/core/tests.h"
+#include "dballe/sql/querybuf.h"
 
 using namespace wreport;
 using namespace dballe;

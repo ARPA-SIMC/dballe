@@ -142,9 +142,9 @@ struct Benchmark
 /**
  * Container for parsed messages used for benchmarking
  */
-struct Messages : public std::vector<dballe::Messages>
+struct Messages : public std::vector<std::vector<std::shared_ptr<dballe::Message>>>
 {
-    void load(const std::string& pathname, dballe::File::Encoding encoding=dballe::File::BUFR, const char* codec_options="accurate");
+    void load(const std::string& pathname, dballe::Encoding encoding=dballe::Encoding::BUFR, const char* codec_options="accurate");
 
     // Copy the first \a size messages, change their datetime, and append them
     // to the vector

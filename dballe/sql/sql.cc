@@ -1,13 +1,13 @@
-#include "sql/sql.h"
+#include "sql.h"
 #include "dballe/types.h"
+#include "querybuf.h"
+#include "sqlite.h"
 #include "config.h"
-#include "sql/querybuf.h"
-#include "sql/sqlite.h"
 #ifdef HAVE_LIBPQ
-#include "sql/postgresql.h"
+#include "postgresql.h"
 #endif
 #ifdef HAVE_MYSQL
-#include "sql/mysql.h"
+#include "mysql.h"
 #endif
 #include <cstring>
 #include <cstdlib>
@@ -17,6 +17,11 @@ using namespace wreport;
 
 namespace dballe {
 namespace sql {
+
+// We cannot call rollback here, because the child class will have already been
+// destructed, and rollback_nothrow will only be a abstract virtual method at
+// this point
+Transaction::~Transaction() {}
 
 const char* format_server_type(ServerType type)
 {

@@ -2,6 +2,8 @@
 #define FDBA_MSGAPI_H
 
 #include "commonapi.h"
+#include <dballe/fwd.h>
+#include <dballe/msg/fwd.h>
 #include <dballe/core/defs.h>
 
 namespace wreport {
@@ -9,15 +11,6 @@ struct Var;
 }
 
 namespace dballe {
-struct File;
-struct Messages;
-struct Msg;
-
-namespace msg {
-struct Importer;
-struct Exporter;
-}
-
 namespace fortran {
 
 class MsgAPI : public CommonAPIImplementation
@@ -29,31 +22,19 @@ protected:
         STATE_VOGLIOQUESTO = 4,
         STATE_EOF = 8,
     };
-	File* file;
-	/**
-	 * State flag to track what actions have been performed in order to decide
-	 * what to do next
-	 */
-	unsigned int state;
-	/// Importer (NULL if we export)
-	msg::Importer* importer;
-	/// Exporter (NULL if we import)
-	msg::Exporter* exporter;
-	/// Template selected for exporter (empty if auto detect)
-	std::string exporter_template;
-    /// Message being written
-    Messages* msgs;
-	/// Message subset being written
-	Msg* wmsg;
-	/// Last variables written with prendilo
-	std::vector<wreport::Var*> vars;
-	/// Level for vars
-	Level vars_level;
-	/// Time range for vars
-	Trange vars_trange;
+    File* file;
+    /**
+     * State flag to track what actions have been performed in order to decide
+     * what to do next
+     */
+    unsigned int state;
+    /// Importer (NULL if we export)
+    Importer* importer;
+    /// Name of the last exporter template set
+    std::string exporter_template;
+    /// Exporter (NULL if we import)
+    Exporter* exporter = nullptr;
 	size_t curmsgidx;
-	int iter_ctx;
-	int iter_var;
 	/// Category set for the message that we are writing
 	int cached_cat;
 	/// Subcategory set for the message that we are writing
@@ -69,55 +50,44 @@ protected:
 	 */
 	bool readNextMessage();
 
-	/**
-	 * Increment message iterators
-	 * @returns
-	 *   true if it could move on, false if we are at the end
-	 */
-	bool incrementMsgIters();
-
-	/**
-	 * Get a pointer to the current message being read or written
-	 */
-	Msg* curmsg();
-
-	void flushVars();
-	void flushSubset();
-	void flushMessage();
 
 public:
+    /// Message subset being written
+    impl::Message* wmsg = nullptr;
+    /// Message being written
+    std::vector<std::shared_ptr<dballe::Message>>* msgs = nullptr;
+
 	/**
 	 * @param fname 
 	 *   the name of the file to open
 	 * @param mode
 	 *   the fopen-style mode to use when opening the file
 	 * @param type
-	 *   the encoding to use for the file.  It can be "BUFR", "CREX", "AOF"
+	 *   the encoding to use for the file.  It can be "BUFR" or "CREX"
 	 *   (read only) or "AUTO" (read only).
 	 */
 	MsgAPI(const char* fname, const char* mode, const char* type);
 	virtual ~MsgAPI();
 
-	virtual void scopa(const char* repinfofile = 0);
+    /**
+     * Get a pointer to the current message being read or written
+     */
+    const impl::Message* curmsg() const;
+    impl::Message* curmsg();
+    void flushSubset();
+    void flushMessage();
+    void set_exporter(const char* template_name);
 
-	virtual int quantesono();
-	virtual void elencamele();
-
-	virtual int voglioquesto();
-	virtual const char* dammelo();
-
-	virtual void prendilo();
-	virtual void dimenticami();
-
-	virtual int voglioancora();
-
-	virtual void critica();
-	virtual void scusa();
-    virtual void remove_all();
-    virtual void messages_open_input(const char* filename, const char* mode, File::Encoding format, bool);
-    virtual void messages_open_output(const char* filename, const char* mode, File::Encoding format);
-    virtual bool messages_read_next();
-    virtual void messages_write_next(const char*);
+    void scopa(const char* repinfofile=0) override;
+    int quantesono() override;
+    int voglioquesto() override;
+    void prendilo() override;
+    void dimenticami() override;
+    void remove_all() override;
+    void messages_open_input(const char* filename, const char* mode, Encoding format, bool) override;
+    void messages_open_output(const char* filename, const char* mode, Encoding format) override;
+    bool messages_read_next() override;
+    void messages_write_next(const char*) override;
 };
 
 }

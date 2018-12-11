@@ -1,22 +1,19 @@
 #ifndef DBALLE_QUERY_H
 #define DBALLE_QUERY_H
 
-#include <wreport/var.h>
+#include <dballe/fwd.h>
 #include <dballe/types.h>
+#include <wreport/var.h>
 #include <string>
 #include <functional>
 #include <memory>
 
 namespace dballe {
-struct Record;
 
 /// Query used to filter DB-All.e data
 struct Query
 {
     virtual ~Query() {}
-
-    /// Set the query values from the contents of a Record
-    virtual void set_from_record(const dballe::Record& rec) = 0;
 
     /// Get the Datetime bounds set in this query
     virtual DatetimeRange get_datetimerange() const = 0;
@@ -59,11 +56,13 @@ struct Query
      */
     virtual bool is_subquery(const Query& other) const = 0;
 
+#if 0
     /**
      * Generate a sequence of key names and unique_ptr<Var> for all the
      * contents of the query
      */
     virtual void foreach_key(std::function<void(const char*, wreport::Var&&)> dest) const = 0;
+#endif
 
     /// Print the query contents to stderr
     virtual void print(FILE* out) const = 0;
@@ -73,9 +72,6 @@ struct Query
 
     /// Create a new Query
     static std::unique_ptr<Query> create();
-
-    /// Create a new Query
-    static std::unique_ptr<Query> from_record(const Record& rec);
 };
 
 }

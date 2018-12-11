@@ -1,4 +1,5 @@
 #include "json.h"
+#include "dballe/values.h"
 #include <cctype>
 #include <cmath>
 
@@ -114,6 +115,51 @@ void JSONWriter::add_coords(const Coords& val)
     end_list();
 }
 
+void JSONWriter::add_station(const Station& s)
+{
+    start_mapping();
+    add("r", s.report);
+    add("c", s.coords);
+    if (s.ident) add("i", s.ident);
+    end_mapping();
+}
+
+void JSONWriter::add_dbstation(const DBStation& s)
+{
+    start_mapping();
+    if (s.id != MISSING_INT) add("id", s.id);
+    add("r", s.report);
+    add("c", s.coords);
+    if (s.ident) add("i", s.ident);
+    end_mapping();
+}
+
+void JSONWriter::add_values(const Values& values)
+{
+    start_mapping();
+    for (const auto& var: values) {
+        add(wreport::varcode_format(var->code()));
+        start_mapping();
+        add("v");
+        add(*var);
+        if (var->next_attr()) {
+            add("a");
+            start_mapping();
+            for (const wreport::Var* attr = var->next_attr(); attr; attr = attr->next_attr()) {
+                add(wreport::varcode_format(attr->code()));
+                add(*attr);
+            }
+            end_mapping();
+        }
+        end_mapping();
+    }
+    end_mapping();
+}
+
+void JSONWriter::add_dbvalues(const DBValues& values)
+{
+}
+
 void JSONWriter::add_datetime(const Datetime& val)
 {
     if (val.is_missing())
@@ -131,7 +177,7 @@ void JSONWriter::add_datetime(const Datetime& val)
     }
 }
 
-void JSONWriter::add_datetime_range(const DatetimeRange& val)
+void JSONWriter::add_datetimerange(const DatetimeRange& val)
 {
     start_list();
     add(val.min);
@@ -342,6 +388,41 @@ Ident Stream::parse_ident()
     }
 }
 
+Station Stream::parse_station()
+{
+    Station res;
+    parse_object([&](const std::string& key) {
+        if (key == "r")
+            res.report = parse_string();
+        else if (key == "c")
+            res.coords = parse_coords();
+        else if (key == "i")
+            res.ident = parse_ident();
+        else
+            throw core::JSONParseException("unsupported key \"" + key + "\" for Station");
+    });
+    return res;
+}
+
+DBStation Stream::parse_dbstation()
+{
+    DBStation res;
+    parse_object([&](const std::string& key) {
+        if (key == "id")
+            res.id = parse_unsigned<int>();
+        else if (key == "r")
+            res.report = parse_string();
+        else if (key == "c")
+            res.coords = parse_coords();
+        else if (key == "i")
+            res.ident = parse_ident();
+        else
+            throw core::JSONParseException("unsupported key \"" + key + "\" for DBStation");
+    });
+    return res;
+}
+
+
 Level Stream::parse_level()
 {
     Level res;
@@ -429,7 +510,7 @@ Datetime Stream::parse_datetime()
     }
 }
 
-DatetimeRange Stream::parse_datetime_range()
+DatetimeRange Stream::parse_datetimerange()
 {
     DatetimeRange res;
     unsigned idx = 0;

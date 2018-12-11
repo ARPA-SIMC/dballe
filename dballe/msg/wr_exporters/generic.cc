@@ -1,22 +1,3 @@
-/*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "dballe/msg/wr_codec.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
@@ -30,6 +11,7 @@ using namespace std;
 #define GENERIC_DESC "Generic (255.0)"
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -39,29 +21,11 @@ struct Generic : public Template
 {
     Bulletin* bulletin;
 
-    Generic(const ExporterOptions& opts, const Messages& msgs)
+    Generic(const dballe::ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
     virtual const char* name() const { return GENERIC_NAME; }
     virtual const char* description() const { return GENERIC_DESC; }
-
-    void add(Varcode code, int shortcut)
-    {
-        const Var* var = msg->find_by_id(shortcut);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
-    }
-
-    void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
-    {
-        const Var* var = msg->get(srccode, level, trange);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
-    }
 
     void add_var_and_attrs(const Var& var)
     {
@@ -91,7 +55,7 @@ struct Generic : public Template
             subset->store_variable_undef(code);
     }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         Template::setupBulletin(bulletin);
 
@@ -120,7 +84,7 @@ struct Generic : public Template
         // Store a pointer to it because we modify it later
         this->bulletin = &bulletin;
     }
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         Template::to_subset(msg, subset);
 
@@ -131,8 +95,8 @@ struct Generic : public Template
         // Report type
         if (repmemo)
             subset.store_variable(repmemo->code(), *repmemo);
-        else if (msg.type != MSG_GENERIC) // It is generic by default, no need to repeat it
-            subset.store_variable_c(WR_VAR(0, 1, 194), Msg::repmemo_from_type(msg.type));
+        else if (msg.type != MessageType::GENERIC) // It is generic by default, no need to repeat it
+            subset.store_variable_c(WR_VAR(0, 1, 194), Message::repmemo_from_type(msg.type));
         else
             subset.store_variable_undef(WR_VAR(0, 1, 194));
 
@@ -146,41 +110,35 @@ struct Generic : public Template
         add_datetime_var(WR_VAR(0, 4, 6), !dt.is_missing(), dt.second);
 
         // Then the station context
-        if (const msg::Context* ctx = msg.find_station_context())
+        for (const auto& val: msg.station_data)
         {
-            for (size_t j = 0; j < ctx->data.size(); ++j)
+            const Var& var = *val;
+
+            // Do not add rep_memo and datetime twice
+            switch (var.code())
             {
-                const Var& var = *(ctx->data[j]);
-
-                // Do not add rep_memo and datetime twice
-                switch (var.code())
-                {
-                    case WR_VAR(0, 1, 194):
-                    case WR_VAR(0, 4, 1):
-                    case WR_VAR(0, 4, 2):
-                    case WR_VAR(0, 4, 3):
-                    case WR_VAR(0, 4, 4):
-                    case WR_VAR(0, 4, 5):
-                    case WR_VAR(0, 4, 6):
-                        continue;
-                    default:
-                        break;
-                }
-
-                // Store the variable
-                add_var_and_attrs(var);
+                case WR_VAR(0, 1, 194):
+                case WR_VAR(0, 4, 1):
+                case WR_VAR(0, 4, 2):
+                case WR_VAR(0, 4, 3):
+                case WR_VAR(0, 4, 4):
+                case WR_VAR(0, 4, 5):
+                case WR_VAR(0, 4, 6):
+                    continue;
+                default:
+                    break;
             }
+
+            // Store the variable
+            add_var_and_attrs(var);
         }
 
         // Then do the other contexts
-        for (size_t i = 0; i < msg.data.size(); ++i)
+        for (const auto& ctx: msg.data)
         {
-            const msg::Context& ctx = *msg.data[i];
-            if (ctx.is_station()) continue;
-
-            for (size_t j = 0; j < ctx.data.size(); ++j)
+            for (const auto& val: ctx.values)
             {
-                const Var& var = *ctx.data[j];
+                const Var& var = *val;
                 if (!var.isset()) continue; // Don't add undef vars
                 if (&var == repmemo) continue; // Don't add rep_memo again
 
@@ -259,11 +217,12 @@ struct Generic : public Template
 void register_generic(TemplateRegistry& r)
 {
     r.register_factory(255, GENERIC_NAME, GENERIC_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Generic(opts, msgs));
             });
 }
 
+}
 }
 }
 }

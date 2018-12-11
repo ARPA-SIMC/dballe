@@ -16,35 +16,35 @@ struct DBData : public TestDataSet
 {
     DBData()
     {
-        stations["st1_synop"].info.coords = Coords(12.34560, 76.54320);
-        stations["st1_synop"].info.report = "synop";
+        stations["st1_synop"].station.coords = Coords(12.34560, 76.54320);
+        stations["st1_synop"].station.report = "synop";
         stations["st1_synop"].values.set(newvar("block", 1));
         stations["st1_synop"].values.set(newvar("station", 1));
         stations["st1_synop"].values.set(newvar("B07030", 42.0)); // height
-        stations["st1_metar"].info = stations["st1_synop"].info;
-        stations["st1_metar"].info.report = "metar";
+        stations["st1_metar"].station = stations["st1_synop"].station;
+        stations["st1_metar"].station.report = "metar";
         stations["st1_metar"].values.set(newvar("block", 1));
         stations["st1_metar"].values.set(newvar("station", 2));
         stations["st1_metar"].values.set(newvar("B07030", 50.0)); // height
-        stations["st2_temp"].info.coords = Coords(23.45670, 65.43210);
-        stations["st2_temp"].info.report = "temp";
+        stations["st2_temp"].station.coords = Coords(23.45670, 65.43210);
+        stations["st2_temp"].station.report = "temp";
         stations["st2_temp"].values.set(newvar("block", 3));
         stations["st2_temp"].values.set(newvar("station", 4));
         stations["st2_temp"].values.set(newvar("B07030", 100.0)); // height
-        stations["st2_metar"].info = stations["st2_temp"].info;
-        stations["st2_metar"].info.report = "metar";
+        stations["st2_metar"].station = stations["st2_temp"].station;
+        stations["st2_metar"].station.report = "metar";
         stations["st2_metar"].values.set(newvar("block", 3));
         stations["st2_metar"].values.set(newvar("station", 4));
         stations["st2_metar"].values.set(newvar("B07030", 110.0)); // height
-        data["rec1"].info = stations["st1_metar"].info;
-        data["rec1"].info.datetime = Datetime(1945, 4, 25, 8);
-        data["rec1"].info.level = Level(10, 11, 15, 22);
-        data["rec1"].info.trange = Trange(20, 111, 122);
+        data["rec1"].station = stations["st1_metar"].station;
+        data["rec1"].datetime = Datetime(1945, 4, 25, 8);
+        data["rec1"].level = Level(10, 11, 15, 22);
+        data["rec1"].trange = Trange(20, 111, 122);
         data["rec1"].values.set("B12101", 290.0);
-        data["rec2"].info = stations["st2_metar"].info;
-        data["rec2"].info.datetime = Datetime(1945, 4, 25, 8);
-        data["rec2"].info.level = Level(10, 11, 15, 22);
-        data["rec2"].info.trange = Trange(20, 111, 122);
+        data["rec2"].station = stations["st2_metar"].station;
+        data["rec2"].datetime = Datetime(1945, 4, 25, 8);
+        data["rec2"].level = Level(10, 11, 15, 22);
+        data["rec2"].trange = Trange(20, 111, 122);
         data["rec2"].values.set("B12101", 300.0);
         data["rec2"].values.set("B12103", 298.0);
     }
@@ -96,14 +96,14 @@ class Tests : public FixtureTestCase<TransactionFixture<DB, DBData>>
             // FIXME: add some mobile stations to the test fixture to test ident
         });
         this->add_method("query_block_station", [](Fixture& f) {
-            wassert(actual(f.tr).try_station_query("B01001=1", 2));
-            wassert(actual(f.tr).try_station_query("B01001=2", 0));
-            wassert(actual(f.tr).try_station_query("B01001=3", 2));
-            wassert(actual(f.tr).try_station_query("B01001=4", 0));
-            wassert(actual(f.tr).try_station_query("B01002=1", 1));
-            wassert(actual(f.tr).try_station_query("B01002=2", 1));
-            wassert(actual(f.tr).try_station_query("B01002=3", 0));
-            wassert(actual(f.tr).try_station_query("B01002=4", 2));
+            wassert(actual(f.tr).try_station_query("block=1", 2));
+            wassert(actual(f.tr).try_station_query("block=2", 0));
+            wassert(actual(f.tr).try_station_query("block=3", 2));
+            wassert(actual(f.tr).try_station_query("block=4", 0));
+            wassert(actual(f.tr).try_station_query("station=1", 1));
+            wassert(actual(f.tr).try_station_query("station=2", 1));
+            wassert(actual(f.tr).try_station_query("station=3", 0));
+            wassert(actual(f.tr).try_station_query("station=4", 2));
         });
         this->add_method("query_mobile", [](Fixture& f) {
         });
@@ -136,7 +136,7 @@ class Tests : public FixtureTestCase<TransactionFixture<DB, DBData>>
             // Manually insert an orphan station
             switch (DB::format)
             {
-                case V7:
+                case Format::V7:
                     if (auto t = dynamic_cast<v7::Transaction*>(f.tr.get()))
                     {
                         v7::Tracer<> trc;
@@ -166,7 +166,7 @@ class Tests : public FixtureTestCase<TransactionFixture<DB, DBData>>
             auto cur = f.tr->query_stations(core::Query());
             switch (f.db->format())
             {
-                case V7:
+                case Format::V7:
                     wassert(actual(cur->remaining()) == 4);
                     break;
                 default: error_unimplemented::throwf("cannot run this test on a database of format %d", (int)DB::format);

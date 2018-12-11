@@ -1,21 +1,15 @@
-#!/usr/bin/python
-# coding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+#!/usr/bin/python3
 import dballe
-from dballe.volnd import *
+from dballe.volnd import tddivmod1, tddivmod2, tddivmod3, read, AnaIndex, LevelIndex, TimeRangeIndex, DateTimeIndex, NetworkIndex
 from testlib import DballeDBMixin
-import unittest, random, sys
+import unittest
+import random
 import datetime
 import warnings
-import numpy
 import numpy.ma as ma
 
+
 class TestTddiv(unittest.TestCase):
-#       def tons(td):
-#               return td.days * 86400000000 + td.seconds * 1000000 + td.microseconds
     def dtest(self, td1, td2):
         self.assertEqual(tddivmod1(td1, td2), tddivmod2(td1, td2))
         q, r = tddivmod1(td1, td2)
@@ -25,13 +19,13 @@ class TestTddiv(unittest.TestCase):
             self.assertEqual(tddivmod1(td1, td2), tddivmod3(td1, td2))
 
     def testtddiv(self):
-        #self.assertEqual(tddivmod(datetime.timedelta(10, 0, 0), datetime.timedelta(2, 0, 0)), (5, datetime.timedelta(0)))
-        #self.assertEqual(tddivmod(datetime.timedelta(10, 0, 1), datetime.timedelta(2, 0, 0)), (5, datetime.timedelta(0, 0, 1)))
-        #self.assertEqual(tddivmod(datetime.timedelta(10, 0, 1), datetime.timedelta(3, 0, 0)), (3, datetime.timedelta(1, 0, 1)))
-        #self.assertEqual(tddivmod(datetime.timedelta(10, 6, 18), datetime.timedelta(5, 3, 9)), (2, datetime.timedelta(0)))
-        #self.assertEqual(tddivmod(datetime.timedelta(3, 4, 5), datetime.timedelta(1, 3, 10)), (2, datetime.timedelta(0, 86397, 999985)))
-        #self.assertEqual(tddivmod(datetime.timedelta(0, 4, 5), datetime.timedelta(0, 3, 10)), (1, datetime.timedelta(0, 0, 999995)))
-        #self.assertEqual(tddivmod(datetime.timedelta(2, 40, 10), datetime.timedelta(0, 0, 5)), (34568000002, datetime.timedelta(0)))
+        # self.assertEqual(tddivmod(datetime.timedelta(10, 0, 0), datetime.timedelta(2, 0, 0)), (5, datetime.timedelta(0)))
+        # self.assertEqual(tddivmod(datetime.timedelta(10, 0, 1), datetime.timedelta(2, 0, 0)), (5, datetime.timedelta(0, 0, 1)))
+        # self.assertEqual(tddivmod(datetime.timedelta(10, 0, 1), datetime.timedelta(3, 0, 0)), (3, datetime.timedelta(1, 0, 1)))
+        # self.assertEqual(tddivmod(datetime.timedelta(10, 6, 18), datetime.timedelta(5, 3, 9)), (2, datetime.timedelta(0)))
+        # self.assertEqual(tddivmod(datetime.timedelta(3, 4, 5), datetime.timedelta(1, 3, 10)), (2, datetime.timedelta(0, 86397, 999985)))
+        # self.assertEqual(tddivmod(datetime.timedelta(0, 4, 5), datetime.timedelta(0, 3, 10)), (1, datetime.timedelta(0, 0, 999995)))
+        # self.assertEqual(tddivmod(datetime.timedelta(2, 40, 10), datetime.timedelta(0, 0, 5)), (34568000002, datetime.timedelta(0)))
 
         self.dtest(datetime.timedelta(10, 0, 0), datetime.timedelta(2, 0, 0))
         self.dtest(datetime.timedelta(10, 0, 1), datetime.timedelta(2, 0, 0))
@@ -42,7 +36,7 @@ class TestTddiv(unittest.TestCase):
         self.dtest(datetime.timedelta(2, 40, 10), datetime.timedelta(0, 0, 5))
 
         # Re-enable when Debian bug #48872 has been fixed
-        #self.dtest(datetime.timedelta(999999999, 86399, 999999), datetime.timedelta(0, 0, 2))
+        # self.dtest(datetime.timedelta(999999999, 86399, 999999), datetime.timedelta(0, 0, 2))
 
         random.seed(1)
         for i in range(100):
@@ -51,18 +45,19 @@ class TestTddiv(unittest.TestCase):
             self.dtest(td1, td2)
 
         # Re-enable when Debian bug #48872 has been fixed
-        #for i in xrange(100):
+        # for i in xrange(100):
         #       td1 = datetime.timedelta(random.randint(0, 999999999), random.randint(0, 86400), random.randint(0, 1000000))
         #       td2 = datetime.timedelta(0, random.randint(0, 86400), random.randint(0, 1000000))
         #       self.dtest(td1, td2)
-        #for i in xrange(100):
+        # for i in xrange(100):
         #       td1 = datetime.timedelta(random.randint(0, 999999999), random.randint(0, 86400), random.randint(0, 1000000))
         #       td2 = datetime.timedelta(0, 0, random.randint(0, 1000000))
         #       self.dtest(td1, td2)
-        #for i in xrange(100):
+        # for i in xrange(100):
         #       td1 = datetime.timedelta(0, random.randint(0, 86400), random.randint(0, 1000000))
         #       td2 = datetime.timedelta(0, 0, random.randint(0, 1000000))
         #       self.dtest(td1, td2)
+
 
 class ReadMixin(DballeDBMixin):
     def setUp(self):
@@ -72,76 +67,69 @@ class ReadMixin(DballeDBMixin):
 
     def testIndexFind(self):
         # Ana in one dimension, network in the other
-        query = dballe.Record(ana_id=1, var="B13011", rep_memo="synop")
+        query = dict(ana_id=1, var="B13011", rep_memo="synop")
         query["datetime"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         vars = read(self.db.query_data(query), (AnaIndex(), TimeRangeIndex()))
         self.assertEqual(vars["B13011"].dims[1].index((4, -21600, 0)), 1)
 
     def testFilter(self):
         # Ana in one dimension, network in the other
-        query = dballe.Record(ana_id=1, var="B13011", rep_memo="synop")
+        query = dict(ana_id=1, var="B13011", rep_memo="synop")
         query["datetime"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
-            vars = read(self.db.query_data(query), \
-                    (AnaIndex(), TimeRangeIndex()), \
-                    filter=lambda rec: rec["trange"] == (4, -21600, 0))
+            vars = read(self.db.query_data(query),
+                        (AnaIndex(), TimeRangeIndex()),
+                        filter=lambda rec: rec["trange"] == (4, -21600, 0))
         self.assertEqual(vars["B13011"].dims[1].index((4, -21600, 0)), 0)
 
     def testUnsharedIndex(self):
         # Ana in one dimension, network in the other
-        query = dballe.Record(ana_id=1, rep_memo="synop")
+        query = dict(ana_id=1, rep_memo="synop")
 
         vars = read(self.db.query_data(query),
-                (AnaIndex(), TimeRangeIndex(), DateTimeIndex()))
+                    (AnaIndex(), TimeRangeIndex(), DateTimeIndex()))
         self.assertEqual(len(vars["B13011"].dims[2]), len(vars["B10004"].dims[2]))
         self.assertEqual(vars["B13011"].dims[2], vars["B10004"].dims[2])
 
         vars = read(self.db.query_data(query),
-                (AnaIndex(), TimeRangeIndex(), DateTimeIndex(shared=False)))
+                    (AnaIndex(), TimeRangeIndex(), DateTimeIndex(shared=False)))
         self.assertNotEqual(len(vars["B13011"].dims[2]), len(vars["B10004"].dims[2]))
 
     def testConflicts(self):
         # Ana in one dimension, network in the other
-        query = dballe.Record(ana_id=1, var="B13011")
+        query = dict(ana_id=1, var="B13011")
         query["datetime"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         # Here conflicting values are overwritten
         vars = read(self.db.query_data(query), (AnaIndex(), ), checkConflicts=False)
         self.assertEqual(type(vars), dict)
         # Here insted they should be detected
-        self.assertRaises(IndexError, read,
-                self.db.query_data(query),
-                (AnaIndex(),),
-                checkConflicts=True)
+        with self.assertRaises(IndexError):
+            read(self.db.query_data(query), (AnaIndex(),), checkConflicts=True)
 
     def testFixedIndex(self):
         # Ana in one dimension, network in the other
-        query = dballe.Record(ana_id=1, rep_memo="synop", year=2007, month=1, day=1)
+        query = dict(ana_id=1, rep_memo="synop", year=2007, month=1, day=1)
 
         vars = read(self.db.query_data(query),
-                (AnaIndex(), TimeRangeIndex(frozen=True,
-                        start=((4, -21600, 0), (4, -43200, 0)) ) ),
-                checkConflicts=False)
+                    (AnaIndex(), TimeRangeIndex(frozen=True, start=(dballe.Trange(4, -21600, 0), (4, -43200, 0)))),
+                    checkConflicts=False)
         self.assertEqual(len(vars["B13011"].dims[1]), 2)
 
-        vars = read(self.db.query_data(query),
-                (AnaIndex(), TimeRangeIndex()),
-                checkConflicts=False)
+        vars = read(self.db.query_data(query), (AnaIndex(), TimeRangeIndex()), checkConflicts=False)
         self.assertEqual(len(vars["B13011"].dims[1]), 3)
 
         vars = read(self.db.query_data(query),
-                (AnaIndex(), LevelIndex(frozen=True, start=((1, None, None, None),))),
-                checkConflicts=False)
+                    (AnaIndex(), LevelIndex(frozen=True, start=(dballe.Level(1, None, None, None),))),
+                    checkConflicts=False)
         self.assertEqual(len(vars["B13011"].dims[1]), 1)
 
-        vars = read(self.db.query_data(query),
-                (AnaIndex(), LevelIndex()),
-                checkConflicts=False)
+        vars = read(self.db.query_data(query), (AnaIndex(), LevelIndex()), checkConflicts=False)
         self.assertEqual(len(vars["B13011"].dims[1]), 2)
 
     def testAnaNetwork(self):
         # Ana in one dimension, network in the other
-        query = dballe.Record()
+        query = {}
         query["var"] = "B10004"
         query["datetime"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         vars = read(self.db.query_data(query), (AnaIndex(), NetworkIndex()))
@@ -168,7 +156,7 @@ class ReadMixin(DballeDBMixin):
     def testAnaTrangeNetwork(self):
         # 3 dimensions: ana, timerange, network
         # 2 variables
-        query = dballe.Record(datetime=datetime.datetime(2007, 1, 1, 0, 0, 0))
+        query = dict(datetime=datetime.datetime(2007, 1, 1, 0, 0, 0))
         vars = read(self.db.query_data(query), (AnaIndex(), TimeRangeIndex(shared=False), NetworkIndex()))
         self.assertEqual(len(vars), 2)
         self.assertEqual(sorted(vars.keys()), ["B10004", "B13011"])
@@ -221,7 +209,7 @@ class ReadMixin(DballeDBMixin):
     def testAttrs(self):
         # Same export as testAnaNetwork, but check that the
         # attributes are synchronised
-        query = dballe.Record()
+        query = {}
         query["var"] = "B10004"
         query["datetime"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         vars = read(self.db.query_data(query), (AnaIndex(), NetworkIndex()), attributes=True)
@@ -245,16 +233,16 @@ class ReadMixin(DballeDBMixin):
             self.assertNotEqual(netidx, -1)
 
             # No attrs in the other network
-            self.assertEqual([x for x in data.attrs[a].vals.mask[:,1-netidx].flat], [True]*len(data.attrs[a].vals.mask[:,1-netidx].flat))
+            self.assertEqual([x for x in data.attrs[a].vals.mask[:, 1-netidx].flat], [True]*len(data.attrs[a].vals.mask[:, 1-netidx].flat))
             # Same attrs as values in this network
-            self.assertEqual([x for x in data.vals.mask[:,netidx].flat], [x for x in data.attrs[a].vals.mask[:,netidx].flat])
+            self.assertEqual([x for x in data.vals.mask[:, netidx].flat], [x for x in data.attrs[a].vals.mask[:, netidx].flat])
         self.assertEqual(round(ma.average(data.attrs['B33007'].vals)), 32)
         self.assertEqual(round(ma.average(data.attrs['B33040'].vals)), 54)
 
     def testSomeAttrs(self):
         # Same export as testAnaNetwork, but check that the
         # attributes are synchronised
-        query = dballe.Record()
+        query = {}
         query["var"] = "B10004"
         query["datetime"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         vars = read(self.db.query_data(query), (AnaIndex(), NetworkIndex()), attributes=('B33040',))
@@ -278,12 +266,12 @@ class ReadMixin(DballeDBMixin):
         self.assertNotEqual(netidx, -1)
 
         # Only compare the values on the temp index
-        self.assertEqual([x for x in a.vals.mask[:,1-netidx].flat], [True]*len(a.vals.mask[:,1-netidx].flat))
-        self.assertEqual([x for x in data.vals.mask[:,netidx].flat], [x for x in a.vals.mask[:,netidx].flat])
+        self.assertEqual([x for x in a.vals.mask[:, 1-netidx].flat], [True]*len(a.vals.mask[:, 1-netidx].flat))
+        self.assertEqual([x for x in data.vals.mask[:, netidx].flat], [x for x in a.vals.mask[:, netidx].flat])
         self.assertEqual(round(ma.average(a.vals)), 54)
 
     def testEmptyExport(self):
-        query = dballe.Record()
+        query = {}
         query["ana_id"] = 5000
         vars = read(self.db.query_data(query), (AnaIndex(), NetworkIndex()), attributes=True)
         self.assertEqual(len(vars), 0)
@@ -292,30 +280,27 @@ class ReadMixin(DballeDBMixin):
         # If an index rejects a variable after another index
         # has successfuly added an item, we used to end up with
         # a 'ghost' index entry with no items in it
-        indexes = (TimeRangeIndex(), \
-                  LevelIndex(frozen=True, start=((3, 2, None, None),) ))
-        query = dballe.Record()
+        indexes = (TimeRangeIndex(), LevelIndex(frozen=True, start=(dballe.Level(3, 2, None, None),)))
+        query = {}
         query['ana_id'] = 1
         query['var'] = 'B13011'
-        vars = read(self.db.query_data(query), indexes, \
-                        checkConflicts=False)
+        vars = read(self.db.query_data(query), indexes, checkConflicts=False)
         self.assertCountEqual(vars.keys(), ["B13011"])
         self.assertEqual(len(vars["B13011"].dims[1]), 1)
         self.assertEqual(vars["B13011"].dims[0][0], (4, -21600, 0))
 
     def testBuggyExport1(self):
         indexes = (AnaIndex(),
-                LevelIndex(frozen=True, start=((1, None, None), (3, 2, None))),
-                TimeRangeIndex(),
-                DateTimeIndex())
-        query = dballe.Record()
+                   LevelIndex(frozen=True, start=((1, None, None), (3, 2, None))),
+                   TimeRangeIndex(),
+                   DateTimeIndex())
+        query = {}
         query['rep_memo'] = 'synop'
-        vars = read(self.db.query_data(query), indexes,
-                checkConflicts=True, attributes=True)
+        read(self.db.query_data(query), indexes, checkConflicts=True, attributes=True)
 
     def testExportAna(self):
         indexes = (AnaIndex(),)
-        query = dballe.Record()
+        query = {}
         query["rep_memo"] = "synop"
         vars = read(self.db.query_station_data(query), indexes, checkConflicts=True)
         self.assertEqual(sorted(vars.keys()), ["B01001", "B01002", "B01019"])
@@ -323,7 +308,7 @@ class ReadMixin(DballeDBMixin):
     def testExportSyncAna(self):
         # Export some data
         indexes = (AnaIndex(), DateTimeIndex())
-        query = dballe.Record()
+        query = {}
         query["rep_memo"] = 'synop'
         query["level"] = (1,)
         query["trange"] = (4, -21600, 0)
@@ -353,4 +338,4 @@ class TestReadMEM(ReadMixin, unittest.TestCase):
 
 if __name__ == "__main__":
     from testlib import main
-    main("test_volnd")
+    main("test-volnd")

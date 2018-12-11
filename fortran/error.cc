@@ -1,5 +1,4 @@
 #include "handles.h"
-#include "trace.h"
 #include "common.h"
 #include <wreport/error.h>
 #include <cstdint>
@@ -52,11 +51,9 @@ void error_init()
 
 int error(wreport::error& e)
 {
-    IF_TRACING(log_error(e));
-
-	last_err_code = e.code();
-	strncpy(last_err_msg, e.what(), 1024);
-	size_t todo = herr.in_use;
+    last_err_code = e.code();
+    strncpy(last_err_msg, e.what(), 1023);
+    size_t todo = herr.in_use;
 	for (int i = 0; todo && i < MAX_CALLBACKS; ++i)
 		if (herr.records[i].used)
 		{

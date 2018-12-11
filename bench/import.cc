@@ -1,6 +1,5 @@
 #include <dballe/db/db.h>
 #include <dballe/file.h>
-#include <dballe/msg/codec.h>
 #include <dballe/core/benchmark.h>
 #include <dballe/msg/msg.h>
 #include <vector>
@@ -8,14 +7,14 @@
 struct BenchmarkImport : public dballe::benchmark::Task
 {
     dballe::benchmark::Messages messages;
-    std::shared_ptr<dballe::DB> db;
+    std::shared_ptr<dballe::db::DB> db;
     const char* m_name;
     const char* m_pathname;
     unsigned hours;
     unsigned minutes;
 
     BenchmarkImport(const char* name, const char* pathname, unsigned hours=24, unsigned minutes=1)
-        : db(dballe::DB::connect_test()), m_name(name), m_pathname(pathname), hours(hours), minutes(minutes)
+        : db(dballe::db::DB::connect_test()), m_name(name), m_pathname(pathname), hours(hours), minutes(minutes)
     {
     }
 
@@ -39,7 +38,7 @@ struct BenchmarkImport : public dballe::benchmark::Task
     {
         auto tr = db->transaction();
         for (const auto& msgs: messages)
-            tr->import_msgs(msgs, nullptr, 0);
+            tr->import_messages(msgs);
         tr->commit();
     }
 

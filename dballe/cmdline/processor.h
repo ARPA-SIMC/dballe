@@ -1,7 +1,9 @@
 #ifndef DBALLE_CMDLINE_PROCESSOR_H
 #define DBALLE_CMDLINE_PROCESSOR_H
 
-#include <dballe/msg/codec.h>
+#include <dballe/importer.h>
+#include <dballe/exporter.h>
+#include <dballe/msg/msg.h>
 #include <stdexcept>
 #include <list>
 #include <string>
@@ -13,10 +15,6 @@ struct Bulletin;
 }
 
 namespace dballe {
-struct Query;
-struct BinaryMessage;
-struct Matcher;
-
 namespace cmdline {
 
 /**
@@ -102,16 +100,16 @@ struct Item
     unsigned idx;
     BinaryMessage* rmsg;
     wreport::Bulletin* bulletin;
-    Messages* msgs;
+    std::vector<std::shared_ptr<Message>>* msgs;
 
     Item();
     ~Item();
 
     /// Decode all that can be decoded
-    void decode(msg::Importer& imp, bool print_errors=false);
+    void decode(Importer& imp, bool print_errors=false);
 
     /// Set the value of msgs, possibly replacing the previous one
-    void set_msgs(Messages* new_msgs);
+    void set_msgs(std::vector<std::shared_ptr<Message>>* new_msgs);
 
     /// Throw a ProcessingException based on e
     void processing_failed(std::exception& e) const __attribute__ ((noreturn));
@@ -146,7 +144,7 @@ struct ReaderOptions
 
 struct Filter
 {
-    msg::ExporterOptions export_opts;
+    impl::ExporterOptions export_opts;
     int category = -1;
     int subcategory = -1;
     int checkdigit = -1;
@@ -168,12 +166,11 @@ struct Filter
     void matcher_from_record(const Query& query);
 
     bool match_index(int idx) const;
-    bool match_common(const BinaryMessage& rmsg, const Messages* msgs) const;
-    bool match_msgs(const Messages& msgs) const;
-    bool match_bufrex(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const Messages* msgs) const;
-    bool match_bufr(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const Messages* msgs) const;
-    bool match_crex(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const Messages* msgs) const;
-    bool match_aof(const BinaryMessage& rmsg, const Messages* msgs) const;
+    bool match_common(const BinaryMessage& rmsg, const std::vector<std::shared_ptr<dballe::Message>>* msgs) const;
+    bool match_msgs(const std::vector<std::shared_ptr<dballe::Message>>& msgs) const;
+    bool match_bufrex(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const std::vector<std::shared_ptr<dballe::Message>>* msgs) const;
+    bool match_bufr(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const std::vector<std::shared_ptr<dballe::Message>>* msgs) const;
+    bool match_crex(const BinaryMessage& rmsg, const wreport::Bulletin* rm, const std::vector<std::shared_ptr<dballe::Message>>* msgs) const;
     bool match_item(const Item& item) const;
 };
 
@@ -188,7 +185,7 @@ protected:
     void read_file(const std::list<std::string>& fnames, Action& action);
 
 public:
-    msg::ImporterOptions import_opts;
+    impl::ImporterOptions import_opts;
     Filter filter;
     bool verbose = false;
     unsigned count_successes = 0;

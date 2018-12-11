@@ -1,8 +1,6 @@
 #include "cmdline.h"
-#include <dballe/record.h>
-#include <dballe/core/query.h>
-#include <dballe/core/record.h>
-#include <dballe/msg/wr_codec.h>
+#include "dballe/core/query.h"
+#include "dballe/msg/wr_codec.h"
 #include <wreport/notes.h>
 #include <popt.h>
 #include <cstring>
@@ -211,16 +209,14 @@ void dba_cmdline_error(poptContext optCon, const char* fmt, ...)
     exit(1);
 }
 
-File::Encoding string_to_encoding(const char* type)
+Encoding string_to_encoding(const char* type)
 {
     if (strlen(type) >= 1) {
         switch (type[0]) {
             case 'b':
-                return File::BUFR;
+                return Encoding::BUFR;
             case 'c':
-                return File::CREX;
-            case 'a':
-                return File::AOF;
+                return Encoding::CREX;
         }
     }
     try {
@@ -505,7 +501,7 @@ int Command::main(int argc, const char* argv[])
 
 unsigned dba_cmdline_get_query(poptContext optCon, Query& query)
 {
-    core::Record rec;
+    core::Query& q = core::Query::downcast(query);
     unsigned res;
     const char* queryparm;
     for (res = 0; (queryparm = poptPeekArg(optCon)) != NULL; ++res)
@@ -517,16 +513,15 @@ unsigned dba_cmdline_get_query(poptContext optCon, Query& query)
         /* Mark as processed */
         poptGetArg(optCon);
 
-        rec.set_from_string(queryparm);
+        q.set_from_string(queryparm);
     }
-    query.set_from_record(rec);
     return res;
 }
 
 void list_templates()
 {
-    const msg::wr::TemplateRegistry& reg = msg::wr::TemplateRegistry::get();
-    for (msg::wr::TemplateRegistry::const_iterator i = reg.begin(); i != reg.end(); ++i)
+    const impl::msg::wr::TemplateRegistry& reg = impl::msg::wr::TemplateRegistry::get();
+    for (impl::msg::wr::TemplateRegistry::const_iterator i = reg.begin(); i != reg.end(); ++i)
         fprintf(stdout, "%s - %s\n",
                 i->second.name.c_str(), i->second.description.c_str());
 }

@@ -6,9 +6,8 @@
 #include "dballe/db/v7/qbuilder.h"
 #include "dballe/sql/mysql.h"
 #include "dballe/sql/querybuf.h"
-#include "dballe/record.h"
 #include "dballe/core/var.h"
-#include "dballe/core/values.h"
+#include "dballe/values.h"
 #include <wreport/var.h>
 
 using namespace wreport;
@@ -139,14 +138,14 @@ void MySQLStation::get_station_vars(Tracer<>& trc, int id_station, std::function
         if (!row.isnull(2))
         {
             TRACE("get_station_vars add attributes\n");
-            Values::decode(row.as_blob(2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
+            DBValues::decode(row.as_blob(2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
         }
 
         dest(move(var));
     }
 }
 
-void MySQLStation::add_station_vars(Tracer<>& trc, int id_station, Record& rec)
+void MySQLStation::add_station_vars(Tracer<>& trc, int id_station, DBValues& values)
 {
     Querybuf qb;
     qb.appendf(R"(
@@ -160,7 +159,7 @@ void MySQLStation::add_station_vars(Tracer<>& trc, int id_station, Record& rec)
     while (auto row = res.fetch())
     {
         if (trc_sel) trc_sel->add_row();
-        rec.set(newvar((wreport::Varcode)row.as_int(0), row.as_cstring(1)));
+        values.set(newvar((wreport::Varcode)row.as_int(0), row.as_cstring(1)));
     }
 }
 

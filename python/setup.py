@@ -11,7 +11,7 @@ def pkg_config_flags(options):
 dballe_module = Extension(
     '_dballe',
     sources=[
-        "common.cc", "cursor.cc", "dballe.cc", "db.cc", "record.cc",
+        "common.cc", "cursor.cc", "dballe.cc", "db.cc",
     ],
     language="c++",
     extra_compile_args=pkg_config_flags(["--cflags"]) + ["-std=c++11"],

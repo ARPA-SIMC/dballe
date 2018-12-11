@@ -1,11 +1,11 @@
 #ifndef DBALLE_MESSAGE_H
 #define DBALLE_MESSAGE_H
 
+#include <dballe/fwd.h>
 #include <dballe/types.h>
 #include <wreport/varinfo.h>
-#include <vector>
 #include <memory>
-#include <iterator>
+#include <iosfwd>
 
 namespace wreport {
 struct Var;
@@ -29,8 +29,20 @@ struct Message
 {
     virtual ~Message();
 
+    /// Return the type of the data in the message
+    virtual MessageType get_type() const = 0;
+
     /// Get the reference Datetime for this message
     virtual Datetime get_datetime() const = 0;
+
+    /// Get the reference coordinates for this message
+    virtual Coords get_coords() const = 0;
+
+    /// Get the station identifier for this message
+    virtual Ident get_ident() const = 0;
+
+    /// Get the report for this message
+    virtual std::string get_report() const = 0;
 
     /// Return a copy of this message
     virtual std::unique_ptr<Message> clone() const = 0;
@@ -41,7 +53,125 @@ struct Message
      * @return
      *   A pointer to the variable, or nullptr if it was not found.
      */
-    virtual const wreport::Var* get(wreport::Varcode code, const Level& lev, const Trange& tr) const = 0;
+    const wreport::Var* get(const Level& lev, const Trange& tr, wreport::Varcode code) const;
+
+    /**
+     * Get a variable given its shortcut name
+     *
+     * @return
+     *   A pointer to the variable, or nullptr if it was not found.
+     */
+    const wreport::Var* get(const char* shortcut) const;
+
+    /**
+     * Get a variable given its shortcut name
+     *
+     * @return
+     *   A pointer to the variable, or nullptr if it was not found.
+     */
+    const wreport::Var* get(const std::string& shortcut) const;
+
+    /**
+     * Add or replace a value
+     *
+     * @param lev
+     *   The Level of the value
+     * @param tr
+     *   The Trange of the value
+     * @param code
+     *   The Varcode of the destination value.  If it is different than the
+     *   varcode of var, a conversion will be attempted.
+     * @param var
+     *   The Var with the value to set
+     */
+    void set(const Level& lev, const Trange& tr, wreport::Varcode code, const wreport::Var& var);
+
+    /**
+     * Add or replace a value
+     *
+     * @param lev
+     *   The Level of the value
+     * @param tr
+     *   The Trange of the value
+     * @param var
+     *   The Var with the value to set
+     */
+    void set(const Level& lev, const Trange& tr, const wreport::Var& var);
+
+    /**
+     * Add or replace a value, taking ownership of the source variable without
+     * copying it.
+     *
+     * @param lev
+     *   The Level of the value
+     * @param tr
+     *   The Trange of the value
+     * @param var
+     *   The Var with the value to set.  This Message will take ownership of memory
+     *   management.
+     */
+    void set(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var);
+
+    /**
+     * Add or replace a value, taking ownership of the source variable without
+     * copying it.
+     *
+     * @param shortcut
+     *   Shortcut name mapping to a (Level, Trange, Varcode) triplet
+     * @param var
+     *   The Var with the value to set.  This Message will take ownership of memory
+     *   management.
+     */
+    void set(const char* shortcut, std::unique_ptr<wreport::Var> var);
+
+    /**
+     * Add or replace a value
+     *
+     * @param shortcut
+     *   Shortcut name mapping to a (Level, Trange, Varcode) triplet
+     * @param var
+     *   The Var with the value to set. If its varcode is different than the
+     *   varcode of the shortcut, a conversion will be attempted.
+     */
+    void set(const char* shortcut, const wreport::Var& var);
+
+    /**
+     * Iterate the contents of the message
+     */
+    virtual bool foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)>) const = 0;
+
+    /**
+     * Return a Cursor to access the station information in the message.
+     *
+     * The cursor will have only one result, with the one station present in
+     * the message, contain all station vars.
+     *
+     * @param query
+     *   The query data  (note: currently ignored)
+     * @return
+     *   The cursor to use to iterate over the results
+     */
+    virtual std::unique_ptr<CursorStation> query_stations(const Query& query) const = 0;
+
+    /**
+     * Query the station variables in the message.
+     *
+     * @param query
+     *   The query data  (note: currently ignored)
+     * @return
+     *   The cursor to use to iterate over the results
+     */
+    virtual std::unique_ptr<CursorStationData> query_station_data(const Query& query) const = 0;
+
+    /**
+     * Query the variables in the message.
+     *
+     * @param query
+     *   The query data  (note: currently ignored)
+     * @return
+     *   The cursor to use to iterate over the results
+     */
+    virtual std::unique_ptr<CursorData> query_data(const Query& query) const = 0;
 
     /// Print all the contents of this message to an output stream
     virtual void print(FILE* out) const = 0;
@@ -56,108 +186,34 @@ struct Message
      *   The number of differences found
      */
     virtual unsigned diff(const Message& msg) const = 0;
-};
-
-/**
- * Ordered collection of messages.
- *
- * This supports many encode/decode operations, that work on group of similar
- * Messages.
- */
-class Messages
-{
-protected:
-    std::vector<Message*> msgs;
-
-    // Convert an iterator over pointers to an iterator over values
-    template<typename VAL, typename WRAPPED>
-    class base_iterator : public std::iterator<std::random_access_iterator_tag, VAL, typename WRAPPED::difference_type, VAL*, VAL&>
-    {
-    protected:
-        WRAPPED current;
-
-    public:
-        base_iterator() {}
-        explicit base_iterator(const WRAPPED& o) : current(o) {}
-
-        // Forward iterator requirements
-        inline VAL& operator*() const { return **current; }
-        inline VAL* operator->() const { return *current; }
-        inline base_iterator& operator++() { ++current; return *this; }
-        inline base_iterator operator++(int) { return base_iterator(current++); }
-
-        // Bidirectional iterator requirements
-        inline base_iterator& operator--() { --current; return *this; }
-        inline base_iterator operator--(int) { return base_iterator(current--); }
-
-        // Random access iterator requirements
-        inline VAL& operator[](typename WRAPPED::difference_type n) const { return *current[n]; }
-        inline base_iterator& operator+=(typename WRAPPED::difference_type n) { current += n; return *this; }
-        inline base_iterator operator+(typename WRAPPED::difference_type n) const { return base_iterator(current + n); }
-        inline base_iterator& operator-=(typename WRAPPED::difference_type n) { current -= n; return *this; }
-        inline base_iterator operator-(typename WRAPPED::difference_type n) const { return base_iterator(current - n); }
-
-        // Forward iterator requirements
-        template<typename O> inline bool operator==(const O& o) const { return current == o.current; }
-        template<typename O> inline bool operator!=(const O& o) const { return current != o.current; }
-        template<typename O> inline bool operator<(const O& o) const { return current < o.current; }
-        template<typename O> inline bool operator<=(const O& o) const { return current <= o.current; }
-        template<typename O> inline bool operator>(const O& o) const { return current > o.current; }
-        template<typename O> inline bool operator>=(const O& o) const { return current >= o.current; }
-        template<typename O> inline typename WRAPPED::difference_type operator-(const O& o) const { return current - o.current; }
-    };
-
-public:
-    typedef base_iterator<Message, std::vector<Message*>::iterator> iterator;
-    typedef base_iterator<const Message, std::vector<Message*>::const_iterator> const_iterator;
-
-    Messages();
-    Messages(const Messages& o);
-    Messages(Messages&& o);
-    ~Messages();
-
-    Messages& operator=(const Messages& o);
-    Messages& operator=(Messages&& o);
-
-    iterator begin() { return iterator(msgs.begin()); }
-    iterator end() { return iterator(msgs.end()); }
-    const_iterator begin() const { return const_iterator(msgs.begin()); }
-    const_iterator end() const { return const_iterator(msgs.end()); }
-
-    Message& operator[](size_t pos) { return *msgs[pos]; }
-    const Message& operator[](size_t pos) const { return *msgs[pos]; }
-
-    /// Check if the collection is empty
-    bool empty() const;
-
-    /// Return the number of messages
-    size_t size() const;
-
-    /// Append a copy of the message
-    void append(const Message& msg);
-
-    /// Append a message, taking over its memory management.
-    void append(std::unique_ptr<Message>&& msg);
-
-    /// Remove all messages
-    void clear();
-
-    /// Print all the contents of all the messages to an output stream
-    void print(FILE* out) const;
 
     /**
-     * Compute the differences between two Messages
-     *
-     * Details of the differences found will be formatted using the wreport
-     * notes system (@see wreport/notes.h).
-     *
-     * @param msgs
-     *   Messages to compare to
-     * @returns
-     *   The number of differences found
+     * Create a new empty message
      */
-    unsigned diff(const Messages& msgs) const;
+    static std::unique_ptr<Message> create(MessageType type);
+
+protected:
+    /// Implementation of get(const Level&, const Trange&, wreport::Varcode)
+    virtual const wreport::Var* get_impl(const Level& lev, const Trange& tr, wreport::Varcode code) const = 0;
+
+    /// Implementation of set(const Level& const Trange&, std::unique_ptr<wreport::Var>)
+    virtual void set_impl(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var) = 0;
 };
+
+
+/**
+ * Return a string with the name of a MessageType.
+ *
+ * @param type
+ *   The MessageType value to format
+ * @return
+ *   The name, as a const string.  This function is thread safe.
+ */
+const char* format_message_type(MessageType type);
+
+
+/// Serialize MessageType
+std::ostream& operator<<(std::ostream&, const dballe::MessageType&);
 
 }
 #endif

@@ -8,18 +8,13 @@
  */
 
 #include <dballe/sql/fwd.h>
+#include <dballe/core/fwd.h>
 #include <memory>
 #include <map>
 #include <string>
 #include <vector>
 
 namespace dballe {
-struct Record;
-
-namespace core {
-struct Query;
-}
-
 namespace db {
 namespace v7 {
 
@@ -81,13 +76,6 @@ struct Repinfo
     virtual ~Repinfo() {}
 
     //static std::unique_ptr<Repinfo> create(Connection& conn);
-
-    /**
-     * Fill repinfo information in a Record based on the repinfo entry with the
-     * given ID
-     */
-    // FIXME: still used?
-    void to_record(const std::string& report, Record& rec);
 
     /// Get the rep_memo for a given ID; throws if id is not valud
     // FIXME: use std::string?

@@ -1,5 +1,6 @@
 #include "data.h"
-#include "dballe/core/values.h"
+#include "dballe/types.h"
+#include "dballe/values.h"
 #include <algorithm>
 #include <cstring>
 
@@ -23,6 +24,15 @@ void DataCommon<Traits>::read_attrs_into_values(Tracer<>& trc, int id_data, Valu
 }
 
 template<typename Traits>
+void DataCommon<Traits>::read_attrs_into_values(Tracer<>& trc, int id_data, Values& values, const db::AttrList& exclude)
+{
+    read_attrs(trc, id_data, [&](unique_ptr<wreport::Var> var) {
+        if (std::find(exclude.begin(), exclude.end(), var->code()) == exclude.end())
+            values.set(move(var));
+    });
+}
+
+template<typename Traits>
 void DataCommon<Traits>::merge_attrs(Tracer<>& trc, int id_data, const Values& attrs)
 {
     // Read existing attributes
@@ -30,7 +40,7 @@ void DataCommon<Traits>::merge_attrs(Tracer<>& trc, int id_data, const Values& a
     read_attrs_into_values(trc, id_data, merged);
 
     // Merge attributes from attrs
-    merged.set(attrs);
+    merged.merge(attrs);
 
     // Write them back
     write_attrs(trc, id_data, merged);
@@ -44,10 +54,7 @@ void DataCommon<Traits>::remove_attrs(Tracer<>& trc, int id_data, const db::Attr
     else {
         // Read existing attributes
         Values remaining;
-        read_attrs_into_values(trc, id_data, remaining);
-
-        for (const auto& i: attrs)
-            remaining.erase(i);
+        read_attrs_into_values(trc, id_data, remaining, attrs);
 
         if (remaining.empty())
             remove_all_attrs(trc, id_data);
@@ -79,7 +86,7 @@ void StationDataDumper::print_row(int id, int id_station, wreport::Varcode code,
     else
         fprintf(out, " %s\n", val);
 
-    Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
+    DBValues::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
         fprintf(out, "     ");
         var->print(out);
     });
@@ -116,7 +123,7 @@ void DataDumper::print_row(int id, int id_station, int id_levtr, const Datetime&
     else
         fprintf(out, " %s\n", val);
 
-    Values::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
+    DBValues::decode(attrs, [&](std::unique_ptr<wreport::Var> var) {
         fprintf(out, "     ");
         var->print(out);
     });

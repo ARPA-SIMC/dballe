@@ -2,13 +2,13 @@
 
 DBALLELIBS =  ../dballe/libdballe.la
 
-AM_CPPFLAGS = -I$(top_srcdir) $(WREPORT_CFLAGS) $(LUA_CFLAGS) -Werror
+AM_CPPFLAGS = -I$(top_srcdir) $(WREPORT_CFLAGS) -Werror
 if FILE_OFFSET_BITS_64
 AM_CPPFLAGS += -D_FILE_OFFSET_BITS=64
 endif
 
 bin_PROGRAMS = dbatbl dbamsg
-dist_bin_SCRIPTS = dbatbl_makeb dbaexport
+dist_bin_SCRIPTS = dbaexport
 
 dbatbl_SOURCES = dbatbl.cc
 dbatbl_LDFLAGS = $(DBALLELIBS) $(WREPORT_LIBS) $(POPT_LIBS)

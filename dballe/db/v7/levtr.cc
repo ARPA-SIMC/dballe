@@ -1,5 +1,4 @@
 #include "levtr.h"
-#include "dballe/core/record.h"
 #include "dballe/msg/msg.h"
 
 using namespace std;
@@ -25,10 +24,10 @@ const LevTrEntry& LevTr::lookup_cache(int id)
     return *res;
 }
 
-msg::Context* LevTr::to_msg(Tracer<>& trc, int id, Msg& msg)
+impl::msg::Context* LevTr::to_msg(Tracer<>& trc, int id, impl::Message& msg)
 {
     auto i = lookup_id(trc, id);
-    msg::Context& res = msg.obtain_context(i->level, i->trange);
+    impl::msg::Context& res = msg.obtain_context(i->level, i->trange);
     return &res;
 }
 

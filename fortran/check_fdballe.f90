@@ -95,7 +95,8 @@
       call ensure_no_error("critica setc 0")
       ierr = idba_setc(handle, "*B33003", "1")
       call ensure_no_error("critica setc 1")
-      ierr = idba_setc(handle, "*var", "B01011")
+      ierr = idba_setc(handle, "*var_related", "B01011")
+      call ensure_no_error("critica setc 2")
       ierr = idba_critica(handle)
 !      ierr = idba_critica(handle, "B01011")
       call ensure_no_error("prima critica")
@@ -103,7 +104,7 @@
 !     Query back the data
 !      ierr = idba_ricominciamo(handle)
       ierr = idba_unsetall(handle)
-      call ensure_no_error("ricominciamo")
+      call ensure_no_error("unsetall")
       ierr = idba_setr(handle, "latmin", 20.0)
       call ensure_no_error("query setf 0")
       ierr = idba_setr(handle, "latmax", 50.0)

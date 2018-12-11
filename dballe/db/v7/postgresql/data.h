@@ -6,8 +6,6 @@
 #include <dballe/sql/fwd.h>
 
 namespace dballe {
-struct Record;
-
 namespace db {
 namespace v7 {
 namespace postgresql {

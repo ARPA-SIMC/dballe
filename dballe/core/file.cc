@@ -18,8 +18,16 @@ File::File(const std::string& name, FILE* fd, bool close_on_exit)
 
 File::~File()
 {
+    close();
+}
+
+void File::close()
+{
     if (fd && close_on_exit)
+    {
         fclose(fd);
+        fd = nullptr;
+    }
 }
 
 bool File::foreach(std::function<bool(const BinaryMessage&)> dest)
@@ -52,35 +60,43 @@ std::unique_ptr<dballe::File> File::open_test_data_file(Encoding type, const std
 
 BinaryMessage BufrFile::read()
 {
-    BinaryMessage res(BUFR);
+    if (fd == nullptr)
+        throw error_consistency("cannot read from a closed file");
+    BinaryMessage res(Encoding::BUFR);
     if (BufrBulletin::read(fd, res.data, m_name.c_str(), &res.offset))
     {
         res.pathname = m_name;
         res.index = idx++;
         return res;
     }
-    return BinaryMessage(BUFR);
+    return BinaryMessage(Encoding::BUFR);
 }
 
 void BufrFile::write(const std::string& msg)
 {
+    if (fd == nullptr)
+        throw error_consistency("cannot write to a closed file");
     BufrBulletin::write(msg, fd, m_name.c_str());
 }
 
 BinaryMessage CrexFile::read()
 {
-    BinaryMessage res(CREX);
+    if (fd == nullptr)
+        throw error_consistency("cannot read from a closed file");
+    BinaryMessage res(Encoding::CREX);
     if (CrexBulletin::read(fd, res.data, m_name.c_str(), &res.offset))
     {
         res.pathname = m_name;
         res.index = idx++;
         return res;
     }
-    return BinaryMessage(CREX);
+    return BinaryMessage(Encoding::CREX);
 }
 
 void CrexFile::write(const std::string& msg)
 {
+    if (fd == nullptr)
+        throw error_consistency("cannot write to a closed file");
     CrexBulletin::write(msg, fd, m_name.c_str());
 }
 

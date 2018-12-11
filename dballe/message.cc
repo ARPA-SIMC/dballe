@@ -1,4 +1,7 @@
 #include "message.h"
+#include "dballe/msg/msg.h"
+#include "dballe/core/shortcuts.h"
+#include "dballe/core/var.h"
 #include <wreport/notes.h>
 
 using namespace std;
@@ -12,100 +15,86 @@ namespace dballe {
 
 Message::~Message() {}
 
-
-/*
- * Messages
- */
-
-Messages::Messages()
+std::unique_ptr<Message> Message::create(MessageType type)
 {
+    impl::Message* msg;
+    std::unique_ptr<Message> res(msg = new impl::Message);
+    msg->type = type;
+    return res;
 }
 
-Messages::Messages(const Messages& o)
+const wreport::Var* Message::get(const Level& lev, const Trange& tr, wreport::Varcode code) const
 {
-    msgs.reserve(o.msgs.size());
-    for (const auto& i: o.msgs)
-        msgs.push_back(i->clone().release());
+    return get_impl(lev, tr, code);
 }
 
-Messages::Messages(Messages&& o)
-    : msgs(move(o.msgs))
+const wreport::Var* Message::get(const char* shortcut) const
 {
+    const impl::Shortcut& s = impl::Shortcut::by_name(shortcut);
+    return get_impl(s.level, s.trange, s.code);
 }
 
-Messages::~Messages()
+const wreport::Var* Message::get(const std::string& shortcut) const
 {
-    for (auto& i: msgs)
-        delete i;
+    const impl::Shortcut& s = impl::Shortcut::by_name(shortcut);
+    return get_impl(s.level, s.trange, s.code);
 }
 
-Messages& Messages::operator=(const Messages& o)
+void Message::set(const Level& lev, const Trange& tr, wreport::Varcode code, const wreport::Var& var)
 {
-    if (this == &o) return *this;
-    clear();
-    msgs.reserve(o.msgs.size());
-    for (const auto& i: o.msgs)
-        msgs.push_back(i->clone().release());
-    return *this;
+    set_impl(lev, tr, var_copy_without_unset_attrs(var, code));
 }
 
-Messages& Messages::operator=(Messages&& o)
+void Message::set(const Level& lev, const Trange& tr, const wreport::Var& var)
 {
-    if (this == &o) return *this;
-    clear();
-    msgs = move(o.msgs);
-    return *this;
+    set_impl(lev, tr, var_copy_without_unset_attrs(var));
 }
 
-bool Messages::empty() const
+void Message::set(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var)
 {
-    return msgs.empty();
+    set_impl(lev, tr, std::move(var));
 }
 
-size_t Messages::size() const
+void Message::set(const char* shortcut, std::unique_ptr<wreport::Var> var)
 {
-    return msgs.size();
+    const impl::Shortcut& s = impl::Shortcut::by_name(shortcut);
+    if (s.code != var->code())
+        error_consistency::throwf("Message::set(%s) called with varcode of %01d%02d%03d instead of %02d%02d%03d",
+                shortcut, WR_VAR_FXY(var->code()), WR_VAR_FXY(s.code));
+    return set(s.level, s.trange, std::move(var));
 }
 
-void Messages::clear()
+void Message::set(const char* shortcut, const wreport::Var& var)
 {
-    for (auto& i: msgs)
-        delete i;
-    msgs.clear();
+    const impl::Shortcut& s = impl::Shortcut::by_name(shortcut);
+    return set(s.level, s.trange, s.code, var);
 }
 
-void Messages::append(const Message& msg)
+const char* format_message_type(MessageType type)
 {
-    msgs.push_back(msg.clone().release());
-}
-
-void Messages::append(unique_ptr<Message>&& msg)
-{
-    msgs.push_back(msg.release());
-}
-
-void Messages::print(FILE* out) const
-{
-    for (unsigned i = 0; i < msgs.size(); ++i)
+    switch (type)
     {
-        fprintf(out, "Subset %d:\n", i);
-        msgs[i]->print(out);
+        case MessageType::GENERIC: return "generic";
+        case MessageType::SYNOP: return "synop";
+        case MessageType::PILOT: return "pilot";
+        case MessageType::TEMP: return "temp";
+        case MessageType::TEMP_SHIP: return "temp_ship";
+        case MessageType::AIREP: return "airep";
+        case MessageType::AMDAR: return "amdar";
+        case MessageType::ACARS: return "acars";
+        case MessageType::SHIP: return "ship";
+        case MessageType::BUOY: return "buoy";
+        case MessageType::METAR: return "metar";
+        case MessageType::SAT: return "sat";
+        case MessageType::POLLUTION: return "pollution";
     }
+    return "(unknown)";
 }
 
-unsigned Messages::diff(const Messages& o) const
+
+std::ostream& operator<<(std::ostream& o, const dballe::MessageType& v)
 {
-    unsigned diffs = 0;
-    if (msgs.size() != o.msgs.size())
-    {
-        notes::logf("the message groups contain a different number of messages (first is %zd, second is %zd)\n",
-                msgs.size(), o.msgs.size());
-        ++diffs;
-    }
-    size_t count = min(msgs.size(), o.msgs.size());
-    for (size_t i = 0; i < count; ++i)
-        diffs += msgs[i]->diff(*o.msgs[i]);
-    return diffs;
+    return o << format_message_type(v);
 }
 
 }

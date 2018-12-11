@@ -1,23 +1,5 @@
-/*
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "dballe/msg/wr_codec.h"
+#include "dballe/core/shortcuts.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 #include <wreport/bulletin.h>
@@ -50,6 +32,7 @@ using namespace std;
 #define ACARS_WMO_DESC "ACARS WMO"
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -61,7 +44,7 @@ struct FlightBase : public Template
     bool is_crex;
     const msg::Context* flight_ctx;
 
-    FlightBase(const ExporterOptions& opts, const Messages& msgs)
+    FlightBase(const dballe::ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs), flight_ctx(0) {}
 
     void add(wreport::Varcode code, const wreport::Var* var) const
@@ -69,9 +52,9 @@ struct FlightBase : public Template
         Template::add(code, var);
     }
 
-    void add(Varcode code, int shortcut) const
+    void add(Varcode code, const Shortcut& shortcut) const
     {
-        const Var* var = msg->find_by_id(shortcut);
+        const Var* var = msg->get(shortcut);
         if (var)
             subset->store_variable(code, *var);
         else
@@ -85,14 +68,14 @@ struct FlightBase : public Template
 
     void add(Varcode code, Varcode srccode) const
     {
-        const Var* var = flight_ctx->find(srccode);
+        const Var* var = flight_ctx->values.maybe_var(srccode);
         if (var)
             subset->store_variable(code, *var);
         else
             subset->store_variable_undef(code);
     }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         Template::setupBulletin(bulletin);
 
@@ -107,27 +90,26 @@ struct FlightBase : public Template
         bulletin.data_category = 4;
         bulletin.data_subcategory = 255;
     }
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         Template::to_subset(msg, subset);
 
         // Find what is the level where the airplane is in
         flight_ctx = 0;
 
-        for (unsigned i = 0; i < msg.data.size(); ++i)
+        for (const auto& ctx : msg.data)
         {
-            const msg::Context& ctx = *msg.data[i];
             if (ctx.trange != Trange::instant()) continue;
 
             bool use = false;
             switch (ctx.level.ltype1)
             {
                 case 100:
-                     use = ctx.find_by_id(DBA_MSG_PRESS) != NULL
-                        || ctx.find_by_id(DBA_MSG_HEIGHT_STATION) != NULL;
+                     use = ctx.values.maybe_var(sc::press.code) != nullptr
+                        || ctx.values.maybe_var(sc::height_station.code) != nullptr;
                      break;
                 case 102:
-                     use = ctx.find_by_id(DBA_MSG_HEIGHT_STATION) != NULL;
+                     use = ctx.values.maybe_var(sc::height_station.code) != nullptr;
                      break;
             }
             if (use)
@@ -146,7 +128,7 @@ struct FlightBase : public Template
 
 struct Airep : public FlightBase
 {
-    Airep(const ExporterOptions& opts, const Messages& msgs)
+    Airep(const dballe::ExporterOptions& opts, const Messages& msgs)
         : FlightBase(opts, msgs) {}
 
     virtual const char* name() const { return AIREP_NAME; }
@@ -174,16 +156,16 @@ struct Airep : public FlightBase
         bulletin.load_tables();
     }
 
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         FlightBase::to_subset(msg, subset);
 
-        /*  0 */ add(WR_VAR(0,  1,  6), DBA_MSG_IDENT);
+        /*  0 */ add(WR_VAR(0,  1,  6), sc::ident);
         /*  1 */ add(WR_VAR(0,  2, 61));
         do_D01011();
         do_D01012();
-        /*  7 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
-        /*  8 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
+        /*  7 */ add(WR_VAR(0,  5,  1), sc::latitude);
+        /*  8 */ add(WR_VAR(0,  6,  1), sc::longitude);
         /*  9 */ add(WR_VAR(0,  8,  4));
         /* 10 */ add(WR_VAR(0,  7,  2), WR_VAR(0,  7,  30)); /* HEIGHT OF STATION -> HEIGHT OR ALTITUDE */
         /* 11 */ add(WR_VAR(0, 12,  1), WR_VAR(0, 12, 101)); /* TEMPERATURE/DRY-BULB TEMPERATURE */
@@ -211,7 +193,7 @@ struct Airep : public FlightBase
 
 struct Amdar : public Airep
 {
-    Amdar(const ExporterOptions& opts, const Messages& msgs)
+    Amdar(const dballe::ExporterOptions& opts, const Messages& msgs)
         : Airep(opts, msgs) {}
 
     virtual const char* name() const { return AMDAR_NAME; }
@@ -226,7 +208,7 @@ struct Amdar : public Airep
 
 struct AmdarWMO : public FlightBase
 {
-    AmdarWMO(const ExporterOptions& opts, const Messages& msgs)
+    AmdarWMO(const dballe::ExporterOptions& opts, const Messages& msgs)
         : FlightBase(opts, msgs) {}
 
     virtual const char* name() const { return AMDAR_WMO_NAME; }
@@ -269,7 +251,7 @@ struct AmdarWMO : public FlightBase
         bulletin.load_tables();
     }
 
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         FlightBase::to_subset(msg, subset);
 
@@ -277,14 +259,14 @@ struct AmdarWMO : public FlightBase
 
         ///*  0 */ add(WR_VAR(0,  1, 33));
         ///*  1 */ add(WR_VAR(0,  1, 34));
-        /*  2 */ add(WR_VAR(0,  1,  8), DBA_MSG_IDENT);
+        /*  2 */ add(WR_VAR(0,  1,  8), sc::ident);
         /*  3 */ add(WR_VAR(0,  1, 23));
-        /*  4 */ add(WR_VAR(0,  5,  1), DBA_MSG_LATITUDE);
-        /*  5 */ add(WR_VAR(0,  6,  1), DBA_MSG_LONGITUDE);
+        /*  4 */ add(WR_VAR(0,  5,  1), sc::latitude);
+        /*  5 */ add(WR_VAR(0,  6,  1), sc::longitude);
         do_D01011();
         do_D01013();
         /* 12 */
-        if (const wreport::Var* v = flight_ctx->find(WR_VAR(0,  7, 30)))
+        if (const wreport::Var* v = flight_ctx->values.maybe_var(WR_VAR(0,  7, 30)))
             add(WR_VAR(0,  7, 10), v);
         else if (flight_ctx->level.ltype1 == 102)
             subset.store_variable_d(WR_VAR(0,  7, 10), (double)flight_ctx->level.l1 / 1000.0);
@@ -325,7 +307,7 @@ struct AmdarWMO : public FlightBase
 
 struct Acars : public FlightBase
 {
-    Acars(const ExporterOptions& opts, const Messages& msgs)
+    Acars(const dballe::ExporterOptions& opts, const Messages& msgs)
         : FlightBase(opts, msgs) {}
 
     virtual const char* name() const { return ACARS_NAME; }
@@ -377,11 +359,11 @@ struct Acars : public FlightBase
         bulletin.load_tables();
     }
 
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         FlightBase::to_subset(msg, subset);
         /*  0 */ add(WR_VAR(0,  1,  6));
-        /*  1 */ add(WR_VAR(0,  1,  8), DBA_MSG_IDENT);
+        /*  1 */ add(WR_VAR(0,  1,  8), sc::ident);
         /*  2 */ add(WR_VAR(0,  2, 61));
         /*  3 */ add(WR_VAR(0,  2, 62));
         /*  4 */ add(WR_VAR(0,  2,  2));
@@ -391,8 +373,8 @@ struct Acars : public FlightBase
         /*  8 */ add(WR_VAR(0,  2,  1));
         do_D01011();
         do_D01012();
-        /* 14 */ add(WR_VAR(0,  5,  2), DBA_MSG_LATITUDE);
-        /* 15 */ add(WR_VAR(0,  6,  2), DBA_MSG_LONGITUDE);
+        /* 14 */ add(WR_VAR(0,  5,  2), sc::latitude);
+        /* 15 */ add(WR_VAR(0,  6,  2), sc::longitude);
         /* 16 */ add(WR_VAR(0,  8,  4));
         /* 17 */ add(WR_VAR(0,  7,  4), WR_VAR(0, 10,   4));
         /* 18 */ add(WR_VAR(0,  8, 21));
@@ -423,7 +405,7 @@ struct Acars : public FlightBase
 
 struct AcarsWMO : public AmdarWMO
 {
-    AcarsWMO(const ExporterOptions& opts, const Messages& msgs)
+    AcarsWMO(const dballe::ExporterOptions& opts, const Messages& msgs)
         : AmdarWMO(opts, msgs) {}
 
     virtual const char* name() const { return ACARS_WMO_NAME; }
@@ -444,39 +426,40 @@ struct AcarsWMO : public AmdarWMO
 void register_flight(TemplateRegistry& r)
 {
     r.register_factory(4, AIREP_NAME, AIREP_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Airep(opts, msgs));
             });
     r.register_factory(4, AIREP_ECMWF_NAME, AIREP_ECMWF_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Airep(opts, msgs));
             });
     r.register_factory(4, AMDAR_NAME, AMDAR_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Amdar(opts, msgs));
             });
     r.register_factory(4, AMDAR_ECMWF_NAME, AMDAR_ECMWF_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Amdar(opts, msgs));
             });
     r.register_factory(4, AMDAR_WMO_NAME, AMDAR_WMO_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new AmdarWMO(opts, msgs));
             });
     r.register_factory(4, ACARS_NAME, ACARS_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Acars(opts, msgs));
             });
     r.register_factory(4, ACARS_ECMWF_NAME, ACARS_ECMWF_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Acars(opts, msgs));
             });
     r.register_factory(4, ACARS_WMO_NAME, ACARS_WMO_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new AcarsWMO(opts, msgs));
             });
 }
 
+}
 }
 }
 }

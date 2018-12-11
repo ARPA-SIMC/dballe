@@ -1,15 +1,13 @@
 #include <dballe/db/db.h>
 #include <dballe/file.h>
-#include <dballe/msg/codec.h>
 #include <dballe/core/benchmark.h>
-#include <dballe/core/record.h>
 #include <dballe/core/query.h>
 #include <dballe/msg/msg.h>
 #include <vector>
 
 struct BenchmarkQuery : public dballe::benchmark::Task
 {
-    std::shared_ptr<dballe::DB> db;
+    std::shared_ptr<dballe::db::DB> db;
     const char* m_name;
     const char* m_pathname;
     unsigned months;
@@ -17,7 +15,7 @@ struct BenchmarkQuery : public dballe::benchmark::Task
     unsigned minutes;
 
     BenchmarkQuery(const char* name, const char* pathname, unsigned months=12, unsigned hours=24, unsigned minutes=1)
-        : db(dballe::DB::connect_test()), m_name(name), m_pathname(pathname), months(months), hours(hours), minutes(minutes)
+        : db(dballe::db::DB::connect_test()), m_name(name), m_pathname(pathname), months(months), hours(hours), minutes(minutes)
     {
     }
 
@@ -39,18 +37,17 @@ struct BenchmarkQuery : public dballe::benchmark::Task
 
         auto tr = db->transaction();
         for (const auto& msgs: messages)
-            tr->import_msgs(msgs, nullptr, 0);
+            tr->import_messages(msgs);
         tr->commit();
     }
 
     void run_once() override
     {
-        auto tr = db->transaction();
+        auto tr = std::dynamic_pointer_cast<dballe::db::Transaction>(db->transaction());
         dballe::core::Query query;
-        dballe::core::Record rec;
         auto cur = tr->query_data(query);
         while (cur->next())
-            cur->to_record(rec);
+            ;
         tr->commit();
     }
 

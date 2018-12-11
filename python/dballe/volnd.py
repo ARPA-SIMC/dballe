@@ -1,8 +1,5 @@
-#!/usr/bin/python
-# -*- coding: UTF-8 -*-
-
 """
-volnd is an easy way of extracting entire matrixes of data out of a DB-All.e
+volnd is a way of extracting entire matrixes of data out of a DB-All.e
 database.
 
 This module allows to extract multidimensional matrixes of data given a list of
@@ -15,7 +12,7 @@ the same meaning.
 
 This example code extracts temperatures in a station by datetime matrix::
 
-        query = dballe.Record()
+        query = dict()
         query["var"] = "B12001"
         query["rep_memo"] = "synop"
         query["level"] = (105, 2)
@@ -38,10 +35,6 @@ This example code extracts temperatures in a station by datetime matrix::
 #       ana_id?)
 # TODO: leggere i dati di anagrafica
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 import dballe
 from collections import namedtuple
 import datetime
@@ -174,6 +167,7 @@ class ListIndex(Index, list):
             self.append(self.details_from_record(rec))
         return pos
 
+
 class AnaIndexEntry(namedtuple("AnaIndexEntry", ("id", "lat", "lon", "ident"))):
     """
     AnaIndex entry, with various data about a single station.
@@ -187,18 +181,19 @@ class AnaIndexEntry(namedtuple("AnaIndexEntry", ("id", "lat", "lon", "ident"))):
     @classmethod
     def from_record(cls, rec):
         """
-        Create an index entry from the contents of a dballe.Record
+        Create an index entry from the contents of a Dict[str, Any]
         """
-        return cls(rec["ana_id"], rec["lat"], rec["lon"], rec.get("ident", None))
+        return cls(rec["ana_id"], rec["lat"], rec["lon"], rec["ident"])
 
     def __str__(self):
-        if self[3] == None:
+        if self[3] is None:
             return "Station at lat %.5f lon %.5f" % (self.lat, self.lon)
         else:
             return "%s at lat %.5f lon %.5f" % (self.ident, self.lat, self.lon)
 
     def __repr__(self):
         return "AnaIndexEntry" + tuple.__repr__(self)
+
 
 class AnaIndex(ListIndex):
     """
@@ -220,6 +215,7 @@ class AnaIndex(ListIndex):
 
     def short_name(self):
         return "AnaIndex["+str(len(self))+"]"
+
 
 class NetworkIndex(ListIndex):
     """
@@ -246,7 +242,7 @@ class LevelIndex(ListIndex):
     """
     Index for levels, as they come out of the database
 
-    The constructor syntax is: ``LevelIndex(shared=True, frozen=False), start=None``.
+    The constructor syntax is: ``LevelIndex(shared=True, frozen=False, start=None)``.
 
     The index saves all levels as dballe.Level tuples, in the same order
     as they come out of the database.
@@ -284,6 +280,7 @@ class TimeRangeIndex(ListIndex):
     def short_name(self):
         return "TimeRangeIndex["+str(len(self))+"]"
 
+
 class DateTimeIndex(ListIndex):
     """
     Index for datetimes, as they come out of the database.
@@ -297,7 +294,7 @@ class DateTimeIndex(ListIndex):
         # Suppress deprecation warnings until we have something better
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
-            return rec["date"]
+            return rec["datetime"]
 
     def details_from_record(self, rec):
         return self.key_from_record(rec)
@@ -445,6 +442,7 @@ class IntervalIndex(Index):
         else:
             return IntervalIndex(self._start, self._step, self._tolerance, self._end)
 
+
 class Data:
     """
     Container for collecting variable data.  It contains the variable data
@@ -483,7 +481,7 @@ class Data:
 
         self._lastPos = None
 
-    def append(self, rec):
+    def append(self, rec, val):
         """
         Collect a new value from the given dballe record.
 
@@ -495,7 +493,7 @@ class Data:
             pos = tuple(dim.index_record(rec) for dim in self.dims)
 
             # Save the value with its indexes
-            self.vals.append( (pos, rec[self.name]) )
+            self.vals.append((pos, val))
 
             # Save the last position for appendAttrs
             self._lastPos = pos
@@ -515,9 +513,10 @@ class Data:
         """
         if not self._lastPos:
             return
-        for code in rec:
-            if codes is not None and code not in codes: continue
-            #print "Attr", var.code(), "for", self.name, "at", self._lastPos
+        for code, var in rec.items():
+            if codes is not None and code not in codes:
+                continue
+            # print "Attr", var.code(), "for", self.name, "at", self._lastPos
             if code in self.attrs:
                 data = self.attrs[code]
             else:
@@ -525,7 +524,7 @@ class Data:
                 self.attrs[code] = data
             # Append at the same position as the last variable
             # collected
-            data.vals.append((self._lastPos, rec[code]))
+            data.vals.append((self._lastPos, var))
 
     def _instantiateIntMatrix(self):
         shape = tuple(len(d) for d in self.dims)
@@ -535,7 +534,7 @@ class Data:
             # used for encoding
             bits = self.info.bit_len
             if bits <= 8:
-                #print 'uint8'
+                # print 'uint8'
                 a = numpy.empty(shape, dtype='uint8')
             elif bits <= 16:
                 #print 'uint16'
@@ -580,9 +579,9 @@ class Data:
         shape = tuple(len(x) for x in self.dims)
 
         # Create the data array, with all values set as missing
-        #print "volnd finalise instantiate"
+        # print "volnd finalise instantiate"
         if self.info.type == "string":
-            #print self.info, "string"
+            # print self.info, "string"
             a = numpy.empty(shape, dtype=object)
             # Fill the array with all the values, at the given indexes
             for pos, val in self.vals:
@@ -600,7 +599,7 @@ class Data:
             for pos, val in self.vals:
                 if self._checkConflicts and not mask[pos]:
                     raise IndexError("Got more than one value for " + self.name + " at position " + str(pos))
-                a[pos] = val
+                a[pos] = val.enqd()
                 mask[pos] = False
             a = ma.array(a, mask=mask)
 
@@ -608,7 +607,7 @@ class Data:
         self.vals = a
 
         # Finalise all the attributes as well
-        #print "volnd finalise fill"
+        # print "volnd finalise fill"
         invalid = []
         for key, d in self.attrs.items():
             if not d.finalise():
@@ -644,35 +643,33 @@ def read(cursor, dims, filter=None, checkConflicts=True, attributes=None):
     if it is a sequence, then it is the sequence of attributes that should
     be read.
     """
-    ndims = len(dims)
     vars = {}
-    #print "volnd iterate"
     # Iterate results
     for rec in cursor:
         # Discard the values that filter does not like
         if filter and not filter(rec):
             continue
 
-        varname = rec["var"]
+        v = rec["var"]
 
         # Instantiate the index objects here for every variable
         # when it appears the first time, sharing those indexes that
         # need to be shared and creating new indexes for the individual
         # ones
-        if varname not in vars:
-            var = Data(varname, [x.copy() for x in dims], checkConflicts)
-            vars[varname] = var
+        if v.code not in vars:
+            var = Data(v.code, [x.copy() for x in dims], checkConflicts)
+            vars[v.code] = var
         else:
-            var = vars[varname]
+            var = vars[v.code]
 
         # Save every value with its indexes
-        if not var.append(rec):
+        if not var.append(rec, v):
             continue
 
         # Add the attributes
-        if attributes != None:
-            arec = cursor.attr_query();
-            if attributes == True:
+        if attributes is not None:
+            arec = cursor.attr_query()
+            if attributes is True:
                 var.appendAttrs(arec)
             else:
                 var.appendAttrs(arec, attributes)

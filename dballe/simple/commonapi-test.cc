@@ -1,4 +1,4 @@
-#include "core/tests.h"
+#include "dballe/core/tests.h"
 #include "commonapi.h"
 
 using namespace std;
@@ -15,14 +15,14 @@ struct APITest : public CommonAPIImplementation
      int quantesono() override { return 0; }
      void elencamele() override {}
      int voglioquesto() override { return 0; }
-     const char* dammelo() override { return nullptr; }
+     wreport::Varcode dammelo() override { return 0; }
      void prendilo() override {}
      void dimenticami() override {}
      int voglioancora() override { return 0; }
      void critica() override {}
      void scusa() override {}
-     void messages_open_input(const char* filename, const char* mode, File::Encoding format, bool simplified=true) override {}
-     void messages_open_output(const char* filename, const char* mode, File::Encoding format) override {}
+     void messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified=true) override {}
+     void messages_open_output(const char* filename, const char* mode, Encoding format) override {}
      bool messages_read_next() override { return false; }
      void messages_write_next(const char*) override {}
 };
@@ -40,7 +40,8 @@ void Tests::register_tests()
     add_method("seti", []() {
         APITest api;
         api.seti("ana_id", 1);
-        wassert(actual(api.test_get_input().get("ana_id")->enqi()) == 1);
+        wassert(actual(api.test_get_input_query().ana_id) == 1);
+        wassert(actual(api.test_get_input_data().station.id) == 1);
     });
 
     add_method("set_undef_key", []() {

@@ -8,7 +8,6 @@
 #include "dballe/core/csv.h"
 #include "dballe/core/json.h"
 #include "dballe/core/match-wreport.h"
-#include "dballe/msg/aof_codec.h"
 #include "dballe/cmdline/cmdline.h"
 #include <cstring>
 #include <cstdlib>
@@ -52,13 +51,13 @@ Item::~Item()
     if (rmsg) delete rmsg;
 }
 
-void Item::set_msgs(Messages* new_msgs)
+void Item::set_msgs(std::vector<std::shared_ptr<dballe::Message>>* new_msgs)
 {
     if (msgs) delete msgs;
     msgs = new_msgs;
 }
 
-void Item::decode(msg::Importer& imp, bool print_errors)
+void Item::decode(Importer& imp, bool print_errors)
 {
     if (!rmsg) return;
 
@@ -77,7 +76,7 @@ void Item::decode(msg::Importer& imp, bool print_errors)
     // First step: decode raw message to bulletin
     switch (rmsg->encoding)
     {
-        case File::BUFR:
+        case Encoding::BUFR:
             try {
                 bulletin = BufrBulletin::decode(rmsg->data, rmsg->pathname.c_str(), rmsg->offset).release();
             } catch (error& e) {
@@ -86,7 +85,7 @@ void Item::decode(msg::Importer& imp, bool print_errors)
                 bulletin = 0;
             }
             break;
-        case File::CREX:
+        case Encoding::CREX:
             try {
                 bulletin = CrexBulletin::decode(rmsg->data, rmsg->pathname.c_str(), rmsg->offset).release();
             } catch (error& e) {
@@ -95,19 +94,16 @@ void Item::decode(msg::Importer& imp, bool print_errors)
                 bulletin = 0;
             }
             break;
-        case File::AOF:
-            // Nothing to do for AOF
-            break;
     }
 
     // Second step: decode to msgs
     switch (rmsg->encoding)
     {
-        case File::BUFR:
-        case File::CREX:
+        case Encoding::BUFR:
+        case Encoding::CREX:
             if (bulletin)
             {
-                msgs = new Messages;
+                msgs = new std::vector<std::shared_ptr<dballe::Message>>;
                 try {
                     *msgs = imp.from_bulletin(*bulletin);
                 } catch (error& e) {
@@ -115,16 +111,6 @@ void Item::decode(msg::Importer& imp, bool print_errors)
                     delete msgs;
                     msgs = 0;
                 }
-            }
-            break;
-        case File::AOF:
-            msgs = new Messages;
-            try {
-                *msgs = imp.from_binary(*rmsg);
-            } catch (error& e) {
-                if (print_errors) print_parse_error(*rmsg, e);
-                delete msgs;
-                msgs = 0;
             }
             break;
     }
@@ -212,7 +198,7 @@ bool Filter::match_index(int idx) const
     return imatcher.match(idx);
 }
 
-bool Filter::match_common(const BinaryMessage&, const Messages* msgs) const
+bool Filter::match_common(const BinaryMessage&, const std::vector<std::shared_ptr<dballe::Message>>* msgs) const
 {
     if (msgs == NULL && parsable)
         return false;
@@ -221,7 +207,7 @@ bool Filter::match_common(const BinaryMessage&, const Messages* msgs) const
     return true;
 }
 
-bool Filter::match_bufrex(const BinaryMessage& rmsg, const Bulletin* rm, const Messages* msgs) const
+bool Filter::match_bufrex(const BinaryMessage& rmsg, const Bulletin* rm, const std::vector<std::shared_ptr<dballe::Message>>* msgs) const
 {
     if (!match_common(rmsg, msgs))
         return false;
@@ -249,14 +235,14 @@ bool Filter::match_bufrex(const BinaryMessage& rmsg, const Bulletin* rm, const M
     return true;
 }
 
-bool Filter::match_bufr(const BinaryMessage& rmsg, const Bulletin* rm, const Messages* msgs) const
+bool Filter::match_bufr(const BinaryMessage& rmsg, const Bulletin* rm, const std::vector<std::shared_ptr<dballe::Message>>* msgs) const
 {
     if (!match_bufrex(rmsg, rm, msgs))
         return false;
     return true;
 }
 
-bool Filter::match_crex(const BinaryMessage& rmsg, const Bulletin* rm, const Messages* msgs) const
+bool Filter::match_crex(const BinaryMessage& rmsg, const Bulletin* rm, const std::vector<std::shared_ptr<dballe::Message>>* msgs) const
 {
     if (!match_bufrex(rmsg, rm, msgs))
         return false;
@@ -276,30 +262,9 @@ bool Filter::match_crex(const BinaryMessage& rmsg, const Bulletin* rm, const Mes
 #endif
 }
 
-bool Filter::match_aof(const BinaryMessage& rmsg, const Messages* msgs) const
+bool Filter::match_msgs(const std::vector<std::shared_ptr<dballe::Message>>& msgs) const
 {
-    int category, subcategory;
-    msg::AOFImporter::get_category(rmsg, &category, &subcategory);
-
-    if (!match_common(rmsg, msgs))
-        return false;
-
-    if (this->category != -1)
-        if (this->category != category)
-            return false;
-
-    if (this->subcategory != -1)
-        if (this->subcategory != subcategory)
-            return false;
-
-    if (msgs) return match_msgs(*msgs);
-
-    return true;
-}
-
-bool Filter::match_msgs(const Messages& msgs) const
-{
-    if (matcher && matcher->match(MatchedMessages(msgs)) != matcher::MATCH_YES)
+    if (matcher && matcher->match(impl::MatchedMessages(msgs)) != matcher::MATCH_YES)
         return false;
 
     return true;
@@ -311,9 +276,8 @@ bool Filter::match_item(const Item& item) const
     {
         switch (item.rmsg->encoding)
         {
-            case File::BUFR: return match_bufr(*item.rmsg, item.bulletin, item.msgs);
-            case File::CREX: return match_crex(*item.rmsg, item.bulletin, item.msgs);
-            case File::AOF: return match_aof(*item.rmsg, item.msgs);
+            case Encoding::BUFR: return match_bufr(*item.rmsg, item.bulletin, item.msgs);
+            case Encoding::CREX: return match_crex(*item.rmsg, item.bulletin, item.msgs);
             default: return false;
         }
     } else if (item.msgs)
@@ -357,7 +321,7 @@ void Reader::read_csv(const std::list<std::string>& fnames, Action& action)
         while (true)
         {
             // Read input message
-            unique_ptr<Msg> msg(new Msg);
+            unique_ptr<impl::Message> msg(new impl::Message);
             if (!msg->from_csv(*csvin))
                 break;
 
@@ -367,8 +331,8 @@ void Reader::read_csv(const std::list<std::string>& fnames, Action& action)
                 continue;
 
             // We want it: move it to the item
-            unique_ptr<Messages> msgs(new Messages);
-            msgs->append(move(msg));
+            unique_ptr<impl::Messages> msgs(new impl::Messages);
+            msgs->emplace_back(move(msg));
             item.set_msgs(msgs.release());
 
             if (!filter.match_item(item))
@@ -385,8 +349,8 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
         std::istream* in;
         bool close_on_exit;
 
-        Msg msg;
-        std::unique_ptr<msg::Context> ctx;
+        impl::Message msg;
+        std::unique_ptr<impl::msg::Context> ctx;
         std::unique_ptr<wreport::Var> var;
         std::unique_ptr<wreport::Var> attr;
 
@@ -437,7 +401,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                 delete in;
         }
 
-        void parse_msgs(std::function<void(const Msg&)> cb) {
+        void parse_msgs(std::function<void(const impl::Message&)> cb) {
             if (in) {
                 while (!in->eof())
                 {
@@ -501,7 +465,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                 switch (s) {
                     case MSG_DATA_LIST:
                         state.push(MSG_DATA_LIST_ITEM);
-                        ctx.reset(new msg::Context(Level(), Trange()));
+                        ctx.reset(new impl::msg::Context(Level(), Trange()));
                         break;
                     case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR:
                         state.pop();
@@ -535,9 +499,13 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     // of "lon", "lat", "ident", "network".
                     // Then, context overwrite is allowed.
                     // msg.add_context(std::move(ctx));
-                    msg::Context& ctx2 = msg.obtain_context(ctx->level, ctx->trange);
-                    for (const auto& ci: ctx->data)
-                        ctx2.set(*ci);
+                    if (ctx->level.is_missing() && ctx->trange.is_missing())
+                    {
+                        msg.station_data.merge(ctx->values);
+                    } else {
+                        impl::msg::Context& ctx2 = msg.obtain_context(ctx->level, ctx->trange);
+                        ctx2.values.merge(ctx->values);
+                    }
                     state.pop();
                     break;
                 }
@@ -591,14 +559,14 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY:
                     var->unset();
-                    ctx->set(*var);
+                    ctx->values.set(*var);
                     state.pop();
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY:
                     state.pop();
                     attr->set(MISSING_INT);
                     var->seta(*attr);
-                    ctx->set(*var);
+                    ctx->values.set(*var);
                     break;
                 default: throw std::runtime_error("Invalid JSON value add_null");
             }
@@ -609,14 +577,14 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
             switch (s) {
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY:
                     var->set(val);
-                    ctx->set(*var);
+                    ctx->values.set(*var);
                     state.pop();
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY:
                     state.pop();
                     attr->set(val);
                     var->seta(*attr);
-                    ctx->set(*var);
+                    ctx->values.set(*var);
                     break;
                 default: throw std::runtime_error("Invalid JSON value add_bool");
             }
@@ -670,14 +638,14 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     // Var::seti on decimal vars is considered as the value
                     // with the scale already applied
                     var->setf(to_string(val).c_str());
-                    ctx->set(*var);
+                    ctx->values.set(*var);
                     state.pop();
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY:
                     state.pop();
                     attr->set(val);
                     var->seta(*attr);
-                    ctx->set(*var);
+                    ctx->values.set(*var);
                     break;
                 default: throw std::runtime_error("Invalid JSON value add_int");
             }
@@ -688,14 +656,14 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
             switch (s) {
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY:
                     var->set(val);
-                    ctx->set(*var);
+                    ctx->values.set(*var);
                     state.pop();
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY:
                     state.pop();
                     attr->set(val);
                     var->seta(*attr);
-                    ctx->set(*var);
+                    ctx->values.set(*var);
                     break;
                 default: throw std::runtime_error("Invalid JSON value add_double");
             }
@@ -751,7 +719,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING:
                     state.push(MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR);
-                    var.reset(new Var(dballe::var(val)));
+                    var = newvar(val);
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_MAPPING:
                     if (val == "v")
@@ -763,18 +731,18 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY:
                     var->set(val);
-                    ctx->set(*var);
+                    ctx->values.set(*var);
                     state.pop();
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING:
                     state.push(MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY);
-                    attr.reset(new Var(dballe::var(val)));
+                    attr = newvar(val);
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY:
                     state.pop();
                     attr->set(val);
                     var->seta(*attr);
-                    ctx->set(*var);
+                    ctx->values.set(*var);
                     break;
                 default: throw std::runtime_error("Invalid JSON value add_string");
             }
@@ -791,12 +759,12 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
         } else {
             jsonreader.reset(new JSONMsgReader(cin));
         }
-        jsonreader->parse_msgs([&](const Msg& msg) {
+        jsonreader->parse_msgs([&](const impl::Message& msg) {
             ++item.idx;
             if (!filter.match_index(item.idx))
                 return;
-            unique_ptr<Messages> msgs(new Messages);
-            msgs->append(msg);
+            unique_ptr<impl::Messages> msgs(new impl::Messages);
+            msgs->emplace_back(make_shared<impl::Message>(msg));
             item.set_msgs(msgs.release());
 
             if (!filter.match_item(item))
@@ -827,7 +795,7 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
                 file = File::create(stdin, false, "standard input");
             }
         } else {
-            File::Encoding intype = string_to_encoding(input_type.c_str());
+            Encoding intype = string_to_encoding(input_type.c_str());
             if (name != fnames.end())
             {
                 file = File::create(intype, *name, "r");
@@ -838,7 +806,7 @@ void Reader::read_file(const std::list<std::string>& fnames, Action& action)
         }
 
 
-        std::unique_ptr<msg::Importer> imp = msg::Importer::create(file->encoding(), import_opts);
+        std::unique_ptr<Importer> imp = Importer::create(file->encoding(), import_opts);
         while (BinaryMessage bm = file->read())
         {
             Item item;

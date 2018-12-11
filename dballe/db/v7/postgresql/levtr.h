@@ -9,13 +9,6 @@
 #include <memory>
 
 namespace dballe {
-struct Record;
-struct Msg;
-
-namespace msg {
-struct Context;
-}
-
 namespace db {
 namespace v7 {
 namespace postgresql {

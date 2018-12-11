@@ -105,11 +105,11 @@ add_method("from_db", [](Fixture& f) {
     Coords coords(44.5008, 11.3288);
 
     TestDataSet ds;
-    ds.stations["synop"].info.coords = coords;
-    ds.stations["synop"].info.report = "synop";
+    ds.stations["synop"].station.coords = coords;
+    ds.stations["synop"].station.report = "synop";
     ds.stations["synop"].values.set("B07030", 78); // Height
-    ds.data["synop"].info = ds.stations["synop"].info;
-    ds.data["synop"].info.datetime = Datetime(2013, 10, 16, 10);
+    ds.data["synop"].station = ds.stations["synop"].station;
+    ds.data["synop"].datetime = Datetime(2013, 10, 16, 10);
     ds.data["synop"].values.set(WR_VAR(0, 12, 101), 16.5);
     wassert(f.populate(ds));
 
@@ -153,8 +153,11 @@ add_method("from_db", [](Fixture& f) {
 
 add_method("import", [](Fixture& f) {
     db::v7::Tracer<> trc;
-    Messages msgs1 = read_msgs("bufr/test-airep1.bufr", File::BUFR);
-    f.tr->import_msg(msgs1[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA);
+    impl::Messages msgs1 = read_msgs("bufr/test-airep1.bufr", Encoding::BUFR);
+    auto opts = DBImportOptions::create();
+    opts->import_attributes = true;
+    opts->update_station = true;
+    f.tr->import_message(*msgs1[0], *opts);
     db::v7::Batch& batch = f.tr->batch;
     wassert(actual(batch.count_select_stations) == 1u);
     wassert(actual(batch.count_select_station_data) == 0u);

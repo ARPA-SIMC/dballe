@@ -17,8 +17,8 @@ struct NavileDataSet : public TestDataSet
 {
     NavileDataSet()
     {
-        stations["synop"].info.coords = Coords(44.5008, 11.3288);
-        stations["synop"].info.report = "synop";
+        stations["synop"].station.coords = Coords(44.5008, 11.3288);
+        stations["synop"].station.report = "synop";
         stations["synop"].values.set("B07030", 78); // Height
     }
 };
@@ -74,21 +74,22 @@ this->add_method("insert", [](Fixture& f) {
 
     // Insert some data
     NavileDataSet ds;
-    ds.data["synop"].info = ds.stations["synop"].info;
-    ds.data["synop"].info.datetime = Datetime(2013, 10, 16, 10);
+    ds.data["synop"].station = ds.stations["synop"].station;
+    ds.data["synop"].datetime = Datetime(2013, 10, 16, 10);
     ds.data["synop"].values.set(WR_VAR(0, 12, 101), 16.5);
     wassert(f.populate(ds));
 
     Values attrs;
     attrs.set("B33007", 50);
-    wassert(f.tr->attr_insert_data(ds.data["synop"].values[WR_VAR(0, 12, 101)].data_id, attrs));
+    wassert(f.tr->attr_insert_data(ds.data["synop"].values.value(WR_VAR(0, 12, 101)).data_id, attrs));
 
     // Query and verify the station data
     {
         auto cur = f.tr->query_stations(core::Query());
         wassert(actual(cur->remaining()) == 1);
         cur->next();
-        wassert(actual(cur).station_vars_match(ds.stations["synop"]));
+        wassert(actual(cur).station_keys_match(ds.stations["synop"].station));
+        wassert(actual(cur).data_var_matches(ds.stations["synop"].values));
     }
 
     // Query and verify the measured data
@@ -104,7 +105,7 @@ this->add_method("insert", [](Fixture& f) {
     {
         int count = 0;
         unique_ptr<Var> attr;
-        wassert(f.tr->attr_query_data(ds.data["synop"].values[WR_VAR(0, 12, 101)].data_id, [&](std::unique_ptr<wreport::Var>&& var) {
+        wassert(f.tr->attr_query_data(ds.data["synop"].values.value(WR_VAR(0, 12, 101)).data_id, [&](std::unique_ptr<wreport::Var>&& var) {
             ++count;
             attr = move(var);
         }));
@@ -116,31 +117,38 @@ this->add_method("insert", [](Fixture& f) {
 this->add_method("insert_perms", [](Fixture& f) {
     // Test insert
     OldDballeTestDataSet oldf;
+    impl::DBInsertOptions opts;
+    opts.can_replace = false;
+    opts.can_add_stations = false;
 
     // Check if adding a nonexisting station when not allowed causes an error
     try {
-        f.tr->insert_data(oldf.data["synop"], false, false);
+        f.tr->insert_data(oldf.data["synop"], opts);
         throw TestFailed("error_consistency should have been thrown");
     } catch (error_consistency& e) {
         wassert(actual(e.what()).contains("insert a station entry when it is forbidden"));
     } catch (error_notfound& e) {
         wassert(actual(e.what()).contains("station not found"));
     }
-    wassert(actual(oldf.data["synop"].info.id) == MISSING_INT);
-    wassert(actual(oldf.data["synop"].values["B01011"].data_id) == MISSING_INT);
-    wassert(actual(oldf.data["synop"].values["B01012"].data_id) == MISSING_INT);
+    wassert(actual(oldf.data["synop"].station.id) == MISSING_INT);
+    wassert(actual(oldf.data["synop"].values.value("B01011").data_id) == MISSING_INT);
+    wassert(actual(oldf.data["synop"].values.value("B01012").data_id) == MISSING_INT);
     oldf.data["synop"].clear_ids();
 
     // Insert the record
-    wassert(f.tr->insert_data(oldf.data["synop"], false, true));
+    opts.can_add_stations = true;
+    wassert(f.tr->insert_data(oldf.data["synop"], opts));
     oldf.data["synop"].clear_ids();
     // Check if duplicate updates are allowed by insert
-    wassert(f.tr->insert_data(oldf.data["synop"], true, false));
+    opts.can_replace = true;
+    opts.can_add_stations = false;
+    wassert(f.tr->insert_data(oldf.data["synop"], opts));
     oldf.data["synop"].clear_ids();
     // Check if overwrites are trapped by insert_new
     oldf.data["synop"].values.set("B01011", "DB-All.e?");
+    opts.can_replace = opts.can_add_stations = false;
     try {
-        f.tr->insert_data(oldf.data["synop"], false, false);
+        f.tr->insert_data(oldf.data["synop"], opts);
         throw TestFailed("wreport::error should have been thrown");
     } catch (wreport::error& e) {
         wassert(actual(e.what()).matches("refusing to overwrite existing data|cannot replace an existing value|Duplicate entry"));
@@ -151,11 +159,11 @@ this->add_method("insert_twice", [](Fixture& f) {
     OldDballeTestDataSet oldf;
 
     // Insert the record twice
-    wassert(f.tr->insert_data(oldf.data["synop"], false, true));
+    wassert(f.tr->insert_data(oldf.data["synop"]));
     // This should fail, refusing to replace station info
     oldf.data["synop"].values.set("B01011", "DB-All.e?");
     try {
-        f.tr->insert_data(oldf.data["synop"], false, true);
+        f.tr->insert_data(oldf.data["synop"]);
         throw TestFailed("wreport::error should have been thrown");
     } catch (wreport::error& e) {
         wassert(actual(e.what()).matches("refusing to overwrite existing data|cannot replace an existing value|Duplicate entry"));
@@ -171,7 +179,7 @@ this->add_method("query_station", [](Fixture& f) {
 
     switch (DB::format)
     {
-        case V7:
+        case Format::V7:
         {
             bool have_synop = false;
             bool have_metar = false;
@@ -182,22 +190,21 @@ this->add_method("query_station", [](Fixture& f) {
             for (unsigned i = 0; i < 2; ++i)
             {
                 wassert(actual(cur->next()).istrue());
+                DBStation station = cur->get_station();
 
-                if (strcmp(cur->get_rep_memo(), "synop") == 0)
+                if (station.report == "synop")
                 {
-                    wassert(actual(cur->get_lat()) == 12.34560);
-                    wassert(actual(cur->get_lon()) == 76.54320);
-                    wassert(actual((void*)cur->get_ident()) == (void*)0);
-                    wassert(actual(cur).station_keys_match(oldf.stations["synop"].info));
+                    wassert(actual(station.coords) == Coords(12.34560, 76.54320));
+                    wassert(actual(station.ident.is_missing()).istrue());
+                    wassert(actual(cur).station_keys_match(oldf.stations["synop"].station));
                     have_synop = true;
                 }
 
-                if (strcmp(cur->get_rep_memo(), "metar") == 0)
+                if (station.report == "metar")
                 {
-                    wassert(actual(cur->get_lat()) == 12.34560);
-                    wassert(actual(cur->get_lon()) == 76.54320);
-                    wassert(actual((void*)cur->get_ident()) == (void*)0);
-                    wassert(actual(cur).station_keys_match(oldf.stations["metar"].info));
+                    wassert(actual(station.coords) == Coords(12.34560, 76.54320));
+                    wassert(actual(station.ident.is_missing()).istrue());
+                    wassert(actual(cur).station_keys_match(oldf.stations["metar"].station));
                     have_metar = true;
                 }
             }
@@ -231,11 +238,10 @@ this->add_method("query_best", [](Fixture& f) {
 
     // There should be four items
     wassert(actual(cur->next()).istrue());
-    wassert(actual(cur->get_lat()) == 12.34560);
-    wassert(actual(cur->get_lon()) == 76.54320);
-    wassert(actual((void*)cur->get_ident()) == (void*)0);
-    wassert(actual((void*)cur->get_rep_memo()).istrue());
-    wassert(actual(cur->get_rep_memo()) == "synop");
+    DBStation station = cur->get_station();
+    wassert(actual(station.coords) == Coords(12.34560, 76.54320));
+    wassert(actual(station.ident.is_missing()).istrue());
+    wassert(actual(station.report) == "synop");
     wassert(actual(cur->get_level()) == Level(10, 11, 15, 22));
     wassert(actual(cur->get_trange()) == Trange(20, 111, 122));
     wassert(actual(cur->get_varcode()) == WR_VAR(0, 1, 11));
@@ -260,17 +266,17 @@ this->add_method("delete", [](Fixture& f) {
     core::Query query;
     auto cur = f.tr->query_data(query);
     wassert(actual(cur->remaining()) == 4);
-    cur->discard_rest();
+    cur->discard();
 
     query.clear();
-    query.datetime = DatetimeRange(Datetime(1945, 4, 25, 8, 10), Datetime());
-    f.tr->remove(query);
+    query.dtrange = DatetimeRange(Datetime(1945, 4, 25, 8, 10), Datetime());
+    f.tr->remove_data(query);
 
     // 2 remaining after remove
     query.clear();
     cur = f.tr->query_data(query);
     wassert(actual(cur->remaining()) == 2);
-    cur->discard_rest();
+    cur->discard();
 
     // Did it remove the right ones?
     query.clear();
@@ -316,50 +322,50 @@ this->add_method("delete_notfound", [](Fixture& f) {
     core::Query query;
     auto cur = f.tr->query_data(query);
     wassert(actual(cur->remaining()) == 4);
-    cur->discard_rest();
+    cur->discard();
 
     // Try to remove using a query that matches none
     query.attr_filter = "B33007<50";
-    f.tr->remove(query);
+    f.tr->remove_data(query);
 
     // Verify that nothing has been deleted
     query.clear();
     cur = f.tr->query_data(query);
     wassert(actual(cur->remaining()) == 4);
-    cur->discard_rest();
+    cur->discard();
 });
 this->add_method("query_datetime", [](Fixture& f) {
     // Test datetime queries
     /* Prepare test data */
-    DataValues base;
-    base.info.coords = Coords(12.0, 48.0);
-    base.info.report = "synop";
-    base.info.level = Level(1, 0, 1, 0);
-    base.info.trange = Trange(1, 0, 0);
+    core::Data base;
+    base.station.coords = Coords(12.0, 48.0);
+    base.station.report = "synop";
+    base.level = Level(1, 0, 1, 0);
+    base.trange = Trange(1, 0, 0);
     base.values.set("B01012", 500);
 
 #define WANTRESULT(querystr, ab) do { \
-    core::Record result; \
     auto cur = f.tr->query_data(*dballe::tests::query_from_string(querystr)); \
     wassert(actual(cur->remaining()) == 1); \
     wassert(actual(cur->next()).istrue()); \
-    cur->to_record(result); \
     wassert(actual(cur->remaining()) == 0); \
-    wassert(actual_varcode(result.vars()[0]->code()) == WR_VAR(0, 1, 12)); \
-    wassert(actual(cur->get_datetime()) == ab.info.datetime); \
-    cur->discard_rest(); \
+    wassert(actual_varcode(cur->get_varcode()) == WR_VAR(0, 1, 12)); \
+    wassert(actual(cur->get_datetime()) == cur->get_datetime()); \
+    cur->discard(); \
 } while(0)
 
-    DataValues a, b;
+    core::Data a, b;
+    impl::DBInsertOptions disallow;
+    disallow.can_replace = disallow.can_add_stations = false;
 
     /* Year */
     f.tr->remove_all();
     a = base;
-    a.info.datetime = Datetime(2005);
-    f.tr->insert_data(a, false, true);
+    a.datetime = Datetime(2005);
+    f.tr->insert_data(a);
     b = base;
-    b.info.datetime = Datetime(2006);
-    f.tr->insert_data(b, false, false);
+    b.datetime = Datetime(2006);
+    f.tr->insert_data(b, disallow);
     WANTRESULT("yearmin=2006", b);
     WANTRESULT("yearmax=2005", a);
     WANTRESULT("year=2006", b);
@@ -367,11 +373,11 @@ this->add_method("query_datetime", [](Fixture& f) {
     /* Month */
     f.tr->remove_all();
     a = base;
-    a.info.datetime = Datetime(2006, 4);
-    f.tr->insert_data(a, false, true);
+    a.datetime = Datetime(2006, 4);
+    f.tr->insert_data(a);
     b = base;
-    b.info.datetime = Datetime(2006, 5);
-    f.tr->insert_data(b, false, false);
+    b.datetime = Datetime(2006, 5);
+    f.tr->insert_data(b, disallow);
     WANTRESULT("year=2006, monthmin=5", b);
     WANTRESULT("year=2006, monthmax=4", a);
     WANTRESULT("year=2006, month=5", b);
@@ -379,11 +385,11 @@ this->add_method("query_datetime", [](Fixture& f) {
     /* Day */
     f.tr->remove_all();
     a = base;
-    a.info.datetime = Datetime(2006, 5, 2);
-    f.tr->insert_data(a, false, true);
+    a.datetime = Datetime(2006, 5, 2);
+    f.tr->insert_data(a);
     b = base;
-    b.info.datetime = Datetime(2006, 5, 3);
-    f.tr->insert_data(b, false, false);
+    b.datetime = Datetime(2006, 5, 3);
+    f.tr->insert_data(b, disallow);
     WANTRESULT("year=2006, month=5, daymin=3", b);
     WANTRESULT("year=2006, month=5, daymax=2", a);
     WANTRESULT("year=2006, month=5, day=3", b);
@@ -391,11 +397,11 @@ this->add_method("query_datetime", [](Fixture& f) {
     /* Hour */
     f.tr->remove_all();
     a = base;
-    a.info.datetime = Datetime(2006, 5, 3, 12);
-    f.tr->insert_data(a, false, true);
+    a.datetime = Datetime(2006, 5, 3, 12);
+    f.tr->insert_data(a);
     b = base;
-    b.info.datetime = Datetime(2006, 5, 3, 13);
-    f.tr->insert_data(b, false, false);
+    b.datetime = Datetime(2006, 5, 3, 13);
+    f.tr->insert_data(b, disallow);
     WANTRESULT("year=2006, month=5, day=3, hourmin=13", b);
     WANTRESULT("year=2006, month=5, day=3, hourmax=12", a);
     WANTRESULT("year=2006, month=5, day=3, hour=13", b);
@@ -403,11 +409,11 @@ this->add_method("query_datetime", [](Fixture& f) {
     /* Minute */
     f.tr->remove_all();
     a = base;
-    a.info.datetime = Datetime(2006, 5, 3, 12, 29);
-    f.tr->insert_data(a, false, true);
+    a.datetime = Datetime(2006, 5, 3, 12, 29);
+    f.tr->insert_data(a);
     b = base;
-    b.info.datetime = Datetime(2006, 5, 3, 12, 30);
-    f.tr->insert_data(b, false, false);
+    b.datetime = Datetime(2006, 5, 3, 12, 30);
+    f.tr->insert_data(b, disallow);
     WANTRESULT("year=2006, month=5, day=3, hour=12, minumin=30", b);
     WANTRESULT("year=2006, month=5, day=3, hour=12, minumax=29", a);
     WANTRESULT("year=2006, month=5, day=3, hour=12, min=30", b);
@@ -418,7 +424,6 @@ this->add_method("attrs", [](Fixture& f) {
     wassert(f.populate(oldf));
 
     core::Query query;
-    core::Record result;
     query.latrange.set(1000000, LatRange::IMAX);
     auto cur = f.tr->query_data(query);
 
@@ -427,11 +432,10 @@ this->add_method("attrs", [](Fixture& f) {
     bool found = false;
     while (cur->next())
     {
-        cur->to_record(result);
-        if (result.vars()[0]->code() == WR_VAR(0, 1, 11))
+        if (cur->get_varcode() == WR_VAR(0, 1, 11))
         {
-            context_id = cur->attr_reference_id();
-            cur->discard_rest();
+            context_id = dynamic_cast<db::CursorData*>(cur.get())->attr_reference_id();
+            cur->discard();
             found = true;
             break;
         }
@@ -449,17 +453,17 @@ this->add_method("attrs", [](Fixture& f) {
     qc.clear();
     wassert(actual(run_attr_query_data(f.tr, context_id, qc)) == 3);
 
-    const auto* attr = qc.get("B33002");
+    const auto* attr = qc.maybe_var("B33002");
     wassert(actual(attr).istrue());
-    wassert(actual(attr->var->enqi()) == 2);
+    wassert(actual(attr->enqi()) == 2);
 
-    attr = qc.get("B33003");
+    attr = qc.maybe_var("B33003");
     wassert(actual(attr).istrue());
-    wassert(actual(attr->var->enqi()) == 5);
+    wassert(actual(attr->enqi()) == 5);
 
-    attr = qc.get("B33005");
+    attr = qc.maybe_var("B33005");
     wassert(actual(attr).istrue());
-    wassert(actual(attr->var->enqi()) == 33);
+    wassert(actual(attr->enqi()) == 33);
 
     // Delete a couple of items
     vector<Varcode> codes;
@@ -477,11 +481,11 @@ this->add_method("attrs", [](Fixture& f) {
     qc.clear();
     wassert(actual(run_attr_query_data(f.tr, context_id, qc)) == 1);
 
-    wassert(actual(qc.get("B33002")).isfalse());
-    wassert(actual(qc.get("B33005")).isfalse());
-    attr = qc.get("B33003");
+    wassert(actual(qc.maybe_var("B33002")).isfalse());
+    wassert(actual(qc.maybe_var("B33005")).isfalse());
+    attr = qc.maybe_var("B33003");
     wassert(actual(attr).istrue());
-    wassert(actual(attr->var->enqi()) == 5);
+    wassert(actual(attr->enqi()) == 5);
     /*dba_error_remove_callback(DBA_ERR_NONE, crash, 0);*/
 });
 this->add_method("query_station", [](Fixture& f) {
@@ -498,9 +502,11 @@ this->add_method("query_station", [](Fixture& f) {
 this->add_method("attrs1", [](Fixture& f) {
     // Test attributes
     OldDballeTestDataSet oldf;
+    impl::DBInsertOptions opts;
+    opts.can_replace = opts.can_add_stations = true;
 
     // Insert a data record
-    f.tr->insert_data(oldf.data["synop"], true, true);
+    f.tr->insert_data(oldf.data["synop"], opts);
 
     Values qc;
     qc.set("B01007",  1);
@@ -513,41 +519,43 @@ this->add_method("attrs1", [](Fixture& f) {
     qc.set("B05021",  8);
     qc.set("B07025",  9);
     qc.set("B05022", 10);
-    f.tr->attr_insert_data(oldf.data["synop"].values[WR_VAR(0, 1, 11)].data_id, qc);
+    f.tr->attr_insert_data(oldf.data["synop"].values.value(WR_VAR(0, 1, 11)).data_id, qc);
 
     // Query back the B01011 variable to read the attr reference id
     auto cur = f.tr->query_data(*query_from_string("var=B01011"));
     wassert(actual(cur->remaining()) == 1);
     cur->next();
-    int attr_id = cur->attr_reference_id();
-    cur->discard_rest();
+    int attr_id = dynamic_cast<db::CursorData*>(cur.get())->attr_reference_id();
+    cur->discard();
 
     qc.clear();
     wassert(actual(run_attr_query_data(f.tr, attr_id, qc)) == 10);
 
     // Check that all the attributes come out
     wassert(actual(qc.size()) == 10);
-    wassert(actual_varcode(qc["B01007"].var->code()) == WR_VAR(0,   1,  7)); wassert(actual(*qc["B01007"].var) ==  1);
-    wassert(actual_varcode(qc["B02048"].var->code()) == WR_VAR(0,   2, 48)); wassert(actual(*qc["B02048"].var) ==  2);
-    wassert(actual_varcode(qc["B05021"].var->code()) == WR_VAR(0,   5, 21)); wassert(actual(*qc["B05021"].var) ==  8);
-    wassert(actual_varcode(qc["B05022"].var->code()) == WR_VAR(0,   5, 22)); wassert(actual(*qc["B05022"].var) == 10);
-    wassert(actual_varcode(qc["B05040"].var->code()) == WR_VAR(0,   5, 40)); wassert(actual(*qc["B05040"].var) ==  3);
-    wassert(actual_varcode(qc["B05041"].var->code()) == WR_VAR(0,   5, 41)); wassert(actual(*qc["B05041"].var) ==  4);
-    wassert(actual_varcode(qc["B05043"].var->code()) == WR_VAR(0,   5, 43)); wassert(actual(*qc["B05043"].var) ==  5);
-    wassert(actual_varcode(qc["B07024"].var->code()) == WR_VAR(0,   7, 24)); wassert(actual(*qc["B07024"].var) ==  7);
-    wassert(actual_varcode(qc["B07025"].var->code()) == WR_VAR(0,   7, 25)); wassert(actual(*qc["B07025"].var) ==  9);
-    wassert(actual_varcode(qc["B33032"].var->code()) == WR_VAR(0,  33, 32)); wassert(actual(*qc["B33032"].var) ==  6);
+    wassert(actual_varcode(qc.var("B01007").code()) == WR_VAR(0,   1,  7)); wassert(actual(qc.var("B01007")) ==  1);
+    wassert(actual_varcode(qc.var("B02048").code()) == WR_VAR(0,   2, 48)); wassert(actual(qc.var("B02048")) ==  2);
+    wassert(actual_varcode(qc.var("B05021").code()) == WR_VAR(0,   5, 21)); wassert(actual(qc.var("B05021")) ==  8);
+    wassert(actual_varcode(qc.var("B05022").code()) == WR_VAR(0,   5, 22)); wassert(actual(qc.var("B05022")) == 10);
+    wassert(actual_varcode(qc.var("B05040").code()) == WR_VAR(0,   5, 40)); wassert(actual(qc.var("B05040")) ==  3);
+    wassert(actual_varcode(qc.var("B05041").code()) == WR_VAR(0,   5, 41)); wassert(actual(qc.var("B05041")) ==  4);
+    wassert(actual_varcode(qc.var("B05043").code()) == WR_VAR(0,   5, 43)); wassert(actual(qc.var("B05043")) ==  5);
+    wassert(actual_varcode(qc.var("B07024").code()) == WR_VAR(0,   7, 24)); wassert(actual(qc.var("B07024")) ==  7);
+    wassert(actual_varcode(qc.var("B07025").code()) == WR_VAR(0,   7, 25)); wassert(actual(qc.var("B07025")) ==  9);
+    wassert(actual_varcode(qc.var("B33032").code()) == WR_VAR(0,  33, 32)); wassert(actual(qc.var("B33032")) ==  6);
 });
 this->add_method("longitude_wrap", [](Fixture& f) {
     // Test longitude wrapping around
     OldDballeTestDataSet oldf;
+    impl::DBInsertOptions opts;
+    opts.can_replace = opts.can_add_stations = true;
 
     // Insert a data record
-    f.tr->insert_data(oldf.data["synop"], true, true);
+    f.tr->insert_data(oldf.data["synop"], opts);
 
     auto cur = f.tr->query_data(*query_from_string("latmin=10.0, latmax=15.0, lonmin=70.0, lonmax=-160.0"));
     wassert(actual(cur->remaining()) == 2);
-    cur->discard_rest();
+    cur->discard();
 });
 this->add_method("query_ana_filter", [](Fixture& f) {
     // Test numeric comparisons in ana_filter
@@ -559,8 +567,8 @@ this->add_method("query_ana_filter", [](Fixture& f) {
 
     // Move the cursor to B01011
     cur->next();
-    int context_id = cur->attr_reference_id();
-    cur->discard_rest();
+    int context_id = dynamic_cast<db::CursorData*>(cur.get())->attr_reference_id();
+    cur->discard();
 
     // Insert new attributes about this report
     Values qc;
@@ -571,36 +579,36 @@ this->add_method("query_ana_filter", [](Fixture& f) {
     // Try queries filtered by numeric attributes
     cur = f.tr->query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01001=50"));
     wassert(actual(cur->remaining()) == 1);
-    cur->discard_rest();
+    cur->discard();
 
     cur = f.tr->query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01001<=50"));
     wassert(actual(cur->remaining()) == 1);
-    cur->discard_rest();
+    cur->discard();
 
     cur = f.tr->query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01001<51"));
     wassert(actual(cur->remaining()) == 1);
-    cur->discard_rest();
+    cur->discard();
 
     cur = f.tr->query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01001<8"));
     wassert(actual(cur->remaining()) == 0);
-    cur->discard_rest();
+    cur->discard();
 
     // Try queries filtered by string attributes
     cur = f.tr->query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01008=50"));
     wassert(actual(cur->remaining()) == 1);
-    cur->discard_rest();
+    cur->discard();
 
     cur = f.tr->query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01008<=50"));
     wassert(actual(cur->remaining()) == 1);
-    cur->discard_rest();
+    cur->discard();
 
     cur = f.tr->query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01008<8"));
     wassert(actual(cur->remaining()) == 1);
-    cur->discard_rest();
+    cur->discard();
 
     cur = f.tr->query_data(*query_from_string("rep_memo=metar, var=B01011, attr_filter=B01008<100"));
     wassert(actual(cur->remaining()) == 0);
-    cur->discard_rest();
+    cur->discard();
 });
 this->add_method("query_station_best", [](Fixture& f) {
     // Reproduce a querybest scenario which produced invalid SQL
@@ -608,7 +616,7 @@ this->add_method("query_station_best", [](Fixture& f) {
     wassert(f.populate(oldf));
 
     core::Query q;
-    q.datetime = DatetimeRange(Datetime(1000, 1, 1, 0, 0, 0), Datetime(1000, 1, 1, 0, 0, 0));
+    q.dtrange = DatetimeRange(Datetime(1000, 1, 1, 0, 0, 0), Datetime(1000, 1, 1, 0, 0, 0));
     q.query = "best";
     auto cur = f.tr->query_data(q);
     while (cur->next())
@@ -620,10 +628,14 @@ this->add_method("query_best_bug1", [](Fixture& f) {
 
     // Import lots
     const char** files = dballe::tests::bufr_files;
+    auto opts = DBImportOptions::create();
+    opts->import_attributes = true;
+    opts->update_station = true;
+    opts->overwrite = true;
     for (int i = 0; files[i] != NULL; i++)
     {
-        Messages inmsgs = read_msgs(files[i], File::BUFR);
-        wassert(f.tr->import_msg(inmsgs[0], NULL, DBA_IMPORT_ATTRS | DBA_IMPORT_FULL_PSEUDOANA | DBA_IMPORT_OVERWRITE));
+        impl::Messages inmsgs = read_msgs(files[i], Encoding::BUFR);
+        wassert(f.tr->import_message(*inmsgs[0], *opts));
     }
 
     // Query all with best
@@ -635,9 +647,10 @@ this->add_method("query_best_bug1", [](Fixture& f) {
     while (cur->next())
     {
         ++count;
-        if (cur->attr_reference_id() != id_data)
+        int attr_reference_id = dynamic_cast<db::CursorData*>(cur.get())->attr_reference_id();
+        if (attr_reference_id != id_data)
         {
-            id_data = cur->attr_reference_id();
+            id_data = attr_reference_id;
             ++id_data_changes;
         }
     }
@@ -658,18 +671,20 @@ this->add_method("query_invalid_sql", [](Fixture& f) {
 this->add_method("update", [](Fixture& f) {
     // Test value update
     OldDballeTestDataSet oldf;
+    impl::DBInsertOptions opts;
+    opts.can_replace = opts.can_add_stations = true;
 
-    DataValues dataset = oldf.data["synop"];
-    f.tr->insert_data(dataset, true, true);
+    core::Data dataset = oldf.data["synop"];
+    f.tr->insert_data(dataset, opts);
     Values attrs;
     attrs.set("B33007", 50);
-    f.tr->attr_insert_data(dataset.values["B01012"].data_id, attrs);
+    f.tr->attr_insert_data(dataset.values.value("B01012").data_id, attrs);
 
     core::Query q;
     q.latrange.set(12.34560, 12.34560);
     q.lonrange.set(76.54320, 76.54320);
-    q.datetime = DatetimeRange(Datetime(1945, 4, 25, 8, 0, 0), Datetime(1945, 4, 25, 8, 0, 0));
-    q.rep_memo = "synop";
+    q.dtrange = DatetimeRange(Datetime(1945, 4, 25, 8, 0, 0), Datetime(1945, 4, 25, 8, 0, 0));
+    q.report = "synop";
     q.level = Level(10, 11, 15, 22);
     q.trange = Trange(20, 111, 122);
     q.varcodes.insert(WR_VAR(0, 1, 12));
@@ -678,24 +693,25 @@ this->add_method("update", [](Fixture& f) {
     auto cur = f.tr->query_data(q);
     wassert(actual(cur->remaining()) == 1);
     cur->next();
-    int ana_id = cur->get_station_id();
+    int ana_id = cur->get_station().id;
     wreport::Var var = cur->get_var();
     wassert(actual(var.enqi()) == 300);
 
     // Query the attributes and check that they are there
     Values qattrs;
-    wassert(actual(run_attr_query_data(f.tr, cur->attr_reference_id(), qattrs)) == 1);
-    wassert(actual(qattrs["B33007"].var->enq(MISSING_INT)) == 50);
+    wassert(actual(run_attr_query_data(f.tr, dynamic_cast<db::CursorData*>(cur.get())->attr_reference_id(), qattrs)) == 1);
+    wassert(actual(qattrs.var("B33007").enq(MISSING_INT)) == 50);
 
     // Update it
-    DataValues update;
-    update.info.id = ana_id;
-    update.info.report = "synop";
-    update.info.datetime = q.datetime.min;
-    update.info.level = q.level;
-    update.info.trange = q.trange;
+    core::Data update;
+    update.station.id = ana_id;
+    update.station.report = "synop";
+    update.datetime = q.dtrange.min;
+    update.level = q.level;
+    update.trange = q.trange;
     update.values.set(var.code(), 200);
-    wassert(f.tr->insert_data(update, true, false));
+    opts.can_replace = true; opts.can_add_stations = false;
+    wassert(f.tr->insert_data(update, opts));
 
     // Query again
     cur = f.tr->query_data(q);
@@ -710,8 +726,8 @@ this->add_method("update", [](Fixture& f) {
     // value removes the attributes
     switch (DB::format)
     {
-        case V7:
-            wassert(actual(run_attr_query_data(f.tr, cur->attr_reference_id(), qattrs)) == 0);
+        case Format::V7:
+            wassert(actual(run_attr_query_data(f.tr, dynamic_cast<db::CursorData*>(cur.get())->attr_reference_id(), qattrs)) == 0);
             break;
         default:
             throw TestFailed("Database format " + to_string((int)DB::format) + " not supported");
@@ -732,17 +748,10 @@ this->add_method("query_stepbystep", [](Fixture& f) {
     // results should match what was inserted
     wassert(actual(cur).data_matches(oldf.data["metar"]));
     // just call to_record now, to check if in the next call old variables are removed
-    core::Record result;
-    cur->to_record(result);
 
     wassert(actual(cur->next()).istrue());
     wassert(actual(cur->remaining()) == 2);
     wassert(actual(cur).data_matches(oldf.data["metar"]));
-
-    // Variables from the previous to_record should be removed
-    cur->to_record(result);
-    wassert(actual(result.vars().size()) == 1u);
-
 
     wassert(actual(cur->next()).istrue());
     wassert(actual(cur->remaining()) == 1);
@@ -759,25 +768,30 @@ this->add_method("query_stepbystep", [](Fixture& f) {
 this->add_method("insert_stationinfo_twice", [](Fixture& f) {
     // Test double insert of station info
     NavileDataSet ds;
+    impl::DBInsertOptions opts;
+    opts.can_replace = opts.can_add_stations = true;
 
     //wassert(actual(f.db).empty());
-    f.tr->insert_station_data(ds.stations["synop"], true, true);
-    f.tr->insert_station_data(ds.stations["synop"], true, true);
+    f.tr->insert_station_data(ds.stations["synop"], opts);
+    f.tr->insert_station_data(ds.stations["synop"], opts);
 
     // Query station data and ensure there is only one info (height)
     core::Query query;
     auto cur = f.tr->query_station_data(query);
     wassert(actual(cur->remaining()) == 1);
     cur->next();
-    wassert(actual(cur).station_vars_match(ds.stations["synop"]));
+    wassert(actual(cur).station_keys_match(ds.stations["synop"].station));
+    wassert(actual(cur).data_var_matches(ds.stations["synop"].values));
 });
 this->add_method("insert_stationinfo_twice1", [](Fixture& f) {
     // Test double insert of station info
     NavileDataSet ds;
+    impl::DBInsertOptions opts;
+    opts.can_replace = opts.can_add_stations = true;
     ds.stations["metar"] = ds.stations["synop"];
-    ds.stations["metar"].info.report = "metar";
-    f.tr->insert_station_data(ds.stations["synop"], true, true);
-    f.tr->insert_station_data(ds.stations["metar"], true, true);
+    ds.stations["metar"].station.report = "metar";
+    f.tr->insert_station_data(ds.stations["synop"], opts);
+    f.tr->insert_station_data(ds.stations["metar"], opts);
 
     // Query station data and ensure there is only one info (height)
     core::Query query;
@@ -789,7 +803,7 @@ this->add_method("insert_stationinfo_twice1", [](Fixture& f) {
     // sort by report name.
     vector<string> reports;
     while (cur->next())
-        reports.push_back(cur->get_rep_memo());
+        reports.push_back(cur->get_station().report);
     std::sort(reports.begin(), reports.end());
     wassert(actual(reports[0]) == "metar");
     wassert(actual(reports[1]) == "synop");
@@ -797,25 +811,24 @@ this->add_method("insert_stationinfo_twice1", [](Fixture& f) {
 this->add_method("insert_undefined_level2", [](Fixture& f) {
     // Test handling of values with undefined leveltype2 and l2
     OldDballeTestDataSet oldf;
+    impl::DBInsertOptions opts;
+    opts.can_replace = opts.can_add_stations = true;
 
     // Insert with undef leveltype2 and l2
-    DataValues dataset;
-    dataset.info = oldf.data["synop"].info;
-    dataset.info.level = Level(44, 55);
-    dataset.info.trange = Trange(20);
+    core::Data dataset;
+    dataset.station = oldf.data["synop"].station;
+    dataset.datetime = oldf.data["synop"].datetime;
+    dataset.level = Level(44, 55);
+    dataset.trange = Trange(20);
     dataset.values.set("B01012", 300);
-    f.tr->insert_data(dataset, true, true);
+    f.tr->insert_data(dataset, opts);
 
     // Query it back
     auto cur = f.tr->query_data(*query_from_string("leveltype1=44, l1=55"));
     wassert(actual(cur->remaining()) == 1);
-
     wassert(actual(cur->next()).istrue());
-    core::Record result;
-    cur->to_record(result);
-    wassert(actual(result.get_level()) == Level(44, 55));
-    wassert(actual(result.get_trange()) == Trange(20));
-
+    wassert(actual(cur->get_level()) == Level(44, 55));
+    wassert(actual(cur->get_trange()) == Trange(20));
     wassert(actual(cur->next()).isfalse());
 });
 this->add_method("query_undefined_level2", [](Fixture& f) {
@@ -826,7 +839,7 @@ this->add_method("query_undefined_level2", [](Fixture& f) {
     // Query with undef leveltype2 and l2
     auto cur = f.tr->query_data(*query_from_string("leveltype1=10, l1=11"));
     wassert(actual(cur->remaining()) == 4);
-    cur->discard_rest();
+    cur->discard();
 });
 this->add_method("query_bad_attrfilter", [](Fixture& f) {
     // Query with an incorrect attr_filter
@@ -842,11 +855,11 @@ this->add_method("query_bad_attrfilter", [](Fixture& f) {
 this->add_method("query_best_priomax", [](Fixture& f) {
     // Test querying priomax together with query=best
     // Prepare the common parts of some data
-    DataValues insert;
-    insert.info.coords = Coords(1.0, 1.0);
-    insert.info.level = Level(1, 0);
-    insert.info.trange = Trange(254, 0, 0);
-    insert.info.datetime = Datetime(2009, 11, 11, 0, 0, 0);
+    core::Data insert;
+    insert.station.coords = Coords(1.0, 1.0);
+    insert.level = Level(1, 0);
+    insert.trange = Trange(254, 0, 0);
+    insert.datetime = Datetime(2009, 11, 11, 0, 0, 0);
 
     //  1,synop,synop,101,oss,0
     //  2,metar,metar,81,oss,0
@@ -865,49 +878,38 @@ this->add_method("query_best_priomax", [](Fixture& f) {
     for (const char** i = rep_memos; *i; ++i)
     {
         insert.clear_ids();
-        insert.info.report = *i;
+        insert.station.report = *i;
         insert.values.set("B12101", (int)(i - rep_memos));
-        f.tr->insert_data(insert, false, true);
+        f.tr->insert_data(insert);
     }
 
     // Query with querybest only
     {
         core::Query query;
         query.query = "best";
-        query.datetime = DatetimeRange(Datetime(2009, 11, 11, 0, 0, 0), Datetime(2009, 11, 11, 0, 0, 0));
+        query.dtrange = DatetimeRange(Datetime(2009, 11, 11, 0, 0, 0), Datetime(2009, 11, 11, 0, 0, 0));
         query.varcodes.insert(WR_VAR(0, 12, 101));
         auto cur = f.tr->query_data(query);
-
         wassert(actual(cur->remaining()) == 1);
-
         wassert(actual(cur->next()).istrue());
-        core::Record result;
-        cur->to_record(result);
-
-        wassert(actual(result.get("rep_memo")).istrue());
-        wassert(actual(result.enq("rep_memo", "")) == "generic");
-
-        cur->discard_rest();
+        wassert(actual(cur->get_station().report) == "generic");
+        cur->discard();
     }
 
     // Query with querybest and priomax
     {
         core::Query query;
-        query.prio_max = 100;
+        query.priomax = 100;
         query.query = "best";
-        query.datetime = DatetimeRange(Datetime(2009, 11, 11, 0, 0, 0), Datetime(2009, 11, 11, 0, 0, 0));
+        query.dtrange = DatetimeRange(Datetime(2009, 11, 11, 0, 0, 0), Datetime(2009, 11, 11, 0, 0, 0));
         query.varcodes.insert(WR_VAR(0, 12, 101));
         auto cur = f.tr->query_data(query);
         wassert(actual(cur->remaining()) == 1);
 
         wassert(actual(cur->next()).istrue());
-        core::Record result;
-        cur->to_record(result);
+        wassert(actual(cur->get_station().report) == "tempship");
 
-        wassert(actual(result.get("rep_memo")).istrue());
-        wassert(actual(result.enq("rep_memo", "")) == "tempship");
-
-        cur->discard_rest();
+        cur->discard();
     }
 });
 this->add_method("query_repmemo_in_results", [](Fixture& f) {
@@ -915,13 +917,9 @@ this->add_method("query_repmemo_in_results", [](Fixture& f) {
     OldDballeTestDataSet oldf;
     wassert(f.populate(oldf));
 
-    core::Record res;
     auto cur = f.tr->query_data(core::Query());
     while (cur->next())
-    {
-        cur->to_record(res);
-        wassert(actual(res["rep_memo"].isset()).istrue());
-    }
+        wassert_false(cur->get_station().report.empty());
 });
 
 }
@@ -931,18 +929,21 @@ void CommitTests<DB>::register_tests() {
 
 this->add_method("fd_leaks", [](Fixture& f) {
     // Test connect leaks
-    StationValues vals;
+    core::Data vals;
     // Set station data
-    vals.info.coords = Coords(12.34560, 76.54320);
-    vals.info.report = "synop";
+    vals.station.coords = Coords(12.34560, 76.54320);
+    vals.station.report = "synop";
     vals.values.set("B07030", 42.0); // Height
+    impl::DBInsertOptions opts;
+    opts.can_replace = true;
+    opts.can_add_stations = true;
 
     // Assume a max open file limit of 1100
     for (unsigned i = 0; i < 1100; ++i)
     {
         auto db = DB::create_db(f.backend);
         vals.clear_ids();
-        wassert(db->insert_station_data(vals, true, true));
+        wassert(db->insert_station_data(vals, opts));
     }
 });
 

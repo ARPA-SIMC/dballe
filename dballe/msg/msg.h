@@ -1,26 +1,55 @@
-#ifndef DBA_MSG_H
-#define DBA_MSG_H
+#ifndef DBALLE_MSG_H
+#define DBALLE_MSG_H
 
 #include <dballe/message.h>
 #include <dballe/var.h>
+#include <dballe/core/fwd.h>
+#include <dballe/msg/fwd.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/matcher.h>
-#include <dballe/msg/fwd.h>
-#include <dballe/msg/vars.h>
+#include <dballe/msg/context.h>
+#include <dballe/importer.h>
+#include <dballe/exporter.h>
 #include <stdio.h>
 #include <vector>
 #include <memory>
 #include <iosfwd>
 
-struct lua_State;
-
 namespace dballe {
-struct Record;
 struct CSVReader;
 struct CSVWriter;
 
+namespace impl {
+
+/// ImporterOptions with default constructor usable
+struct ImporterOptions : public dballe::ImporterOptions
+{
+    ImporterOptions() = default;
+    ImporterOptions(const std::string& s) : dballe::ImporterOptions(s) {}
+    ImporterOptions(const ImporterOptions&) = default;
+    ImporterOptions(ImporterOptions&&) = default;
+    ImporterOptions& operator=(const ImporterOptions&) = default;
+    ImporterOptions& operator=(ImporterOptions&&) = default;
+    using dballe::ImporterOptions::operator==;
+    using dballe::ImporterOptions::operator!=;
+};
+
+/// ExporterOptions with default constructor usable
+struct ExporterOptions : public dballe::ExporterOptions
+{
+    ExporterOptions() = default;
+    ExporterOptions(const ExporterOptions&) = default;
+    ExporterOptions(ExporterOptions&&) = default;
+    ExporterOptions& operator=(const ExporterOptions&) = default;
+    ExporterOptions& operator=(ExporterOptions&&) = default;
+    using dballe::ExporterOptions::operator==;
+    using dballe::ExporterOptions::operator!=;
+};
+
+// Compatibility/shortcut from old Messages implementation to new vector of shared_ptr
+typedef std::vector<std::shared_ptr<dballe::Message>> Messages;
+
 namespace msg {
-struct Context;
 
 /**
  * Read data from a CSV input.
@@ -34,22 +63,71 @@ Messages messages_from_csv(CSVReader& in);
  */
 void messages_to_csv(const Messages& msgs, CSVWriter& out);
 
+/**
+ * Compute the differences between two Messages
+ *
+ * Details of the differences found will be formatted using the wreport
+ * notes system (@see wreport/notes.h).
+ *
+ * @returns
+ *   The number of differences found
+ */
+unsigned messages_diff(const Messages& msgs1, const Messages& msgs2);
+
+/// Print all the contents of all the messages to an output stream
+void messages_print(const Messages& msgs, FILE* out);
+
+
+class Contexts
+{
+public:
+    typedef std::vector<msg::Context>::const_iterator const_iterator;
+    typedef std::vector<msg::Context>::iterator iterator;
+    typedef std::vector<msg::Context>::const_reverse_iterator const_reverse_iterator;
+    typedef std::vector<msg::Context>::reverse_iterator reverse_iterator;
+
+protected:
+    std::vector<msg::Context> m_contexts;
+
+    iterator insert_new(const Level& level, const Trange& trange);
+
+public:
+    Contexts() = default;
+    Contexts(const Contexts&) = default;
+    Contexts(Contexts&&) = default;
+    Contexts& operator=(const Contexts&) = default;
+    Contexts& operator=(Contexts&&) = default;
+
+    const_iterator begin() const { return m_contexts.begin(); }
+    const_iterator end() const { return m_contexts.end(); }
+    iterator begin() { return m_contexts.begin(); }
+    iterator end() { return m_contexts.end(); }
+    const_reverse_iterator rbegin() const { return m_contexts.rbegin(); }
+    const_reverse_iterator rend() const { return m_contexts.rend(); }
+    const_iterator cbegin() const { return m_contexts.cbegin(); }
+    const_iterator cend() const { return m_contexts.cend(); }
+
+    const_iterator find(const Level& level, const Trange& trange) const;
+    iterator find(const Level& level, const Trange& trange);
+
+    iterator obtain(const Level& level, const Trange& trange);
+    bool drop(const Level& level, const Trange& trange);
+
+    size_t size() const { return m_contexts.size(); }
+    bool empty() const { return m_contexts.empty(); }
+    void clear() { return m_contexts.clear(); }
+    void reserve(typename std::vector<Value>::size_type size) { m_contexts.reserve(size); }
+    iterator erase(iterator pos) { return m_contexts.erase(pos); }
+    // iterator erase(const_iterator pos) { return m_contexts.erase(pos); }
+};
+
 }
 
-/**
- * Return a string with the name of a dba_msg_type
- *
- * @param type
- *   The dba_msg_type value to name
- * @return
- *   The name, as a const string.  This function is thread safe.
- */
-const char* msg_type_name(MsgType type);
 
 /**
  * Storage for related physical data
  */
-class Msg : public Message
+class Message : public dballe::Message
 {
 protected:
     /**
@@ -57,70 +135,86 @@ protected:
      */
     int find_index(const Level& lev, const Trange& tr) const;
 
-    /// Sensor network of origin of the Msg contents
-    std::string m_rep_memo;
-    /// Reference coordinates for the Msg contents
-    Coords m_coords;
-    /// Identifier of the contents originator
-    Ident m_ident;
-    /// Reference time for the Msg contents
-    Datetime m_datetime;
+    const wreport::Var* get_impl(const Level& lev, const Trange& tr, wreport::Varcode code) const override;
+    void set_impl(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var) override;
+
+    void seti(const Level& lev, const Trange& tr, wreport::Varcode code, int val, int conf);
+    void setd(const Level& lev, const Trange& tr, wreport::Varcode code, double val, int conf);
+    void setc(const Level& lev, const Trange& tr, wreport::Varcode code, const char* val, int conf);
 
 public:
     /// Source of the data
-    MsgType type;
+    MessageType type = MessageType::GENERIC;
+    Values station_data;
+    msg::Contexts data;
 
-    /** Context in the message */
-    std::vector<msg::Context*> data;
-
-    /**
-     * Create a new dba_msg
-     *
-     * By default, type is MSG_GENERIC
-     */
-    Msg();
-    ~Msg();
-
-    Msg(const Msg& m);
-    Msg& operator=(const Msg& m);
+    Message() = default;
+    Message(const Message&) = default;
+    Message(Message&&) = default;
+    Message& operator=(const Message& m) = default;
+    Message& operator=(Message&& m) = default;
 
     /**
-     * Return a reference to \a o downcasted as a Msg.
+     * Return a reference to \a o downcasted as an impl::Message.
      *
-     * Throws an exception if \a o is not a Msg.
+     * Throws an exception if \a o is not an impl::Message.
      */
-    static const Msg& downcast(const Message& o);
+    static const Message& downcast(const dballe::Message& o);
 
     /**
-     * Return a reference to \a o downcasted as a Msg.
+     * Return a reference to \a o downcasted as an impl::Message.
      *
-     * Throws an exception if \a o is not a Msg.
+     * Throws an exception if \a o is not an impl::Message.
      */
-    static Msg& downcast(Message& o);
+    static Message& downcast(dballe::Message& o);
 
+    /**
+     * Returns a pointer to \a o downcasted as an impl::Message.
+     *
+     * Throws an exception if \a o is not an impl::Message.
+     */
+    static std::shared_ptr<Message> downcast(std::shared_ptr<dballe::Message> o);
 
-    std::unique_ptr<Message> clone() const override;
-    Datetime get_datetime() const override { return m_datetime; }
-
-    const wreport::Var* get(wreport::Varcode code, const Level& lev, const Trange& tr) const override;
-
+    std::unique_ptr<dballe::Message> clone() const override;
+    Datetime get_datetime() const override;
+    Coords get_coords() const override;
+    Ident get_ident() const override;
+    std::string get_report() const override;
+    MessageType get_type() const override { return type; }
+    bool foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)>) const override;
     void print(FILE* out) const override;
-    unsigned diff(const Message& msg) const override;
+    unsigned diff(const dballe::Message& msg) const override;
 
-    void set_rep_memo(const std::string& r) { m_rep_memo = r; }
-    void set_coords(const Coords& c) { m_coords = c; }
-    void set_ident(const Ident& i) { m_ident = i; }
-    void set_datetime(const Datetime& dt) { m_datetime = dt; }
-
-    /// Remove all information from Msg
+    /// Reset the messages as if it was just created
     void clear();
 
+    using dballe::Message::get;
+    using dballe::Message::set;
+
     /**
-     * Add a missing context, taking care of its memory management
+     * Find a datum given its shortcut
      *
-     * Note: if the context already exists, an exception is thrown
+     * @param shortcut
+     *   Shortcut of the value to set.
+     * @return
+     *   The value found, or nullptr if it was not found.
      */
-    void add_context(std::unique_ptr<msg::Context>&& ctx);
+    const wreport::Var* get(const Shortcut& shortcut) const;
+
+    /**
+     * Add or replace a value
+     *
+     * @param shortcut
+     *   Shortcut ID of the value to set
+     * @param var
+     *   The Var with the value to set
+     */
+    void set(const Shortcut& shortcut, const wreport::Var& var);
+
+    /**
+     * Shortcut to set year...second variables in a single call
+     */
+    void set_datetime(const Datetime& dt);
 
     /**
      * Remove a context from the message
@@ -147,7 +241,7 @@ public:
      * @return
      *   The context found, or NULL if it was not found.
      */
-    const msg::Context* find_station_context() const;
+    const Values& find_station_context() const;
 
     /**
      * Find a msg::Context given its description
@@ -174,9 +268,6 @@ public:
      */
     msg::Context& obtain_context(const Level& lev, const Trange& tr);
 
-    /// Shortcut to obtain_context(Level(), Trange());
-    msg::Context& obtain_station_context();
-
     /**
      * Find a variable given its description
      *
@@ -191,6 +282,7 @@ public:
      */
     wreport::Var* edit(wreport::Varcode code, const Level& lev, const Trange& tr);
 
+#if 0
     /**
      * Remove a variable given its description
      *
@@ -204,158 +296,17 @@ public:
      *   True if the variable was removed, false if it was not found.
      */
     bool remove(wreport::Varcode code, const Level& lev, const Trange& tr);
-
-    /** 
-     * Find a datum given its shortcut ID
-     *
-     * @param id
-     *   Shortcut ID of the value to set.
-     * @return
-     *   The value found, or NULL if it was not found.
-     */
-    const wreport::Var* find_by_id(int id) const;
-
-    /** 
-     * Find a contexts given level and timerange found in a shortcut ID
-     *
-     * @param id
-     *   Shortcut ID with the level information to use
-     * @return
-     *   The context found, or NULL if it was not found.
-     */
-    const msg::Context* find_context_by_id(int id) const;
-
-    /** 
-     * Find a datum given its shortcut ID
-     *
-     * @param id
-     *   Shortcut ID of the value to set.
-     * @return
-     *   The value found, or NULL if it was not found.
-     */
-    wreport::Var* edit_by_id(int id);
+#endif
 
     /**
-     * Add or replace a value
-     *
-     * @param var
-     *   The Var with the value to set
-     * @param code
-     *   The dba_varcode of the destination value.  If it is different than the
-     *   varcode of var, a conversion will be attempted.
-     * @param lev
-     *   The Level of the value
-     * @param tr
-     *   The Trange of the value
-     */
-    void set(const wreport::Var& var, wreport::Varcode code, const Level& lev, const Trange& tr);
-
-    /**
-     * Add or replace a value
-     *
-     * @param var
-     *   The Var with the value to set
-     * @param shortcut
-     *   Shortcut ID of the value to set
-     */
-    void set_by_id(const wreport::Var& var, int shortcut);
-
-    /**
-     * Add or replace a value, taking ownership of the source variable without
-     * copying it.
-     *
-     * @param var
-     *   The Var with the value to set.  This Msg will take ownership of memory
-     *   management.
-     * @param lev
-     *   The Level of the value
-     * @param tr
-     *   The Trange of the value
-     */
-    void set(std::unique_ptr<wreport::Var>&& var, const Level& lev, const Trange& tr);
-
-    /**
-     * Add or replace an integer value in the dba_msg
-     *
-     * @param code
-     *   The dba_varcode of the destination value..  See @ref vartable.h
-     * @param val
-     *   The integer value of the data
-     * @param conf
-     *   The confidence interval of the data, as the value of a B33007 WMO B (per
-     *   cent confidence) table entry, that is, a number between 0 and 100
-     *   inclusive.  -1 means no confidence interval attribute.
-     * @param lev
-     *   The Level of the value
-     * @param tr
-     *   The Trange of the value
-     */
-    void seti(wreport::Varcode code, int val, int conf, const Level& lev, const Trange& tr);
-
-    /**
-     * Add or replace a double value in the dba_msg
-     *
-     * @param code
-     *   The dba_varcode of the destination value.  See @ref vartable.h
-     * @param val
-     *   The double value of the data
-     * @param conf
-     *   The confidence interval of the data, as the value of a B33007 WMO B (per
-     *   cent confidence) table entry, that is, a number between 0 and 100
-     *   inclusive.  -1 means no confidence interval attribute.
-     * @param lev
-     *   The Level of the value
-     * @param tr
-     *   The Trange of the value
-     */
-    void setd(wreport::Varcode code, double val, int conf, const Level& lev, const Trange& tr);
-
-    /**
-     * Add or replace a string value in the dba_msg
-     *
-     * @param code
-     *   The dba_varcode of the destination value.  See @ref vartable.h
-     * @param val
-     *   The string value of the data
-     * @param conf
-     *   The confidence interval of the data, as the value of a B33007 WMO B (per
-     *   cent confidence) table entry, that is, a number between 0 and 100
-     *   inclusive.  -1 means no confidence interval attribute.
-     * @param lev
-     *   The Level of the value
-     * @param tr
-     *   The Trange of the value
-     */
-    void setc(wreport::Varcode code, const char* val, int conf, const Level& lev, const Trange& tr);
-
-    /**
-     * Copy to dest all the variable in this message that match \a filter
-     * TODO: to be implemented
-     */
-    //void filter(const Record& filter, Msg& dest) const;
-
-    /**
-     * Copy a Msg, removing the sounding significance from the level
-     * descriptions and packing together the data at the same pressure level.
+     * Remove the sounding significance from the level descriptions and pack
+     * together the data at the same pressure level.
      *
      * This is used to postprocess data after decoding, where the l2 field of the
      * level description is temporarily used to store the vertical sounding
      * significance, to simplify decoding.
      */
-    void sounding_pack_levels(Msg& dst) const;
-
-#if 0
-    /**
-     * Copy a Msg, adding the sounding significance from the level descriptions
-     * and moving the data at the same pressure level to the resulting
-     * pseudolevels.
-     *
-     * This is used to preprocess data before encoding, where the l2 field of the
-     * level description is temporarily used to store the vertical sounding
-     * significance, to simplify encoding.
-     */
-    void sounding_unpack_levels(Msg& dst) const;
-#endif
+    void sounding_pack_levels();
 
     /**
      * Read data from a CSV input.
@@ -369,43 +320,36 @@ public:
     /// Output in CSV format
     void to_csv(CSVWriter& out) const;
 
+    std::unique_ptr<CursorStation> query_stations(const Query& query) const override;
+    std::unique_ptr<CursorStationData> query_station_data(const Query& query) const override;
+    std::unique_ptr<CursorData> query_data(const Query& query) const override;
+    std::unique_ptr<CursorData> query_station_and_data(const Query& query) const;
+
     /// Output the CSV header
     static void csv_header(CSVWriter& out);
 
     /**
      * Get the message source type corresponding to the given report code
      */
-    static MsgType type_from_repmemo(const char* repmemo);
+    static MessageType type_from_repmemo(const char* repmemo);
 
     /**
      * Get the report code corresponding to the given message source type
      */
-    static const char* repmemo_from_type(MsgType type);
+    static const char* repmemo_from_type(MessageType type);
 
 #include <dballe/msg/msg-extravars.h>
-
-
-    /**
-     * Push the variable as an object in the lua stack
-     */
-    void lua_push(struct lua_State* L);
-
-    /**
-     * Check that the element at \a idx is a dba_msg
-     *
-     * @return the dba_msg element, or NULL if the check failed
-     */
-    static Msg* lua_check(struct lua_State* L, int idx);
 };
 
+
 /**
- * Match adapter for Msg
+ * Match adapter for impl::Message
  */
 struct MatchedMsg : public Matched
 {
-    const Msg& m;
+    const impl::Message& m;
 
-    MatchedMsg(const Msg& r);
+    MatchedMsg(const impl::Message& r);
     ~MatchedMsg();
 
     matcher::Result match_var_id(int val) const override;
@@ -416,14 +360,15 @@ struct MatchedMsg : public Matched
     matcher::Result match_rep_memo(const char* memo) const override;
 };
 
+
 /**
  * Match adapter for Messages
  */
 struct MatchedMessages : public Matched
 {
-    const Messages& m;
+    const std::vector<std::shared_ptr<dballe::Message>>& m;
 
-    MatchedMessages(const Messages& m);
+    MatchedMessages(const std::vector<std::shared_ptr<dballe::Message>>& m);
     ~MatchedMessages();
 
     matcher::Result match_var_id(int val) const override;
@@ -434,5 +379,6 @@ struct MatchedMessages : public Matched
     matcher::Result match_rep_memo(const char* memo) const override;
 };
 
+}
 }
 #endif

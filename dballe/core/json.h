@@ -78,10 +78,14 @@ public:
     void add_level(const Level& val);
     void add_trange(const Trange& val);
     void add_datetime(const Datetime& val);
-    void add_datetime_range(const DatetimeRange& val);
+    void add_datetimerange(const DatetimeRange& val);
     void add_coords(const Coords& val);
     void add_ident(const Ident& val);
     void add_var(const wreport::Var& val);
+    void add_station(const Station& s);
+    void add_dbstation(const DBStation& s);
+    void add_values(const Values& values);
+    void add_dbvalues(const DBValues& values);
     void add_break();
 
     void add(const std::string& val) { add_string(val); }
@@ -94,10 +98,14 @@ public:
     void add(const Level& val) { add_level(val); }
     void add(const Trange& val) { add_trange(val); }
     void add(const Datetime& val) { add_datetime(val); }
-    void add(const DatetimeRange& val) { add_datetime_range(val); }
+    void add(const DatetimeRange& val) { add_datetimerange(val); }
     void add(const Coords& val) { add_coords(val); }
     void add(const Ident& val) { add_ident(val); }
     void add(const wreport::Var& val) { add_var(val); }
+    void add(const Station& s) { add_station(s); }
+    void add(const DBStation& s) { add_dbstation(s); }
+    void add(const Values& v) { add_values(v); }
+    void add(const DBValues& v) { add_dbvalues(v); }
 
     template<typename T>
     void add(const char* a, T b)
@@ -212,6 +220,12 @@ struct Stream
     /// Parse a Coords object
     Coords parse_coords();
 
+    /// Parse a Coords object
+    Station parse_station();
+
+    /// Parse a Coords object
+    DBStation parse_dbstation();
+
     /// Parse an Ident object
     Ident parse_ident();
 
@@ -225,7 +239,10 @@ struct Stream
     Datetime parse_datetime();
 
     /// Parse a DatetimeRange object
-    DatetimeRange parse_datetime_range();
+    DatetimeRange parse_datetimerange();
+
+    template<typename T>
+    inline T parse() { throw wreport::error_unimplemented(); }
 
     /// Parse a JSON array, calling on_element to parse each element
     void parse_array(std::function<void()> on_element);
@@ -237,6 +254,16 @@ struct Stream
     /// position
     Element identify_next();
 };
+
+template<> inline std::string Stream::parse() { return parse_string(); }
+template<> inline Coords Stream::parse() { return parse_coords(); }
+template<> inline Station Stream::parse() { return parse_station(); }
+template<> inline DBStation Stream::parse() { return parse_dbstation(); }
+template<> inline Ident Stream::parse() { return parse_ident(); }
+template<> inline Level Stream::parse() { return parse_level(); }
+template<> inline Trange Stream::parse() { return parse_trange(); }
+template<> inline Datetime Stream::parse() { return parse_datetime(); }
+template<> inline DatetimeRange Stream::parse() { return parse_datetimerange(); }
 
 }
 

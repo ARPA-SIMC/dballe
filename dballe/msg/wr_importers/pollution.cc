@@ -1,37 +1,3 @@
-/*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
-#if 0
-        // Above ground is ltype = 105, l1 = metri (se undef, cosa metto? Chiedo a
-        // Stortini per un default?)
-
-                switch (dba_var_code(var))
-                {
-
-
-cleanup:
-        if (finalvar != NULL)
-                dba_var_delete(finalvar);
-        return err == DBA_OK ? dba_error_ok() : err;
-}
-#endif
-
 #include "base.h"
 #include "dballe/msg/msg.h"
 #include <wreport/bulletin.h>
@@ -42,6 +8,7 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -93,7 +60,7 @@ protected:
     void import_var(const Var& var);
 
 public:
-    PollutionImporter(const msg::ImporterOptions& opts) : WMOImporter(opts) {}
+    PollutionImporter(const dballe::ImporterOptions& opts) : WMOImporter(opts) {}
     virtual ~PollutionImporter() {}
 
     virtual void init()
@@ -147,13 +114,13 @@ public:
         if (attr_pmc) finalvar->seta(*attr_pmc);
 
         // Store it into the dba_msg
-        msg->set(move(finalvar), lev, tr);
+        msg->set(lev, tr, move(finalvar));
     }
 
-    MsgType scanType(const Bulletin& bulletin) const { return MSG_POLLUTION; }
+    MessageType scanType(const Bulletin& bulletin) const { return MessageType::POLLUTION; }
 };
 
-std::unique_ptr<Importer> Importer::createPollution(const msg::ImporterOptions& opts)
+std::unique_ptr<Importer> Importer::createPollution(const dballe::ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new PollutionImporter(opts));
 }
@@ -376,8 +343,7 @@ void PollutionImporter::import_var(const Var& var)
     }
 }
 
-} // namespace wbimporter
-} // namespace msg
-} // namespace dballe
-
-/* vim:set ts=4 sw=4: */
+}
+}
+}
+}

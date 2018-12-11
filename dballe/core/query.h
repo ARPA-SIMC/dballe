@@ -4,7 +4,6 @@
 #include <dballe/query.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/fwd.h>
-#include <dballe/record.h>
 #include <wreport/varinfo.h>
 #include <set>
 
@@ -47,14 +46,14 @@ struct Query : public dballe::Query
      */
     uint32_t want_missing = 0;
     int ana_id = MISSING_INT;
-    int prio_min = MISSING_INT;
-    int prio_max = MISSING_INT;
-    std::string rep_memo;
+    int priomin = MISSING_INT;
+    int priomax = MISSING_INT;
+    std::string report;
     int mobile = MISSING_INT;
     Ident ident;
     LatRange latrange;
     LonRange lonrange;
-    DatetimeRange datetime;
+    DatetimeRange dtrange;
     Level level;
     Trange trange;
     std::set<wreport::Varcode> varcodes;
@@ -68,16 +67,27 @@ struct Query : public dballe::Query
 
     bool operator==(const Query& o) const
     {
-        return std::tie(want_missing, ana_id, prio_min, prio_max, rep_memo, mobile, ident, latrange, lonrange, datetime, level, trange, varcodes, query, ana_filter, data_filter, attr_filter, limit, block, station)
-            == std::tie(o.want_missing, o.ana_id, o.prio_min, o.prio_max, o.rep_memo, o.mobile, o.ident, o.latrange, o.lonrange, o.datetime, o.level, o.trange, o.varcodes, o.query, o.ana_filter, o.data_filter, o.attr_filter, o.limit, o.block, o.station);
+        return std::tie(want_missing, ana_id, priomin, priomax, report, mobile, ident, latrange, lonrange, dtrange, level, trange, varcodes, query, ana_filter, data_filter, attr_filter, limit, block, station)
+            == std::tie(o.want_missing, o.ana_id, o.priomin, o.priomax, o.report, o.mobile, o.ident, o.latrange, o.lonrange, o.dtrange, o.level, o.trange, o.varcodes, o.query, o.ana_filter, o.data_filter, o.attr_filter, o.limit, o.block, o.station);
     }
+
+    /**
+     * Check the query fields for consistency, and fill in missing values:
+     *
+     *  - month without year, day without month, and so on, cause errors
+     *  - only one longitude extreme without the other causes error
+     *  - min and max datetimes are filled with the actual minimum and maximum
+     *    values acceptable for that range (year=2017, for example, becomes
+     *    min=2017-01-01 00:00:00, max=2017-12-31 23:59:59
+     */
+    void validate();
 
     std::unique_ptr<dballe::Query> clone() const override;
 
     unsigned get_modifiers() const;
 
-    DatetimeRange get_datetimerange() const override { return datetime; }
-    void set_datetimerange(const DatetimeRange& dt) override { datetime = dt; }
+    DatetimeRange get_datetimerange() const override { return dtrange; }
+    void set_datetimerange(const DatetimeRange& dt) override { dtrange = dt; }
     LatRange get_latrange() const override { return latrange; }
     void set_latrange(const LatRange& lr) override { latrange = lr; }
     LonRange get_lonrange() const override { return lonrange; }
@@ -89,7 +99,19 @@ struct Query : public dballe::Query
 
     void clear() override;
 
-    void set_from_record(const dballe::Record& rec) override;
+    /**
+     * Set a value in the record according to an assignment encoded in a string.
+     *
+     * String can use keywords, aliases and varcodes.  Examples: ana_id=3,
+     * name=Bologna, B12012=32.4
+     *
+     * In case of numeric parameter, a hyphen ("-") means MISSING_INT (e.g.,
+     * `leveltype2=-`).
+     *
+     * @param str
+     *   The string containing the assignment.
+     */
+    void set_from_string(const char* str);
 
     /**
      * Set a record from a ", "-separated string of assignments.
@@ -108,23 +130,11 @@ struct Query : public dballe::Query
      */
     bool is_subquery(const dballe::Query& other) const override;
 
-    /**
-     * Generate a sequence of dba_keyword and Var for all contents
-     * of the query that can be represented in a record.
-     */
-    void foreach_key(std::function<void(const char*, wreport::Var&&)> dest) const override;
-
     /// Print the query contents to stderr
     void print(FILE* out) const override;
 
     /// Send the contents to a JSONWriter
     void serialize(JSONWriter& out) const;
-
-    /**
-     * Parse the query=* modifiers specification inside the record, returning the
-     * ORed flags
-     */
-    static unsigned parse_modifiers(const dballe::Record& rec);
 
     /**
      * Parse the modifiers specification given a query=* string, returning the ORed
@@ -147,6 +157,9 @@ struct Query : public dballe::Query
     static Query& downcast(dballe::Query& query);
 
     static Query from_json(core::json::Stream& in);
+
+protected:
+    void setf(const char* key, unsigned len, const char* val);
 };
 
 }

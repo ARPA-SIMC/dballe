@@ -4,19 +4,13 @@
 #include <dballe/core/defs.h>
 #include <dballe/db/v7/cache.h>
 #include <dballe/db/v7/fwd.h>
+#include <dballe/msg/fwd.h>
 #include <memory>
 #include <set>
 #include <cstdio>
 #include <functional>
 
 namespace dballe {
-struct Record;
-struct Msg;
-
-namespace msg {
-struct Context;
-}
-
 namespace db {
 namespace v7 {
 
@@ -52,7 +46,7 @@ public:
      *
      * @returns the context, or 0 if the id is not valid.
      */
-    msg::Context* to_msg(Tracer<>& trc, int id, Msg& msg);
+    impl::msg::Context* to_msg(Tracer<>& trc, int id, impl::Message& msg);
 
     /**
      * Lookup a LevTr entry from the cache, throwing an exception if it is not found

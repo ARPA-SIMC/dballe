@@ -8,6 +8,7 @@
 #include "batch.h"
 #include "trace.h"
 #include "dballe/core/query.h"
+#include "dballe/core/data.h"
 #include "dballe/sql/sql.h"
 #include <cassert>
 #include <memory>
@@ -19,7 +20,7 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-Transaction::Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Transaction> sql_transaction)
+Transaction::Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::sql::Transaction> sql_transaction)
     : db(db), sql_transaction(sql_transaction.release()), batch(*this), trc(db->trace->trace_transaction())
 {
     m_repinfo = db->driver().create_repinfo(*this).release();
@@ -31,7 +32,7 @@ Transaction::Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Tra
 
 Transaction::~Transaction()
 {
-    rollback();
+    rollback_nothrow();
     delete m_data;
     delete m_station_data;
     delete m_levtr;
@@ -83,6 +84,15 @@ void Transaction::rollback()
     trc.done();
 }
 
+void Transaction::rollback_nothrow() noexcept
+{
+    if (fired) return;
+    sql_transaction->rollback_nothrow();
+    clear_cached_state();
+    fired = true;
+    trc.done();
+}
+
 void Transaction::clear_cached_state()
 {
     repinfo().read_cache();
@@ -92,7 +102,7 @@ void Transaction::clear_cached_state()
     batch.clear();
 }
 
-Transaction& Transaction::downcast(dballe::Transaction& transaction)
+Transaction& Transaction::downcast(dballe::db::Transaction& transaction)
 {
     v7::Transaction* t = dynamic_cast<v7::Transaction*>(&transaction);
     assert(t);
@@ -106,58 +116,60 @@ void Transaction::remove_all()
     clear_cached_state();
 }
 
-void Transaction::insert_station_data(StationValues& vals, bool can_replace, bool station_can_add)
+void Transaction::insert_station_data(dballe::Data& vals, const dballe::DBInsertOptions& opts)
 {
     Tracer<> trc(this->trc ? this->trc->trace_insert_station_data() : nullptr);
-    batch::Station* st = batch.get_station(trc, vals.info, station_can_add);
+    core::Data& data = core::Data::downcast(vals);
+    batch::Station* st = batch.get_station(trc, data.station, opts.can_add_stations);
 
     // Add all the variables we find
     batch::StationData& sd = st->get_station_data(trc);
-    for (auto& i: vals.values)
-        sd.add(i.second.var, can_replace ? batch::UPDATE : batch::ERROR);
+    for (auto& i: data.values)
+        sd.add(i.get(), opts.can_replace ? batch::UPDATE : batch::ERROR);
 
     // Perform changes
     batch.write_pending(trc);
 
     // Read the IDs from the results
-    vals.info.id = st->id;
-    for (auto& v: vals.values)
+    data.station.id = st->id;
+    for (auto& v: data.values)
     {
-        auto i = sd.ids_by_code.find(v.first);
+        auto i = sd.ids_by_code.find(v.code());
         if (i == sd.ids_by_code.end())
             continue;
-        v.second.data_id = i->id;
+        v.data_id = i->id;
     }
 }
 
-void Transaction::insert_data(DataValues& vals, bool can_replace, bool station_can_add)
+void Transaction::insert_data(dballe::Data& vals, const dballe::DBInsertOptions& opts)
 {
-    if (vals.values.empty())
+    core::Data& data = core::Data::downcast(vals);
+    if (data.values.empty())
         throw error_notfound("no variables found in input record");
 
     Tracer<> trc(this->trc ? this->trc->trace_insert_data() : nullptr);
-    batch::Station* st = batch.get_station(trc, vals.info, station_can_add);
+    batch::Station* st = batch.get_station(trc, data.station, opts.can_add_stations);
 
-    batch::MeasuredData& md = st->get_measured_data(trc, vals.info.datetime);
+    batch::MeasuredData& md = st->get_measured_data(trc, data.datetime);
 
     // Insert the lev_tr data, and get the ID
-    int id_levtr = levtr().obtain_id(trc, LevTrEntry(vals.info.level, vals.info.trange));
+    int id_levtr = levtr().obtain_id(trc, LevTrEntry(data.level, data.trange));
 
     // Add all the variables we find
-    for (auto& i: vals.values)
-        md.add(id_levtr, i.second.var, can_replace ? batch::UPDATE : batch::ERROR);
+    for (auto& i: data.values)
+        md.add(id_levtr, i.get(), opts.can_replace ? batch::UPDATE : batch::ERROR);
 
     // Perform changes
     batch.write_pending(trc);
 
     // Read the IDs from the results
-    vals.info.id = st->id;
-    for (auto& v: vals.values)
+    data.station.id = st->id;
+    for (auto& v: data.values)
     {
-        auto i = md.ids_on_db.find(IdVarcode(id_levtr, v.first));
+        auto i = md.ids_on_db.find(IdVarcode(id_levtr, v.code()));
         if (i == md.ids_on_db.end())
             continue;
-        v.second.data_id = i->id;
+        v.data_id = i->id;
     }
 }
 
@@ -167,41 +179,41 @@ void Transaction::remove_station_data(const Query& query)
     cursor::run_delete_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), true, db->explain_queries);
 }
 
-void Transaction::remove(const Query& query)
+void Transaction::remove_data(const Query& query)
 {
-    Tracer<> trc(this->trc ? this->trc->trace_remove(query) : nullptr);
-    cursor::run_delete_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), false, db->explain_queries); // TODO: tracing
+    Tracer<> trc(this->trc ? this->trc->trace_remove_data(query) : nullptr);
+    cursor::run_delete_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), false, db->explain_queries);
 }
 
-std::unique_ptr<db::CursorStation> Transaction::query_stations(const Query& query)
+std::unique_ptr<dballe::CursorStation> Transaction::query_stations(const Query& query)
 {
     Tracer<> trc(this->trc ? this->trc->trace_query_stations(query) : nullptr);
     auto res = cursor::run_station_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
     return move(res);
 }
 
-std::unique_ptr<db::CursorStationData> Transaction::query_station_data(const Query& query)
+std::unique_ptr<dballe::CursorStationData> Transaction::query_station_data(const Query& query)
 {
     Tracer<> trc(this->trc ? this->trc->trace_query_station_data(query) : nullptr);
     auto res = cursor::run_station_data_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
     return move(res);
 }
 
-std::unique_ptr<db::CursorData> Transaction::query_data(const Query& query)
+std::unique_ptr<dballe::CursorData> Transaction::query_data(const Query& query)
 {
     Tracer<> trc(this->trc ? this->trc->trace_query_data(query) : nullptr);
     auto res = cursor::run_data_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
     return move(res);
 }
 
-std::unique_ptr<db::CursorSummary> Transaction::query_summary(const Query& query)
+std::unique_ptr<dballe::CursorSummary> Transaction::query_summary(const Query& query)
 {
     Tracer<> trc(this->trc ? this->trc->trace_query_summary(query) : nullptr);
     auto res = cursor::run_summary_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
     return move(res);
 }
 
-void Transaction::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
+void Transaction::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     Tracer<> trc(this->trc ? this->trc->trace_func("attr_query_station") : nullptr);
     // Create the query
@@ -209,7 +221,7 @@ void Transaction::attr_query_station(int data_id, std::function<void(std::unique
     d.read_attrs(trc, data_id, dest);
 }
 
-void Transaction::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest)
+void Transaction::attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     Tracer<> trc(this->trc ? this->trc->trace_func("attr_query_data") : nullptr);
     // Create the query

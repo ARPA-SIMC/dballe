@@ -1,15 +1,8 @@
 #include "common.h"
 #include <Python.h>
-#include <datetime.h>
 #include "dballe/types.h"
 #include "dballe/core/var.h"
-#include "config.h"
-
-#if PY_MAJOR_VERSION >= 3
-    #define PyInt_FromLong PyLong_FromLong
-    #define PyInt_AsLong PyLong_AsLong
-    #define PyInt_Type PyLong_Type
-#endif
+#include <string>
 
 using namespace wreport;
 
@@ -17,13 +10,6 @@ namespace dballe {
 namespace python {
 
 wrpy_c_api* wrpy = 0;
-
-PyObject* format_varcode(wreport::Varcode code)
-{
-    char buf[7];
-    format_code(code, buf);
-    return PyUnicode_FromString(buf);
-}
 
 void set_wreport_exception(const wreport::error& e)
 {
@@ -77,223 +63,143 @@ void set_wreport_exception(const wreport::error& e)
     }
 }
 
-PyObject* raise_wreport_exception(const wreport::error& e)
-{
-    set_wreport_exception(e);
-    return nullptr;
-}
-
 void set_std_exception(const std::exception& e)
 {
     PyErr_SetString(PyExc_RuntimeError, e.what());
 }
 
-PyObject* raise_std_exception(const std::exception& e)
-{
-    set_std_exception(e);
-    return NULL;
-}
-
-PyObject* datetime_to_python(const Datetime& dt)
-{
-    if (dt.is_missing())
-    {
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    return PyDateTime_FromDateAndTime(
-            dt.year, dt.month,  dt.day,
-            dt.hour, dt.minute, dt.second, 0);
-}
-
-int datetime_from_python(PyObject* dt, Datetime& out)
-{
-    if (dt == NULL || dt == Py_None)
-    {
-        out = Datetime();
-        return 0;
-    }
-
-    if (!PyDateTime_Check(dt))
-    {
-        PyErr_SetString(PyExc_TypeError, "value must be an instance of datetime.datetime");
-        return -1;
-    }
-
-    out = Datetime(
-        PyDateTime_GET_YEAR((PyDateTime_DateTime*)dt),
-        PyDateTime_GET_MONTH((PyDateTime_DateTime*)dt),
-        PyDateTime_GET_DAY((PyDateTime_DateTime*)dt),
-        PyDateTime_DATE_GET_HOUR((PyDateTime_DateTime*)dt),
-        PyDateTime_DATE_GET_MINUTE((PyDateTime_DateTime*)dt),
-        PyDateTime_DATE_GET_SECOND((PyDateTime_DateTime*)dt));
-    return 0;
-}
-
-int datetimerange_from_python(PyObject* val, DatetimeRange& out)
-{
-    if (PySequence_Size(val) != 2)
-    {
-        PyErr_SetString(PyExc_TypeError, "Expected a 2-tuple of datetime() objects");
-        return -1;
-    }
-    pyo_unique_ptr dtmin(PySequence_GetItem(val, 0));
-    pyo_unique_ptr dtmax(PySequence_GetItem(val, 1));
-
-    if (datetime_from_python(dtmin, out.min))
-        return -1;
-    if (datetime_from_python(dtmax, out.max))
-        return -1;
-
-    return 0;
-}
-
 PyObject* string_to_python(const std::string& str)
 {
-    return PyUnicode_FromStringAndSize(str.data(), str.size());
+    return throw_ifnull(PyUnicode_FromStringAndSize(str.data(), str.size()));
 }
 
 bool pyobject_is_string(PyObject* o)
 {
-#if PY_MAJOR_VERSION >= 3
-    if (PyBytes_Check(o))
-        return true;
-#else
-    if (PyString_Check(o))
-        return true;
-#endif
-    if (PyUnicode_Check(o))
+    if (PyUnicode_Check(o) || PyBytes_Check(o))
         return true;
     return false;
 }
 
-int string_from_python(PyObject* o, std::string& out)
+std::string string_from_python(PyObject* o)
 {
-#if PY_MAJOR_VERSION >= 3
-    if (PyBytes_Check(o)) {
-        const char* v = PyBytes_AsString(o);
-        if (v == NULL) return -1;
-        out = v;
-        return 0;
-    }
-#else
-    if (PyString_Check(o)) {
-        const char* v = PyString_AsString(o);
-        if (v == NULL) return -1;
-        out = v;
-        return 0;
-    }
-#endif
-    if (PyUnicode_Check(o)) {
-#if PY_MAJOR_VERSION >= 3
-        const char* v = PyUnicode_AsUTF8(o);
-        if (v == NULL) return -1;
-        out = v;
-        return 0;
-#else
-        PyObject *utf8 = PyUnicode_AsUTF8String(o);
-        const char* v = PyString_AsString(utf8);
-        if (v == NULL)
-        {
-            Py_DECREF(utf8);
-            return -1;
-        }
-        out = v;
-        Py_DECREF(utf8);
-        return 0;
-#endif
-    }
+    if (PyUnicode_Check(o))
+        return throw_ifnull(PyUnicode_AsUTF8(o));
+    if (PyBytes_Check(o))
+        return throw_ifnull(PyBytes_AsString(o));
     PyErr_SetString(PyExc_TypeError, "value must be an instance of str, bytes or unicode");
-    return -1;
+    throw PythonException();
 }
 
-int file_get_fileno(PyObject* o)
+double double_from_python(PyObject* o)
 {
-    // fileno_value = obj.fileno()
-    pyo_unique_ptr fileno_meth(PyObject_GetAttrString(o, "fileno"));
-    if (!fileno_meth) return -1;
-    pyo_unique_ptr fileno_args(Py_BuildValue("()"));
-    if (!fileno_args) return -1;
-    PyObject* fileno_value = PyObject_Call(fileno_meth, fileno_args, NULL);
-    if (!fileno_value)
+    double res = PyFloat_AsDouble(o);
+    if (res == -1.0 && PyErr_Occurred())
+        throw PythonException();
+    return res;
+}
+
+PyObject* double_to_python(double val)
+{
+    return throw_ifnull(PyFloat_FromDouble(val));
+}
+
+PyObject* dballe_int_to_python(int val)
+{
+    if (val == MISSING_INT)
+        Py_RETURN_NONE;
+    return throw_ifnull(PyLong_FromLong(val));
+}
+
+int dballe_int_from_python(PyObject* o)
+{
+    if (o == NULL || o == Py_None)
+        return MISSING_INT;
+
+    int res = PyLong_AsLong(o);
+    if (res == -1 && PyErr_Occurred())
+        throw PythonException();
+
+    return res;
+}
+
+std::string object_repr(PyObject* o)
+{
+    pyo_unique_ptr repr(throw_ifnull(PyObject_Repr(o)));
+    return string_from_python(repr);
+}
+
+std::string build_method_doc(const char* name, const char* signature, const char* returns, const char* summary, const char* doc)
+{
+    std::string res;
+    unsigned doc_indent = 0;
+    if (doc)
     {
-        if (PyErr_ExceptionMatches(PyExc_AttributeError) || PyErr_ExceptionMatches(PyExc_IOError))
-            PyErr_Clear();
-        return -1;
+        // Look up doc indentation
+        // Count the leading spaces of the first non-empty line
+        unsigned indent = 0;
+        for (const char* c = doc; *c; ++c)
+        {
+            if (isblank(*c))
+                ++indent;
+            else if (*c == '\n' || *c == '\r')
+            {
+                // strip empty lines
+                doc = c;
+                indent = 0;
+            }
+            else
+            {
+                doc_indent = indent;
+                break;
+            }
+        }
     }
 
-    // fileno = int(fileno_value)
-    if (!PyObject_TypeCheck(fileno_value, &PyInt_Type)) {
-        PyErr_SetString(PyExc_ValueError, "fileno() function must return an integer");
-        return -1;
+    // Function name and signature
+    res += name;
+    res += '(';
+    res += signature;
+    res += ')';
+    if (returns)
+    {
+        res += " -> ";
+        res += returns;
+    }
+    res += "\n\n";
+
+    // Indented summary
+    if (summary)
+    {
+        for (unsigned i = 0; i < doc_indent; ++i) res += ' ';
+        res += summary;
+        res += "\n\n";
     }
 
-    return PyInt_AsLong(fileno_value);
+    // Docstring
+    if (doc)
+        res += doc;
+
+    // Return a C string with a copy of res
+    return res;
 }
 
-PyObject* file_get_data(PyObject* o, char*&buf, Py_ssize_t& len)
+void common_init()
 {
-    // Use read() instead
-    pyo_unique_ptr read_meth(PyObject_GetAttrString(o, "read"));
-    pyo_unique_ptr read_args(Py_BuildValue("()"));
-    pyo_unique_ptr data(PyObject_Call(read_meth, read_args, NULL));
-    if (!data) return nullptr;
-
-#if PY_MAJOR_VERSION >= 3
-    if (!PyObject_TypeCheck(data, &PyBytes_Type)) {
-        PyErr_SetString(PyExc_ValueError, "read() function must return a bytes object");
-        return nullptr;
-    }
-    if (PyBytes_AsStringAndSize(data, &buf, &len))
-        return nullptr;
-#else
-    if (!PyObject_TypeCheck(data, &PyString_Type)) {
-        Py_DECREF(data);
-        PyErr_SetString(PyExc_ValueError, "read() function must return a string object");
-        return nullptr;
-    }
-    if (PyString_AsStringAndSize(data, &buf, &len))
-        return nullptr;
-#endif
-
-    return data.release();
-}
-
-
-int object_repr(PyObject* o, std::string& out)
-{
-    pyo_unique_ptr fileno_repr(PyObject_Repr(o));
-    if (!fileno_repr) return -1;
-
-    std::string name;
-    if (string_from_python(fileno_repr, name))
-        return -1;
-
-    return 0;
-}
-
-int common_init()
-{
-    /*
-     * PyDateTimeAPI, that is used by all the PyDate* and PyTime* macros, is
-     * defined as a static variable defaulting to NULL, and it needs to be
-     * initialized on each and every C file where it is used.
-     *
-     * Therefore, we need to have a common_init() to call from all
-     * initialization functions. *sigh*
-     */
-    if (!PyDateTimeAPI)
-        PyDateTime_IMPORT;
-
     if (!wrpy)
     {
         wrpy = (wrpy_c_api*)PyCapsule_Import("_wreport._C_API", 0);
         if (!wrpy)
-            return -1;
-    }
+            throw PythonException();
 
-    return 0;
+#if 0
+        // TODO: reenable when the new wreport has been deployed
+        if (wrpy->version_major != 1)
+        {
+            PyErr_Format(PyExc_RuntimeError, "wreport C API version is %d.%d but only 1.x is supported", wrpy->version_major, wrpy->version_minor);
+            throw PythonException();
+        }
+#endif
+    }
 }
 
 }

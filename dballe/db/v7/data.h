@@ -1,8 +1,10 @@
 #ifndef DBALLE_DB_V7_DATAV7_H
 #define DBALLE_DB_V7_DATAV7_H
 
+#include <dballe/fwd.h>
+#include <dballe/values.h>
+#include <dballe/core/fwd.h>
 #include <dballe/core/defs.h>
-#include <dballe/core/values.h>
 #include <dballe/sql/fwd.h>
 #include <dballe/db/defs.h>
 #include <dballe/db/v7/fwd.h>
@@ -14,9 +16,6 @@
 #include <functional>
 
 namespace dballe {
-struct Record;
-struct Values;
-
 namespace db {
 namespace v7 {
 
@@ -33,6 +32,12 @@ protected:
      * Load attributes from the database into a Values
      */
     void read_attrs_into_values(Tracer<>& trc, int id_data, Values& values);
+
+    /**
+     * Load attributes from the database into a Values, except those whose
+     * Varcode is in `exclude`
+     */
+    void read_attrs_into_values(Tracer<>& trc, int id_data, Values& values, const db::AttrList& exclude);
 
     /**
      * Replace the attributes of a variable with those in Values

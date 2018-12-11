@@ -1,4 +1,5 @@
 #include "base.h"
+#include "dballe/core/shortcuts.h"
 #include "dballe/msg/msg.h"
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
@@ -8,6 +9,7 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -24,24 +26,23 @@ protected:
     void set_gen_sensor(const Var& var, Varcode code, const Level& defaultLevel, const Trange& trange)
     {
         if (height_sensor == MISSING_SENSOR_H || defaultLevel == Level(103, height_sensor * 1000))
-            msg->set(var, code, defaultLevel, trange);
+            msg->set(defaultLevel, trange, code, var);
         else if (opts.simplified)
         {
             Var var1(var);
             var1.seta(newvar(WR_VAR(0, 7, 32), height_sensor));
-            msg->set(var1, code, defaultLevel, trange);
+            msg->set(defaultLevel, trange, code, var1);
         } else
-            msg->set(var, code, Level(103, height_sensor * 1000), trange);
+            msg->set(Level(103, height_sensor * 1000), trange, code, var);
     }
 
-    void set_gen_sensor(const Var& var, int shortcut)
+    void set_gen_sensor(const Var& var, const Shortcut& shortcut)
     {
-        const MsgVarShortcut& v = shortcutTable[shortcut];
-        set_gen_sensor(var, v.code, Level(v.ltype1, v.l1, v.ltype2, v.l2), Trange(v.pind, v.p1, v.p2));
+        set_gen_sensor(var, shortcut.code, shortcut.level, shortcut.trange);
     }
 
 public:
-    MetarImporter(const msg::ImporterOptions& opts) : WMOImporter(opts) {}
+    MetarImporter(const dballe::ImporterOptions& opts) : WMOImporter(opts) {}
     virtual ~MetarImporter() {}
 
     virtual void init()
@@ -63,10 +64,10 @@ public:
         }
     }
 
-    MsgType scanType(const Bulletin& bulletin) const { return MSG_METAR; }
+    MessageType scanType(const Bulletin& bulletin) const { return MessageType::METAR; }
 };
 
-std::unique_ptr<Importer> Importer::createMetar(const msg::ImporterOptions& opts)
+std::unique_ptr<Importer> Importer::createMetar(const dballe::ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new MetarImporter(opts));
 }
@@ -90,21 +91,22 @@ void MetarImporter::import_var(const Var& var)
     switch (var.code())
     {
         case WR_VAR(0,  7,  1): msg->set_height_station_var(var); break;
-        case WR_VAR(0, 11,  1): set_gen_sensor(var, DBA_MSG_WIND_DIR); break;
-        case WR_VAR(0, 11, 16): set_gen_sensor(var, DBA_MSG_EX_CCW_WIND); break;
-        case WR_VAR(0, 11, 17): set_gen_sensor(var, DBA_MSG_EX_CW_WIND); break;
-        case WR_VAR(0, 11,  2): set_gen_sensor(var, DBA_MSG_WIND_SPEED); break;
-        case WR_VAR(0, 11, 41): set_gen_sensor(var, DBA_MSG_WIND_SPEED); break;
-        case WR_VAR(0, 12,  1): set_gen_sensor(var, DBA_MSG_TEMP_2M); break;
-        case WR_VAR(0, 12,  3): set_gen_sensor(var, DBA_MSG_DEWPOINT_2M); break;
-        case WR_VAR(0, 10, 52): set_gen_sensor(var, DBA_MSG_QNH); break;
-        case WR_VAR(0, 20,  9): set_gen_sensor(var, DBA_MSG_METAR_WTR); break;
+        case WR_VAR(0, 11,  1): set_gen_sensor(var, sc::wind_dir); break;
+        case WR_VAR(0, 11, 16): set_gen_sensor(var, sc::ex_ccw_wind); break;
+        case WR_VAR(0, 11, 17): set_gen_sensor(var, sc::ex_cw_wind); break;
+        case WR_VAR(0, 11,  2): set_gen_sensor(var, sc::wind_speed); break;
+        case WR_VAR(0, 11, 41): set_gen_sensor(var, sc::wind_speed); break;
+        case WR_VAR(0, 12,  1): set_gen_sensor(var, sc::temp_2m); break;
+        case WR_VAR(0, 12,  3): set_gen_sensor(var, sc::dewpoint_2m); break;
+        case WR_VAR(0, 10, 52): set_gen_sensor(var, sc::qnh); break;
+        case WR_VAR(0, 20,  9): set_gen_sensor(var, sc::metar_wtr); break;
         default:
             WMOImporter::import_var(var);
             break;
     }
 }
 
+}
 }
 }
 }

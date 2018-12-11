@@ -1,10 +1,3 @@
-#!/usr/bin/python
-# coding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-import dballe
 import csv
 import sys
 import warnings
@@ -78,7 +71,7 @@ class ColumnStation(Column):
 
     def add(self, row):
         self.values.add(row["ana_id"])
-        ident = row.get("ident", None)
+        ident = row["ident"]
         if ident is not None:
             self.idents.add(ident)
 
@@ -122,7 +115,7 @@ class ColumnDatetime(Column):
         # Suppress deprecation warnings until we have something better
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
-            self.values.add(row["date"])
+            self.values.add(row["datetime"])
 
     def title(self):
         return str(next(iter(self.values)))
@@ -131,7 +124,7 @@ class ColumnDatetime(Column):
         # Suppress deprecation warnings until we have something better
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
-            return [rec["date"]]
+            return [rec["datetime"]]
 
 
 class ColumnLevel(Column):
@@ -153,10 +146,10 @@ class ColumnLevel(Column):
             warnings.simplefilter("ignore", DeprecationWarning)
             lev = rec["level"]
         return [
-            intormiss(lev[0]),
-            intormiss(lev[1]),
-            intormiss(lev[2]),
-            intormiss(lev[3])
+            intormiss(lev.ltype1),
+            intormiss(lev.l1),
+            intormiss(lev.ltype2),
+            intormiss(lev.l2)
         ]
 
 
@@ -178,31 +171,27 @@ class ColumnTrange(Column):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
             tr = rec["trange"]
-        return [
-            intormiss(tr[0]),
-            intormiss(tr[1]),
-            intormiss(tr[2])
-        ]
+        return [intormiss(tr.pind), intormiss(tr.p1), intormiss(tr.p2)]
 
 
 class ColumnVar(Column):
     LABEL = "Variable"
 
     def add(self, row):
-        self.values.add(row["var"])
+        self.values.add(row["var"].code)
 
     def column_data(self, rec):
-        return [rec["var"]]
+        return [rec["var"].code]
 
 
 class ColumnValue(Column):
     LABEL = "Value"
 
     def add(self, row):
-        self.values.add(row.var(row["var"]).format(""))
+        self.values.add(row["var"].format(""))
 
     def column_data(self, rec):
-        return [rec.var(rec["var"]).format("")]
+        return [rec["var"].format("")]
 
 
 class ColumnStationData(Column):
@@ -212,8 +201,8 @@ class ColumnStationData(Column):
         # { Station id: { varcode: value } }
         self.station_data = station_data
 
-    def add(self, row):
-        self.values.add(row[self.varcode])
+    def add(self, var):
+        self.values.add(var.enq())
 
     def title(self):
         data = next(iter(self.station_data.values()))
@@ -248,7 +237,7 @@ class ColumnAttribute(Column):
         self.values.add(var.format(""))
 
     def title(self):
-        data = next(iter(self.attributes.itervalues()))
+        data = next(iter(self.attributes.values()))
         var = data.get(self.varcode, None)
         if var is None:
             value = ""
@@ -309,24 +298,24 @@ class Exporter:
 
             # Index station data by ana_id
             id = row["ana_id"]
-            stations[id] = [row["lat"], row["lon"], row.get("ident", None)]
+            stations[id] = [row["lat"], row["lon"], row["ident"]]
 
             # Load station variables for this station
             if id not in self.station_data:
-                query = dballe.Record(ana_id=id)
+                query = dict(ana_id=id)
                 items = {}
                 for record in tr.query_station_data(query):
-                    v = record.var(record["var"])
+                    v = record["var"]
                     items[v.code] = v
                     col = station_var_cols.get(v.code, None)
                     if col is None:
                         station_var_cols[v.code] = col = ColumnStationData(v.code, self.station_data)
-                    col.add(record)
+                    col.add(v)
                 self.station_data[id] = items
 
             # Load attributes
             attributes = {}
-            for key, v in tr.attr_query_data(row["context_id"]).varitems():
+            for key, v in tr.attr_query_data(row["context_id"]).items():
                 code = v.code
                 attributes[code] = v
                 col = attribute_cols.get(code, None)

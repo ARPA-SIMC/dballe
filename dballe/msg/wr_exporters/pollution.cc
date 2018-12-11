@@ -1,23 +1,5 @@
-/*
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "dballe/msg/wr_codec.h"
+#include "dballe/core/shortcuts.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 #include <wreport/bulletin.h>
@@ -31,6 +13,7 @@ using namespace std;
 #define POLLUTION_DESC "Pollution (8.171)"
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -64,29 +47,11 @@ static double intexp10(unsigned x)
 
 struct Pollution : public Template
 {
-    Pollution(const ExporterOptions& opts, const Messages& msgs)
+    Pollution(const dballe::ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
     virtual const char* name() const { return POLLUTION_NAME; }
     virtual const char* description() const { return POLLUTION_DESC; }
-
-    void add(Varcode code, int shortcut)
-    {
-        const Var* var = msg->find_by_id(shortcut);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
-    }
-
-    void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
-    {
-        const Var* var = msg->get(srccode, level, trange);
-        if (var)
-            subset->store_variable(code, *var);
-        else
-            subset->store_variable_undef(code);
-    }
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
     {
@@ -131,21 +96,20 @@ struct Pollution : public Template
 
         bulletin.load_tables();
     }
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         Template::to_subset(msg, subset);
 
         // Get the variable out of msg
         const Var* mainvar = NULL;
         int l1 = -1, p1 = -1;
-        for (size_t i = 0; i < msg.data.size(); ++i)
+        for (const auto& ctx: msg.data)
         {
-            const msg::Context& ctx = *msg.data[i];
             if (ctx.level.ltype1 != 103) continue;
             if (ctx.trange.pind != 0) continue;
-            for (size_t j = 0; j < ctx.data.size(); ++j)
+            for (const auto& val: ctx.values)
             {
-                const Var& var = *ctx.data[j];
+                const Var& var = *val;
                 if (var.code() < WR_VAR(0, 15, 193) || var.code() > WR_VAR(0, 15, 198)) continue;
                 if (mainvar != NULL)
                     error_consistency::throwf("found more than one variable to export in one template: B%02d%03d and B%02d%03d",
@@ -215,18 +179,18 @@ struct Pollution : public Template
 
         // Add the variables to the subset
 
-        /*  0 */ add(WR_VAR(0,  1,  19), DBA_MSG_ST_NAME);
-        /*  1 */ add(WR_VAR(0,  1, 212), DBA_MSG_POLL_LCODE);
-        /*  2 */ add(WR_VAR(0,  1, 213), DBA_MSG_POLL_SCODE);
-        /*  3 */ add(WR_VAR(0,  1, 214), DBA_MSG_POLL_GEMSCODE);
-        /*  4 */ add(WR_VAR(0,  1, 215), DBA_MSG_POLL_SOURCE);
-        /*  5 */ add(WR_VAR(0,  1, 216), DBA_MSG_POLL_ATYPE);
-        /*  6 */ add(WR_VAR(0,  1, 217), DBA_MSG_POLL_TTYPE);
+        /*  0 */ add(WR_VAR(0,  1,  19), sc::st_name);
+        /*  1 */ add(WR_VAR(0,  1, 212), sc::poll_lcode);
+        /*  2 */ add(WR_VAR(0,  1, 213), sc::poll_scode);
+        /*  3 */ add(WR_VAR(0,  1, 214), sc::poll_gemscode);
+        /*  4 */ add(WR_VAR(0,  1, 215), sc::poll_source);
+        /*  5 */ add(WR_VAR(0,  1, 216), sc::poll_atype);
+        /*  6 */ add(WR_VAR(0,  1, 217), sc::poll_ttype);
         do_D01011();
         do_D01013();
-        /* 13 */ add(WR_VAR(0,  5,   1), DBA_MSG_LATITUDE);
-        /* 14 */ add(WR_VAR(0,  6,   1), DBA_MSG_LONGITUDE);
-        /* 15 */ add(WR_VAR(0,  7,  30), DBA_MSG_HEIGHT_STATION);
+        /* 13 */ add(WR_VAR(0,  5,   1), sc::latitude);
+        /* 14 */ add(WR_VAR(0,  6,   1), sc::longitude);
+        /* 15 */ add(WR_VAR(0,  7,  30), sc::height_station);
 
 
         /* 16 */ subset.store_variable_i(WR_VAR(0,  7, 32), l1);
@@ -258,11 +222,12 @@ struct Pollution : public Template
 void register_pollution(TemplateRegistry& r)
 {
     r.register_factory(8, POLLUTION_NAME, POLLUTION_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Pollution(opts, msgs));
             });
 }
 
+}
 }
 }
 }

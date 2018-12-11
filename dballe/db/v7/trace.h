@@ -184,7 +184,7 @@ public:
     Tracer<> trace_add_station_vars();
     Tracer<> trace_func(const std::string& name);
     Tracer<> trace_remove_station_data(const Query& query);
-    Tracer<> trace_remove(const Query& query);
+    Tracer<> trace_remove_data(const Query& query);
 };
 
 }

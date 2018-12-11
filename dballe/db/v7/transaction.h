@@ -1,11 +1,11 @@
 #ifndef DBALLE_DB_V7_TRANSACTION_H
 #define DBALLE_DB_V7_TRANSACTION_H
 
-#include <dballe/transaction.h>
 #include <dballe/db/db.h>
 #include <dballe/db/v7/fwd.h>
 #include <dballe/db/v7/data.h>
 #include <dballe/db/v7/batch.h>
+#include <dballe/sql/fwd.h>
 #include <memory>
 
 namespace dballe {
@@ -26,14 +26,14 @@ protected:
     /// Variable data
     v7::Data* m_data = nullptr;
 
-    void add_msg_to_batch(Tracer<>& trc, const Message& message, const char* repmemo, int flags);
+    void add_msg_to_batch(Tracer<>& trc, const Message& message, const dballe::DBImportOptions& opts);
 
 public:
     typedef v7::DB DB;
 
     std::shared_ptr<v7::DB> db;
     /// SQL-side transaction
-    dballe::Transaction* sql_transaction = nullptr;
+    dballe::sql::Transaction* sql_transaction = nullptr;
     /// True if commit or rollback have already been called on this transaction
     bool fired = false;
     /// Batch importer
@@ -41,7 +41,7 @@ public:
     /// Tracing system
     v7::Tracer<v7::trace::Transaction> trc;
 
-    Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::Transaction> sql_transaction);
+    Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::sql::Transaction> sql_transaction);
     Transaction(const Transaction&) = delete;
     Transaction(Transaction&&) = delete;
     Transaction& operator=(const Transaction&) = delete;
@@ -61,31 +61,32 @@ public:
 
     void commit() override;
     void rollback() override;
+    void rollback_nothrow() noexcept override;
     void clear_cached_state() override;
 
-    std::unique_ptr<db::CursorStation> query_stations(const Query& query);
-    std::unique_ptr<db::CursorStationData> query_station_data(const Query& query) override;
-    std::unique_ptr<db::CursorData> query_data(const Query& query);
-    std::unique_ptr<db::CursorSummary> query_summary(const Query& query);
-    void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
-    void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest) override;
+    std::unique_ptr<dballe::CursorStation> query_stations(const Query& query);
+    std::unique_ptr<dballe::CursorStationData> query_station_data(const Query& query) override;
+    std::unique_ptr<dballe::CursorData> query_data(const Query& query);
+    std::unique_ptr<dballe::CursorSummary> query_summary(const Query& query);
+    std::unique_ptr<dballe::CursorMessage> query_messages(const Query& query);
+    void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
+    void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
 
-    void insert_station_data(StationValues& vals, bool can_replace, bool station_can_add) override;
-    void insert_data(DataValues& vals, bool can_replace, bool station_can_add) override;
+    void insert_station_data(dballe::Data& vals, const dballe::DBInsertOptions& opts=dballe::DBInsertOptions::defaults) override;
+    void insert_data(dballe::Data& vals, const dballe::DBInsertOptions& opts=dballe::DBInsertOptions::defaults) override;
     void remove_station_data(const Query& query) override;
-    void remove(const Query& query);
+    void remove_data(const Query& query) override;
     void remove_all() override;
 
     void attr_insert_station(int data_id, const Values& attrs) override;
     void attr_insert_data(int data_id, const Values& attrs) override;
     void attr_remove_station(int data_id, const db::AttrList& attrs) override;
     void attr_remove_data(int data_id, const db::AttrList& attrs) override;
-    void import_msg(const Message& msg, const char* repmemo, int flags) override;
-    void import_msgs(const Messages& msgs, const char* repmemo, int flags) override;
-    bool export_msgs(const Query& query, std::function<bool(std::unique_ptr<Message>&&)> dest) override;
+    void import_message(const Message& message, const dballe::DBImportOptions& opts) override;
+    void import_messages(const std::vector<std::shared_ptr<Message>>& msgs, const dballe::DBImportOptions& opts) override;
     void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated) override;
 
-    static Transaction& downcast(dballe::Transaction& transaction);
+    static Transaction& downcast(dballe::db::Transaction& transaction);
 
     void dump(FILE* out) override;
 };

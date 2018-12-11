@@ -1,8 +1,7 @@
 #include "dballe/db/benchmark.h"
-#include "dballe/core/values.h"
+#include "dballe/values.h"
 #include "dballe/core/query.h"
 #include "dballe/msg/msg.h"
-#include "dballe/msg/codec.h"
 
 using namespace dballe;
 using namespace std;
@@ -96,7 +95,7 @@ struct B : benchmark::DBBenchmark
             for (const auto& report: reports)
             {
                 //fprintf(stderr, "INSERT LATLON %d REPORT %s\n", latlon, report.c_str());
-                DataValues vals;
+                core::Data vals;
                 vals.info.coords = Coords((double)latlon, (double)latlon);
                 vals.info.report = report;
                 for (int year = 2010; year < 2015; ++year)

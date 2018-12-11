@@ -4,12 +4,9 @@
 #include "dballe/message.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
-#include "dballe/msg/aof_codec.h"
 #include "dballe/msg/bulletin.h"
-#include "dballe/record.h"
 #include "dballe/file.h"
 #include "dballe/core/query.h"
-#include "dballe/core/aoffile.h"
 #include "dballe/core/matcher.h"
 #include "dballe/core/csv.h"
 #include "dballe/core/json.h"
@@ -138,15 +135,6 @@ static void dump_crex_header(const BinaryMessage& rmsg, const CrexBulletin& braw
     printf("Check digit: %s\n\n", braw.has_check_digit ? "yes" : "no");
 }
 
-static void dump_aof_header(const BinaryMessage& rmsg)
-{
-    int category, subcategory;
-    msg::AOFImporter::get_category(rmsg, &category, &subcategory);
-    printf("Message %d\n", rmsg.index);
-    printf("Size: %zd\n", rmsg.data.size());
-    printf("Category: %d:%d\n\n", category, subcategory);
-}
-
 static void print_bulletin_header(const Bulletin& braw)
 {
     printf(", origin %hu:%hu, category %hhu %hhu:%hhu:%hhu",
@@ -180,13 +168,6 @@ static void print_crex_header(const CrexBulletin& braw)
         printf(" %d/%zd", count_nonnulls(braw.subsets[i]), braw.subsets[i].size());
 }
 
-static void print_aof_header(const BinaryMessage& rmsg)
-{
-    int category, subcategory;
-    msg::AOFImporter::get_category(rmsg, &category, &subcategory);
-    printf(", category %d, subcategory %d", category, subcategory);
-}
-
 static void print_item_header(const Item& item)
 {
     printf("#%d", item.idx);
@@ -197,16 +178,13 @@ static void print_item_header(const Item& item)
 
         switch (item.rmsg->encoding)
         {
-            case File::BUFR:
+            case Encoding::BUFR:
                 if (item.bulletin != NULL)
                     print_bufr_header(*dynamic_cast<const BufrBulletin*>(item.bulletin));
                 break;
-            case File::CREX:
+            case Encoding::CREX:
                 if (item.bulletin != NULL)
                     print_crex_header(*dynamic_cast<const CrexBulletin*>(item.bulletin));
-                break;
-            case File::AOF:
-                print_aof_header(*item.rmsg);
                 break;
         }
     } else if (item.msgs) {
@@ -215,8 +193,8 @@ static void print_item_header(const Item& item)
         unsigned count = 0;
         for (const auto& i: *item.msgs)
         {
-            const Msg& m = Msg::downcast(i);
-            string new_type = msg_type_name(m.type);
+            auto m = impl::Message::downcast(i);
+            string new_type = format_message_type(m->type);
             if (old_type.empty())
             {
                 old_type = new_type;
@@ -249,16 +227,13 @@ struct Head : public cmdline::Action
         if (!item.rmsg) return false;
         switch (item.rmsg->encoding)
         {
-            case File::BUFR:
+            case Encoding::BUFR:
                 if (item.bulletin == NULL) return true;
                 dump_bufr_header(*item.rmsg, *dynamic_cast<const BufrBulletin*>(item.bulletin)); puts(".");
                 break;
-            case File::CREX:
+            case Encoding::CREX:
                 if (item.bulletin == NULL) return true;
                 dump_crex_header(*item.rmsg, *dynamic_cast<const CrexBulletin*>(item.bulletin)); puts(".");
-                break;
-            case File::AOF:
-                dump_aof_header(*item.rmsg);
                 break;
         }
         return true;
@@ -290,7 +265,7 @@ struct CSVBulletin : public cmdline::Action
 };
 
 /**
- * Print a Msgs in CSV format
+ * Print a impl::Message in CSV format
  */
 
 struct CSVMsgs : public cmdline::Action
@@ -306,12 +281,12 @@ struct CSVMsgs : public cmdline::Action
 
         if (first)
         {
-            Msg::csv_header(writer);
+            impl::Message::csv_header(writer);
             first = false;
         }
 
         for (const auto& mi: *item.msgs)
-            Msg::downcast(mi).to_csv(writer);
+            impl::Message::downcast(mi)->to_csv(writer);
         return true;
     }
 };
@@ -331,57 +306,42 @@ struct JSONMsgs : public cmdline::Action
         if (!item.msgs) return false;
 
         for (const auto& mi: *item.msgs) {
-            const Msg& msg = Msg::downcast(mi);
+            auto msg = impl::Message::downcast(mi);
             json.start_mapping();
             json.add("version");
             json.add(DBALLE_JSON_VERSION);
             json.add("network");
-            json.add(msg.get_rep_memo_var() ? msg.get_rep_memo_var()->enqc() : dballe::Msg::repmemo_from_type(msg.type));
+            json.add(msg->get_rep_memo_var() ? msg->get_rep_memo_var()->enqc() : dballe::impl::Message::repmemo_from_type(msg->type));
             json.add("ident");
-            if (msg.get_ident_var() != NULL)
-                json.add(msg.get_ident_var()->enqc());
+            if (msg->get_ident_var() != NULL)
+                json.add(msg->get_ident_var()->enqc());
             else
                 json.add_null();
             json.add("lon");
-            json.add_int(msg.get_longitude_var()->enqi());
+            json.add_int(msg->get_longitude_var()->enqi());
             json.add("lat");
-            json.add_int(msg.get_latitude_var()->enqi());
+            json.add_int(msg->get_latitude_var()->enqi());
             json.add("date");
             std::stringstream ss;
-            msg.get_datetime().to_stream_iso8601(ss, 'T', "Z");
+            msg->get_datetime().to_stream_iso8601(ss, 'T', "Z");
             json.add(ss.str().c_str());
             json.add("data");
             json.start_list();
-            for (const auto& ctx: msg.data) {
                 json.start_mapping();
-                if (not ctx->is_station()) {
-                    json.add("timerange");
-                    json.add(ctx->trange);
-                    json.add("level");
-                    json.add(ctx->level);
-                }
                 json.add("vars");
-                json.start_mapping();
-                for (const auto& var: ctx->data) {
-                    json.add(wreport::varcode_format(var->code()));
+                json.add(msg->station_data);
+                json.end_mapping();
+                for (const auto& ctx: msg->data) {
                     json.start_mapping();
-                    json.add("v");
-                    json.add(*var);
-                    if (var->next_attr()) {
-                        json.add("a");
-                        json.start_mapping();
-                        for (const Var* attr = var->next_attr(); attr; attr = attr->next_attr()) {
-                            json.add(wreport::varcode_format(attr->code()));
-                            json.add(*attr);
-                        }
-                        json.end_mapping();
-                    }
+                    json.add("timerange");
+                    json.add(ctx.trange);
+                    json.add("level");
+                    json.add(ctx.level);
+                    json.add("vars");
+                    json.add(ctx.values);
                     json.end_mapping();
                 }
-                json.end_mapping();
-                json.end_mapping();
-            }
-            json.end_list();
+                json.end_list();
             json.end_mapping();
             json.add_break();
         }
@@ -411,21 +371,18 @@ struct DumpMessage : public cmdline::Action
         puts(":");
         switch (item.rmsg->encoding)
         {
-            case File::BUFR:
+            case Encoding::BUFR:
                 {
                     if (item.bulletin == NULL) return true;
                     print_subsets(*item.bulletin);
                     break;
                 }
-            case File::CREX:
+            case Encoding::CREX:
                 {
                     if (item.bulletin == NULL) return true;
                     print_subsets(*item.bulletin);
                     break;
                 }
-            case File::AOF:
-                msg::AOFImporter::dump(*item.rmsg, stdout);
-                break;
         }
         return true;
     }
@@ -439,7 +396,7 @@ struct DumpCooked : public cmdline::Action
         for (size_t i = 0; i < item.msgs->size(); ++i)
         {
             printf("#%d[%zd] ", item.idx, i);
-            (*item.msgs)[i].print(stdout);
+            (*item.msgs)[i]->print(stdout);
         }
         return true;
     }
@@ -594,7 +551,7 @@ struct Scan : public cmdline::Subcommand
     {
         Subcommand::add_to_optable(opts);
         opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
-            "format of the input data ('bufr', 'crex', 'aof')", "type" });
+            "format of the input data ('bufr', 'crex')", "type" });
         opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
@@ -629,7 +586,7 @@ struct HeadCmd : public cmdline::Subcommand
     {
         Subcommand::add_to_optable(opts);
         opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
-            "format of the input data ('bufr', 'crex', 'aof')", "type" });
+            "format of the input data ('bufr', 'crex')", "type" });
         opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
@@ -665,7 +622,7 @@ struct Dump : public cmdline::Subcommand
     {
         Subcommand::add_to_optable(opts);
         opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
-            "format of the input data ('bufr', 'crex', 'aof')", "type" });
+            "format of the input data ('bufr', 'crex')", "type" });
         opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ "interpreted", 0, 0, &op_dump_interpreted, 0,
@@ -736,7 +693,7 @@ struct Cat : public cmdline::Subcommand
     {
         Subcommand::add_to_optable(opts);
         opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
-            "format of the input data ('bufr', 'crex', 'aof')", "type" });
+            "format of the input data ('bufr', 'crex')", "type" });
         opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
@@ -753,20 +710,21 @@ struct Cat : public cmdline::Subcommand
         if (dba_cmdline_get_query(optCon, query) > 0)
             reader.filter.matcher_from_record(query);
 
-        /*DBA_RUN_OR_RETURN(aof_file_write_header(file, 0, 0)); */
         WriteRaw wraw;
         reader.read(get_filenames(optCon), wraw);
         return 0;
     }
 };
 
+#if 0
 struct StoreMessages : public cmdline::Action, public vector<BinaryMessage>
 {
-	virtual void operator()(const BinaryMessage& rmsg, const wreport::Bulletin*, const Messages*)
-	{
-		push_back(rmsg);
-	}
+    void operator()(const BinaryMessage& rmsg, const wreport::Bulletin*, const impl::Messages*) override
+    {
+        push_back(rmsg);
+    }
 };
+#endif
 
 #if 0
 static dba_err bisect_test(struct message_vector* vec, size_t first, size_t last, int* fails)
@@ -844,7 +802,7 @@ struct Bisect : public cmdline::Subcommand
         opts.push_back({ "test", 0, POPT_ARG_STRING, &op_bisect_cmd, 0,
             "command to run to test a message group", "cmd" });
         opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
-            "format of the input data ('bufr', 'crex', 'aof')", "type" });
+            "format of the input data ('bufr', 'crex')", "type" });
         opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
@@ -919,9 +877,9 @@ struct Convert : public cmdline::Subcommand
     {
         Subcommand::add_to_optable(opts);
         opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
-            "format of the input data ('bufr', 'crex', 'aof', 'csv')", "type" });
+            "format of the input data ('bufr', 'crex', 'csv')", "type" });
         opts.push_back({ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
-            "format of the data in output ('bufr', 'crex', 'aof')", "type" });
+            "format of the data in output ('bufr', 'crex')", "type" });
         opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ "template", 0, POPT_ARG_STRING, &op_output_template, 0,
@@ -940,7 +898,7 @@ struct Convert : public cmdline::Subcommand
 
     int main(poptContext optCon) override
     {
-        msg::ExporterOptions opts;
+        impl::ExporterOptions opts;
         cmdline::Converter conv;
         cmdline::Reader reader(readeropts);
         reader.verbose = op_verbose;
@@ -985,7 +943,7 @@ struct Convert : public cmdline::Subcommand
                 conv.file = File::create(string_to_encoding(op_output_type), op_output_file, "w").release();
         }
 
-        conv.exporter = msg::Exporter::create(conv.file->encoding(), opts).release();
+        conv.exporter = Exporter::create(conv.file->encoding(), opts).release();
 
         reader.read(get_filenames(optCon), conv);
 
@@ -1008,9 +966,9 @@ struct Compare : public cmdline::Subcommand
     {
         Subcommand::add_to_optable(opts);
         opts.push_back({ "type1", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
-            "format of the first file to compare ('bufr', 'crex', 'aof')", "type" });
+            "format of the first file to compare ('bufr', 'crex')", "type" });
         opts.push_back({ "type2", 'd', POPT_ARG_STRING, &op_output_type, 0,
-            "format of the second file to compare ('bufr', 'crex', 'aof')", "type" });
+            "format of the second file to compare ('bufr', 'crex')", "type" });
         opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
@@ -1042,8 +1000,8 @@ struct Compare : public cmdline::Subcommand
             file2 = File::create(file2_name, "r");
         else
             file2 = File::create(string_to_encoding(op_output_type), file2_name, "r");
-        std::unique_ptr<msg::Importer> importer1 = msg::Importer::create(file1->encoding());
-        std::unique_ptr<msg::Importer> importer2 = msg::Importer::create(file2->encoding());
+        std::unique_ptr<Importer> importer1 = Importer::create(file1->encoding());
+        std::unique_ptr<Importer> importer2 = Importer::create(file2->encoding());
         size_t idx = 0;
         for ( ; ; ++idx)
         {
@@ -1059,46 +1017,16 @@ struct Compare : public cmdline::Subcommand
             if (!found1 && !found2)
                 break;
 
-            Messages msgs1 = importer1->from_binary(msg1);
-            Messages msgs2 = importer2->from_binary(msg2);
+            impl::Messages msgs1 = importer1->from_binary(msg1);
+            impl::Messages msgs2 = importer2->from_binary(msg2);
 
             notes::Collect c(cerr);
-            int diffs = msgs1.diff(msgs2);
+            int diffs = impl::msg::messages_diff(msgs1, msgs2);
             if (diffs > 0)
                 error_consistency::throwf("Messages #%zd contain %d differences", idx, diffs);
         }
         if (idx == 0)
             throw error_consistency("The files do not contain messages");
-        return 0;
-    }
-};
-
-struct FixAOF : public cmdline::Subcommand
-{
-    FixAOF()
-    {
-        names.push_back("fixaof");
-        usage = "fixaof [options] filename [filename1 [...]]]";
-        desc = "Recomputes the start and end of observation period in the headers of the given AOF files";
-    }
-
-    int main(poptContext optCon) override
-    {
-        /* Throw away the command name */
-        poptGetArg(optCon);
-
-        int count = 0;
-        while (const char* filename = poptGetArg(optCon))
-        {
-            unique_ptr<File> file = File::create(File::AOF, filename, "rb+");
-            core::AofFile* aoffile = dynamic_cast<core::AofFile*>(file.get());
-            aoffile->fix_header();
-            ++count;
-        }
-
-        if (count == 0)
-            dba_cmdline_error(optCon, "at least one input file needs to be specified");
-
         return 0;
     }
 };
@@ -1340,14 +1268,11 @@ int main (int argc, const char* argv[])
     dbamsg.desc = "Work with encoded meteorological data";
     dbamsg.longdesc =
         "Examine, dump and convert files containing meteorological data. "
-        "It supports observations encoded in BUFR, CREX and AOF formats";
+        "It supports observations encoded in BUFR or CREX formats";
     dbamsg.manpage_examples_section = R"(
 Here are some example invocations of \\fBdbamsg\\fP:
 .P
 .nf
-  # Convert an AOF message to BUFR
-  dbamsg convert file.aof > file.bufr
-
   # Convert a BUFR message to CREX
   dbamsg convert file.bufr -d crex > file.crex
 
@@ -1369,7 +1294,6 @@ Here are some example invocations of \\fBdbamsg\\fP:
     dbamsg.add_subcommand(new Bisect);
     dbamsg.add_subcommand(new Convert);
     dbamsg.add_subcommand(new Compare);
-    dbamsg.add_subcommand(new FixAOF);
     dbamsg.add_subcommand(new MakeBUFR);
 
     return dbamsg.main(argc, argv);

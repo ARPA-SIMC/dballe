@@ -9,8 +9,6 @@
 #include "dballe/db/v7/data.h"
 #include "cursor.h"
 #include "dballe/core/query.h"
-#include "dballe/core/record.h"
-#include "dballe/core/values.h"
 #include "dballe/types.h"
 #include <cstring>
 #include <cstdlib>
@@ -61,7 +59,7 @@ v7::Driver& DB::driver()
     return *m_driver;
 }
 
-std::shared_ptr<dballe::db::Transaction> DB::transaction(bool readonly)
+std::shared_ptr<dballe::Transaction> DB::transaction(bool readonly)
 {
     auto res = conn->transaction(readonly);
     return make_shared<v7::Transaction>(dynamic_pointer_cast<v7::DB>(shared_from_this()), move(res));
@@ -92,7 +90,7 @@ void DB::reset(const char* repinfo_file)
     m_driver->create_tables_v7();
 
     // Populate the tables with values
-    auto tr = transaction();
+    auto tr = dynamic_pointer_cast<db::Transaction>(transaction());
     int added, deleted, updated;
     tr->update_repinfo(repinfo_file, &added, &deleted, &updated);
     tr->commit();

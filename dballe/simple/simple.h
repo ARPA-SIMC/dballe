@@ -1,8 +1,8 @@
-#ifndef FDBA_SIMPLE_H
-#define FDBA_SIMPLE_H
+#ifndef DBALLE_SIMPLE_SIMPLE_H
+#define DBALLE_SIMPLE_SIMPLE_H
 
-#include <dballe/file.h>
-#include <dballe/types.h>
+#include <dballe/fwd.h>
+#include <wreport/varinfo.h>
 
 namespace dballe {
 namespace fortran {
@@ -21,13 +21,13 @@ struct API
 
     virtual ~API() {}
 
-    virtual void scopa(const char* repinfofile = 0) = 0;
+    virtual void scopa(const char* repinfofile=nullptr) = 0;
     virtual void remove_all() = 0;
     virtual int enqi(const char* param) = 0;
     virtual signed char enqb(const char* param) = 0;
     virtual float enqr(const char* param) = 0;
     virtual double enqd(const char* param) = 0;
-    virtual const char* enqc(const char* param) = 0;
+    virtual bool enqc(const char* param, std::string& res) = 0;
     virtual void seti(const char* param, int value) = 0;
     virtual void setb(const char* param, signed char value) = 0;
     virtual void setr(const char* param, float value) = 0;
@@ -48,24 +48,21 @@ struct API
     virtual int quantesono() = 0;
     virtual void elencamele() = 0;
     virtual int voglioquesto() = 0;
-    virtual const char* dammelo() = 0;
+    virtual wreport::Varcode dammelo() = 0;
     virtual void prendilo() = 0;
     virtual void dimenticami() = 0;
     virtual int voglioancora() = 0;
     virtual const char* ancora() = 0;
     virtual void critica() = 0;
     virtual void scusa() = 0;
-    virtual void messages_open_input(const char* filename, const char* mode, File::Encoding format, bool simplified=true) = 0;
-    virtual void messages_open_output(const char* filename, const char* mode, File::Encoding format) = 0;
+    virtual void messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified=true) = 0;
+    virtual void messages_open_output(const char* filename, const char* mode, Encoding format) = 0;
     virtual bool messages_read_next() = 0;
     virtual void messages_write_next(const char* template_name=0) = 0;
     virtual const char* spiegal(int ltype1, int l1, int ltype2, int l2) = 0;
     virtual const char* spiegat(int ptype, int p1, int p2) = 0;
     virtual const char* spiegab(const char* varcode, const char* value) = 0;
     virtual void fatto() = 0;
-
-    // Function used for test purposes only
-    virtual void test_input_to_output() = 0;
 };
 
 }

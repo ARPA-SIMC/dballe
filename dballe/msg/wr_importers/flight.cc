@@ -1,22 +1,3 @@
-/*
- * Copyright (C) 2005--2011  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "base.h"
 #include "dballe/core/var.h"
 #include "dballe/msg/msg.h"
@@ -29,6 +10,7 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -43,7 +25,7 @@ protected:
     void import_var(const Var& var);
 
 public:
-    FlightImporter(const msg::ImporterOptions& opts) : WMOImporter(opts) {}
+    FlightImporter(const dballe::ImporterOptions& opts) : WMOImporter(opts) {}
     virtual ~FlightImporter()
     {
         // If there are leftover variables in deferred, deallocate them
@@ -53,7 +35,7 @@ public:
                 delete *i;
     }
 
-    virtual void init()
+    void init() override
     {
         WMOImporter::init();
         lev = Level();
@@ -71,7 +53,7 @@ public:
             deferred.push_back(copy.release());
         }
         else
-            msg->set(var, var.code(), lev, Trange::instant());
+            msg->set(lev, Trange::instant(), var.code(), var);
     }
 
     void acquire(const Var& var, Varcode code)
@@ -84,7 +66,7 @@ public:
             deferred.push_back(copy.release());
         }
         else
-            msg->set(var, code, lev, Trange::instant());
+            msg->set(lev, Trange::instant(), code, var);
     }
 
     void set_level(const Level& newlev)
@@ -100,12 +82,12 @@ public:
         {
             unique_ptr<Var> var(*i);
             *i = 0;
-            msg->set(move(var), lev, Trange::instant());
+            msg->set(lev, Trange::instant(), move(var));
         }
         deferred.clear();
     }
 
-    virtual void run()
+    void run() override
     {
         for (pos = 0; pos < subset->size(); ++pos)
         {
@@ -123,7 +105,7 @@ public:
             msg->set_ident_var(*b01006);
     }
 
-    MsgType scanTypeFromVars(const Subset& subset) const
+    MessageType scanTypeFromVars(const Subset& subset) const
     {
         for (unsigned i = 0; i < subset.size(); ++i)
         {
@@ -131,30 +113,30 @@ public:
             {
                 case WR_VAR(0, 2, 65): // ACARS GROUND RECEIVING STATION
                     if (subset[0].isset())
-                        return MSG_ACARS;
+                        return MessageType::ACARS;
                     break;
             }
         }
-        return MSG_AMDAR;
+        return MessageType::AMDAR;
     }
 
-    MsgType scanType(const Bulletin& bulletin) const
+    MessageType scanType(const Bulletin& bulletin) const
     {
         switch (bulletin.data_subcategory_local)
         {
-            case 142: return MSG_AIREP;
-            case 144: return MSG_AMDAR;
-            case 145: return MSG_ACARS;
+            case 142: return MessageType::AIREP;
+            case 144: return MessageType::AMDAR;
+            case 145: return MessageType::ACARS;
             default:
                 // Scan for the presence of significant B codes
                 if (bulletin.subsets.empty())
-                    return MSG_GENERIC;
+                    return MessageType::GENERIC;
                 return scanTypeFromVars(bulletin.subsets[0]);
         }
     }
 };
 
-std::unique_ptr<Importer> Importer::createFlight(const msg::ImporterOptions& opts)
+std::unique_ptr<Importer> Importer::createFlight(const dballe::ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new FlightImporter(opts));
 }
@@ -233,9 +215,7 @@ void FlightImporter::import_var(const Var& var)
     }
 }
 
-} // namespace wbimporter
-} // namespace msg
-} // namespace dballe
-
-
-/* vim:set ts=4 sw=4: */
+}
+}
+}
+}

@@ -33,7 +33,7 @@ void Driver::create_tables(db::Format format)
 {
     switch (format)
     {
-        case V7: create_tables_v7(); break;
+        case Format::V7: create_tables_v7(); break;
         default: throw wreport::error_consistency("cannot create tables on the given DB format");
     }
 }
@@ -42,7 +42,7 @@ void Driver::delete_tables(db::Format format)
 {
     switch (format)
     {
-        case V7: delete_tables_v7(); break;
+        case Format::V7: delete_tables_v7(); break;
         default: throw wreport::error_consistency("cannot delete tables on the given DB format");
     }
 }
@@ -51,7 +51,7 @@ void Driver::remove_all(db::Format format)
 {
     switch (format)
     {
-        case V7: remove_all_v7(); break;
+        case Format::V7: remove_all_v7(); break;
         default: throw wreport::error_consistency("cannot empty a database with the given format");
     }
 }
