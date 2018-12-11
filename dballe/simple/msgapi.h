@@ -78,11 +78,11 @@ public:
     void flushMessage();
     void set_exporter(const char* template_name);
 
-    void scopa(const char* repinfofile=0) override;
-    int quantesono() override;
-    int voglioquesto() override;
-    void prendilo() override;
-    void dimenticami() override;
+    void reinit_db(const char* repinfofile=0) override;
+    int query_stations() override;
+    int query_data() override;
+    void insert_data() override;
+    void remove_data() override;
     void remove_all() override;
     void messages_open_input(const char* filename, const char* mode, Encoding format, bool) override;
     void messages_open_output(const char* filename, const char* mode, Encoding format) override;

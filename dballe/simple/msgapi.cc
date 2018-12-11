@@ -32,19 +32,19 @@ struct QuantesonoOperation : public CursorOperation<CursorStation>
     {
         const impl::Message* curmsg = api.curmsg();
         if (!curmsg)
-            throw error_consistency("quantesono called without a current message");
+            throw error_consistency("query_stations called without a current message");
         cursor = curmsg->query_stations(api.input_query);
         return cursor->remaining();
     }
 
-    bool elencamele() override
+    bool next_station() override
     {
         return cursor->next();
     }
 
-    void voglioancora(Attributes& dest) override { throw error_consistency("voglioancora cannot be called after quantesono/elencamele"); }
-    void critica(Values& qcinput) override { throw error_consistency("critica cannot be called after quantesono/elencamele"); }
-    void scusa() override { throw error_consistency("scusa cannot be called after quantesono/elencamele"); }
+    void query_attributes(Attributes& dest) override { throw error_consistency("query_attributes cannot be called after query_stations/next_station"); }
+    void insert_attributes(Values& qcinput) override { throw error_consistency("insert_attributes cannot be called after query_stations/next_station"); }
+    void remove_attributes() override { throw error_consistency("remove_attributes cannot be called after query_stations/next_station"); }
 };
 
 template<typename Cursor>
@@ -85,7 +85,7 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
 {
     MsgAPI& api;
     bool valid_cached_attrs = false;
-    bool dammelo_ended = false;
+    bool next_data_ended = false;
 
     VoglioquestoOperation(MsgAPI& api)
         : api(api)
@@ -102,23 +102,23 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
         return this->cursor->remaining();
     }
 
-    wreport::Varcode dammelo() override
+    wreport::Varcode next_data() override
     {
-        if (dammelo_ended) return 0;
+        if (next_data_ended) return 0;
 
         if (this->cursor->next())
         {
             valid_cached_attrs = true;
             return this->cursor->get_varcode();
         } else {
-            dammelo_ended = true;
+            next_data_ended = true;
             return 0;
         }
     }
 
-    void voglioancora(Attributes& dest) override
+    void query_attributes(Attributes& dest) override
     {
-        if (dammelo_ended) throw error_consistency("voglioancora called after dammelo returned end of data");
+        if (next_data_ended) throw error_consistency("query_attributes called after next_data returned end of data");
 
         wreport::Var var = this->cursor->get_var();
         api.qcoutput.values.clear();
@@ -128,14 +128,14 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
         api.qcinput.clear();
     }
 
-    void critica(Values& qcinput) override
+    void insert_attributes(Values& qcinput) override
     {
-        throw error_consistency("critica has been called without a previous prendilo");
+        throw error_consistency("insert_attributes has been called without a previous insert_data");
     }
 
-    void scusa() override
+    void remove_attributes() override
     {
-        throw error_consistency("scusa does not make sense when writing messages");
+        throw error_consistency("remove_attributes does not make sense when writing messages");
     }
 };
 
@@ -148,7 +148,7 @@ struct PrendiloOperation : public Operation
     Level vars_level;
     /// Time range for vars
     Trange vars_trange;
-    /// Last variables written with prendilo
+    /// Last variables written with insert_data
     Values vars;
 
     PrendiloOperation(MsgAPI& api)
@@ -165,7 +165,7 @@ struct PrendiloOperation : public Operation
 
     void flushVars()
     {
-        // Acquire the variables still around from the last prendilo
+        // Acquire the variables still around from the last insert_data
         vars.move_to([&](std::unique_ptr<wreport::Var> var) {
             api.wmsg->set(vars_level, vars_trange, std::move(var));
         });
@@ -231,30 +231,30 @@ struct PrendiloOperation : public Operation
             api.input_query.query.clear();
         }
     }
-    void voglioancora(Attributes& dest) override
+    void query_attributes(Attributes& dest) override
     {
-        throw error_consistency("voglioancora cannot be called after a prendilo");
+        throw error_consistency("query_attributes cannot be called after a insert_data");
     }
-    void critica(Values& qcinput) override
+    void insert_attributes(Values& qcinput) override
     {
         if (vars.empty())
-            throw error_consistency("critica has been called without a previous prendilo");
+            throw error_consistency("insert_attributes has been called without a previous insert_data");
         if (vars.size() > 1)
-            throw error_consistency("critica has been called after setting many variables with a single prendilo, so I do not know which one should get the attributes");
+            throw error_consistency("insert_attributes has been called after setting many variables with a single insert_data, so I do not know which one should get the attributes");
 
         qcinput.move_to_attributes(**vars.begin());
     }
 
-    void scusa() override
+    void remove_attributes() override
     {
-        throw error_consistency("scusa does not make sense when writing messages");
+        throw error_consistency("remove_attributes does not make sense when writing messages");
     }
-    int enqi(const char* param) const override { wreport::error_consistency::throwf("enqi %s cannot be called after a prendilo", param); }
-    double enqd(const char* param) const override { throw wreport::error_consistency("enqd cannot be called after a prendilo"); }
-    bool enqc(const char* param, std::string& res) const override { throw wreport::error_consistency("enqc cannot be called after a prendilo"); }
-    void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const override { throw wreport::error_consistency("enqlevel cannot be called after a prendilo"); }
-    void enqtimerange(int& ptype, int& p1, int& p2) const override { throw wreport::error_consistency("enqtimerange cannot be called after a prendilo"); }
-    void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) const override { throw wreport::error_consistency("enqdate cannot be called after a prendilo"); }
+    int enqi(const char* param) const override { wreport::error_consistency::throwf("enqi %s cannot be called after a insert_data", param); }
+    double enqd(const char* param) const override { throw wreport::error_consistency("enqd cannot be called after a insert_data"); }
+    bool enqc(const char* param, std::string& res) const override { throw wreport::error_consistency("enqc cannot be called after a insert_data"); }
+    void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const override { throw wreport::error_consistency("enqlevel cannot be called after a insert_data"); }
+    void enqtimerange(int& ptype, int& p1, int& p2) const override { throw wreport::error_consistency("enqtimerange cannot be called after a insert_data"); }
+    void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) const override { throw wreport::error_consistency("enqdate cannot be called after a insert_data"); }
 };
 
 }
@@ -370,17 +370,17 @@ bool MsgAPI::readNextMessage()
     return false;
 }
 
-void MsgAPI::scopa(const char* repinfofile)
+void MsgAPI::reinit_db(const char* repinfofile)
 {
     if (!(perms & PERM_DATA_WRITE))
         throw error_consistency(
-            "scopa must be run with the database open in data write mode");
+            "reinit_db must be run with the database open in data write mode");
 
     // FIXME: In theory, nothing to do
     // FIXME: In practice, we could reset all buffered data and ftruncate the file
 }
 
-int MsgAPI::quantesono()
+int MsgAPI::query_stations()
 {
     if (state & (STATE_BLANK | STATE_QUANTESONO))
         readNextMessage();
@@ -391,7 +391,7 @@ int MsgAPI::quantesono()
     return reset_operation(new QuantesonoOperation(*this));
 }
 
-int MsgAPI::voglioquesto()
+int MsgAPI::query_data()
 {
     if (state & (STATE_BLANK | STATE_VOGLIOQUESTO))
         readNextMessage();
@@ -419,19 +419,19 @@ void MsgAPI::set_exporter(const char* template_name)
     exporter_template = template_name;
 }
 
-void MsgAPI::prendilo()
+void MsgAPI::insert_data()
 {
     if (perms & PERM_DATA_RO)
-        error_consistency("prendilo cannot be called with the file open in read mode");
+        error_consistency("insert_data cannot be called with the file open in read mode");
 
     input_data.datetime.set_lower_bound();
     reset_operation(new PrendiloOperation(*this));
     unsetb();
 }
 
-void MsgAPI::dimenticami()
+void MsgAPI::remove_data()
 {
-    throw error_consistency("dimenticami does not make sense when writing messages");
+    throw error_consistency("remove_data does not make sense when writing messages");
 }
 
 void MsgAPI::messages_open_input(const char* filename, const char* mode, Encoding format, bool)

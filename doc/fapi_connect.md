@@ -10,7 +10,7 @@ Specifying the URL directly:
 
 Fortran:
 ```fortran
-ierr = idba_presentati(dbhandle, "dbtype://info")
+ierr = idba_connect(dbhandle, "dbtype://info")
 ```
 
 dbadb:
@@ -38,7 +38,7 @@ export DBA_DB="dbtype://info"
 
 Fortran:
 ```fortran
-ierr = idba_presentati(dbhandle, DBA_MVC)
+ierr = idba_connect(dbhandle, DBA_MVC)
 ```
 
 dbadb:

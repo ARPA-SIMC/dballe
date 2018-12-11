@@ -70,13 +70,13 @@ compatibility.
 ## `DBA_FORTRAN_TRANSACTION`
 
 Wrap in a single database transaction everything that happens on a session
-between [idba_preparati][] and [idba_fatto][], unless [idba_preparati][] is
+between [idba_begin][] and [idba_commit][], unless [idba_begin][] is
 called with only `"read"` access levels.
 
 This should make execution faster at least on PostgreSQL and MySQL, and if
-[idba_fatto][] is not called, like if the program aborts because of an error,
+[idba_commit][] is not called, like if the program aborts because of an error,
 then the partial work is rolled back rather than kept in the database.
 
-[idba_preparati]: fapi_reference.md#idba_preparati
-[idba_messaggi]: fapi_reference.md#idba_messaggi
-[idba_fatto]: fapi_reference.md#idba_fatto
+[idba_begin]: fapi_reference.md#idba_begin
+[idba_begin_messages]: fapi_reference.md#idba_begin_messages
+[idba_commit]: fapi_reference.md#idba_commit

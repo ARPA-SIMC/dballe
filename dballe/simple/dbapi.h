@@ -32,13 +32,13 @@ public:
     virtual ~DbAPI();
 
     void seti(const char* param, int value) override;
-    void scopa(const char* repinfofile=nullptr) override;
+    void reinit_db(const char* repinfofile=nullptr) override;
     void remove_all() override;
-    int quantesono() override;
-    int voglioquesto() override;
-    void prendilo() override;
-    void dimenticami() override;
-    void fatto() override;
+    int query_stations() override;
+    int query_data() override;
+    void insert_data() override;
+    void remove_data() override;
+    void commit() override;
     void messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified=true) override;
     void messages_open_output(const char* filename, const char* mode, Encoding format) override;
     bool messages_read_next() override;

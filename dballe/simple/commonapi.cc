@@ -18,9 +18,9 @@ namespace fortran {
 wreport::Varcode Attributes::next()
 {
     if (!valid)
-        throw error_consistency("ancora called without a previous voglioancora");
+        throw error_consistency("next_attribute called without a previous query_attributes");
     if (current == values.end())
-        throw error_notfound("ancora called with no (or no more) results available");
+        throw error_notfound("next_attribute called with no (or no more) results available");
 
     Varcode res = current->code();
     ++current;
@@ -41,8 +41,8 @@ void Attributes::has_new_values()
 
 Operation::~Operation() {}
 void Operation::set_varcode(wreport::Varcode varcode) {}
-bool Operation::elencamele() { throw error_consistency("elencamele called without a previous quantesono"); }
-wreport::Varcode Operation::dammelo() { throw error_consistency("dammelo called without a previous voglioquesto"); }
+bool Operation::next_station() { throw error_consistency("next_station called without a previous query_stations"); }
+wreport::Varcode Operation::next_data() { throw error_consistency("next_data called without a previous query_data"); }
 
 signed char Operation::enqb(const char* param) const
 {
@@ -136,7 +136,7 @@ int CommonAPIImplementation::enqi(const char* param)
         else
         {
             if (!qcoutput.valid)
-                error_consistency::throwf("enqi %s can only be called after a voglioancora", param);
+                error_consistency::throwf("enqi %s can only be called after a query_attributes", param);
             wreport::Varcode code = resolve_varcode(param + 1);
             return qcoutput.values.enq(code, API::missing_int);
         }
@@ -150,7 +150,7 @@ signed char CommonAPIImplementation::enqb(const char* param)
     if (param[0] == '*')
     {
         if (!qcoutput.valid)
-            error_consistency::throwf("enqb %s can only be called after a voglioancora", param);
+            error_consistency::throwf("enqb %s can only be called after a query_attributes", param);
         wreport::Varcode code = resolve_varcode(param + 1);
         if (const wreport::Var* var = qcoutput.values.maybe_var(code))
             if (var->isset())
@@ -166,7 +166,7 @@ float CommonAPIImplementation::enqr(const char* param)
     if (param[0] == '*')
     {
         if (!qcoutput.valid)
-            error_consistency::throwf("enqb %s can only be called after a voglioancora", param);
+            error_consistency::throwf("enqb %s can only be called after a query_attributes", param);
         wreport::Varcode code = resolve_varcode(param + 1);
         if (const wreport::Var* var = qcoutput.values.maybe_var(code))
             if (var->isset())
@@ -182,7 +182,7 @@ double CommonAPIImplementation::enqd(const char* param)
     if (param[0] == '*')
     {
         if (!qcoutput.valid)
-            error_consistency::throwf("enqd %s can only be called after a voglioancora", param);
+            error_consistency::throwf("enqd %s can only be called after a query_attributes", param);
         wreport::Varcode code = resolve_varcode(param + 1);
         return qcoutput.values.enq(code, API::missing_double);
     }
@@ -195,7 +195,7 @@ bool CommonAPIImplementation::enqc(const char* param, std::string& res)
     if (param[0] == '*')
     {
         if (!qcoutput.valid)
-            error_consistency::throwf("enqc %s can only be called after a voglioancora", param);
+            error_consistency::throwf("enqc %s can only be called after a query_attributes", param);
         wreport::Varcode code = resolve_varcode(param + 1);
         const Var* var = qcoutput.values.maybe_var(code);
         if (!var) return false;
@@ -271,7 +271,7 @@ void CommonAPIImplementation::setc(const char* param, const char* value)
         if (strcmp(param + 1, "var_related") == 0)
         {
             if (!operation)
-                throw error_consistency("*var_related set without context_id, or before any dammelo or prendilo");
+                throw error_consistency("*var_related set without context_id, or before any next_data or insert_data");
             operation->set_varcode(resolve_varcode(value));
         } else if (strcmp(param + 1, "var") == 0) {
             selected_attr_codes = std::vector<wreport::Varcode>{resolve_varcode(value + 1)};
@@ -301,7 +301,7 @@ void CommonAPIImplementation::setc(const char* param, const char* value)
         input_data.values.set(resolve_varcode(param), value);
 }
 
-void CommonAPIImplementation::setcontextana()
+void CommonAPIImplementation::set_station_context()
 {
     input_query.dtrange = DatetimeRange();
     input_data.datetime = Datetime();
@@ -355,7 +355,7 @@ void CommonAPIImplementation::unset(const char* param)
         if (strcmp(param + 1, "var_related") == 0)
         {
             if (!operation)
-                throw error_consistency("*var_related set without context_id, or before any dammelo or prendilo");
+                throw error_consistency("*var_related set without context_id, or before any next_data or insert_data");
             operation->set_varcode(0);
         } else if (strcmp(param + 1, "var") == 0) {
             selected_attr_codes.clear();
@@ -391,19 +391,19 @@ void CommonAPIImplementation::unsetb()
     input_data.clear_vars();
 }
 
-const char* CommonAPIImplementation::spiegal(int ltype1, int l1, int ltype2, int l2)
+const char* CommonAPIImplementation::describe_level(int ltype1, int l1, int ltype2, int l2)
 {
     cached_spiega = Level(ltype1, l1, ltype2, l2).describe();
     return cached_spiega.c_str();
 }
 
-const char* CommonAPIImplementation::spiegat(int ptype, int p1, int p2)
+const char* CommonAPIImplementation::describe_timerange(int ptype, int p1, int p2)
 {
     cached_spiega = Trange(ptype, p1, p2).describe();
     return cached_spiega.c_str();
 }
 
-const char* CommonAPIImplementation::spiegab(const char* varcode, const char* value)
+const char* CommonAPIImplementation::describe_var(const char* varcode, const char* value)
 {
     Varinfo info = varinfo(WR_STRING_TO_VAR(varcode + 1));
     Var var(info, value);
@@ -426,31 +426,31 @@ const char* CommonAPIImplementation::spiegab(const char* varcode, const char* va
     return cached_spiega.c_str();
 }
 
-void CommonAPIImplementation::elencamele()
+void CommonAPIImplementation::next_station()
 {
     if (!operation)
-        throw error_consistency("elencamele called without a previous quantesono");
-    if (!operation->elencamele())
+        throw error_consistency("next_station called without a previous query_stations");
+    if (!operation->next_station())
         reset_operation();
 }
 
-wreport::Varcode CommonAPIImplementation::dammelo()
+wreport::Varcode CommonAPIImplementation::next_data()
 {
-    if (!operation) throw error_consistency("dammelo called without a previous voglioquesto");
+    if (!operation) throw error_consistency("next_data called without a previous query_data");
     qcoutput.invalidate();
-    return operation->dammelo();
+    return operation->next_data();
 }
 
-int CommonAPIImplementation::voglioancora()
+int CommonAPIImplementation::query_attributes()
 {
     // Query attributes
-    if (!operation) throw error_consistency("voglioancora was not called after a dammelo, or was called with an invalid *context_id or *var_related");
-    operation->voglioancora(qcoutput);
+    if (!operation) throw error_consistency("query_attributes was not called after a next_data, or was called with an invalid *context_id or *var_related");
+    operation->query_attributes(qcoutput);
     qcinput.clear();
     return qcoutput.values.size();
 }
 
-const char* CommonAPIImplementation::ancora()
+const char* CommonAPIImplementation::next_attribute()
 {
     static char parm[10] = "*";
     Varcode code = qcoutput.next();
@@ -458,31 +458,31 @@ const char* CommonAPIImplementation::ancora()
     return parm;
 }
 
-void CommonAPIImplementation::critica()
+void CommonAPIImplementation::insert_attributes()
 {
     if (perms & PERM_ATTR_RO)
         throw error_consistency(
-            "critica cannot be called with the database open in attribute readonly mode");
+            "insert_attributes cannot be called with the database open in attribute readonly mode");
 
-    if (!operation) throw error_consistency("critica was not called after a dammelo or prendilo, or was called with an invalid *context_id or *var_related");
-    operation->critica(qcinput);
+    if (!operation) throw error_consistency("insert_attributes was not called after a next_data or insert_data, or was called with an invalid *context_id or *var_related");
+    operation->insert_attributes(qcinput);
     qcinput.clear();
 }
 
-void CommonAPIImplementation::scusa()
+void CommonAPIImplementation::remove_attributes()
 {
     if (! (perms & PERM_ATTR_WRITE))
         throw error_consistency(
-            "scusa must be called with the database open in attribute write mode");
+            "remove_attributes must be called with the database open in attribute write mode");
 
 
     // Retrieve the varcodes of the attributes we want to remove
-    if (!operation) throw error_consistency("scusa was not called after a dammelo, or was called with an invalid *context_id or *var_related");
-    operation->scusa();
+    if (!operation) throw error_consistency("remove_attributes was not called after a next_data, or was called with an invalid *context_id or *var_related");
+    operation->remove_attributes();
     qcinput.clear();
 }
 
-void CommonAPIImplementation::fatto()
+void CommonAPIImplementation::commit()
 {
 }
 

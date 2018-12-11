@@ -31,7 +31,7 @@ Errors can be handled by checking the return value of every function:
 
 ```fortran
       ! Example error handling
-      ierr = idba_presentati(dbhandle, "dburl")
+      ierr = idba_connect(dbhandle, "dburl")
       if (ierr.ne.0) then
            ! handle the error...
       end if
@@ -149,24 +149,24 @@ This code will open a connection with DB-All.e, then it will start a session:
 
 ```fortran
       ! Connect to the database and get a handle to work with it
-      ierr = idba_presentati(dbhandle, "url")
-      ierr = idba_preparati(dbhandle, handle, "read", "read", "read")
+      ierr = idba_connect(dbhandle, "url")
+      ierr = idba_begin(dbhandle, handle, "read", "read", "read")
 
       ! ...do your work...
 
       ! End of the work
-      ierr = idba_fatto(handle)
-      ierr = idba_arrivederci(dbhandle)
+      ierr = idba_commit(handle)
+      ierr = idba_disconnect(dbhandle)
 ```
 
-You call [idba_presentati][] to connect to the databse. The parameters are
+You call [idba_connect][] to connect to the databse. The parameters are
 the [database connection URL](fapi_connect.md), and two parameters that were
 used in the past and are now ignored.
 
-You can call [idba_preparati][] many times and get more handles.  This allows
+You can call [idba_begin][] many times and get more handles.  This allows
 to perform many operations on the database at the same time.
 
-[idba_preparati][] has three extra parameters that can be used to limit
+[idba_begin][] has three extra parameters that can be used to limit
 write operations on the database, as a limited protection against programming
 errors.
 
@@ -203,20 +203,20 @@ attributes are deleted as well.
 Instead of connecting to a database, you can use the DB-All.e API to read and
 write message reports in BUFR and CREX format.
 
-To do that, use [idba_messaggi][] instead of both [idba_presentati][] and
-[idba_preparati][].  To write a message, your code will look like:
+To do that, use [idba_begin_messages][] instead of both [idba_connect][] and
+[idba_begin][].  To write a message, your code will look like:
 
 ```fortran
       ! Connect to the database and get a handle to work with it
-      ierr = idba_messaggi(handle, "file.bufr", "r", "auto")
+      ierr = idba_begin_messages(handle, "file.bufr", "r", "auto")
 
       ! ...do your work...
 
       ! End of the work
-      ierr = idba_fatto(handle)
+      ierr = idba_commit(handle)
 ```
 
-[idba_messaggi][] has three parameters:
+[idba_begin_messages][] has three parameters:
 
 1. the name of the file to open
 2. the open mode ("r" for read, "w" for write or create, "a" for append).
@@ -225,8 +225,8 @@ To do that, use [idba_messaggi][] instead of both [idba_presentati][] and
    DB-All.e to autodetect the file format, but it only works when reading
    files, not when writing new one.
 
-You can call [idba_messaggi][] many times and read or write many files.  You
-can even call [idba_messaggi][] many time on the same file as long as you
+You can call [idba_begin_messages][] many times and read or write many files.  You
+can even call [idba_begin_messages][] many time on the same file as long as you
 open it read only.
 
 Once you open a file, you can use the other DB-All.e functions on it.  There
@@ -245,11 +245,11 @@ is read with the functions `idba_enq*` (see [the introduction](fapi_concepts.md#
       ierr = idba_setd(handle, "latmax", 50.D0)
       ierr = idba_setd(handle, "lonmin", 10.D0)
       ierr = idba_setd(handle, "lonmax", 20.D0)
-      ierr = idba_quantesono(handle, count)
+      ierr = idba_query_stations(handle, count)
 
       ! Get the informations about a station
       do while (count.gt.0)
-        ierr = idba_elencamele(handle)
+        ierr = idba_next_station(handle)
         ierr = idba_enqc(handle, "name", cname)
         ierr = idba_enqi(handle, "ana_id", id)
         ierr = idba_enqd(handle, "lat", lat)
@@ -375,7 +375,7 @@ For example:
       ierr = idba_setr(handle, "B11002", 1.8)
       ! Also set the temperature
       ierr = idba_setr(handle, "B12001", 21.8)
-      ierr = idba_prendilo(handle)
+      ierr = idba_insert_data(handle)
 ```
 
 ## Attributes
@@ -389,10 +389,10 @@ For example:
 
 ```fortran
       ! Set the confidence of the wind speed value we inserted
-      ! in the last 'idba_prendilo'
+      ! in the last 'idba_insert_data'
       ierr = idba_setr(handle, "*B33007", 75.0)
       ierr = idba_setc(handle, "*var_related", "B11002")
-      ierr = idba_critica(handle)
+      ierr = idba_insert_attributes(handle)
 ```
 
 ## Querying the database
@@ -410,9 +410,9 @@ Example code to query all the stations in a given area:
       ierr = idba_setd(handle, "latmax", 50.D0)
       ierr = idba_setd(handle, "lonmin", 10.D0)
       ierr = idba_setd(handle, "lonmax", 20.D0)
-      ierr = idba_quantesono(handle, count)
+      ierr = idba_query_stations(handle, count)
       do while (count.gt.0)
-        ierr = idba_elencamele(handle)
+        ierr = idba_next_station(handle)
         ierr = idba_enqi(handle, "ana_id", id)
         ! Pseudoana values can be read as well:
         ierr = idba_enqc(handle, "name", cname)
@@ -424,15 +424,15 @@ Example code to query all the stations in a given area:
 
 This code introduces two new functions:
 
-* [idba_quantesono][]: performs the query and returns the number of stations it
+* [idba_query_stations][]: performs the query and returns the number of stations it
   finds.
-* [idba_elencamele][]: gets a station out of the results of [idba_quantesono][].
+* [idba_next_station][]: gets a station out of the results of [idba_query_stations][].
   If there are no more stations, the function fails.
 
-After [idba_elencamele][], the output record will also contain all the pseudoana
+After [idba_next_station][], the output record will also contain all the pseudoana
 values available for the station.  If `rep_cod` or `rep_memo` are specified as
 query parameters, the pseudoana values of that network will be used.  Else,
-[idba_elencamele][] will use all available pseudoana values, choosing the one in
+[idba_next_station][] will use all available pseudoana values, choosing the one in
 the network with the highest priority in case the same pseudoana value is
 available on more than one network.
 
@@ -447,9 +447,9 @@ Example code to query all the values in a given area and time:
       ierr = idba_seti(handle, "lonmax", 20)
       ierr = idba_seti(handle, "yearmin", 2004)
       ierr = idba_seti(handle, "yearmax", 2004)
-      ierr = idba_voglioquesto(handle, count)
+      ierr = idba_query_data(handle, count)
       do while (count.gt.0)
-        ierr = idba_dammelo(handle, param)
+        ierr = idba_next_data(handle, param)
         ! get the value of this variable
         ierr = idba_enqc(handle, param, cvalue)
         ierr = idba_enqd(handle, "lat", dlat)
@@ -461,21 +461,21 @@ Example code to query all the values in a given area and time:
 
 This code introduces two new functions:
 
-* [idba_voglioquesto][]: performs the query and returns the number of values it
+* [idba_query_data][]: performs the query and returns the number of values it
   finds.
-* [idba_dammelo][]: gets a value out of the result of [idba_voglioquesto][].  If
+* [idba_next_data][]: gets a value out of the result of [idba_query_data][].  If
   there are no more stations, the function fails.
 
 ## Clearing the database
 
-You can initialise or reinitialise the database using [idba_scopa][]:
+You can initialise or reinitialise the database using [idba_reinit_db][]:
 
 ```fortran
       ! Start the work with a clean database
-      ierr = idba_scopa(handle, "repinfo.csv")
+      ierr = idba_reinit_db(handle, "repinfo.csv")
 ```
 
-[idba_scopa][] clears the database if it exists, then recreates all the
+[idba_reinit_db][] clears the database if it exists, then recreates all the
 needed tables.  Finally, it populates the informations about the reports (such
 as the available report types, their mnemonics and their priority) using the
 data in the file given as argument.
@@ -489,7 +489,7 @@ The file is in CSV format, with 6 columns:
 5. Ignored
 6. Ignored
 
-If `""` is given instead of the file name, [idba_scopa][] will read the
+If `""` is given instead of the file name, [idba_reinit_db][] will read the
 data from `/etc/repinfo.csv`.
 
 This is an example of the contents of the file:
@@ -506,13 +506,13 @@ This is an example of the contents of the file:
 09,boe,dati omdametrici,100,oss,31
 ```
 
-[idba_scopa][] will not work unless `rewrite` has been enabled for the
+[idba_reinit_db][] will not work unless `rewrite` has been enabled for the
 data when opening the database.
 
 
 ## Inserting data
 
-Data is inserted using [idba_prendilo][]:
+Data is inserted using [idba_insert_data][]:
 
 ```fortran
       ! Insert a new data in the database
@@ -525,21 +525,21 @@ Data is inserted using [idba_prendilo][]:
       ierr = idba_setr(handle, "day", 26)
       ...
       ierr = idba_setr(handle, "B11002", 1.8)
-      ierr = idba_prendilo(handle)
+      ierr = idba_insert_data(handle)
 ```
 
 This code introduces a new function:
 
-* [idba_prendilo][]:
+* [idba_insert_data][]:
   inserts a new value in the database.  All the information about the parameter
   to insert is taken from the input previously set by `idba_set*` functions.
 
   When data of the same kind and with the same characteristics already exists,
-  the behaviour of [idba_prendilo][] is defined by the parameter passed to
-  [idba_preparati][] when creating the handle.  See [Starting the
+  the behaviour of [idba_insert_data][] is defined by the parameter passed to
+  [idba_begin][] when creating the handle.  See [Starting the
   work](#ch_work_start) for more informations.
 
-[idba_prendilo][] will work in different ways according to the data opening
+[idba_insert_data][] will work in different ways according to the data opening
 mode of the database:
 
 * `read`: causes an error, because the data cannot be read.
@@ -560,37 +560,37 @@ is `add` or `rewrite`.
 
 ## Deleting data
 
-Data is deleted using [idba_dimenticami][]:
+Data is deleted using [idba_remove_data][]:
 
 ```fortran
       ! Delete all data from the station with id 4 in year 2002
       ierr = idba_seti(handle, "ana_id", 4)
       ierr = idba_seti(handle, "year", 2002)
-      ierr = idba_dimenticami(handle)
+      ierr = idba_remove_data(handle)
 ```
 
 This code introduces a new function:
 
-* [idba_dimenticami][]: deletes all the data found in the extremes specified in
+* [idba_remove_data][]: deletes all the data found in the extremes specified in
   input.
 
-[idba_dimenticami][] will not work unless `rewrite` has been enabled for
+[idba_remove_data][] will not work unless `rewrite` has been enabled for
 the data when opening the database.
 
 ## Reading attributes
 
-Attributes are read using [idba_ancora][]:
+Attributes are read using [idba_next_attribute][]:
 
 ```fortran
       ! ...setup a query...
-      idba_voglioquesto(handle, count)
+      idba_query_data(handle, count)
       do while (count.gt.0)
-        ierr = idba_dammelo(handle, param)
+        ierr = idba_next_data(handle, param)
 
         ! Read QC informations about the last value read
-        ierr = idba_voglioancora(handle, qc_count)
+        ierr = idba_query_attributes(handle, qc_count)
         do while (qc_count.gt.0)
-            ierr = idba_ancora(handle, param) 
+            ierr = idba_next_attribute(handle, param) 
             ierr = idba_enqc(handle, param, value)
             ! ...process the value...
             qc_count = qc_count - 1
@@ -602,11 +602,11 @@ Attributes are read using [idba_ancora][]:
 
 This code introduces two new functions:
 
-* [idba_voglioancora][]:
+* [idba_query_attributes][]:
   Performs a query to retrieve attributes for the last variable read by
-  [idba_dammelo][].  It returns the number of attributes available.
-* [idba_ancora][]:
-  Retrieves one by one the values queried by [idba_voglioancora][] if
+  [idba_next_data][].  It returns the number of attributes available.
+* [idba_next_attribute][]:
+  Retrieves one by one the values queried by [idba_query_attributes][] if
   there are no more items available, the function will fail.
 
   The parameter `param` will be set to the name (in the form `*Bxxyyy`) of
@@ -616,7 +616,7 @@ It is possible to read attributes at a later time giving a context ID and a B
 table value:
 
 ```fortran
-      ! Read the context ID after a prendilo or a dammelo
+      ! Read the context ID after a insert_data or a next_data
       idba_enqi(handle, "context_id", id)
 
       ! ...a while later...
@@ -632,9 +632,9 @@ table value:
       ! by default, all attributes are returned
 
       ! Read QC informations about the last value read
-      ierr = idba_voglioancora(handle, qc_count)
+      ierr = idba_query_attributes(handle, qc_count)
       do while (qc_count.gt.0)
-          ierr = idba_ancora(handle, param) 
+          ierr = idba_next_attribute(handle, param) 
           ierr = idba_enqc(handle, param, value)
           ! ...process the value...
           qc_count = qc_count - 1
@@ -643,39 +643,39 @@ table value:
 
 ## Writing attributes
 
-Attributes are written using [idba_critica][], which can be used after an
-[idba_dammelo][], after an [idba_prendilo][] or at any time using a stored data
-id.  These three case differ on how to communicate to [idba_critica][] what is
+Attributes are written using [idba_insert_attributes][], which can be used after an
+[idba_next_data][], after an [idba_insert_data][] or at any time using a stored data
+id.  These three case differ on how to communicate to [idba_insert_attributes][] what is
 the data about which to write attributes.
 
-When used after [idba_dammelo][], [idba_critica][] can refer directly to the
+When used after [idba_next_data][], [idba_insert_attributes][] can refer directly to the
 last data retrieved:
 
 ```fortran
       ! ...setup a query...
-      ierr = idba_voglioquesto(handle, count)
+      ierr = idba_query_data(handle, count)
       do while (count.gt.0)
-        ierr = idba_dammelo(handle, param)
+        ierr = idba_next_data(handle, param)
         ! ...process data...
 
         ! Set the attributes
         ierr = idba_seti(handle, "*B33007", 75)
         ierr = idba_seti(handle, "*B33006", 42)
-        ierr = idba_critica(handle)
+        ierr = idba_insert_attributes(handle)
 
         count = count - 1
       enddo
 ```
 
-After an [idba_prendilo][] instead, since [idba_prendilo][] can write more than
-one data at a time, we need to tell [idba_critica][] which of them we are
+After an [idba_insert_data][] instead, since [idba_insert_data][] can write more than
+one data at a time, we need to tell [idba_insert_attributes][] which of them we are
 referring to:
 
 ```fortran
       ! Insert wind speed and temperature
       ierr = idba_setr(handle, "B11002", 1.8)
       ierr = idba_setr(handle, "B12001", 22)
-      ierr = idba_prendilo(handle)
+      ierr = idba_insert_data(handle)
 
       ! Set the attributes
       ierr = idba_seti(handle, "*B33007", 75)
@@ -683,15 +683,15 @@ referring to:
       ! Use "*var_related" to indicate which of the two variables we are annotating
       ierr = idba_setc(handle, "*var_related", "B11002")
 
-      ierr = idba_critica(handle)
+      ierr = idba_insert_attributes(handle)
 ```
 
-[idba_critica][] can also be called at any time using a previously stored data it:
+[idba_insert_attributes][] can also be called at any time using a previously stored data it:
 
 ```fortran
-      ! ...perform a query with idba_voglioquesto...
+      ! ...perform a query with idba_query_data...
       do while (count.gt.0)
-        ierr = idba_dammelo(handle, param)
+        ierr = idba_next_data(handle, param)
         ! ...process data...
 
         ! This variable is interesting: save the context ID
@@ -711,23 +711,23 @@ referring to:
       ! and variable code
       ierr = idba_seti(handle, "*context_id", saved_id)
       ierr = idba_seti(handle, "*var_related", "B11001")
-      ierr = idba_critica(handle)
+      ierr = idba_insert_attributes(handle)
 ```
 
 This code introduces a new function:
 
-* [idba_critica][]
+* [idba_insert_attributes][]
   Set one or more attributes about a variable.
   
   The variable can be identified directly by using `idba_seti(handle,
   "*context_id", id)` and `idba_seti(handle, "*var_related", name)`.
-  These parameters are automatically set by the [idba_dammelo][] and
-  [idba_prendilo][] action routines.
+  These parameters are automatically set by the [idba_next_data][] and
+  [idba_insert_data][] action routines.
 
-  The attributes and values are set as input to [idba_critica][] using the
+  The attributes and values are set as input to [idba_insert_attributes][] using the
   `idba_set*` functions with an asterisk in front of the variable name.
 
-[idba_critica][] will work in different ways according to the attributes
+[idba_insert_attributes][] will work in different ways according to the attributes
 opening mode of the database:
 
 * `"read"`: attributes cannot be modified in any way.
@@ -737,46 +737,46 @@ opening mode of the database:
 
 ## Deleting attributes
 
-Attributes are deleted using [[idba_scusa][]](fapi_reference.md#idba_scusa):
+Attributes are deleted using [[idba_remove_attributes][]](fapi_reference.md#idba_remove_attributes):
 
 ```fortran
       ! Delete the confidence interval from the wind speed
 
       ! The referring variable is identified in the same way as with
-      ! idba_critica:
+      ! idba_insert_attributes:
       ierr = idba_seti(handle, "*context_id", saved_id)
       ierr = idba_seti(handle, "*var_related", "B11002")
 
       ! The attributes to delete are selected by setting "*varlist":
       ierr = idba_setc(handle, "*varlist", "*B33007")
-      ierr = idba_scusa(handle)
+      ierr = idba_remove_attributes(handle)
 ```
 
 This code introduces a new function:
 
-* [idba_scusa][]:
+* [idba_remove_attributes][]:
   Delete attributes from a variable identified in the same way as with
 
-[idba_scusa][] will not work unless the database has been opened in
+[idba_remove_attributes][] will not work unless the database has been opened in
 attribute `rewrite` mode.
 
 
 ## Ending the work
 
 When you are finished working with a handle, you release it with
-[idba_fatto][]:
+[idba_commit][]:
 
 ```fortran
       ! We are finished with this handle
-      ierr = idba_fatto(handle)
+      ierr = idba_commit(handle)
 ```
 
-When you are finished working with DB-ALLe, you use [idba_arrivederci][] to
+When you are finished working with DB-ALLe, you use [idba_disconnect][] to
 close all connections and release all resources:
 
 ```fortran
       ! We do not need to work with dballe anymore
-      ierr = idba_arrivederci(dbh)
+      ierr = idba_disconnect(dbh)
 ```
 
 
@@ -784,7 +784,7 @@ close all connections and release all resources:
 
 DB-All.e offers two shortcuts to represent pseudoana entries and data in the
 database: the `ana_id` and the `data_id` keys, that are set in the
-output of every [idba_dammelo][].
+output of every [idba_next_data][].
 
 `ana_id` represents a pseudoana entry.  Every time one needs to specify a
 set of latitude, longitude, fixed/mobile, one could use the corresponding
@@ -805,16 +805,16 @@ proper description of the values into the string.
 
 The functions are:
 
-* `idba_spiegal(handle,ltype1,l1,ltype2,l2,string)`:
-  Describes a level.  For example, `idba_spiegal(handle,106,10,106,20,string)`
+* `idba_describe_level(handle,ltype1,l1,ltype2,l2,string)`:
+  Describes a level.  For example, `idba_describe_level(handle,106,10,106,20,string)`
   will store in `string` something like: *"Layer between 10hm and
   20hm above ground"*.
-* `idba_spiegat(handle,ptype,p1,p2,string)`:
-  Describes a time range.  For example, `idba_spiegat(handle,3,0,600,string)`
+* `idba_describe_timerange(handle,ptype,p1,p2,string)`:
+  Describes a time range.  For example, `idba_describe_timerange(handle,3,0,600,string)`
   will store in `string` something like: *"Average between reference
   time+0s to reference time+600s"*.
-* `idba_spiegab(handle,varcode,value,string)`:
-  Describe a value.  For example, `idba_spiegab(handle,"B12001","280",string)`
+* `idba_describe_var(handle,varcode,value,string)`:
+  Describe a value.  For example, `idba_describe_var(handle,"B12001","280",string)`
   will store in `string` something like: *"280 (K) TEMPERATURE/DRY-BULB
   TEMPERATURE"*.
 
@@ -832,18 +832,18 @@ parameter.  The available options are:
 This is a list of the differences between working with files and working with
 databases:
 
-* You do not need to call [idba_presentati][] and [idba_arrivederci][]: the work
-  session starts at [idba_messaggi][] and ends at [idba_fatto][]
-* When reading, performing [idba_quantesono][] or [idba_voglioquesto][] a second
+* You do not need to call [idba_connect][] and [idba_disconnect][]: the work
+  session starts at [idba_begin_messages][] and ends at [idba_commit][]
+* When reading, performing [idba_query_stations][] or [idba_query_data][] a second
   time advances to the next message in the file.
-* Query parameters set before an [idba_voglioquesto][] have no effect: filtering
+* Query parameters set before an [idba_query_data][] have no effect: filtering
   data is not implemented for files. Since it may be implemented in the future,
   it is suggested to avoid setting query parameters before an
-  [idba_voglioquesto][] to avoid unexpected changes of behaviour with future
+  [idba_query_data][] to avoid unexpected changes of behaviour with future
   versions of DB-All.e.
 * When reading, you will see that there are no more messages because
-  [idba_quantesono][] or [idba_voglioquesto][] will return 0.
-* When writing, you can use the `query` input parameter to [idba_prendilo][] to
+  [idba_query_stations][] or [idba_query_data][] will return 0.
+* When writing, you can use the `query` input parameter to [idba_insert_data][] to
   control when a new message is started.  If you set it to `subset`, then the
   data will be inserted in a new BUFR or CREX subset.  If you set it to
   `message`, you will start a new message.
@@ -862,16 +862,16 @@ databases:
 ### Insert station data, then insert data
 
 ```fortran
-ierr = idba_preparati(dbhandle, handle, "write", "add", "write")
+ierr = idba_begin(dbhandle, handle, "write", "add", "write")
 
 ! Insert data about a station
 ierr = idba_setr (handle, "lat", 11.345)
 ierr = idba_setr (handle, "lon", 44.678)
 ierr = idba_setr (handle, "height", 23)
-ierr = idba_prendilo (handle)
+ierr = idba_insert_data (handle)
 
 ! Read the station ID for the station we just inserted
-! Use *ana_id instead of ana_id after an idba_prendilo
+! Use *ana_id instead of ana_id after an idba_insert_data
 ierr = idba_enqi (handle, "*ana_id", anaid)
 
 ! Reset the input data
@@ -884,15 +884,15 @@ ierr = idba_settimerange (handle, 0, 0, 0)
 ierr = idba_setdate (handle, 2006, 06, 20, 19, 30, 0)
 ierr = idba_seti (handle, "t", 21)
 ierr = idba_setc (handle, "B12345", "ciao")
-ierr = idba_prendilo (handle)
+ierr = idba_insert_data (handle)
 ```
 
 
 ### Query data, then query station data
 
 ```fortran
-ierr = idba_preparati(dbhandle, handle, "read", "read", "read")
-ierr = idba_preparati(dbhandle, handleana, "read", "read", "read")
+ierr = idba_begin(dbhandle, handle, "read", "read", "read")
+ierr = idba_begin(dbhandle, handleana, "read", "read", "read")
 
 ! Prepare a query
 ierr = idba_setd (handle, "latmin", 10)
@@ -900,28 +900,28 @@ ierr = idba_setd (handle, "latmin", 10)
 ierr = idba_setd (handle, "lonmax", 60)
 
 ! Make the query
-ierr = idba_voglioquesto (handle, N)
+ierr = idba_query_data (handle, N)
 
 ! Iterate the results
 do i=1,N
-  ierr = idba_dammelo (handle, varname)
+  ierr = idba_next_data (handle, varname)
 
   ! Read data about the variable we just had
   ierr = idba_enqlevel (handle, ltype, l1, l2)
 
   ! Read pseudoana data about the variable we just had
-  ! Setup a query for the station with 'quantesono'
+  ! Setup a query for the station with 'query_stations'
   ierr = idba_enqi (handle, "ana_id", anaid)
   ierr = idba_seti (handleana, "ana_id", anaid)
 
   ! Query.  Nstaz should always be 1 because we query a specific station
-  ierr = idba_quantesono (handleana, Nstaz)
+  ierr = idba_query_stations (handleana, Nstaz)
 
   ! Fetch the data
-  ierr = idba_elencamele (handleana)
+  ierr = idba_next_station (handleana)
 
   ! Read the data about the station
-  ! All the data inserted with setcontextana is available here
+  ! All the data inserted with set_station_context is available here
   ierr = idba_enqi (handleana, "height", height)
 enddo
 ```
@@ -934,15 +934,15 @@ enddo
 There are two ways:
 
 If you know in advances what variables you want to read, you can find them
-among the results of [idba_elencamele][]:
+among the results of [idba_next_station][]:
 
 ```fortran
       ! Query station data
-      ierr = idba_quantesono(handle, count)
+      ierr = idba_query_stations(handle, count)
 
       ! Get the informations about a station
       do i=1,count
-        ierr = idba_elencamele(handle)
+        ierr = idba_next_station(handle)
         ierr = idba_enqc(handle, "name", cname)
         ierr = idba_enqi(handle, "B02001", type)
         ! ....
@@ -950,14 +950,14 @@ among the results of [idba_elencamele][]:
 ```
 
 If you want to see all the extra station data available, you can make an
-explicit query for the extra station data using [idba_voglioquesto][] and
-[idba_dammelo][]:
+explicit query for the extra station data using [idba_query_data][] and
+[idba_next_data][]:
 
 ```fortran
       ierr = idba_seti("ana_id", id)
-      ierr = idba_voglioquesto(handle, count)
+      ierr = idba_query_data(handle, count)
       do i=1,count
-        ierr = idba_dammelo(handle, param)
+        ierr = idba_next_data(handle, param)
         ! get the value of this variable
         ierr = idba_enqc(handle, param, cvalue)
         print*,param,": ",cvalue
@@ -974,11 +974,11 @@ explicit query for the extra station data using [idba_voglioquesto][] and
 [idba_error_remove_callback]: fapi_reference.md#idba_error_remove_callback
 [idba_default_error_handler]: fapi_reference.md#idba_default_error_handler
 [idba_error_handle_tolerating_overflows]: fapi_reference.md#idba_error_handle_tolerating_overflows
-[idba_presentati]: fapi_reference.md#idba_presentati
-[idba_arrivederci]: fapi_reference.md#idba_arrivederci
-[idba_preparati]: fapi_reference.md#idba_preparati
-[idba_messaggi]: fapi_reference.md#idba_messaggi
-[idba_fatto]: fapi_reference.md#idba_fatto
+[idba_connect]: fapi_reference.md#idba_connect
+[idba_disconnect]: fapi_reference.md#idba_disconnect
+[idba_begin]: fapi_reference.md#idba_begin
+[idba_begin_messages]: fapi_reference.md#idba_begin_messages
+[idba_commit]: fapi_reference.md#idba_commit
 [idba_seti]: fapi_reference.md#idba_seti
 [idba_setb]: fapi_reference.md#idba_setb
 [idba_setr]: fapi_reference.md#idba_setr
@@ -992,7 +992,7 @@ explicit query for the extra station data using [idba_voglioquesto][] and
 [idba_unset]: fapi_reference.md#idba_unset
 [idba_unsetb]: fapi_reference.md#idba_unsetb
 [idba_unsetall]: fapi_reference.md#idba_unsetall
-[idba_setcontextana]: fapi_reference.md#idba_setcontextana
+[idba_set_station_context]: fapi_reference.md#idba_set_station_context
 [idba_setlevel]: fapi_reference.md#idba_setlevel
 [idba_settimerange]: fapi_reference.md#idba_settimerange
 [idba_setdate]: fapi_reference.md#idba_setdate
@@ -1001,22 +1001,22 @@ explicit query for the extra station data using [idba_voglioquesto][] and
 [idba_enqlevel]: fapi_reference.md#idba_enqlevel
 [idba_enqtimerange]: fapi_reference.md#idba_enqtimerange
 [idba_enqdate]: fapi_reference.md#idba_enqdate
-[idba_scopa]: fapi_reference.md#idba_scopa
-[idba_quantesono]: fapi_reference.md#idba_quantesono
-[idba_elencamele]: fapi_reference.md#idba_elencamele
-[idba_voglioquesto]: fapi_reference.md#idba_voglioquesto
-[idba_dammelo]: fapi_reference.md#idba_dammelo
-[idba_prendilo]: fapi_reference.md#idba_prendilo
-[idba_dimenticami]: fapi_reference.md#idba_dimenticami
+[idba_reinit_db]: fapi_reference.md#idba_reinit_db
+[idba_query_stations]: fapi_reference.md#idba_query_stations
+[idba_next_station]: fapi_reference.md#idba_next_station
+[idba_query_data]: fapi_reference.md#idba_query_data
+[idba_next_data]: fapi_reference.md#idba_next_data
+[idba_insert_data]: fapi_reference.md#idba_insert_data
+[idba_remove_data]: fapi_reference.md#idba_remove_data
 [idba_remove_all]: fapi_reference.md#idba_remove_all
-[idba_voglioancora]: fapi_reference.md#idba_voglioancora
-[idba_ancora]: fapi_reference.md#idba_ancora
-[idba_critica]: fapi_reference.md#idba_critica
-[idba_scusa]: fapi_reference.md#idba_scusa
+[idba_query_attributes]: fapi_reference.md#idba_query_attributes
+[idba_next_attribute]: fapi_reference.md#idba_next_attribute
+[idba_insert_attributes]: fapi_reference.md#idba_insert_attributes
+[idba_remove_attributes]: fapi_reference.md#idba_remove_attributes
 [idba_messages_open_input]: fapi_reference.md#idba_messages_open_input
 [idba_messages_open_output]: fapi_reference.md#idba_messages_open_output
 [idba_messages_read_next]: fapi_reference.md#idba_messages_read_next
 [idba_messages_write_next]: fapi_reference.md#idba_messages_write_next
-[idba_spiegal]: fapi_reference.md#idba_spiegal
-[idba_spiegat]: fapi_reference.md#idba_spiegat
-[idba_spiegab]: fapi_reference.md#idba_spiegab
+[idba_describe_level]: fapi_reference.md#idba_describe_level
+[idba_describe_timerange]: fapi_reference.md#idba_describe_timerange
+[idba_describe_var]: fapi_reference.md#idba_describe_var

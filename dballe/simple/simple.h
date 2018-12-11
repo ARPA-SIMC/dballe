@@ -21,7 +21,7 @@ struct API
 
     virtual ~API() {}
 
-    virtual void scopa(const char* repinfofile=nullptr) = 0;
+    virtual void reinit_db(const char* repinfofile=nullptr) = 0;
     virtual void remove_all() = 0;
     virtual int enqi(const char* param) = 0;
     virtual signed char enqb(const char* param) = 0;
@@ -33,7 +33,7 @@ struct API
     virtual void setr(const char* param, float value) = 0;
     virtual void setd(const char* param, double value) = 0;
     virtual void setc(const char* param, const char* value) = 0;
-    virtual void setcontextana() = 0;
+    virtual void set_station_context() = 0;
     virtual void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) = 0;
     virtual void setlevel(int ltype1, int l1, int ltype2, int l2) = 0;
     virtual void enqtimerange(int& ptype, int& p1, int& p2) = 0;
@@ -45,24 +45,24 @@ struct API
     virtual void unset(const char* param) = 0;
     virtual void unsetall() = 0;
     virtual void unsetb() = 0;
-    virtual int quantesono() = 0;
-    virtual void elencamele() = 0;
-    virtual int voglioquesto() = 0;
-    virtual wreport::Varcode dammelo() = 0;
-    virtual void prendilo() = 0;
-    virtual void dimenticami() = 0;
-    virtual int voglioancora() = 0;
-    virtual const char* ancora() = 0;
-    virtual void critica() = 0;
-    virtual void scusa() = 0;
+    virtual int query_stations() = 0;
+    virtual void next_station() = 0;
+    virtual int query_data() = 0;
+    virtual wreport::Varcode next_data() = 0;
+    virtual void insert_data() = 0;
+    virtual void remove_data() = 0;
+    virtual int query_attributes() = 0;
+    virtual const char* next_attribute() = 0;
+    virtual void insert_attributes() = 0;
+    virtual void remove_attributes() = 0;
     virtual void messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified=true) = 0;
     virtual void messages_open_output(const char* filename, const char* mode, Encoding format) = 0;
     virtual bool messages_read_next() = 0;
     virtual void messages_write_next(const char* template_name=0) = 0;
-    virtual const char* spiegal(int ltype1, int l1, int ltype2, int l2) = 0;
-    virtual const char* spiegat(int ptype, int p1, int p2) = 0;
-    virtual const char* spiegab(const char* varcode, const char* value) = 0;
-    virtual void fatto() = 0;
+    virtual const char* describe_level(int ltype1, int l1, int ltype2, int l2) = 0;
+    virtual const char* describe_timerange(int ptype, int p1, int p2) = 0;
+    virtual const char* describe_var(const char* varcode, const char* value) = 0;
+    virtual void commit() = 0;
 };
 
 }

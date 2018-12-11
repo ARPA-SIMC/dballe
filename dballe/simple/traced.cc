@@ -12,15 +12,15 @@ using namespace wreport;
 namespace dballe {
 namespace fortran {
 
-std::unique_ptr<API> Tracer::preparati(int dbahandle, int handle, const char* url, const char* anaflag, const char* dataflag, const char* attrflag)
+std::unique_ptr<API> Tracer::begin(int dbahandle, int handle, const char* url, const char* anaflag, const char* dataflag, const char* attrflag)
 {
-    log_preparati(dbahandle, handle, anaflag, dataflag, attrflag);
+    log_begin(dbahandle, handle, anaflag, dataflag, attrflag);
     return wrap_api(handle, fortran::DbAPI::fortran_connect(url, anaflag, dataflag, attrflag));
 }
 
-std::unique_ptr<API> Tracer::messaggi(int handle, const char* filename, const char* mode, const char* type)
+std::unique_ptr<API> Tracer::begin_messages(int handle, const char* filename, const char* mode, const char* type)
 {
-    log_messaggi(handle, filename, mode, type);
+    log_begin_messages(handle, filename, mode, type);
     return wrap_api(handle, std::unique_ptr<API>(new fortran::MsgAPI(filename, mode, type)));
 }
 
@@ -29,10 +29,10 @@ namespace {
 struct NullTracer : public Tracer
 {
     std::unique_ptr<API> wrap_api(int handle, std::unique_ptr<API> api) { return std::move(api); }
-    void log_presentati_url(int handle, const char* chosen_dsn) override {}
-    void log_preparati(int dbahandle, int handle, const char* anaflag, const char* dataflag, const char* attrflag) override {}
-    void log_messaggi(int handle, const char* filename, const char* mode, const char* type) override {}
-    void log_arrivederci(int handle) override {}
+    void log_connect_url(int handle, const char* chosen_dsn) override {}
+    void log_begin(int dbahandle, int handle, const char* anaflag, const char* dataflag, const char* attrflag) override {}
+    void log_begin_messages(int handle, const char* filename, const char* mode, const char* type) override {}
+    void log_disconnect(int handle) override {}
 };
 
 }
@@ -65,26 +65,26 @@ struct FileTracer : public Tracer
         return std::unique_ptr<API>(new TracedAPI(*this, trace_tag, std::move(api)));
     }
 
-    void log_presentati_url(int handle, const char* chosen_dsn) override
+    void log_connect_url(int handle, const char* chosen_dsn) override
     {
         std::string arg1 = str::encode_cstring(chosen_dsn);
         fprintf(trace_file, "auto db%d(DB::connect_from_url(\"%s\"));\n", handle, arg1.c_str());
     }
 
-    void log_preparati(int dbahandle, int handle, const char* anaflag, const char* dataflag, const char* attrflag) override
+    void log_begin(int dbahandle, int handle, const char* anaflag, const char* dataflag, const char* attrflag) override
     {
         fprintf(trace_file, "DbAPI dbapi%d(*db%d, \"%s\", \"%s\", \"%s\");\n",
                 handle, dbahandle, anaflag, dataflag, attrflag);
     }
 
-    void log_messaggi(int handle, const char* filename, const char* mode, const char* type) override
+    void log_begin_messages(int handle, const char* filename, const char* mode, const char* type) override
     {
         std::string arg1(str::encode_cstring(filename));
         fprintf(trace_file, "MsgAPI msgapi%d(\"%s\", \"%s\", \"%s\");\n",
                 handle, arg1.c_str(), mode, type);
     }
 
-    void log_arrivederci(int handle) override
+    void log_disconnect(int handle) override
     {
         fprintf(trace_file, "// db%d not used anymore\n", handle);
     }
@@ -309,9 +309,9 @@ TracedAPI::TracedAPI(FileTracer& tracer, const std::string& name, std::unique_pt
 
 #define RUN(name, ...) run_and_log(*this, #name, &API::name, ## __VA_ARGS__);
 
-void TracedAPI::scopa(const char* repinfofile)
+void TracedAPI::reinit_db(const char* repinfofile)
 {
-    RUN(scopa, repinfofile);
+    RUN(reinit_db, repinfofile);
 }
 
 void TracedAPI::remove_all()
@@ -390,9 +390,9 @@ void TracedAPI::setc(const char* param, const char* value)
     RUN(setc, param, value);
 }
 
-void TracedAPI::setcontextana()
+void TracedAPI::set_station_context()
 {
-    RUN(setcontextana);
+    RUN(set_station_context);
 }
 
 namespace {
@@ -508,54 +508,54 @@ void TracedAPI::unsetb()
     RUN(unsetb);
 }
 
-int TracedAPI::quantesono()
+int TracedAPI::query_stations()
 {
-    return RUN(quantesono);
+    return RUN(query_stations);
 }
 
-void TracedAPI::elencamele()
+void TracedAPI::next_station()
 {
-    RUN(elencamele);
+    RUN(next_station);
 }
 
-int TracedAPI::voglioquesto()
+int TracedAPI::query_data()
 {
-    return RUN(voglioquesto);
+    return RUN(query_data);
 }
 
-wreport::Varcode TracedAPI::dammelo()
+wreport::Varcode TracedAPI::next_data()
 {
-    return RUN(dammelo);
+    return RUN(next_data);
 }
 
-void TracedAPI::prendilo()
+void TracedAPI::insert_data()
 {
-    RUN(prendilo);
+    RUN(insert_data);
 }
 
-void TracedAPI::dimenticami()
+void TracedAPI::remove_data()
 {
-    RUN(dimenticami);
+    RUN(remove_data);
 }
 
-int TracedAPI::voglioancora()
+int TracedAPI::query_attributes()
 {
-    return RUN(voglioancora);
+    return RUN(query_attributes);
 }
 
-const char* TracedAPI::ancora()
+const char* TracedAPI::next_attribute()
 {
-    return RUN(ancora);
+    return RUN(next_attribute);
 }
 
-void TracedAPI::critica()
+void TracedAPI::insert_attributes()
 {
-    RUN(critica);
+    RUN(insert_attributes);
 }
 
-void TracedAPI::scusa()
+void TracedAPI::remove_attributes()
 {
-    RUN(scusa);
+    RUN(remove_attributes);
 }
 
 void TracedAPI::messages_open_input(const char* filename, const char* mode, Encoding format, bool simplified)
@@ -578,24 +578,24 @@ void TracedAPI::messages_write_next(const char* template_name)
     RUN(messages_write_next, template_name);
 }
 
-const char* TracedAPI::spiegal(int ltype1, int l1, int ltype2, int l2)
+const char* TracedAPI::describe_level(int ltype1, int l1, int ltype2, int l2)
 {
-    return RUN(spiegal, ltype1, l1, ltype2, l2);
+    return RUN(describe_level, ltype1, l1, ltype2, l2);
 }
 
-const char* TracedAPI::spiegat(int ptype, int p1, int p2)
+const char* TracedAPI::describe_timerange(int ptype, int p1, int p2)
 {
-    return RUN(spiegat, ptype, p1, p2);
+    return RUN(describe_timerange, ptype, p1, p2);
 }
 
-const char* TracedAPI::spiegab(const char* varcode, const char* value)
+const char* TracedAPI::describe_var(const char* varcode, const char* value)
 {
-    return RUN(spiegab, varcode, value);
+    return RUN(describe_var, varcode, value);
 }
 
-void TracedAPI::fatto()
+void TracedAPI::commit()
 {
-    RUN(fatto);
+    RUN(commit);
     fprintf(tracer.trace_file, "// %s not used anymore\n", name.c_str());
 }
 

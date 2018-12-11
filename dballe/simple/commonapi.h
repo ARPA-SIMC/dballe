@@ -44,11 +44,11 @@ class Operation
 public:
     virtual ~Operation();
     virtual void set_varcode(wreport::Varcode varcode);
-    virtual void voglioancora(Attributes& dest) = 0;
-    virtual void critica(Values& qcinput) = 0;
-    virtual void scusa() = 0;
-    virtual bool elencamele();
-    virtual wreport::Varcode dammelo();
+    virtual void query_attributes(Attributes& dest) = 0;
+    virtual void insert_attributes(Values& qcinput) = 0;
+    virtual void remove_attributes() = 0;
+    virtual bool next_station();
+    virtual wreport::Varcode next_data();
 
     virtual int enqi(const char* param) const = 0;
     virtual signed char enqb(const char* param) const;
@@ -232,7 +232,7 @@ public:
     void setr(const char* param, float value) override;
     void setd(const char* param, double value) override;
     void setc(const char* param, const char* value) override;
-    void setcontextana() override;
+    void set_station_context() override;
     void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) override;
     void setlevel(int ltype1, int l1, int ltype2, int l2) override;
     void enqtimerange(int& ptype, int& p1, int& p2) override;
@@ -244,16 +244,16 @@ public:
     void unset(const char* param) override;
     void unsetall() override;
     void unsetb() override;
-    const char* spiegal(int ltype1, int l1, int ltype2, int l2) override;
-    const char* spiegat(int ptype, int p1, int p2) override;
-    const char* spiegab(const char* varcode, const char* value) override;
-    void elencamele() override;
-    wreport::Varcode dammelo() override;
-    int voglioancora() override;
-    const char* ancora() override;
-    void critica() override;
-    void scusa() override;
-    void fatto() override;
+    const char* describe_level(int ltype1, int l1, int ltype2, int l2) override;
+    const char* describe_timerange(int ptype, int p1, int p2) override;
+    const char* describe_var(const char* varcode, const char* value) override;
+    void next_station() override;
+    wreport::Varcode next_data() override;
+    int query_attributes() override;
+    const char* next_attribute() override;
+    void insert_attributes() override;
+    void remove_attributes() override;
+    void commit() override;
 
     const Operation* test_get_operation() const { return operation; }
 
