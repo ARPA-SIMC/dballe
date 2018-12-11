@@ -409,6 +409,14 @@ class Tests : public TestCase
             IS2(WR_VAR(0, 12, 30), Level(106, 1000), Trange::instant(), 288.4);
         });
 
+        // Truncated UTF8 in station name
+        add_bufr_simplified_method("truncated-unicode.bufr", [](const impl::Messages& msgs) {
+            wassert(actual(msgs.size()) == 1u);
+            const impl::Message& msg = impl::Message::downcast(*msgs[0]);
+            wassert(actual(msg.type) == MessageType::GENERIC);
+            IS2(WR_VAR(0,  1, 19), Level(), Trange(), "Rocca San Giovanni, C.da Vallev\xc3");
+            IS2(WR_VAR(0, 13, 11), Level(1), Trange(1, 0, 21600), 0.0);
+        });
     }
 } test("msg_wr_import");
 
