@@ -57,6 +57,21 @@ class CommonDBTestMixin(DballeDBMixin):
             count += 1
         self.assertEqual(count, 1)
 
+    def testQueryDecimal(self):
+        cur = self.db.query_stations({"lat": Decimal("12.34560"), "lon": Decimal("76.54320")})
+        self.assertEqual(cur.remaining, 1)
+        count = 0
+        for idx, result in enumerate(cur):
+            self.assertEqual(result["lat"], Decimal("12.34560"))
+            self.assertEqual(result["lon"], Decimal("76.54320"))
+            self.assertEqual(result.enqi("lat"), 1234560)
+            self.assertEqual(result.enqd("lat"), 12.34560)
+            self.assertEqual(result.enqs("lat"), "1234560")
+            self.assertEqual(result.enqf("lat"), "12.34560")
+            self.assertNotIn("B01011", result)
+            count += 1
+        self.assertEqual(count, 1)
+
     def testQueryStationData(self):
         cur = self.db.query_station_data({"latmin": 10.0})
         self.assertEqual(cur.remaining, 1)
