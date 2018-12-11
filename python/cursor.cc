@@ -48,6 +48,96 @@ struct remaining : Getter<Impl>
     }
 };
 
+void _set_query(PyObject* dict, const DBStation& station)
+{
+    if (station.id == MISSING_INT)
+    {
+        set_dict(dict, "rep_memo", station.report);
+        set_dict(dict, "lat", dballe_int_lat_to_python(station.coords.lat));
+        set_dict(dict, "lon", dballe_int_lon_to_python(station.coords.lat));
+        set_dict(dict, "rep_memo", station.report);
+        if (station.ident.is_missing())
+        {
+            set_dict(dict, "mobile", 0);
+        } else {
+            set_dict(dict, "mobile", 1);
+            set_dict(dict, "ident", station.ident.get());
+        }
+    } else {
+        set_dict(dict, "ana_id", station.id);
+    }
+}
+
+void _set_query(PyObject* dict, dballe::db::CursorStation& cur)
+{
+    _set_query(dict, cur.get_station());
+}
+
+void _set_query(PyObject* dict, dballe::db::CursorStationData& cur)
+{
+    _set_query(dict, cur.get_station());
+    set_dict(dict, "level", level_to_python(Level()));
+    set_dict(dict, "trange", trange_to_python(Trange()));
+    set_dict(dict, "var", varcode_to_python(cur.get_varcode()));
+}
+
+void _set_query(PyObject* dict, dballe::db::CursorData& cur)
+{
+    _set_query(dict, cur.get_station());
+    set_dict(dict, "level", to_python(cur.get_level()));
+    set_dict(dict, "trange", to_python(cur.get_trange()));
+    set_dict(dict, "var", varcode_to_python(cur.get_varcode()));
+    set_dict(dict, "datetime", to_python(cur.get_datetime()));
+}
+
+void _set_query(PyObject* dict, dballe::db::CursorSummary& cur)
+{
+    _set_query(dict, cur.get_station());
+    set_dict(dict, "level", to_python(cur.get_level()));
+    set_dict(dict, "trange", to_python(cur.get_trange()));
+    set_dict(dict, "var", varcode_to_python(cur.get_varcode()));
+}
+
+void _set_query(PyObject* dict, dballe::db::summary::Cursor<dballe::Station>& cur)
+{
+    _set_query(dict, cur.get_station());
+    set_dict(dict, "level", to_python(cur.get_level()));
+    set_dict(dict, "trange", to_python(cur.get_trange()));
+    set_dict(dict, "var", varcode_to_python(cur.get_varcode()));
+}
+
+void _set_query(PyObject* dict, dballe::db::summary::Cursor<dballe::DBStation>& cur)
+{
+    _set_query(dict, cur.get_station());
+    set_dict(dict, "level", to_python(cur.get_level()));
+    set_dict(dict, "trange", to_python(cur.get_trange()));
+    set_dict(dict, "var", varcode_to_python(cur.get_varcode()));
+}
+
+void _set_query(PyObject* dict, dballe::CursorMessage& cur)
+{
+    PyErr_SetString(PyExc_NotImplementedError, "accessing .query on CursorMessage is not yet implemented");
+    throw PythonException();
+}
+
+
+
+template<typename Impl>
+struct query : Getter<Impl>
+{
+    constexpr static const char* name = "query";
+    constexpr static const char* doc = "return a dict with a query to select exactly the current value at this cursor";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            ensure_valid_cursor(self);
+            pyo_unique_ptr result(throw_ifnull(PyDict_New()));
+            _set_query(result, *self->cur);
+            return result.release();
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
 template<typename Impl>
 struct query_attrs : MethKwargs<Impl>
 {
@@ -296,7 +386,7 @@ struct DefinitionStationDB : public DefinitionBase<DefinitionStationDB, dpy_Curs
     constexpr static const char* qual_name = "dballe.CursorStationDB";
     constexpr static const char* summary = "cursor iterating dballe.DB query_station results";
 
-    GetSetters<remaining<Impl>> getsetters;
+    GetSetters<remaining<Impl>, query<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
@@ -307,7 +397,7 @@ struct DefinitionStationDataDB : public DefinitionBase<DefinitionStationDataDB, 
     constexpr static const char* qual_name = "dballe.CursorStationDataDB";
     constexpr static const char* summary = "cursor iterating dballe.DB query_station_data results";
 
-    GetSetters<remaining<Impl>> getsetters;
+    GetSetters<remaining<Impl>, query<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, query_attrs<Impl>, attr_query<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
@@ -318,7 +408,7 @@ struct DefinitionDataDB : public DefinitionBase<DefinitionDataDB, dpy_CursorData
     constexpr static const char* qual_name = "dballe.CursorDataDB";
     constexpr static const char* summary = "cursor iterating dballe.DB query_data results";
 
-    GetSetters<remaining<Impl>> getsetters;
+    GetSetters<remaining<Impl>, query<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, query_attrs<Impl>, attr_query<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
@@ -329,7 +419,7 @@ struct DefinitionSummaryDB : public DefinitionBase<DefinitionSummaryDB, dpy_Curs
     constexpr static const char* qual_name = "dballe.CursorSummaryDB";
     constexpr static const char* summary = "cursor iterating dballe.DB query_summary results";
 
-    GetSetters<remaining<Impl>> getsetters;
+    GetSetters<remaining<Impl>, query<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
@@ -340,7 +430,7 @@ struct DefinitionSummarySummary : public DefinitionBase<DefinitionSummarySummary
     constexpr static const char* qual_name = "dballe.CursorSummarySummary";
     constexpr static const char* summary = "cursor iterating dballe.Explorer query_summary* results";
 
-    GetSetters<remaining<Impl>> getsetters;
+    GetSetters<remaining<Impl>, query<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
@@ -351,7 +441,7 @@ struct DefinitionSummaryDBSummary : public DefinitionBase<DefinitionSummaryDBSum
     constexpr static const char* qual_name = "dballe.CursorSummaryDBSummary";
     constexpr static const char* summary = "cursor iterating dballe.DBExplorer query_summary* results";
 
-    GetSetters<remaining<Impl>> getsetters;
+    GetSetters<remaining<Impl>, query<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
@@ -381,7 +471,7 @@ struct DefinitionMessage : public DefinitionBase<DefinitionMessage, dpy_CursorMe
     constexpr static const char* qual_name = "dballe.CursorMessage";
     constexpr static const char* summary = "cursor iterating Message results";
 
-    GetSetters<remaining<Impl>, message<Impl>> getsetters;
+    GetSetters<remaining<Impl>, message<Impl>, query<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 
     static void _dealloc(Impl* self)

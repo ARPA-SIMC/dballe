@@ -1116,6 +1116,39 @@ std::set<wreport::Varcode> varcodes_from_python(PyObject* o)
     return res;
 }
 
+void set_dict(PyObject* dict, const char* key, const char* val)
+{
+    pyo_unique_ptr pyval(throw_ifnull(PyUnicode_FromString(val)));
+    if (PyDict_SetItemString(dict, key, pyval))
+        throw PythonException();
+}
+
+void set_dict(PyObject* dict, const char* key, const std::string& val)
+{
+    pyo_unique_ptr pyval(throw_ifnull(PyUnicode_FromStringAndSize(val.data(), val.size())));
+    if (PyDict_SetItemString(dict, key, pyval))
+        throw PythonException();
+}
+
+void set_dict(PyObject* dict, const char* key, int val)
+{
+    pyo_unique_ptr pyval(throw_ifnull(PyLong_FromLong(val)));
+    if (PyDict_SetItemString(dict, key, pyval))
+        throw PythonException();
+}
+
+void set_dict(PyObject* dict, const char* key, PyObject* val)
+{
+    if (PyDict_SetItemString(dict, key, val))
+        throw PythonException();
+}
+
+void set_dict(PyObject* dict, const char* key, pyo_unique_ptr&& val)
+{
+    if (PyDict_SetItemString(dict, key, val))
+        throw PythonException();
+}
+
 void register_types(PyObject* m)
 {
     common_init();
