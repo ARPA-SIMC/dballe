@@ -346,6 +346,15 @@ class CommonDBTestMixin(DballeDBMixin):
             self.assertEqual(cur["var"].code, "B01011")
             self.assertCountEqual((repr(x) for x in cur["attrs"]), ["Var('B33007', 50)", "Var('B33036', 75)"])
 
+    def test_delete_by_context_id(self):
+        # See #140
+        records_to_del = []
+        for rec in self.db.query_data():
+            records_to_del.append(rec["context_id"])
+
+        for rec in records_to_del:
+            self.db.remove_data({"context_id": rec})
+
 
 class FullDBTestMixin(CommonDBTestMixin):
     def test_transaction_enter_exit(self):
