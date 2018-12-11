@@ -57,6 +57,21 @@ class CommonDBTestMixin(DballeDBMixin):
             count += 1
         self.assertEqual(count, 1)
 
+    def testQueryDecimal(self):
+        cur = self.db.query_stations({"lat": Decimal("12.34560"), "lon": Decimal("76.54320")})
+        self.assertEqual(cur.remaining, 1)
+        count = 0
+        for idx, result in enumerate(cur):
+            self.assertEqual(result["lat"], Decimal("12.34560"))
+            self.assertEqual(result["lon"], Decimal("76.54320"))
+            self.assertEqual(result.enqi("lat"), 1234560)
+            self.assertEqual(result.enqd("lat"), 12.34560)
+            self.assertEqual(result.enqs("lat"), "1234560")
+            self.assertEqual(result.enqf("lat"), "12.34560")
+            self.assertNotIn("B01011", result)
+            count += 1
+        self.assertEqual(count, 1)
+
     def testQueryStationData(self):
         cur = self.db.query_station_data({"latmin": 10.0})
         self.assertEqual(cur.remaining, 1)
@@ -345,6 +360,25 @@ class CommonDBTestMixin(DballeDBMixin):
             self.assertEqual(cur.remaining, 1)
             self.assertEqual(cur["var"].code, "B01011")
             self.assertCountEqual((repr(x) for x in cur["attrs"]), ["Var('B33007', 50)", "Var('B33036', 75)"])
+
+    def test_delete_by_context_id(self):
+        # See #140
+        records_to_del = []
+        with self.db.query_data() as cur:
+            for rec in cur:
+                records_to_del.append(rec.query)
+        self.assertEqual(len(records_to_del), 2)
+
+        query = records_to_del[0]
+        self.assertEqual(len(records_to_del[0]), 5)
+        self.assertIn("ana_id", query)
+        self.assertEqual(query["level"], dballe.Level(10, 11, 15, 22))
+        self.assertEqual(query["trange"], dballe.Trange(20, 111, 222))
+        self.assertEqual(query["datetime"], datetime.datetime(1945, 4, 25, 8, 0))
+        self.assertEqual(query["var"], "B01011")
+
+        self.db.remove_data(records_to_del[0])
+        self.assertEqual(self.db.query_data().remaining, 1)
 
 
 class FullDBTestMixin(CommonDBTestMixin):

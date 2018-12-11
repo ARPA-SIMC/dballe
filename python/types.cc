@@ -872,7 +872,20 @@ int dballe_int_lat_from_python(PyObject* o)
         double res = strtod(throw_ifnull(PyUnicode_AsUTF8(o)), nullptr);
         return Coords::lat_to_int(res);
     }
-    PyErr_SetString(PyExc_TypeError, "latitude value must be an instance of int, float, str, or None");
+    // We cannot directly test if it is a decimal, but we can try to duck type
+    PyObject* scaleb = PyObject_GetAttrString(o, "scaleb");
+    if (scaleb == nullptr)
+    {
+        PyErr_Clear();
+    } else {
+        pyo_unique_ptr six(throw_ifnull(PyLong_FromLong(5)));
+        pyo_unique_ptr scaled(throw_ifnull(PyObject_CallFunctionObjArgs(scaleb, six.get(), nullptr)));
+        int res = PyLong_AsLong(scaled);
+        if (res == -1 && PyErr_Occurred())
+            throw PythonException();
+        return res;
+    }
+    PyErr_SetString(PyExc_TypeError, "latitude value must be an instance of int, float, str, Decimal, or None");
     throw PythonException();
 }
 
@@ -899,7 +912,20 @@ int dballe_int_lon_from_python(PyObject* o)
         double res = strtod(throw_ifnull(PyUnicode_AsUTF8(o)), nullptr);
         return Coords::lon_to_int(res);
     }
-    PyErr_SetString(PyExc_TypeError, "longitude value must be an instance of int, float, str, or None");
+    // We cannot directly test if it is a decimal, but we can try to duck type
+    PyObject* scaleb = PyObject_GetAttrString(o, "scaleb");
+    if (scaleb == nullptr)
+    {
+        PyErr_Clear();
+    } else {
+        pyo_unique_ptr six(throw_ifnull(PyLong_FromLong(5)));
+        pyo_unique_ptr scaled(throw_ifnull(PyObject_CallFunctionObjArgs(scaleb, six.get(), nullptr)));
+        int res = PyLong_AsLong(scaled);
+        if (res == -1 && PyErr_Occurred())
+            throw PythonException();
+        return res;
+    }
+    PyErr_SetString(PyExc_TypeError, "longitude value must be an instance of int, float, str, Decimal, or None");
     throw PythonException();
 }
 
@@ -1114,6 +1140,39 @@ std::set<wreport::Varcode> varcodes_from_python(PyObject* o)
     for (unsigned i = 0; i < size; ++i)
         res.insert(varcode_from_python(vals[i]));
     return res;
+}
+
+void set_dict(PyObject* dict, const char* key, const char* val)
+{
+    pyo_unique_ptr pyval(throw_ifnull(PyUnicode_FromString(val)));
+    if (PyDict_SetItemString(dict, key, pyval))
+        throw PythonException();
+}
+
+void set_dict(PyObject* dict, const char* key, const std::string& val)
+{
+    pyo_unique_ptr pyval(throw_ifnull(PyUnicode_FromStringAndSize(val.data(), val.size())));
+    if (PyDict_SetItemString(dict, key, pyval))
+        throw PythonException();
+}
+
+void set_dict(PyObject* dict, const char* key, int val)
+{
+    pyo_unique_ptr pyval(throw_ifnull(PyLong_FromLong(val)));
+    if (PyDict_SetItemString(dict, key, pyval))
+        throw PythonException();
+}
+
+void set_dict(PyObject* dict, const char* key, PyObject* val)
+{
+    if (PyDict_SetItemString(dict, key, val))
+        throw PythonException();
+}
+
+void set_dict(PyObject* dict, const char* key, pyo_unique_ptr&& val)
+{
+    if (PyDict_SetItemString(dict, key, val))
+        throw PythonException();
 }
 
 void register_types(PyObject* m)
