@@ -256,6 +256,61 @@ this->add_method("update_with_ana_id", [](Fixture& f) {
     wassert(actual(dcur->remaining()) == 0u);
 });
 
+this->add_method("delete_by_var", [](Fixture& f) {
+    // See issue #141
+    {
+        core::Data vals;
+        vals.station.report = "synop";
+        vals.station.coords = Coords(44.10, 11.50);
+        vals.station.ident = "foo";
+        vals.level = Level(1);
+        vals.trange = Trange::instant();
+        vals.datetime = Datetime(2015, 4, 25, 12, 30, 45);
+        vals.values.set("B12101", 295.1);
+        vals.values.set("B12103", 295.2);
+        f.tr->insert_data(vals);
+        f.tr->insert_station_data(vals);
+    }
+
+    // Try deleting station data
+    {
+        auto cur = f.tr->query_station_data(core::Query());
+        wassert(actual(cur->remaining()) == 2u);
+    }
+
+    {
+        core::Query query;
+        query.varcodes.insert(WR_VAR(0, 12, 101));
+        f.tr->remove_station_data(query);
+    }
+
+    {
+        auto cur = f.tr->query_station_data(core::Query());
+        wassert(actual(cur->remaining()) == 1u);
+        wassert_true(cur->next());
+        wassert(actual(cur->get_varcode()) == WR_VAR(0, 12, 103));
+    }
+
+    // Try deleting normal data
+    {
+        auto cur = f.tr->query_data(core::Query());
+        wassert(actual(cur->remaining()) == 2u);
+    }
+
+    {
+        core::Query query;
+        query.varcodes.insert(WR_VAR(0, 12, 101));
+        f.tr->remove_data(query);
+    }
+
+    {
+        auto cur = f.tr->query_data(core::Query());
+        wassert(actual(cur->remaining()) == 1u);
+        wassert_true(cur->next());
+        wassert(actual(cur->get_varcode()) == WR_VAR(0, 12, 103));
+    }
+});
+
 }
 
 template<typename DB>
