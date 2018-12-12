@@ -362,7 +362,7 @@ class CommonDBTestMixin(DballeDBMixin):
             self.assertCountEqual((repr(x) for x in cur["attrs"]), ["Var('B33007', 50)", "Var('B33036', 75)"])
 
     def test_delete_by_context_id(self):
-        # See #140
+        # See issue #140
         records_to_del = []
         with self.db.query_data() as cur:
             for rec in cur:
@@ -379,6 +379,25 @@ class CommonDBTestMixin(DballeDBMixin):
 
         self.db.remove_data(records_to_del[0])
         self.assertEqual(self.db.query_data().remaining, 1)
+
+    def test_delete_by_var(self):
+        # See issue #141
+        with self.db.query_data() as cur:
+            self.assertEqual(cur.remaining, 2)
+        self.db.remove_data({"var": "B01011"})
+        with self.db.query_data() as cur:
+            self.assertEqual(cur.remaining, 1)
+
+        data = {
+            "lat": 12.34560, "lon": 76.54320, "rep_memo": "synop",
+            "B01011": "Hey Hey!!",
+        }
+        self.db.insert_station_data(data, False, True)
+        with self.db.query_station_data() as cur:
+            self.assertEqual(cur.remaining, 2)
+        self.db.remove_station_data({"var": "B02005"})
+        with self.db.query_station_data() as cur:
+            self.assertEqual(cur.remaining, 1)
 
 
 class FullDBTestMixin(CommonDBTestMixin):

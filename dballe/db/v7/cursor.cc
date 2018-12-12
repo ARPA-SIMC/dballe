@@ -421,7 +421,10 @@ void run_delete_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const 
         tr->db->conn->explain(qb.sql_query, stderr);
     }
 
-    tr->data().remove(trc, qb);
+    if (station_vars)
+        tr->station_data().remove(trc, qb);
+    else
+        tr->data().remove(trc, qb);
 }
 
 
