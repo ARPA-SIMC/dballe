@@ -85,6 +85,43 @@ struct MaybeBase
         }
     }
 
+    bool search_b_value(const char* key, unsigned len, const dballe::Value& value)
+    {
+        if (key[0] != 'B' || len != 6)
+            return false;
+
+        wreport::Varcode code = WR_STRING_TO_VAR(key + 1);
+        if (code != value.code())
+            throw_notfound(key);
+
+        const wreport::Var* var = value.get();
+        _found = true;
+        if (var && var->isset())
+        {
+            _missing = false;
+            _val = var->enq<T>();
+        }
+        return true;
+    }
+
+
+    template<typename Values>
+    bool search_b_values(const char* key, unsigned len, const Values& values)
+    {
+        if (key[0] != 'B' || len != 6)
+            return false;
+
+        wreport::Varcode code = WR_STRING_TO_VAR(key + 1);
+        const wreport::Var* var = values.maybe_var(code);
+        _found = true;
+        if (var && var->isset())
+        {
+            _missing = false;
+            _val = var->enq<T>();
+        }
+        return true;
+    }
+
     [[noreturn]] void throw_notfound(const char* key)
     {
         wreport::error_notfound::throwf("key %s not found on this query result", key);

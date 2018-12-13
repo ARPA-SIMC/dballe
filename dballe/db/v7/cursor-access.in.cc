@@ -19,6 +19,8 @@ namespace cursor {
 bool Stations::enqi(const char* key, unsigned len, int& res) const
 {
     Maybe<Int> r(res);
+    if (r.search_b_values(key, len, values())) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.set(get_priority());
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
@@ -36,6 +38,8 @@ bool Stations::enqi(const char* key, unsigned len, int& res) const
 bool Stations::enqd(const char* key, unsigned len, double& res) const
 {
     Maybe<Double> r(res);
+    if (r.search_b_values(key, len, values())) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.set(get_priority());
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
@@ -53,6 +57,8 @@ bool Stations::enqd(const char* key, unsigned len, double& res) const
 bool Stations::enqs(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
+    if (r.search_b_values(key, len, values())) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.set(get_priority());
         case "rep_memo":    r.set(cur->station.report);
@@ -70,6 +76,8 @@ bool Stations::enqs(const char* key, unsigned len, std::string& res) const
 bool Stations::enqf(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
+    if (r.search_b_values(key, len, values())) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.set(get_priority());
         case "rep_memo":    r.set(cur->station.report);
@@ -92,6 +100,8 @@ bool Stations::enqf(const char* key, unsigned len, std::string& res) const
 bool StationData::enqi(const char* key, unsigned len, int& res) const
 {
     Maybe<Int> r(res);
+    if (r.search_b_value(key, len, cur->value)) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.set(get_priority());
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
@@ -111,6 +121,8 @@ bool StationData::enqi(const char* key, unsigned len, int& res) const
 bool StationData::enqd(const char* key, unsigned len, double& res) const
 {
     Maybe<Double> r(res);
+    if (r.search_b_value(key, len, cur->value)) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.set(get_priority());
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
@@ -130,6 +142,8 @@ bool StationData::enqd(const char* key, unsigned len, double& res) const
 bool StationData::enqs(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
+    if (r.search_b_value(key, len, cur->value)) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.set(get_priority());
         case "rep_memo":    r.set(cur->station.report);
@@ -149,6 +163,8 @@ bool StationData::enqs(const char* key, unsigned len, std::string& res) const
 bool StationData::enqf(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
+    if (r.search_b_value(key, len, cur->value)) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.set(get_priority());
         case "rep_memo":    r.set(cur->station.report);
@@ -173,6 +189,8 @@ bool StationData::enqf(const char* key, unsigned len, std::string& res) const
 bool Data::enqi(const char* key, unsigned len, int& res) const
 {
     Maybe<Int> r(res);
+    if (r.search_b_value(key, len, cur->value)) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.set(get_priority());
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
@@ -205,6 +223,8 @@ bool Data::enqi(const char* key, unsigned len, int& res) const
 bool Data::enqd(const char* key, unsigned len, double& res) const
 {
     Maybe<Double> r(res);
+    if (r.search_b_value(key, len, cur->value)) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.set(get_priority());
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
@@ -237,6 +257,8 @@ bool Data::enqd(const char* key, unsigned len, double& res) const
 bool Data::enqs(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
+    if (r.search_b_value(key, len, cur->value)) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.set(get_priority());
         case "rep_memo":    r.set(cur->station.report);
@@ -269,6 +291,8 @@ bool Data::enqs(const char* key, unsigned len, std::string& res) const
 bool Data::enqf(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
+    if (r.search_b_value(key, len, cur->value)) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.set(get_priority());
         case "rep_memo":    r.set(cur->station.report);

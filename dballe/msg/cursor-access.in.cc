@@ -15,6 +15,8 @@ namespace msg {
 bool CursorStation::enqi(const char* key, unsigned len, int& res) const
 {
     Maybe<Int> r(res);
+    if (r.search_b_values(key, len, station_values)) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.found();
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
@@ -32,6 +34,8 @@ bool CursorStation::enqi(const char* key, unsigned len, int& res) const
 bool CursorStation::enqd(const char* key, unsigned len, double& res) const
 {
     Maybe<Double> r(res);
+    if (r.search_b_values(key, len, station_values)) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.found();
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
@@ -49,6 +53,8 @@ bool CursorStation::enqd(const char* key, unsigned len, double& res) const
 bool CursorStation::enqs(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
+    if (r.search_b_values(key, len, station_values)) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.found();
         case "rep_memo":    r.set(station.report);
@@ -66,6 +72,8 @@ bool CursorStation::enqs(const char* key, unsigned len, std::string& res) const
 bool CursorStation::enqf(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
+    if (r.search_b_values(key, len, station_values)) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.found();
         case "rep_memo":    r.set(station.report);
@@ -88,6 +96,8 @@ bool CursorStation::enqf(const char* key, unsigned len, std::string& res) const
 bool CursorStationData::enqi(const char* key, unsigned len, int& res) const
 {
     Maybe<Int> r(res);
+    if (r.search_b_value(key, len, *cur)) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.found();
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
@@ -107,6 +117,8 @@ bool CursorStationData::enqi(const char* key, unsigned len, int& res) const
 bool CursorStationData::enqd(const char* key, unsigned len, double& res) const
 {
     Maybe<Double> r(res);
+    if (r.search_b_value(key, len, *cur)) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.found();
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
@@ -126,6 +138,8 @@ bool CursorStationData::enqd(const char* key, unsigned len, double& res) const
 bool CursorStationData::enqs(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
+    if (r.search_b_value(key, len, *cur)) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.found();
         case "rep_memo":    r.set(station.report);
@@ -145,6 +159,8 @@ bool CursorStationData::enqs(const char* key, unsigned len, std::string& res) co
 bool CursorStationData::enqf(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
+    if (r.search_b_value(key, len, *cur)) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.found();
         case "rep_memo":    r.set(station.report);
@@ -169,6 +185,8 @@ bool CursorStationData::enqf(const char* key, unsigned len, std::string& res) co
 bool CursorData::enqi(const char* key, unsigned len, int& res) const
 {
     Maybe<Int> r(res);
+    if (r.search_b_value(key, len, *(cur->var))) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.found();
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
@@ -201,6 +219,8 @@ bool CursorData::enqi(const char* key, unsigned len, int& res) const
 bool CursorData::enqd(const char* key, unsigned len, double& res) const
 {
     Maybe<Double> r(res);
+    if (r.search_b_value(key, len, *(cur->var))) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.found();
         case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
@@ -233,6 +253,8 @@ bool CursorData::enqd(const char* key, unsigned len, double& res) const
 bool CursorData::enqs(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
+    if (r.search_b_value(key, len, *(cur->var))) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.found();
         case "rep_memo":    r.set(station.report);
@@ -265,6 +287,8 @@ bool CursorData::enqs(const char* key, unsigned len, std::string& res) const
 bool CursorData::enqf(const char* key, unsigned len, std::string& res) const
 {
     Maybe<String> r(res);
+    if (r.search_b_value(key, len, *(cur->var))) return !r.missing();
+
     switch (key) { // mklookup
         case "priority":    r.found();
         case "rep_memo":    r.set(station.report);
