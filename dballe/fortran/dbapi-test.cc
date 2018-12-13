@@ -77,20 +77,20 @@ class CommitTests : public FixtureTestCase<DBFixture<DB>>
     void register_tests() override;
 };
 
-Tests<V7DB> tg2("simple_dbapi_tr_v7_sqlite", "SQLITE");
+Tests<V7DB> tg2("fortran_dbapi_tr_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests<V7DB> tg4("simple_dbapi_tr_v7_postgresql", "POSTGRESQL");
+Tests<V7DB> tg4("fortran_dbapi_tr_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests<V7DB> tg6("simple_dbapi_tr_v7_mysql", "MYSQL");
+Tests<V7DB> tg6("fortran_dbapi_tr_v7_mysql", "MYSQL");
 #endif
 
-CommitTests<V7DB> ct2("simple_dbapi_db_v7_sqlite", "SQLITE");
+CommitTests<V7DB> ct2("fortran_dbapi_db_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
-CommitTests<V7DB> ct4("simple_dbapi_db_v7_postgresql", "POSTGRESQL");
+CommitTests<V7DB> ct4("fortran_dbapi_db_v7_postgresql", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-CommitTests<V7DB> ct6("simple_dbapi_db_v7_mysql", "MYSQL");
+CommitTests<V7DB> ct6("fortran_dbapi_db_v7_mysql", "MYSQL");
 #endif
 
 template<typename DB>

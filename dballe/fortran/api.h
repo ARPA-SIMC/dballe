@@ -1,5 +1,5 @@
-#ifndef DBALLE_SIMPLE_SIMPLE_H
-#define DBALLE_SIMPLE_SIMPLE_H
+#ifndef DBALLE_FORTRAN_API_H
+#define DBALLE_FORTRAN_API_H
 
 #include <dballe/fwd.h>
 #include <wreport/varinfo.h>

@@ -1,7 +1,7 @@
-#ifndef DBALLE_SIMPLE_TRACED_H
-#define DBALLE_SIMPLE_TRACED_H
+#ifndef DBALLE_FORTRAN_TRACED_H
+#define DBALLE_FORTRAN_TRACED_H
 
-#include <dballe/simple/simple.h>
+#include <dballe/fortran/api.h>
 #include <memory>
 
 namespace dballe {

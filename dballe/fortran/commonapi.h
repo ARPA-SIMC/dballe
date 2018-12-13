@@ -1,7 +1,7 @@
-#ifndef FDBA_COMMONAPI_H
-#define FDBA_COMMONAPI_H
+#ifndef DBALLE_FORTRAN_COMMONAPI_H
+#define DBALLE_FORTRAN_COMMONAPI_H
 
-#include "simple.h"
+#include "api.h"
 #include <dballe/cursor.h>
 #include <dballe/values.h>
 #include <dballe/core/query.h>

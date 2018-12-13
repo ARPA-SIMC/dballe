@@ -257,7 +257,7 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 %{_includedir}/dballe/sql/*
 %{_includedir}/dballe/db/*
 %{_includedir}/dballe/cmdline/*
-%{_includedir}/dballe/simple/*
+%{_includedir}/dballe/fortran/*
 
 %exclude %{_libdir}/libdballe.la
 %{_libdir}/libdballe.so

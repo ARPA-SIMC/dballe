@@ -14,7 +14,7 @@ class Tests : public TestCase
     using TestCase::TestCase;
 
     void register_tests() override;
-} newtg("simple_msgapi");
+} newtg("fortran_msgapi");
 
 void Tests::register_tests()
 {

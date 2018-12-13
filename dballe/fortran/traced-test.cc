@@ -13,7 +13,7 @@ class Tests : public TestCase
     using TestCase::TestCase;
 
     void register_tests() override;
-} tests("simple_traced");
+} tests("fortran_traced");
 
 void Tests::register_tests()
 {

@@ -1,5 +1,5 @@
-#ifndef FDBA_MSGAPI_H
-#define FDBA_MSGAPI_H
+#ifndef DBALLE_FORTRAN_MSGAPI_H
+#define DBALLE_FORTRAN_MSGAPI_H
 
 #include "commonapi.h"
 #include <dballe/fwd.h>

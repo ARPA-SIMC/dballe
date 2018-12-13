@@ -1,5 +1,5 @@
-#ifndef DBALLE_SIMPLE_DBAPI_H
-#define DBALLE_SIMPLE_DBAPI_H
+#ifndef DBALLE_FORTRAN_DBAPI_H
+#define DBALLE_FORTRAN_DBAPI_H
 
 #include "commonapi.h"
 #include <dballe/file.h>

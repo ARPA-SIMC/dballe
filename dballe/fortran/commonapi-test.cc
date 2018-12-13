@@ -33,7 +33,7 @@ class Tests : public TestCase
     using TestCase::TestCase;
 
     void register_tests() override;
-} newtg("simple_commonapi");
+} newtg("fortran_commonapi");
 
 void Tests::register_tests()
 {

@@ -45,7 +45,7 @@ db/v7/cursor-access.cc: db/v7/cursor-access.in.cc mklookup
 db/summary-access.tcc: db/summary-access.in.tcc mklookup
 	$(top_srcdir)/dballe/mklookup $< -o $@
 
-simple/commonapi-access.cc: simple/commonapi-access.in.cc mklookup
+fortran/commonapi-access.cc: fortran/commonapi-access.in.cc mklookup
 	$(top_srcdir)/dballe/mklookup $< -o $@
 
 core/aliases.cc: core/aliases.gperf
@@ -55,7 +55,7 @@ BUILT_SOURCES = core/aliases.cc \
 				core/shortcuts.h core/shortcuts.cc core/shortcuts-access.in.cc core/shortcuts-access.cc msg/msg-extravars.h \
 				core/query-access.cc core/data-access.cc \
 				msg/cursor-access.cc db/v7/cursor-access.cc \
-				db/summary-access.tcc simple/commonapi-access.cc
+				db/summary-access.tcc fortran/commonapi-access.cc
 EXTRA_DIST += mklookup mkvars vars.csv \
 			  core/aliases.gperf core/aliases.cc \
 			  core/shortcuts.h core/shortcuts.cc core/shortcuts-access.in.cc core/shortcuts-access.cc msg/msg-extravars.h \
@@ -64,7 +64,7 @@ EXTRA_DIST += mklookup mkvars vars.csv \
 			  msg/cursor-access.in.cc msg/cursor-access.cc \
 			  db/v7/cursor-access.in.cc db/v7/cursor-access.cc \
 			  db/summary-access.in.tcc db/summary-access.tcc \
-			  simple/commonapi-access.in.cc simple/commonapi-access.cc
+			  fortran/commonapi-access.in.cc fortran/commonapi-access.cc
 
 noinst_PROGRAMS =
 EXTRA_PROGRAMS =
@@ -153,11 +153,11 @@ nobase_dist_dballeinclude_HEADERS = \
 	cmdline/conversion.h \
 	cmdline/processor.h \
 	cmdline/dbadb.h \
-	simple/dbapi.h \
-	simple/simple.h \
-	simple/traced.h \
-	simple/commonapi.h \
-	simple/msgapi.h
+	fortran/api.h \
+	fortran/dbapi.h \
+	fortran/traced.h \
+	fortran/commonapi.h \
+	fortran/msgapi.h
 if HAVE_LIBPQ
 nobase_dist_dballeinclude_HEADERS += \
 	sql/postgresql.h \
@@ -266,12 +266,12 @@ libdballe_la_SOURCES = \
 	cmdline/processor.cc \
 	cmdline/conversion.cc \
 	cmdline/dbadb.cc \
-	simple/simple.cc \
-	simple/traced.cc \
-	simple/commonapi.cc \
-	simple/commonapi-access.cc \
-	simple/msgapi.cc \
-	simple/dbapi.cc
+	fortran/api.cc \
+	fortran/traced.cc \
+	fortran/commonapi.cc \
+	fortran/commonapi-access.cc \
+	fortran/msgapi.cc \
+	fortran/dbapi.cc
 if HAVE_LIBPQ
 libdballe_la_SOURCES += \
 	sql/postgresql.cc \
@@ -381,10 +381,10 @@ test_dballe_SOURCES = \
 	db/db-export-test.cc \
 	db/summary-test.cc \
 	db/explorer-test.cc \
-	simple/traced-test.cc \
-	simple/commonapi-test.cc \
-	simple/msgapi-test.cc \
-	simple/dbapi-test.cc \
+	fortran/traced-test.cc \
+	fortran/commonapi-test.cc \
+	fortran/msgapi-test.cc \
+	fortran/dbapi-test.cc \
 	cmdline/processor-test.cc \
 	cmdline/dbadb-test.cc
 if HAVE_LIBPQ
