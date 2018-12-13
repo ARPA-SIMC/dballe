@@ -27,7 +27,7 @@ struct API
     virtual signed char enqb(const char* param) = 0;
     virtual float enqr(const char* param) = 0;
     virtual double enqd(const char* param) = 0;
-    virtual bool enqc(const char* param, std::string& res) = 0;
+    virtual bool enqc(const char* param, char* res, unsigned res_len) = 0;
     virtual void seti(const char* param, int value) = 0;
     virtual void setb(const char* param, signed char value) = 0;
     virtual void setr(const char* param, float value) = 0;
@@ -63,6 +63,9 @@ struct API
     virtual const char* describe_timerange(int ptype, int p1, int p2) = 0;
     virtual const char* describe_var(const char* varcode, const char* value) = 0;
     virtual void commit() = 0;
+
+    static void to_fortran(const char* str, char* buf, unsigned buf_len);
+    static void to_fortran(const std::string& str, char* buf, unsigned buf_len);
 };
 
 }

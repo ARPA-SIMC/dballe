@@ -48,7 +48,7 @@ Makefile
 /dballe/msg/cursor-access.cc
 /dballe/db/v7/cursor-access.cc
 /dballe/db/summary-access.tcc
-/dballe/simple/commonapi-access.cc
+/dballe/fortran/commonapi-access.cc
 /dballe/test-dballe
 /dballe/bench-run
 /dballe/profile-run

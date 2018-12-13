@@ -9,7 +9,6 @@
 #include <cstring>  // memset
 #include <limits.h>
 #include <float.h>
-#include "common.h"
 #include "handles.h"
 #include "error.h"
 
@@ -600,13 +599,11 @@ int idba_enqc(int handle, const char* parameter, char* value, unsigned value_len
     try {
         HSimple& h = hsimp.get(handle);
         std::string v;
-        bool found = h.api->enqc(parameter, v);
+        bool found = h.api->enqc(parameter, value, value_len);
 
         // Copy the result values
-        if (found)
-            fortran::cstring_to_fortran(v, value, value_len);
-        else
-            fortran::cstring_to_fortran(nullptr, value, value_len);
+        if (!found)
+            fortran::API::to_fortran(nullptr, value, value_len);
 
         return fortran::success();
     } catch (error& e) {
@@ -1096,7 +1093,7 @@ int idba_next_data(int handle, char* parameter, int parameter_len)
         wreport::Varcode res = h.api->next_data();
         char buf[8];
         format_bcode(res, buf);
-        fortran::cstring_to_fortran(buf, parameter, parameter_len);
+        fortran::API::to_fortran(buf, parameter, parameter_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1220,7 +1217,7 @@ int idba_next_attribute(int handle, char* parameter, unsigned parameter_len)
     try {
         HSimple& h = hsimp.get(handle);
         const char* res = h.api->next_attribute();
-        fortran::cstring_to_fortran(res, parameter, parameter_len);
+        fortran::API::to_fortran(res, parameter, parameter_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1456,7 +1453,7 @@ int idba_describe_level(
     try {
         HSimple& h = hsimp.get(handle);
         const char* res = h.api->describe_level(ltype1, l1, ltype2, l2);
-        fortran::cstring_to_fortran(res, result, result_len);
+        fortran::API::to_fortran(res, result, result_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1487,7 +1484,7 @@ int idba_describe_timerange(
     try {
         HSimple& h = hsimp.get(handle);
         const char* res = h.api->describe_timerange(ptype, p1, p2);
-        fortran::cstring_to_fortran(res, result, result_len);
+        fortran::API::to_fortran(res, result, result_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1517,7 +1514,7 @@ int idba_describe_var(
     try {
         HSimple& h = hsimp.get(handle);
         const char* res = h.api->describe_var(varcode, value);
-        fortran::cstring_to_fortran(res, result, result_len);
+        fortran::API::to_fortran(res, result, result_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);

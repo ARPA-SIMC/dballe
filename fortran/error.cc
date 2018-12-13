@@ -1,5 +1,5 @@
+#include "dballe/fortran/api.h"
 #include "handles.h"
-#include "common.h"
 #include <wreport/error.h>
 #include <cstdint>
 #include <cstring>
@@ -123,7 +123,7 @@ int idba_error_code()
  */
 void idba_error_message(char* message, unsigned message_len)
 {
-    fortran::cstring_to_fortran(last_err_msg, message, message_len);
+    fortran::API::to_fortran(last_err_msg, message, message_len);
 }
 
 /**
@@ -138,7 +138,7 @@ void idba_error_message(char* message, unsigned message_len)
  */
 void idba_error_context(char* message, unsigned message_len)
 {
-    fortran::cstring_to_fortran("", message, message_len);
+    fortran::API::to_fortran("", message, message_len);
 }
 
 /**
@@ -155,7 +155,7 @@ void idba_error_context(char* message, unsigned message_len)
  */
 void idba_error_details(char* message, unsigned message_len)
 {
-    fortran::cstring_to_fortran("", message, message_len);
+    fortran::API::to_fortran("", message, message_len);
 }
 
 /**

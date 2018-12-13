@@ -251,7 +251,7 @@ struct PrendiloOperation : public Operation
     }
     int enqi(const char* param) const override { wreport::error_consistency::throwf("enqi %s cannot be called after a insert_data", param); }
     double enqd(const char* param) const override { throw wreport::error_consistency("enqd cannot be called after a insert_data"); }
-    bool enqc(const char* param, std::string& res) const override { throw wreport::error_consistency("enqc cannot be called after a insert_data"); }
+    bool enqc(const char* param, char* res, unsigned res_len) const override { throw wreport::error_consistency("enqc cannot be called after a insert_data"); }
     void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const override { throw wreport::error_consistency("enqlevel cannot be called after a insert_data"); }
     void enqtimerange(int& ptype, int& p1, int& p2) const override { throw wreport::error_consistency("enqtimerange cannot be called after a insert_data"); }
     void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) const override { throw wreport::error_consistency("enqdate cannot be called after a insert_data"); }

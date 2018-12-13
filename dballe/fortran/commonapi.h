@@ -54,7 +54,7 @@ public:
     virtual signed char enqb(const char* param) const;
     virtual float enqr(const char* param) const;
     virtual double enqd(const char* param) const = 0;
-    virtual bool enqc(const char* param, std::string& res) const = 0;
+    virtual bool enqc(const char* param, char* res, unsigned res_len) const = 0;
     virtual void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const = 0;
     virtual void enqtimerange(int& ptype, int& p1, int& p2) const = 0;
     virtual void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) const = 0;
@@ -107,11 +107,15 @@ struct CursorOperation : public Operation
         }
         return res;
     }
-    bool enqc(const char* param, std::string& res) const override
+    bool enqc(const char* param, char* res, unsigned res_len) const override
     {
         if (!cursor)
             throw wreport::error_consistency("enqc called before running a query");
-        return cursor->enqs(param, strlen(param), res);
+        std::string value;
+        if (!cursor->enqs(param, strlen(param), value))
+            return false;
+        API::to_fortran(value, res, res_len);
+        return true;
     }
     void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const override
     {
@@ -226,7 +230,7 @@ public:
     signed char enqb(const char* param) override;
     float enqr(const char* param) override;
     double enqd(const char* param) override;
-    bool enqc(const char* param, std::string& res) override;
+    bool enqc(const char* param, char* res, unsigned res_len) override;
     void seti(const char* param, int value) override;
     void setb(const char* param, signed char value) override;
     void setr(const char* param, float value) override;

@@ -40,7 +40,7 @@ struct TracedAPI : public API
     signed char enqb(const char* param) override;
     float enqr(const char* param) override;
     double enqd(const char* param) override;
-    bool enqc(const char* param, std::string& res) override;
+    bool enqc(const char* param, char* res, unsigned res_len) override;
     void seti(const char* param, int value) override;
     void setb(const char* param, signed char value) override;
     void setr(const char* param, float value) override;

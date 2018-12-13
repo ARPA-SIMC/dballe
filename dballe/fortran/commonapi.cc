@@ -190,7 +190,7 @@ double CommonAPIImplementation::enqd(const char* param)
     return operation->enqd(param);
 }
 
-bool CommonAPIImplementation::enqc(const char* param, std::string& res)
+bool CommonAPIImplementation::enqc(const char* param, char* res, unsigned res_len)
 {
     if (param[0] == '*')
     {
@@ -200,11 +200,11 @@ bool CommonAPIImplementation::enqc(const char* param, std::string& res)
         const Var* var = qcoutput.values.maybe_var(code);
         if (!var) return false;
         if (!var->isset()) return false;
-        res = var->enqc();
+        to_fortran(var->enqc(), res, res_len);
         return true;
     }
     if (!operation) return false;
-    return operation->enqc(param, res);
+    return operation->enqc(param, res, res_len);
 }
 
 void CommonAPIImplementation::enqlevel(int& ltype1, int& l1, int& ltype2, int& l2)

@@ -216,9 +216,9 @@ this->add_method("insert_attrs_insert_data", [](Fixture& f) {
     wassert(actual(api.query_attributes()) == 1);
     wassert(actual(api.enqi("*B33007")) == 60);
     wassert(actual(api.enqd("*B33007")) == 60.0);
-    string res;
-    wassert_true(api.enqc("*B33007", res));
-    wassert(actual(res) == "60");
+    char res[4];
+    wassert_true(api.enqc("*B33007", res, 4));
+    wassert(actual(string(res, 4)) == "60  ");
 });
 
 this->add_method("insert_attrs_insert_data", [](Fixture& f) {
@@ -1116,8 +1116,8 @@ this->add_method("query_attr_values", [](Fixture& f) {
     wassert(dbapi0.enqb("*B33193"));
     wassert(dbapi0.enqr("*B33193"));
     wassert(dbapi0.enqd("*B33193"));
-    string sres;
-    wassert(dbapi0.enqc("*B33193", sres));
+    char sres[1];
+    wassert(dbapi0.enqc("*B33193", sres, 1));
     // error: cannot parse a Varcode out of '*B33193'
 });
 
