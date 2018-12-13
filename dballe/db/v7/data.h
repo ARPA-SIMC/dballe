@@ -85,6 +85,9 @@ public:
     /// Run the query to delete all records selected by the given QueryBuilder
     virtual void remove(Tracer<>& trc, const v7::IdQueryBuilder& qb) = 0;
 
+    /// Run the query to delete the record with the given ID
+    virtual void remove_by_id(Tracer<>& trc, int id) = 0;
+
     /// Dump the entire contents of the table to an output stream
     virtual void dump(FILE* out) = 0;
 

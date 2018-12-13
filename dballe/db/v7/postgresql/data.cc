@@ -145,6 +145,18 @@ void PostgreSQLDataCommon<Parent>::remove(Tracer<>& trc, const v7::IdQueryBuilde
 }
 
 template<typename Parent>
+void PostgreSQLDataCommon<Parent>::remove_by_id(Tracer<>& trc, int id)
+{
+    char query[64];
+    snprintf(query, 64, "DELETE FROM %s WHERE id=%d", Parent::table_name, id);
+
+    // Iterate all the data_id results, deleting the related data and attributes
+    Tracer<> trc_sel(trc ? trc->trace_delete(query, 1) : nullptr);
+    conn.exec_no_data(query);
+}
+
+
+template<typename Parent>
 void PostgreSQLDataCommon<Parent>::update(Tracer<>& trc, std::vector<typename Parent::BatchValue>& vars, bool with_attrs)
 {
     Querybuf qb(512);

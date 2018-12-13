@@ -76,6 +76,8 @@ public:
     void insert_data(dballe::Data& vals, const dballe::DBInsertOptions& opts=dballe::DBInsertOptions::defaults) override;
     void remove_station_data(const Query& query) override;
     void remove_data(const Query& query) override;
+    void remove_station_data_by_id(int id);
+    void remove_data_by_id(int id);
     void remove_all() override;
 
     void attr_insert_station(int data_id, const Values& attrs) override;

@@ -140,6 +140,14 @@ void Stations::load(Tracer<>& trc, const StationQueryBuilder& qb)
     cur = results.begin();
 }
 
+void Stations::remove()
+{
+    core::Query query;
+    query.ana_id = this->cur->station.id;
+    tr->remove_station_data(query);
+    tr->remove_data(query);
+}
+
 
 StationData::StationData(DataQueryBuilder& qb, bool with_attributes)
     : Base(qb.tr), with_attributes(with_attributes) {}
@@ -163,6 +171,11 @@ void StationData::query_attrs(std::function<void(std::unique_ptr<wreport::Var>)>
     } else {
         tr->attr_query_station(attr_reference_id(), dest);
     }
+}
+
+void StationData::remove()
+{
+    tr->remove_station_data_by_id(cur->value.data_id);
 }
 
 
@@ -213,6 +226,11 @@ void Data::query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, 
     }
 }
 
+void Data::remove()
+{
+    tr->remove_data_by_id(cur->value.data_id);
+}
+
 
 void Summary::load(Tracer<>& trc, const SummaryQueryBuilder& qb)
 {
@@ -226,6 +244,17 @@ void Summary::load(Tracer<>& trc, const SummaryQueryBuilder& qb)
     cur = results.begin();
 
     this->tr->levtr().prefetch_ids(trc, ids);
+}
+
+void Summary::remove()
+{
+    core::Query query;
+    query.ana_id = cur->station.id;
+    auto levtr = get_levtr();
+    query.level = levtr.level;
+    query.trange = levtr.trange;
+    query.varcodes.insert(cur->code);
+    tr->remove_data(query);
 }
 
 namespace {

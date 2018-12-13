@@ -193,6 +193,22 @@ class CommonDBTestMixin(DballeDBMixin):
             self.assertIsNone(msg.ident)
             self.assertEqual(msg.report, "synop")
 
+    def testCursorStationsRemove(self):
+        with self.db.query_stations() as cur:
+            cur.remove()
+
+    def testCursorStationDataRemove(self):
+        with self.db.query_station_data() as cur:
+            cur.remove()
+
+    def testCursorDataRemove(self):
+        with self.db.query_data() as cur:
+            cur.remove()
+
+    def testCursorSummaryRemove(self):
+        with self.db.query_summary() as cur:
+            cur.remove()
+
     def testAttrRemove(self):
         self.db.attr_remove_data(self.attr_ref, ("B33007",))
 

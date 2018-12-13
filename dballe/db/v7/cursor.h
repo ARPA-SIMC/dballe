@@ -127,6 +127,7 @@ struct Stations : public Base<CursorStation, StationRow>
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
     bool enqf(const char* key, unsigned len, std::string& res) const override;
+    void remove() override;
 
 protected:
     const DBValues& values() const;
@@ -152,6 +153,7 @@ struct StationData : public Base<CursorStationData, StationDataRow>
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
     bool enqf(const char* key, unsigned len, std::string& res) const override;
+    void remove() override;
 };
 
 
@@ -206,6 +208,7 @@ struct Data : public LevtrBase<CursorData, DataRow>
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
     bool enqf(const char* key, unsigned len, std::string& res) const override;
+    void remove() override;
 };
 
 
@@ -227,6 +230,7 @@ struct Summary : public LevtrBase<CursorSummary, SummaryRow>
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
     bool enqf(const char* key, unsigned len, std::string& res) const override;
+    void remove() override;
 };
 
 

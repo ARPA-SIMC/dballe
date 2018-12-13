@@ -20,6 +20,7 @@
    * Renamed `Cursor*.attr_query` to `Cursor*.query_attrs`
    * Added `Cursor*.insert_attrs`
    * Added `Cursor*.remove_attrs`
+   * Added `Cursor*.remove()`
    * Added `DB.query_messages`
    * DB or Transaction: `.query_*`: query argument is now optional, omit it to
      query everything

@@ -57,6 +57,9 @@ Format format_parse(const std::string& str);
 
 struct CursorStation : public dballe::CursorStation
 {
+    /// Remove this station and all its data
+    virtual void remove() = 0;
+
     /**
      * Iterate the cursor until the end, returning the number of items.
      *
@@ -67,6 +70,9 @@ struct CursorStation : public dballe::CursorStation
 
 struct CursorStationData : public dballe::CursorStationData
 {
+    /// Remove this datum
+    virtual void remove() = 0;
+
     /// Get the database that created this cursor
     virtual std::shared_ptr<db::Transaction> get_transaction() const = 0;
 
@@ -97,6 +103,9 @@ struct CursorStationData : public dballe::CursorStationData
 
 struct CursorData : public dballe::CursorData
 {
+    /// Remove this datum
+    virtual void remove() = 0;
+
     /// Get the database that created this cursor
     virtual std::shared_ptr<db::Transaction> get_transaction() const = 0;
 
@@ -127,6 +136,9 @@ struct CursorData : public dballe::CursorData
 
 struct CursorSummary : public dballe::CursorSummary
 {
+    /// Remove all data summarised by this entry
+    virtual void remove() = 0;
+
     /**
      * Iterate the cursor until the end, returning the number of items.
      *

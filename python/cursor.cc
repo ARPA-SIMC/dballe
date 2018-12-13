@@ -150,6 +150,22 @@ inline void run_attr_query(const db::CursorData& cur, std::function<void(std::un
 }
 
 template<typename Impl>
+struct remove : MethNoargs<Impl>
+{
+    constexpr static const char* name = "remove";
+    constexpr static const char* summary = "Remove the data currently addressed by the cursor";
+    static PyObject* run(Impl* self)
+    {
+        try {
+            ensure_valid_cursor(self);
+            ReleaseGIL gil;
+            self->cur->remove();
+        } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
+    }
+};
+
+template<typename Impl>
 struct query_attrs : MethNoargs<Impl>
 {
     constexpr static const char* name = "query_attrs";
@@ -185,12 +201,10 @@ struct insert_attrs : MethKwargs<Impl>
                 return nullptr;
 
             Values values = values_from_python(attrs);
-
             ReleaseGIL gil;
             self->cur->insert_attrs(values);
-
-            Py_RETURN_NONE;
         } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
     }
 };
 
@@ -213,9 +227,8 @@ struct remove_attrs : MethKwargs<Impl>
             db::AttrList codes = db_read_attrlist(attrs);
             ReleaseGIL gil;
             self->cur->remove_attrs(codes);
-
-            Py_RETURN_NONE;
         } DBALLE_CATCH_RETURN_PYO
+        Py_RETURN_NONE;
     }
 };
 
@@ -403,7 +416,7 @@ struct DefinitionStationDB : public DefinitionBase<DefinitionStationDB, dpy_Curs
     constexpr static const char* summary = "cursor iterating dballe.DB query_station results";
 
     GetSetters<remaining<Impl>, query<Impl>> getsetters;
-    Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>, remove<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
 
@@ -414,7 +427,7 @@ struct DefinitionStationDataDB : public DefinitionBase<DefinitionStationDataDB, 
     constexpr static const char* summary = "cursor iterating dballe.DB query_station_data results";
 
     GetSetters<remaining<Impl>, query<Impl>> getsetters;
-    Methods<MethGenericEnter<Impl>, __exit__<Impl>, query_attrs<Impl>, insert_attrs<Impl>, remove_attrs<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>, remove<Impl>, query_attrs<Impl>, insert_attrs<Impl>, remove_attrs<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
 
@@ -425,7 +438,7 @@ struct DefinitionDataDB : public DefinitionBase<DefinitionDataDB, dpy_CursorData
     constexpr static const char* summary = "cursor iterating dballe.DB query_data results";
 
     GetSetters<remaining<Impl>, query<Impl>> getsetters;
-    Methods<MethGenericEnter<Impl>, __exit__<Impl>, query_attrs<Impl>, insert_attrs<Impl>, remove_attrs<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>, remove<Impl>, query_attrs<Impl>, insert_attrs<Impl>, remove_attrs<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
 
@@ -436,7 +449,7 @@ struct DefinitionSummaryDB : public DefinitionBase<DefinitionSummaryDB, dpy_Curs
     constexpr static const char* summary = "cursor iterating dballe.DB query_summary results";
 
     GetSetters<remaining<Impl>, query<Impl>> getsetters;
-    Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>, remove<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
 
