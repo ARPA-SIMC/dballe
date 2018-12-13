@@ -138,41 +138,6 @@ struct query : Getter<Impl>
     }
 };
 
-template<typename Impl>
-struct query_attrs : MethKwargs<Impl>
-{
-    constexpr static const char* name = "query_attrs";
-    constexpr static const char* signature = "attrs: Iterable[str]";
-    constexpr static const char* returns = "Dict[str, Any]";
-    constexpr static const char* doc = "Query attributes for the current variable (deprecated)";
-    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
-    {
-        try {
-            ensure_valid_cursor(self);
-
-            if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use Cursor.attr_query, DB.attr_query_station or DB.attr_query_data instead of Cursor.query_attrs", 1))
-                return nullptr;
-
-            static const char* kwlist[] = { "attrs", NULL };
-            PyObject* attrs = 0;
-            if (!PyArg_ParseTupleAndKeywords(args, kw, "|O", const_cast<char**>(kwlist), &attrs))
-                return nullptr;
-
-            // Read the attribute list, if provided
-            db::AttrList codes = db_read_attrlist(attrs);
-
-            pyo_unique_ptr res(throw_ifnull(PyDict_New()));
-
-            self->cur->get_transaction()->attr_query_station(self->cur->attr_reference_id(), [&](unique_ptr<Var>&& var) {
-                if (!codes.empty() && find(codes.begin(), codes.end(), var->code()) == codes.end())
-                    return;
-                add_var_to_dict(res, *var);
-            });
-            return (PyObject*)res.release();
-        } DBALLE_CATCH_RETURN_PYO
-    }
-};
-
 namespace {
 inline void run_attr_query(const db::CursorStationData& cur, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
@@ -185,9 +150,9 @@ inline void run_attr_query(const db::CursorData& cur, std::function<void(std::un
 }
 
 template<typename Impl>
-struct attr_query : MethNoargs<Impl>
+struct query_attrs : MethNoargs<Impl>
 {
-    constexpr static const char* name = "attr_query";
+    constexpr static const char* name = "query_attrs";
     constexpr static const char* returns = "Dict[str, Any]";
     constexpr static const char* summary = "Query attributes for the current variable";
     static PyObject* run(Impl* self)
@@ -199,6 +164,57 @@ struct attr_query : MethNoargs<Impl>
                 add_var_to_dict(res, *var);
             });
             return (PyObject*)res.release();
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+template<typename Impl>
+struct insert_attrs : MethKwargs<Impl>
+{
+    constexpr static const char* name = "insert_attrs";
+    constexpr static const char* signature = "attrs: Dict[str, Any]";
+    constexpr static const char* summary = "Insert or update attributes for the current variable";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        try {
+            ensure_valid_cursor(self);
+
+            static const char* kwlist[] = { "attrs", NULL };
+            PyObject* attrs;
+            if (!PyArg_ParseTupleAndKeywords(args, kw, "O", const_cast<char**>(kwlist), &attrs))
+                return nullptr;
+
+            Values values = values_from_python(attrs);
+
+            ReleaseGIL gil;
+            self->cur->insert_attrs(values);
+
+            Py_RETURN_NONE;
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+template<typename Impl>
+struct remove_attrs : MethKwargs<Impl>
+{
+    constexpr static const char* name = "remove_attrs";
+    constexpr static const char* signature = "attrs: Iterable[str]";
+    constexpr static const char* summary = "Remove attributes from the current variable";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        try {
+            ensure_valid_cursor(self);
+
+            static const char* kwlist[] = { "attrs", NULL };
+            PyObject* attrs = nullptr;
+            if (!PyArg_ParseTupleAndKeywords(args, kw, "|O", const_cast<char**>(kwlist), &attrs))
+                return nullptr;
+
+            db::AttrList codes = db_read_attrlist(attrs);
+            ReleaseGIL gil;
+            self->cur->remove_attrs(codes);
+
+            Py_RETURN_NONE;
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -398,7 +414,7 @@ struct DefinitionStationDataDB : public DefinitionBase<DefinitionStationDataDB, 
     constexpr static const char* summary = "cursor iterating dballe.DB query_station_data results";
 
     GetSetters<remaining<Impl>, query<Impl>> getsetters;
-    Methods<MethGenericEnter<Impl>, __exit__<Impl>, query_attrs<Impl>, attr_query<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>, query_attrs<Impl>, insert_attrs<Impl>, remove_attrs<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
 
@@ -409,7 +425,7 @@ struct DefinitionDataDB : public DefinitionBase<DefinitionDataDB, dpy_CursorData
     constexpr static const char* summary = "cursor iterating dballe.DB query_data results";
 
     GetSetters<remaining<Impl>, query<Impl>> getsetters;
-    Methods<MethGenericEnter<Impl>, __exit__<Impl>, query_attrs<Impl>, attr_query<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>, query_attrs<Impl>, insert_attrs<Impl>, remove_attrs<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
 

@@ -16,6 +16,27 @@ using namespace wreport;
 namespace dballe {
 namespace db {
 
+void CursorStationData::insert_attrs(const Values& attrs)
+{
+    get_transaction()->attr_insert_station(attr_reference_id(), attrs);
+}
+
+void CursorStationData::remove_attrs(const db::AttrList& attrs)
+{
+    get_transaction()->attr_remove_station(attr_reference_id(), attrs);
+}
+
+void CursorData::insert_attrs(const Values& attrs)
+{
+    get_transaction()->attr_insert_data(attr_reference_id(), attrs);
+}
+
+void CursorData::remove_attrs(const db::AttrList& attrs)
+{
+    get_transaction()->attr_remove_data(attr_reference_id(), attrs);
+}
+
+
 static Format default_format = Format::V7;
 
 std::string format_format(Format format)

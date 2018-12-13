@@ -154,7 +154,7 @@ void StationData::load(Tracer<>& trc, const DataQueryBuilder& qb)
     cur = results.begin();
 }
 
-void StationData::attr_query(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read)
+void StationData::query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read)
 {
     if (!force_read && with_attributes)
     {
@@ -202,7 +202,7 @@ void Data::load(Tracer<>& trc, const DataQueryBuilder& qb)
     this->tr->levtr().prefetch_ids(trc, ids);
 }
 
-void Data::attr_query(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read)
+void Data::query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read)
 {
     if (!force_read && with_attributes)
     {
@@ -299,7 +299,7 @@ struct Best : public Data
         this->tr->levtr().prefetch_ids(trc, ids);
     }
 
-    void attr_query(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read) override
+    void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read) override
     {
         if (!force_read && with_attributes)
         {

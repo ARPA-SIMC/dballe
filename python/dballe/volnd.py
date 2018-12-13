@@ -668,7 +668,7 @@ def read(cursor, dims, filter=None, checkConflicts=True, attributes=None):
 
         # Add the attributes
         if attributes is not None:
-            arec = cursor.attr_query()
+            arec = cursor.query_attrs()
             if attributes is True:
                 var.appendAttrs(arec)
             else:

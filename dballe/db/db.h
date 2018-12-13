@@ -79,7 +79,13 @@ struct CursorStationData : public dballe::CursorStationData
     /**
      * Query/return the attributes for the current value of this cursor
      */
-    virtual void attr_query(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read=false) = 0;
+    virtual void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read=false) = 0;
+
+    /// Insert/update attributes for the current variable
+    virtual void insert_attrs(const Values& attrs);
+
+    /// Remove attributes for the current variable
+    virtual void remove_attrs(const db::AttrList& attrs);
 
     /**
      * Iterate the cursor until the end, returning the number of items.
@@ -103,7 +109,13 @@ struct CursorData : public dballe::CursorData
     /**
      * Query/return the attributes for the current value of this cursor
      */
-    virtual void attr_query(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read=false) = 0;
+    virtual void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read=false) = 0;
+
+    /// Insert/update attributes for the current variable
+    virtual void insert_attrs(const Values& attrs);
+
+    /// Remove attributes for the current variable
+    virtual void remove_attrs(const db::AttrList& attrs);
 
     /**
      * Iterate the cursor until the end, returning the number of items.

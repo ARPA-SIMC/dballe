@@ -206,7 +206,7 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
             };
         }
         dest.values.clear();
-        this->cursor->attr_query(consumer, !valid_cached_attrs);
+        this->cursor->query_attrs(consumer, !valid_cached_attrs);
         dest.has_new_values();
     }
     void insert_attributes(Values& qcinput) override
