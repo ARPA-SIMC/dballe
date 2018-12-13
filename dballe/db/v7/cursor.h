@@ -147,7 +147,7 @@ struct StationData : public Base<CursorStationData, StationDataRow>
     wreport::Varcode get_varcode() const override { return cur->value.code(); }
     wreport::Var get_var() const override { return *cur->value; }
     int attr_reference_id() const override { return cur->value.data_id; }
-    void attr_query(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read) override;
+    void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read) override;
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
@@ -200,7 +200,7 @@ struct Data : public LevtrBase<CursorData, DataRow>
     wreport::Var get_var() const override { return *cur->value; }
     int attr_reference_id() const override { return cur->value.data_id; }
 
-    void attr_query(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read) override;
+    void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read) override;
 
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;

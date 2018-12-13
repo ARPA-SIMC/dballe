@@ -85,8 +85,8 @@ class CommonDBTestMixin(DballeDBMixin):
             self.assertEqual(var.code, "B02005")
             self.assertEqual(var.enq(), Decimal("0.5"))
             # FIXME: this should trigger a query: how do we test it?
-            # self.assertEqual({k: v.enq() for k, v in result.attr_query().items()}, expected[idx]["attrs"])
-            self.assertEqual(result.attr_query(), {})
+            # self.assertEqual({k: v.enq() for k, v in result.query_attrs().items()}, expected[idx]["attrs"])
+            self.assertEqual(result.query_attrs(), {})
 
     def testQueryData(self):
         expected = [
@@ -106,7 +106,7 @@ class CommonDBTestMixin(DballeDBMixin):
             self.assertEqual(var.code, expected[idx]["code"])
             self.assertEqual(var.enq(), expected[idx]["val"])
             # FIXME: this should trigger a query: how do we test it?
-            self.assertEqual({k: v.enq() for k, v in result.attr_query().items()}, expected[idx]["attrs"])
+            self.assertEqual({k: v.enq() for k, v in result.query_attrs().items()}, expected[idx]["attrs"])
 
     def testQueryDataAttrs(self):
         expected = [
@@ -122,7 +122,7 @@ class CommonDBTestMixin(DballeDBMixin):
             self.assertEqual(var.code, expected[idx]["code"])
             self.assertEqual(var.enq(), expected[idx]["val"])
             # FIXME: this should NOT trigger a query: how do we test it?
-            self.assertEqual({k: v.enq() for k, v in result.attr_query().items()}, expected[idx]["attrs"])
+            self.assertEqual({k: v.enq() for k, v in result.query_attrs().items()}, expected[idx]["attrs"])
 
     def testQueryDataLimit(self):
         cur = self.db.query_data({"limit": 1})
@@ -150,7 +150,7 @@ class CommonDBTestMixin(DballeDBMixin):
         data = next(cur)
         self.assertTrue(data)
 
-        attrs = cur.attr_query()
+        attrs = cur.query_attrs()
 
         expected = {}
         expected["B33007"] = 50
@@ -195,6 +195,26 @@ class CommonDBTestMixin(DballeDBMixin):
 
     def testAttrRemove(self):
         self.db.attr_remove_data(self.attr_ref, ("B33007",))
+
+    def testAttrInsertCursorStation(self):
+        with self.db.query_station_data() as cur:
+            for row in cur:
+                row.insert_attrs({"B33007": 42})
+
+    def testAttrInsertCursorData(self):
+        with self.db.query_data() as cur:
+            for row in cur:
+                row.insert_attrs({"B33007": 42})
+
+    def testAttrRemoveCursorStation(self):
+        with self.db.query_station_data() as cur:
+            for row in cur:
+                row.remove_attrs()
+
+    def testAttrRemoveCursorData(self):
+        with self.db.query_data() as cur:
+            for row in cur:
+                row.remove_attrs()
 
     def testLoadFile(self):
         with io.open(test_pathname("bufr/vad.bufr"), "rb") as fp:
