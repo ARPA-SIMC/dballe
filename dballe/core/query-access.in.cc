@@ -14,6 +14,7 @@ void Query::setf(const char* key, unsigned len, const char* val)
         case "priomax":     priomax = strtol(val, nullptr, 10);
         case "priomin":     priomin = strtol(val, nullptr, 10);
         case "rep_memo":    report = val;
+        case "report":      report = val;
         case "ana_id":      ana_id = strtol(val, nullptr, 10);
         case "mobile":      mobile = strtol(val, nullptr, 10);
         case "ident":       ident = val;

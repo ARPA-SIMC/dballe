@@ -1142,6 +1142,14 @@ std::set<wreport::Varcode> varcodes_from_python(PyObject* o)
     return res;
 }
 
+bool bool_from_python(PyObject* o)
+{
+    int is_true = PyObject_IsTrue(o);
+    if (is_true == -1)
+        throw PythonException();
+    return is_true == 1;
+}
+
 void set_dict(PyObject* dict, const char* key, const char* val)
 {
     pyo_unique_ptr pyval(throw_ifnull(PyUnicode_FromString(val)));
@@ -1152,6 +1160,13 @@ void set_dict(PyObject* dict, const char* key, const char* val)
 void set_dict(PyObject* dict, const char* key, const std::string& val)
 {
     pyo_unique_ptr pyval(throw_ifnull(PyUnicode_FromStringAndSize(val.data(), val.size())));
+    if (PyDict_SetItemString(dict, key, pyval))
+        throw PythonException();
+}
+
+void set_dict(PyObject* dict, const char* key, bool val)
+{
+    PyObject* pyval = val ? Py_True : Py_False;
     if (PyDict_SetItemString(dict, key, pyval))
         throw PythonException();
 }

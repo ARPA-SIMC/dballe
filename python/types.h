@@ -159,6 +159,8 @@ extern template void set_values_from_python(DBValues& values, wreport::Varcode c
 
 std::set<wreport::Varcode> varcodes_from_python(PyObject* o);
 
+bool bool_from_python(PyObject* o);
+
 /// Return a list with all the attributes in var [Var]
 PyObject* attrs_to_python(const wreport::Var& var);
 
@@ -169,6 +171,7 @@ void data_setpy(core::Data& data, const char* key, unsigned len, PyObject* val);
 
 void set_dict(PyObject* dict, const char* key, const char* val);
 void set_dict(PyObject* dict, const char* key, const std::string& val);
+void set_dict(PyObject* dict, const char* key, bool val);
 void set_dict(PyObject* dict, const char* key, int val);
 void set_dict(PyObject* dict, const char* key, PyObject* val);
 void set_dict(PyObject* dict, const char* key, pyo_unique_ptr&& val);
