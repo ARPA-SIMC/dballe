@@ -1213,6 +1213,359 @@ this->add_method("issue137", [](Fixture& f) {
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 12, 102));;
 });
 
+this->add_method("issue144", [](Fixture& f) {
+    auto tr = dynamic_pointer_cast<db::Transaction>(f.db->transaction());
+    fortran::DbAPI dbapi0(tr, "write", "write", "write");
+    wassert(dbapi0.messages_open_input(dballe::tests::datafile("bufr/camse-rad1havg.bufr").c_str(), "r", Encoding::BUFR, true));
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == true);
+    wassert(actual(dbapi0.messages_read_next()) == false);
+
+    // Query station data
+    wassert(dbapi0.unsetall());
+    wassert(dbapi0.set_station_context());
+    wassert(actual(dbapi0.query_data()) == 6);
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 1, 19));
+    wassert(actual(dbapi0.test_enqc("B01019", 255)) == "Camse");
+    wassert(actual(dbapi0.enqi("lat")) == 4460016);
+    wassert(actual(dbapi0.enqi("lon")) == 1207738);
+    wassert_false(dbapi0.test_enqc("ident", 255));
+    wassert(actual(dbapi0.test_enqc("rep_memo", 255)) == "locali");
+    wassert(actual(dbapi0.enqi("priority")) == 1001);
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 1, 194));
+    wassert(actual(dbapi0.test_enqc("B01194", 255)) == "locali");
+    wassert(actual(dbapi0.enqi("lat")) == 4460016);
+    wassert(actual(dbapi0.enqi("lon")) == 1207738);
+    wassert_false(dbapi0.test_enqc("ident", 25));
+    wassert(actual(dbapi0.test_enqc("rep_memo", 255)) == "locali");
+    wassert(actual(dbapi0.enqi("priority")) == 1001);
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 5, 1));
+    wassert(actual(dbapi0.test_enqc("B05001", 255)) == "4460016");
+    wassert(actual(dbapi0.enqi("lat")) == 4460016);
+    wassert(actual(dbapi0.enqi("lon")) == 1207738);
+    wassert_false(dbapi0.test_enqc("ident", 255));
+    wassert(actual(dbapi0.test_enqc("rep_memo", 255)) == "locali");
+    wassert(actual(dbapi0.enqi("priority")) == 1001);
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 6, 1));
+    wassert(actual(dbapi0.test_enqc("B06001", 255)) == "1207738");
+    wassert(actual(dbapi0.enqi("lat")) == 4460016);
+    wassert(actual(dbapi0.enqi("lon")) == 1207738);
+    wassert_false(dbapi0.test_enqc("ident", 255));
+    wassert(actual(dbapi0.test_enqc("rep_memo", 255)) == "locali");
+    wassert(actual(dbapi0.enqi("priority")) == 1001);
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 7, 30));
+    wassert(actual(dbapi0.test_enqc("B07030", 255)) == "-10"); // New: 10
+    wassert(actual(dbapi0.enqi("lat")) == 4460016);
+    wassert(actual(dbapi0.enqi("lon")) == 1207738);
+    wassert_false(dbapi0.test_enqc("ident", 255));
+    wassert(actual(dbapi0.test_enqc("rep_memo", 255)) == "locali");
+    wassert(actual(dbapi0.enqi("priority")) == 1001);
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 7, 31));
+    wassert(actual(dbapi0.test_enqc("B07031", 255)) == "0");
+    wassert(actual(dbapi0.enqi("lat")) == 4460016);
+    wassert(actual(dbapi0.enqi("lon")) == 1207738);
+    wassert_false(dbapi0.test_enqc("ident", 255));
+    wassert(actual(dbapi0.test_enqc("rep_memo", 255)) == "locali");
+    wassert(actual(dbapi0.enqi("priority")) == 1001);
+
+    // Query data for B14198
+    int year, month, day, hour, min, sec;
+    int ltype1, l1, ltype2, l2;
+    int pind, p1, p2;
+
+    wassert(dbapi0.unsetall());
+    wassert(dbapi0.setc("varlist", "B14198"));
+    wassert(dbapi0.unset("*varlist"));
+    wassert(actual(dbapi0.query_data()) == 24);
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.enqi("lat")) == 4460016);
+    wassert(actual(dbapi0.enqi("lon")) == 1207738);
+    wassert_false(dbapi0.test_enqc("ident", 255));
+    wassert(actual(dbapi0.test_enqc("rep_memo", 255)) == "locali");
+    wassert(actual(dbapi0.enqi("priority")) == 1001);
+
+    wassert(dbapi0.enqdate(year, month, day, hour, min, sec));
+    wassert(actual(year) == 2018);
+    wassert(actual(month) == 12);
+    wassert(actual(day) == 8);
+    wassert(actual(hour) == 1);
+    wassert(actual(min) == 0);
+    wassert(actual(sec) == 0);
+
+    wassert(dbapi0.enqlevel(ltype1, l1, ltype2, l2));
+    wassert(actual(ltype1) == 1);
+    wassert(actual(l1) == fortran::API::missing_int);
+    wassert(actual(ltype2) == fortran::API::missing_int);
+    wassert(actual(l2) == fortran::API::missing_int);
+
+    wassert(dbapi0.enqtimerange(pind, p1, p2));
+    wassert(actual(pind) == 0);
+    wassert(actual(p1) == 0);
+    wassert(actual(p2) == 3600);
+
+    wassert(actual(dbapi0.test_enqc("var", 255)) == "B14198");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-658"); // New: 658
+
+    // Next B14198
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.enqi("lat")) == 4460016);
+    wassert(actual(dbapi0.enqi("lon")) == 1207738);
+    wassert_false(dbapi0.test_enqc("ident", 255));
+    wassert(actual(dbapi0.test_enqc("rep_memo", 255)) == "locali");
+    wassert(actual(dbapi0.enqi("priority")) == 1001);
+
+    wassert(dbapi0.enqdate(year, month, day, hour, min, sec));
+    wassert(actual(year) == 2018);
+    wassert(actual(month) == 12);
+    wassert(actual(day) == 8);
+    wassert(actual(hour) == 2);
+    wassert(actual(min) == 0);
+    wassert(actual(sec) == 0);
+
+    wassert(dbapi0.enqlevel(ltype1, l1, ltype2, l2));
+    wassert(actual(ltype1) == 1);
+    wassert(actual(l1) == fortran::API::missing_int);
+    wassert(actual(ltype2) == fortran::API::missing_int);
+    wassert(actual(l2) == fortran::API::missing_int);
+
+    wassert(dbapi0.enqtimerange(pind, p1, p2));
+    wassert(actual(pind) == 0);
+    wassert(actual(p1) == 0);
+    wassert(actual(p2) == 3600);
+
+    wassert(actual(dbapi0.test_enqc("var", 255)) == "B14198");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-247");
+
+    // Next B14198
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.enqi("lat")) == 4460016);
+    wassert(actual(dbapi0.enqi("lon")) == 1207738);
+    wassert_false(dbapi0.test_enqc("ident", 255));
+    wassert(actual(dbapi0.test_enqc("rep_memo", 255)) == "locali");
+    wassert(actual(dbapi0.enqi("priority")) == 1001);
+
+    wassert(dbapi0.enqdate(year, month, day, hour, min, sec));
+    wassert(actual(year) == 2018);
+    wassert(actual(month) == 12);
+    wassert(actual(day) == 8);
+    wassert(actual(hour) == 3);
+    wassert(actual(min) == 0);
+    wassert(actual(sec) == 0);
+
+    wassert(dbapi0.enqlevel(ltype1, l1, ltype2, l2));
+    wassert(actual(ltype1) == 1);
+    wassert(actual(l1) == fortran::API::missing_int);
+    wassert(actual(ltype2) == fortran::API::missing_int);
+    wassert(actual(l2) == fortran::API::missing_int);
+
+    wassert(dbapi0.enqtimerange(pind, p1, p2));
+    wassert(actual(pind) == 0);
+    wassert(actual(p1) == 0);
+    wassert(actual(p2) == 3600);
+
+    wassert(actual(dbapi0.test_enqc("var", 255)) == "B14198");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-905");
+
+    // Next B14198
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.enqi("lat")) == 4460016);
+    wassert(actual(dbapi0.enqi("lon")) == 1207738);
+    wassert_false(dbapi0.test_enqc("ident", 255));
+    wassert(actual(dbapi0.test_enqc("rep_memo", 255)) == "locali");
+    wassert(actual(dbapi0.enqi("priority")) == 1001);
+
+    wassert(dbapi0.enqdate(year, month, day, hour, min, sec));
+    wassert(actual(year) == 2018);
+    wassert(actual(month) == 12);
+    wassert(actual(day) == 8);
+    wassert(actual(hour) == 4);
+    wassert(actual(min) == 0);
+    wassert(actual(sec) == 0);
+
+    wassert(dbapi0.enqlevel(ltype1, l1, ltype2, l2));
+    wassert(actual(ltype1) == 1);
+    wassert(actual(l1) == fortran::API::missing_int);
+    wassert(actual(ltype2) == fortran::API::missing_int);
+    wassert(actual(l2) == fortran::API::missing_int);
+
+    wassert(dbapi0.enqtimerange(pind, p1, p2));
+    wassert(actual(pind) == 0);
+    wassert(actual(p1) == 0);
+    wassert(actual(p2) == 3600);
+
+    wassert(actual(dbapi0.test_enqc("var", 255)) == "B14198");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-82");
+
+    // Next B14198
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.enqi("lat")) == 4460016);
+    wassert(actual(dbapi0.enqi("lon")) == 1207738);
+    wassert_false(dbapi0.test_enqc("ident", 255));
+    wassert(actual(dbapi0.test_enqc("rep_memo", 255)) == "locali");
+    wassert(actual(dbapi0.enqi("priority")) == 1001);
+
+    wassert(dbapi0.enqdate(year, month, day, hour, min, sec));
+    wassert(actual(year) == 2018);
+    wassert(actual(month) == 12);
+    wassert(actual(day) == 8);
+    wassert(actual(hour) == 5);
+    wassert(actual(min) == 0);
+    wassert(actual(sec) == 0);
+
+    wassert(dbapi0.enqlevel(ltype1, l1, ltype2, l2));
+    wassert(actual(ltype1) == 1);
+    wassert(actual(l1) == fortran::API::missing_int);
+    wassert(actual(ltype2) == fortran::API::missing_int);
+    wassert(actual(l2) == fortran::API::missing_int);
+
+    wassert(dbapi0.enqtimerange(pind, p1, p2));
+    wassert(actual(pind) == 0);
+    wassert(actual(p1) == 0);
+    wassert(actual(p2) == 3600);
+
+    wassert(actual(dbapi0.test_enqc("var", 255)) == "B14198");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "658");
+
+    // Next B14198
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.enqi("lat")) == 4460016);
+    wassert(actual(dbapi0.enqi("lon")) == 1207738);
+    wassert_false(dbapi0.test_enqc("ident", 255));
+    wassert(actual(dbapi0.test_enqc("rep_memo", 255)) == "locali");
+    wassert(actual(dbapi0.enqi("priority")) == 1001);
+
+    wassert(dbapi0.enqdate(year, month, day, hour, min, sec));
+    wassert(actual(year) == 2018);
+    wassert(actual(month) == 12);
+    wassert(actual(day) == 8);
+    wassert(actual(hour) == 6);
+    wassert(actual(min) == 0);
+    wassert(actual(sec) == 0);
+
+    wassert(dbapi0.enqlevel(ltype1, l1, ltype2, l2));
+    wassert(actual(ltype1) == 1);
+    wassert(actual(l1) == fortran::API::missing_int);
+    wassert(actual(ltype2) == fortran::API::missing_int);
+    wassert(actual(l2) == fortran::API::missing_int);
+
+    wassert(dbapi0.enqtimerange(pind, p1, p2));
+    wassert(actual(pind) == 0);
+    wassert(actual(p1) == 0);
+    wassert(actual(p2) == 3600);
+
+    wassert(actual(dbapi0.test_enqc("var", 255)) == "B14198");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-411");
+
+    // Next B14198
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.enqi("lat")) == 4460016);
+    wassert(actual(dbapi0.enqi("lon")) == 1207738);
+    wassert_false(dbapi0.test_enqc("ident", 255));
+    wassert(actual(dbapi0.test_enqc("rep_memo", 255)) == "locali");
+    wassert(actual(dbapi0.enqi("priority")) == 1001);
+
+    wassert(dbapi0.enqdate(year, month, day, hour, min, sec));
+    wassert(actual(year) == 2018);
+    wassert(actual(month) == 12);
+    wassert(actual(day) == 8);
+    wassert(actual(hour) == 7);
+    wassert(actual(min) == 0);
+    wassert(actual(sec) == 0);
+
+    wassert(dbapi0.enqlevel(ltype1, l1, ltype2, l2));
+    wassert(actual(ltype1) == 1);
+    wassert(actual(l1) == fortran::API::missing_int);
+    wassert(actual(ltype2) == fortran::API::missing_int);
+    wassert(actual(l2) == fortran::API::missing_int);
+
+    wassert(dbapi0.enqtimerange(pind, p1, p2));
+    wassert(actual(pind) == 0);
+    wassert(actual(p1) == 0);
+    wassert(actual(p2) == 3600);
+
+    wassert(actual(dbapi0.test_enqc("var", 255)) == "B14198");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "1727");
+
+    // Next B14198
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "5593");
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "44662");
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "141637");
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "238611");
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "339286");
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "294048");
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "202503");
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "91299");
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "9294");
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-1316");
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-2961");
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-1481");
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-823");
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-2221");
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-2056");
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-3208");
+
+    wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-4113");
+});
+
 }
 
 }
