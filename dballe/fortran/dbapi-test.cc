@@ -1331,189 +1331,26 @@ this->add_method("issue144", [](Fixture& f) {
     wassert(actual(p2) == 3600);
 
     wassert(actual(dbapi0.test_enqc("var", 255)) == "B14198");
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-658"); // New: 658
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-658");
 
-    // Next B14198
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.enqi("lat")) == 4460016);
-    wassert(actual(dbapi0.enqi("lon")) == 1207738);
-    wassert_false(dbapi0.test_enqc("ident", 255));
-    wassert(actual(dbapi0.test_enqc("rep_memo", 255)) == "locali");
-    wassert(actual(dbapi0.enqi("priority")) == 1001);
-
-    wassert(dbapi0.enqdate(year, month, day, hour, min, sec));
-    wassert(actual(year) == 2018);
-    wassert(actual(month) == 12);
-    wassert(actual(day) == 8);
-    wassert(actual(hour) == 2);
-    wassert(actual(min) == 0);
-    wassert(actual(sec) == 0);
-
-    wassert(dbapi0.enqlevel(ltype1, l1, ltype2, l2));
-    wassert(actual(ltype1) == 1);
-    wassert(actual(l1) == fortran::API::missing_int);
-    wassert(actual(ltype2) == fortran::API::missing_int);
-    wassert(actual(l2) == fortran::API::missing_int);
-
-    wassert(dbapi0.enqtimerange(pind, p1, p2));
-    wassert(actual(pind) == 0);
-    wassert(actual(p1) == 0);
-    wassert(actual(p2) == 3600);
-
-    wassert(actual(dbapi0.test_enqc("var", 255)) == "B14198");
     wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-247");
 
-    // Next B14198
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.enqi("lat")) == 4460016);
-    wassert(actual(dbapi0.enqi("lon")) == 1207738);
-    wassert_false(dbapi0.test_enqc("ident", 255));
-    wassert(actual(dbapi0.test_enqc("rep_memo", 255)) == "locali");
-    wassert(actual(dbapi0.enqi("priority")) == 1001);
-
-    wassert(dbapi0.enqdate(year, month, day, hour, min, sec));
-    wassert(actual(year) == 2018);
-    wassert(actual(month) == 12);
-    wassert(actual(day) == 8);
-    wassert(actual(hour) == 3);
-    wassert(actual(min) == 0);
-    wassert(actual(sec) == 0);
-
-    wassert(dbapi0.enqlevel(ltype1, l1, ltype2, l2));
-    wassert(actual(ltype1) == 1);
-    wassert(actual(l1) == fortran::API::missing_int);
-    wassert(actual(ltype2) == fortran::API::missing_int);
-    wassert(actual(l2) == fortran::API::missing_int);
-
-    wassert(dbapi0.enqtimerange(pind, p1, p2));
-    wassert(actual(pind) == 0);
-    wassert(actual(p1) == 0);
-    wassert(actual(p2) == 3600);
-
-    wassert(actual(dbapi0.test_enqc("var", 255)) == "B14198");
     wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-905");
 
-    // Next B14198
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.enqi("lat")) == 4460016);
-    wassert(actual(dbapi0.enqi("lon")) == 1207738);
-    wassert_false(dbapi0.test_enqc("ident", 255));
-    wassert(actual(dbapi0.test_enqc("rep_memo", 255)) == "locali");
-    wassert(actual(dbapi0.enqi("priority")) == 1001);
-
-    wassert(dbapi0.enqdate(year, month, day, hour, min, sec));
-    wassert(actual(year) == 2018);
-    wassert(actual(month) == 12);
-    wassert(actual(day) == 8);
-    wassert(actual(hour) == 4);
-    wassert(actual(min) == 0);
-    wassert(actual(sec) == 0);
-
-    wassert(dbapi0.enqlevel(ltype1, l1, ltype2, l2));
-    wassert(actual(ltype1) == 1);
-    wassert(actual(l1) == fortran::API::missing_int);
-    wassert(actual(ltype2) == fortran::API::missing_int);
-    wassert(actual(l2) == fortran::API::missing_int);
-
-    wassert(dbapi0.enqtimerange(pind, p1, p2));
-    wassert(actual(pind) == 0);
-    wassert(actual(p1) == 0);
-    wassert(actual(p2) == 3600);
-
-    wassert(actual(dbapi0.test_enqc("var", 255)) == "B14198");
     wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-82");
 
-    // Next B14198
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.enqi("lat")) == 4460016);
-    wassert(actual(dbapi0.enqi("lon")) == 1207738);
-    wassert_false(dbapi0.test_enqc("ident", 255));
-    wassert(actual(dbapi0.test_enqc("rep_memo", 255)) == "locali");
-    wassert(actual(dbapi0.enqi("priority")) == 1001);
-
-    wassert(dbapi0.enqdate(year, month, day, hour, min, sec));
-    wassert(actual(year) == 2018);
-    wassert(actual(month) == 12);
-    wassert(actual(day) == 8);
-    wassert(actual(hour) == 5);
-    wassert(actual(min) == 0);
-    wassert(actual(sec) == 0);
-
-    wassert(dbapi0.enqlevel(ltype1, l1, ltype2, l2));
-    wassert(actual(ltype1) == 1);
-    wassert(actual(l1) == fortran::API::missing_int);
-    wassert(actual(ltype2) == fortran::API::missing_int);
-    wassert(actual(l2) == fortran::API::missing_int);
-
-    wassert(dbapi0.enqtimerange(pind, p1, p2));
-    wassert(actual(pind) == 0);
-    wassert(actual(p1) == 0);
-    wassert(actual(p2) == 3600);
-
-    wassert(actual(dbapi0.test_enqc("var", 255)) == "B14198");
     wassert(actual(dbapi0.test_enqc("B14198", 255)) == "658");
 
-    // Next B14198
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.enqi("lat")) == 4460016);
-    wassert(actual(dbapi0.enqi("lon")) == 1207738);
-    wassert_false(dbapi0.test_enqc("ident", 255));
-    wassert(actual(dbapi0.test_enqc("rep_memo", 255)) == "locali");
-    wassert(actual(dbapi0.enqi("priority")) == 1001);
-
-    wassert(dbapi0.enqdate(year, month, day, hour, min, sec));
-    wassert(actual(year) == 2018);
-    wassert(actual(month) == 12);
-    wassert(actual(day) == 8);
-    wassert(actual(hour) == 6);
-    wassert(actual(min) == 0);
-    wassert(actual(sec) == 0);
-
-    wassert(dbapi0.enqlevel(ltype1, l1, ltype2, l2));
-    wassert(actual(ltype1) == 1);
-    wassert(actual(l1) == fortran::API::missing_int);
-    wassert(actual(ltype2) == fortran::API::missing_int);
-    wassert(actual(l2) == fortran::API::missing_int);
-
-    wassert(dbapi0.enqtimerange(pind, p1, p2));
-    wassert(actual(pind) == 0);
-    wassert(actual(p1) == 0);
-    wassert(actual(p2) == 3600);
-
-    wassert(actual(dbapi0.test_enqc("var", 255)) == "B14198");
     wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-411");
 
-    // Next B14198
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.enqi("lat")) == 4460016);
-    wassert(actual(dbapi0.enqi("lon")) == 1207738);
-    wassert_false(dbapi0.test_enqc("ident", 255));
-    wassert(actual(dbapi0.test_enqc("rep_memo", 255)) == "locali");
-    wassert(actual(dbapi0.enqi("priority")) == 1001);
-
-    wassert(dbapi0.enqdate(year, month, day, hour, min, sec));
-    wassert(actual(year) == 2018);
-    wassert(actual(month) == 12);
-    wassert(actual(day) == 8);
-    wassert(actual(hour) == 7);
-    wassert(actual(min) == 0);
-    wassert(actual(sec) == 0);
-
-    wassert(dbapi0.enqlevel(ltype1, l1, ltype2, l2));
-    wassert(actual(ltype1) == 1);
-    wassert(actual(l1) == fortran::API::missing_int);
-    wassert(actual(ltype2) == fortran::API::missing_int);
-    wassert(actual(l2) == fortran::API::missing_int);
-
-    wassert(dbapi0.enqtimerange(pind, p1, p2));
-    wassert(actual(pind) == 0);
-    wassert(actual(p1) == 0);
-    wassert(actual(p2) == 3600);
-
-    wassert(actual(dbapi0.test_enqc("var", 255)) == "B14198");
     wassert(actual(dbapi0.test_enqc("B14198", 255)) == "1727");
 
-    // Next B14198
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
     wassert(actual(dbapi0.test_enqc("B14198", 255)) == "5593");
 
