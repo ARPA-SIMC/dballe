@@ -160,7 +160,7 @@ struct FuncLogger
 
     void _log_args(Encoding encoding)
     {
-        args << File::encoding_name(encoding);
+        args << "Encoding::" << File::encoding_name(encoding);
     }
 
     void _log_args(const char* arg)
