@@ -1,4 +1,5 @@
 #include "dballe/core/tests.h"
+#include "fortran.h"
 #include <cstring>
 
 using namespace dballe;
@@ -11,7 +12,7 @@ class Tests : public TestCase
     using TestCase::TestCase;
 
     void register_tests() override;
-} tests("core_cursor");
+} tests("core_fortran");
 
 void Tests::register_tests()
 {
