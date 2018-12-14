@@ -13,6 +13,7 @@
 #include "dballe/core/var.h"
 #include "dballe/core/data.h"
 #include "dballe/core/query.h"
+#include "dballe/core/fortran.h"
 #include "wreport/var.h"
 #include <unordered_map>
 #include <cstring>
@@ -148,6 +149,46 @@ void Stations::remove()
     tr->remove_data(query);
 }
 
+bool Stations::enqi(const char* key, unsigned len, int& res) const
+{
+    impl::Enqi enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
+}
+
+bool Stations::enqd(const char* key, unsigned len, double& res) const
+{
+    impl::Enqd enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
+}
+
+bool Stations::enqs(const char* key, unsigned len, std::string& res) const
+{
+    impl::Enqs enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
+}
+
+bool Stations::enqf(const char* key, unsigned len, std::string& res) const
+{
+    impl::Enqf enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
+}
+
 
 StationData::StationData(DataQueryBuilder& qb, bool with_attributes)
     : Base(qb.tr), with_attributes(with_attributes) {}
@@ -176,6 +217,46 @@ void StationData::query_attrs(std::function<void(std::unique_ptr<wreport::Var>)>
 void StationData::remove()
 {
     tr->remove_station_data_by_id(cur->value.data_id);
+}
+
+bool StationData::enqi(const char* key, unsigned len, int& res) const
+{
+    impl::Enqi enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
+}
+
+bool StationData::enqd(const char* key, unsigned len, double& res) const
+{
+    impl::Enqd enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
+}
+
+bool StationData::enqs(const char* key, unsigned len, std::string& res) const
+{
+    impl::Enqs enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
+}
+
+bool StationData::enqf(const char* key, unsigned len, std::string& res) const
+{
+    impl::Enqf enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
 }
 
 

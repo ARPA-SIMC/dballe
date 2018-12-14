@@ -4,6 +4,7 @@
 #include <string>
 #include <dballe/fwd.h>
 #include <dballe/types.h>
+#include <dballe/values.h>
 #include <dballe/core/var.h>
 
 namespace dballe {
@@ -55,6 +56,11 @@ struct Enqi
         wreport::error_consistency::throwf("cannot enqi `%s`", key);
     }
 
+    void set_var(wreport::Varcode val)
+    {
+        wreport::error_consistency::throwf("cannot enqi `%s`", key);
+    }
+
     void set_lat(int lat)
     {
         if (lat == MISSING_INT)
@@ -87,11 +93,42 @@ struct Enqi
         return true;
     }
 
+    bool search_b_value(const dballe::Value& value)
+    {
+        if (key[0] != 'B' || len != 6)
+            return false;
+
+        wreport::Varcode code = WR_STRING_TO_VAR(key + 1);
+        if (code != value.code())
+            wreport::error_notfound::throwf("key %s not found on this query result", key);
+
+        const wreport::Var* var = value.get();
+        if (var && var->isset())
+        {
+            missing = false;
+            res = var->enqi();
+        }
+        return true;
+    }
+
     template<typename Values>
     void search_alias_values(const Values& values)
     {
         wreport::Varcode code = dballe::resolve_varcode(key);
         const wreport::Var* var = values.maybe_var(code);
+        if (var && var->isset())
+        {
+            missing = false;
+            res = var->enqi();
+        }
+    }
+
+    void search_alias_value(const dballe::Value& value)
+    {
+        wreport::Varcode code = dballe::resolve_varcode(key);
+        if (code != value.code())
+            wreport::error_notfound::throwf("key %s not found on this query result", key);
+        const wreport::Var* var = value.get();
         if (var && var->isset())
         {
             missing = false;
@@ -134,12 +171,17 @@ struct Enqd
 
     void set_string(const std::string& val)
     {
-        wreport::error_consistency::throwf("cannot enqi `%s`", key);
+        wreport::error_consistency::throwf("cannot enqd `%s`", key);
     }
 
     void set_ident(const Ident& ident)
     {
-        wreport::error_consistency::throwf("cannot enqi `%s`", key);
+        wreport::error_consistency::throwf("cannot enqd `%s`", key);
+    }
+
+    void set_var(wreport::Varcode val)
+    {
+        wreport::error_consistency::throwf("cannot enqd `%s`", key);
     }
 
     void set_lat(int lat)
@@ -174,11 +216,42 @@ struct Enqd
         return true;
     }
 
+    bool search_b_value(const dballe::Value& value)
+    {
+        if (key[0] != 'B' || len != 6)
+            return false;
+
+        wreport::Varcode code = WR_STRING_TO_VAR(key + 1);
+        if (code != value.code())
+            wreport::error_notfound::throwf("key %s not found on this query result", key);
+
+        const wreport::Var* var = value.get();
+        if (var && var->isset())
+        {
+            missing = false;
+            res = var->enqd();
+        }
+        return true;
+    }
+
     template<typename Values>
     void search_alias_values(const Values& values)
     {
         wreport::Varcode code = dballe::resolve_varcode(key);
         const wreport::Var* var = values.maybe_var(code);
+        if (var && var->isset())
+        {
+            missing = false;
+            res = var->enqd();
+        }
+    }
+
+    void search_alias_value(const dballe::Value& value)
+    {
+        wreport::Varcode code = dballe::resolve_varcode(key);
+        if (code != value.code())
+            wreport::error_notfound::throwf("key %s not found on this query result", key);
+        const wreport::Var* var = value.get();
         if (var && var->isset())
         {
             missing = false;
@@ -233,6 +306,14 @@ struct Enqs
         missing = false;
     }
 
+    void set_var(wreport::Varcode val)
+    {
+        char buf[7];
+        dballe::format_bcode(val, buf);
+        res = buf;
+        missing = false;
+    }
+
     void set_lat(int lat)
     {
         if (lat == MISSING_INT)
@@ -265,11 +346,42 @@ struct Enqs
         return true;
     }
 
+    bool search_b_value(const dballe::Value& value)
+    {
+        if (key[0] != 'B' || len != 6)
+            return false;
+
+        wreport::Varcode code = WR_STRING_TO_VAR(key + 1);
+        if (code != value.code())
+            wreport::error_notfound::throwf("key %s not found on this query result", key);
+
+        const wreport::Var* var = value.get();
+        if (var && var->isset())
+        {
+            missing = false;
+            res = var->enqs();
+        }
+        return true;
+    }
+
     template<typename Values>
     void search_alias_values(const Values& values)
     {
         wreport::Varcode code = dballe::resolve_varcode(key);
         const wreport::Var* var = values.maybe_var(code);
+        if (var && var->isset())
+        {
+            missing = false;
+            res = var->enqs();
+        }
+    }
+
+    void search_alias_value(const dballe::Value& value)
+    {
+        wreport::Varcode code = dballe::resolve_varcode(key);
+        if (code != value.code())
+            wreport::error_notfound::throwf("key %s not found on this query result", key);
+        const wreport::Var* var = value.get();
         if (var && var->isset())
         {
             missing = false;
@@ -324,6 +436,14 @@ struct Enqf
         missing = false;
     }
 
+    void set_var(wreport::Varcode val)
+    {
+        char buf[7];
+        dballe::format_bcode(val, buf);
+        res = buf;
+        missing = false;
+    }
+
     void set_lat(int lat)
     {
         if (lat == MISSING_INT)
@@ -360,11 +480,42 @@ struct Enqf
         return true;
     }
 
+    bool search_b_value(const dballe::Value& value)
+    {
+        if (key[0] != 'B' || len != 6)
+            return false;
+
+        wreport::Varcode code = WR_STRING_TO_VAR(key + 1);
+        if (code != value.code())
+            wreport::error_notfound::throwf("key %s not found on this query result", key);
+
+        const wreport::Var* var = value.get();
+        if (var && var->isset())
+        {
+            missing = false;
+            res = var->format();
+        }
+        return true;
+    }
+
     template<typename Values>
     void search_alias_values(const Values& values)
     {
         wreport::Varcode code = dballe::resolve_varcode(key);
         const wreport::Var* var = values.maybe_var(code);
+        if (var && var->isset())
+        {
+            missing = false;
+            res = var->format();
+        }
+    }
+
+    void search_alias_value(const dballe::Value& value)
+    {
+        wreport::Varcode code = dballe::resolve_varcode(key);
+        if (code != value.code())
+            wreport::error_notfound::throwf("key %s not found on this query result", key);
+        const wreport::Var* var = value.get();
         if (var && var->isset())
         {
             missing = false;

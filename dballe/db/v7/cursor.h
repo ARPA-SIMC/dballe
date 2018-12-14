@@ -124,8 +124,7 @@ struct Stations : public Base<CursorStation, StationRow>
     DBValues get_values() const override;
     void load(Tracer<>& trc, const StationQueryBuilder& qb);
 
-    template<typename Enq> void enq_unscaled(Enq& enq) const;
-
+    template<typename Enq> void enq_generic(Enq& enq) const;
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
@@ -152,6 +151,7 @@ struct StationData : public Base<CursorStationData, StationDataRow>
     wreport::Var get_var() const override { return *cur->value; }
     int attr_reference_id() const override { return cur->value.data_id; }
     void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read) override;
+    template<typename Enq> void enq_generic(Enq& enq) const;
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;

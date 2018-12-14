@@ -18,7 +18,7 @@ namespace cursor {
  */
 
 template<typename Enq>
-void Stations::enq_unscaled(Enq& enq) const
+void Stations::enq_generic(Enq& enq) const
 {
     if (enq.search_b_values(values())) return;
 
@@ -37,135 +37,32 @@ void Stations::enq_unscaled(Enq& enq) const
     }
 }
 
-bool Stations::enqi(const char* key, unsigned len, int& res) const
-{
-    impl::Enqi enq(key, len);
-    enq_unscaled(enq);
-    if (enq.missing)
-        return false;
-    res = enq.res;
-    return true;
-}
-
-bool Stations::enqd(const char* key, unsigned len, double& res) const
-{
-    impl::Enqd enq(key, len);
-    enq_unscaled(enq);
-    if (enq.missing)
-        return false;
-    res = enq.res;
-    return true;
-}
-
-bool Stations::enqs(const char* key, unsigned len, std::string& res) const
-{
-    impl::Enqs enq(key, len);
-    enq_unscaled(enq);
-    if (enq.missing)
-        return false;
-    res = enq.res;
-    return true;
-}
-
-bool Stations::enqf(const char* key, unsigned len, std::string& res) const
-{
-    impl::Enqf enq(key, len);
-    enq_unscaled(enq);
-    if (enq.missing)
-        return false;
-    res = enq.res;
-    return true;
-}
-
 
 /*
  * StationData
  */
 
-bool StationData::enqi(const char* key, unsigned len, int& res) const
+template<typename Enq>
+void StationData::enq_generic(Enq& enq) const
 {
-    Maybe<Int> r(res);
-    if (r.search_b_value(key, len, cur->value)) return !r.missing();
+    if (enq.search_b_value(cur->value)) return;
+
+    const auto key = enq.key;
+    const auto len = enq.len;
 
     switch (key) { // mklookup
-        case "priority":    r.set(get_priority());
-        case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
-        case "ana_id":      r.set(cur->station.id);
-        case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
-        case "ident":       throw error_consistency("cannot enqi ident");
-        case "lat":         r.set(cur->station.coords.lat);
-        case "lon":         r.set(cur->station.coords.lon);
-        case "var":         throw error_consistency("cannot enqi var");
-        case "context_id":  r.set(cur->value.data_id);
-        default: break;
+        case "priority":    enq.set_int(get_priority());
+        case "rep_memo":    enq.set_string(cur->station.report);
+        case "ana_id":      enq.set_dballe_int(cur->station.id);
+        case "mobile":      enq.set_bool(cur->station.ident.is_missing());
+        case "ident":       enq.set_ident(cur->station.ident);
+        case "lat":         enq.set_lat(cur->station.coords.lat);
+        case "lon":         enq.set_lon(cur->station.coords.lon);
+        case "var":         enq.set_var(cur->value.code());
+        case "context_id":  enq.set_dballe_int(cur->value.data_id);
+        default:            enq.search_alias_value(cur->value);
     }
-    r.maybe_search_value(key, cur->value);
-    return !r.missing();
 }
-
-bool StationData::enqd(const char* key, unsigned len, double& res) const
-{
-    Maybe<Double> r(res);
-    if (r.search_b_value(key, len, cur->value)) return !r.missing();
-
-    switch (key) { // mklookup
-        case "priority":    r.set(get_priority());
-        case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
-        case "ana_id":      r.set(cur->station.id);
-        case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
-        case "ident":       throw error_consistency("cannot enqi ident");
-        case "lat":         r.set(cur->station.coords.dlat());
-        case "lon":         r.set(cur->station.coords.dlon());
-        case "var":         throw error_consistency("cannot enqi var");
-        case "context_id":  r.set(cur->value.data_id);
-        default: break;
-    }
-    r.maybe_search_value(key, cur->value);
-    return !r.missing();
-}
-
-bool StationData::enqs(const char* key, unsigned len, std::string& res) const
-{
-    Maybe<String> r(res);
-    if (r.search_b_value(key, len, cur->value)) return !r.missing();
-
-    switch (key) { // mklookup
-        case "priority":    r.set(get_priority());
-        case "rep_memo":    r.set(cur->station.report);
-        case "ana_id":      r.set(cur->station.id);
-        case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
-        case "ident":       r.set_ident(cur->station.ident);
-        case "lat":         r.set(cur->station.coords.lat);
-        case "lon":         r.set(cur->station.coords.lon);
-        case "var":         r.set_varcode(cur->value.code());
-        case "context_id":  r.set(cur->value.data_id);
-        default: break;
-    }
-    r.maybe_search_value(key, cur->value);
-    return !r.missing();
-}
-
-bool StationData::enqf(const char* key, unsigned len, std::string& res) const
-{
-    Maybe<String> r(res);
-    if (r.search_b_value(key, len, cur->value)) return !r.missing();
-
-    switch (key) { // mklookup
-        case "priority":    r.set(get_priority());
-        case "rep_memo":    r.set(cur->station.report);
-        case "ana_id":      r.set(cur->station.id);
-        case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
-        case "ident":       r.set_ident(cur->station.ident);
-        case "lat":         r.set_latlon(cur->station.coords.dlat());
-        case "lon":         r.set_latlon(cur->station.coords.dlon());
-        case "var":         r.set_varcode(cur->value.code());
-        case "context_id":  r.set(cur->value.data_id);
-        default: break;
-    }
-    r.maybe_search_value(key, cur->value);
-    return !r.missing();
-}
-
 
 /*
  * Data
