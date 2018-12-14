@@ -50,21 +50,15 @@ struct remaining : Getter<Impl>
 
 void _set_query(PyObject* dict, const DBStation& station)
 {
-    if (station.id == MISSING_INT)
+    set_dict(dict, "report", station.report);
+    set_dict(dict, "lat", dballe_int_lat_to_python(station.coords.lat));
+    set_dict(dict, "lon", dballe_int_lon_to_python(station.coords.lon));
+    if (station.ident.is_missing())
     {
-        set_dict(dict, "rep_memo", station.report);
-        set_dict(dict, "lat", dballe_int_lat_to_python(station.coords.lat));
-        set_dict(dict, "lon", dballe_int_lon_to_python(station.coords.lat));
-        set_dict(dict, "rep_memo", station.report);
-        if (station.ident.is_missing())
-        {
-            set_dict(dict, "mobile", 0);
-        } else {
-            set_dict(dict, "mobile", 1);
-            set_dict(dict, "ident", station.ident.get());
-        }
+        set_dict(dict, "mobile", false);
     } else {
-        set_dict(dict, "ana_id", station.id);
+        set_dict(dict, "mobile", true);
+        set_dict(dict, "ident", station.ident.get());
     }
 }
 

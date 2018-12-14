@@ -7,7 +7,8 @@
 | `priority`      | Integer   | Priority of the type of report | Every type of report has an associated priority that controls which data are first returned when there is more than one in the same physical space.  It can be changed by editing /etc/dballe/repinfo.csv |
 | `priomax`       | Integer   | Maximum priority of reports queried |                                        |
 | `priomin`       | Integer   | Minimum priority of reports queried |                                        |
-| `rep_memo`      | String    | Type of report                 |                                             |
+| `report`        | String    | Type of report                 | Alias for `rep_memo`                        |
+| `rep_memo`      | String    | Type of report                 | Alias for `repoert`                         |
 | `ana_id`        | Integer   | Station database ID            | internal DB-ALLe ID referring to an existing station, usable as a shortcut reference instead of specifying the full data |
 | `mobile`        | Integer   | Station is mobile              | Set to 1 to query mobile station, such as a ship or a flight; to 0 to query only fixed stations, such as synop or metar |
 | `ident`         | String    | Station identifier             |                                             |

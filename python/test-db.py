@@ -406,12 +406,16 @@ class CommonDBTestMixin(DballeDBMixin):
         self.assertEqual(len(records_to_del), 2)
 
         query = records_to_del[0]
-        self.assertEqual(len(records_to_del[0]), 5)
-        self.assertIn("ana_id", query)
-        self.assertEqual(query["level"], dballe.Level(10, 11, 15, 22))
-        self.assertEqual(query["trange"], dballe.Trange(20, 111, 222))
-        self.assertEqual(query["datetime"], datetime.datetime(1945, 4, 25, 8, 0))
-        self.assertEqual(query["var"], "B01011")
+        self.assertEqual(query, {
+            "report": "synop",
+            "mobile": False,
+            "lat": Decimal("12.34560"),
+            "lon": Decimal("76.54320"),
+            "level": dballe.Level(10, 11, 15, 22),
+            "trange": dballe.Trange(20, 111, 222),
+            "datetime": datetime.datetime(1945, 4, 25, 8, 0),
+            "var": "B01011",
+        })
 
         self.db.remove_data(records_to_del[0])
         self.assertEqual(self.db.query_data().remaining, 1)

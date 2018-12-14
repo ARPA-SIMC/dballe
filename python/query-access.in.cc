@@ -13,9 +13,10 @@ void query_setpy(core::Query& query, const char* key, unsigned len, PyObject* va
         case "priority":    query.priomin = query.priomax = dballe_int_from_python(val);
         case "priomax":     query.priomax = dballe_int_from_python(val);
         case "priomin":     query.priomin = dballe_int_from_python(val);
+        case "report":      query.report = dballe_nullable_string_from_python(val);
         case "rep_memo":    query.report = dballe_nullable_string_from_python(val);
         case "ana_id":      query.ana_id = dballe_int_from_python(val);
-        case "mobile":      query.mobile = dballe_int_from_python(val);
+        case "mobile":      query.mobile = bool_from_python(val) ? 1 : 0;
         case "ident":       query.ident = ident_from_python(val);
         case "lat":         { int ival = dballe_int_lat_from_python(val); query.latrange.set(ival, ival); }
         case "lon":         { int ival = dballe_int_lon_from_python(val); query.lonrange.set(ival, ival); }
