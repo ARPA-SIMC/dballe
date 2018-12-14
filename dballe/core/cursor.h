@@ -27,6 +27,9 @@ struct CursorStation : public dballe::CursorStation
     {
         return std::unique_ptr<CursorStation>(dynamic_cast<CursorStation*>(c.release()));
     }
+
+    /// Create a CursorStation iterating on no results
+    static std::unique_ptr<CursorStation> make_empty();
 };
 
 /// Cursor iterating over station data values
@@ -49,6 +52,9 @@ struct CursorStationData : public dballe::CursorStationData
     {
         return std::unique_ptr<CursorStationData>(dynamic_cast<CursorStationData*>(c.release()));
     }
+
+    /// Create a CursorStationData iterating on no results
+    static std::unique_ptr<CursorStationData> make_empty();
 };
 
 /// Cursor iterating over data values
@@ -71,6 +77,9 @@ struct CursorData : public dballe::CursorData
     {
         return std::unique_ptr<CursorData>(dynamic_cast<CursorData*>(c.release()));
     }
+
+    /// Create a CursorData iterating on no results
+    static std::unique_ptr<CursorData> make_empty();
 };
 
 /// Cursor iterating over summary entries
@@ -93,6 +102,9 @@ struct CursorSummary : public dballe::CursorSummary
     {
         return std::unique_ptr<CursorSummary>(dynamic_cast<CursorSummary*>(c.release()));
     }
+
+    /// Create a CursorSummary iterating on no results
+    static std::unique_ptr<CursorSummary> make_empty();
 };
 
 /// Cursor iterating over messages
@@ -115,6 +127,9 @@ struct CursorMessage : public dballe::CursorMessage
     {
         return std::unique_ptr<CursorMessage>(dynamic_cast<CursorMessage*>(c.release()));
     }
+
+    /// Create a CursorStation iterating on no results
+    static std::unique_ptr<CursorMessage> make_empty();
 };
 
 }

@@ -49,9 +49,6 @@ struct CursorStation : public Cursor
      * Get the station data values
      */
     virtual DBValues get_values() const = 0;
-
-    /// Create a CursorStation iterating on no results
-    static std::unique_ptr<CursorStation> make_empty();
 };
 
 /// Cursor iterating over station data values
@@ -62,9 +59,6 @@ struct CursorStationData : public Cursor
 
     /// Get the variable
     virtual wreport::Var get_var() const = 0;
-
-    /// Create a CursorStationData iterating on no results
-    static std::unique_ptr<CursorStationData> make_empty();
 };
 
 /// Cursor iterating over data values
@@ -84,9 +78,6 @@ struct CursorData : public Cursor
 
     /// Get the datetime
     virtual Datetime get_datetime() const = 0;
-
-    /// Create a CursorData iterating on no results
-    static std::unique_ptr<CursorData> make_empty();
 };
 
 /// Cursor iterating over summary entries
@@ -106,9 +97,6 @@ struct CursorSummary : public Cursor
 
     /// Get the count of elements
     virtual size_t get_count() const = 0;
-
-    /// Create a CursorSummary iterating on no results
-    static std::unique_ptr<CursorSummary> make_empty();
 };
 
 /// Cursor iterating over messages
@@ -116,9 +104,6 @@ struct CursorMessage : public Cursor
 {
     virtual const Message& get_message() const = 0;
     virtual std::unique_ptr<Message> detach_message() = 0;
-
-    /// Create a CursorStation iterating on no results
-    static std::unique_ptr<CursorMessage> make_empty();
 };
 
 }
