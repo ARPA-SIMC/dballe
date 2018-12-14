@@ -39,7 +39,7 @@ msg/msg-extravars.h: vars.csv mkvars
 msg/cursor-access.cc: msg/cursor-access.in.cc mklookup
 	$(top_srcdir)/dballe/mklookup $< -o $@
 
-db/v7/cursor-access.cc: db/v7/cursor-access.in.cc mklookup
+db/v7/cursor-access.tcc: db/v7/cursor-access.in.tcc mklookup
 	$(top_srcdir)/dballe/mklookup $< -o $@
 
 db/summary-access.tcc: db/summary-access.in.tcc mklookup
@@ -54,7 +54,7 @@ core/aliases.cc: core/aliases.gperf
 BUILT_SOURCES = core/aliases.cc \
 				core/shortcuts.h core/shortcuts.cc core/shortcuts-access.in.cc core/shortcuts-access.cc msg/msg-extravars.h \
 				core/query-access.cc core/data-access.cc \
-				msg/cursor-access.cc db/v7/cursor-access.cc \
+				msg/cursor-access.cc db/v7/cursor-access.tcc \
 				db/summary-access.tcc fortran/commonapi-access.cc
 EXTRA_DIST += mklookup mkvars vars.csv \
 			  core/aliases.gperf core/aliases.cc \
@@ -62,7 +62,7 @@ EXTRA_DIST += mklookup mkvars vars.csv \
 			  core/query-access.in.cc core/query-access.cc \
 			  core/data-access.in.cc core/data-access.cc \
 			  msg/cursor-access.in.cc msg/cursor-access.cc \
-			  db/v7/cursor-access.in.cc db/v7/cursor-access.cc \
+			  db/v7/cursor-access.in.tcc db/v7/cursor-access.tcc \
 			  db/summary-access.in.tcc db/summary-access.tcc \
 			  fortran/commonapi-access.in.cc fortran/commonapi-access.cc
 
@@ -260,7 +260,6 @@ libdballe_la_SOURCES = \
 	db/v7/sqlite/driver.cc \
 	db/v7/db.cc \
 	db/v7/cursor.cc \
-	db/v7/cursor-access.cc \
 	db/v7/qbuilder.cc \
 	db/v7/import.cc \
 	db/v7/export.cc \

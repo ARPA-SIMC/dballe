@@ -461,3 +461,5 @@ void run_delete_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const 
 }
 }
 }
+
+#include "dballe/db/v7/cursor-access.tcc"
