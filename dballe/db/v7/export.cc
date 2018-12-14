@@ -53,7 +53,7 @@ struct ProtoMessage
     ProtoMessage() : msg(new impl::Message) {}
 };
 
-struct Cursor : public dballe::CursorMessage
+struct Cursor : public impl::CursorMessage
 {
     typedef std::vector<std::unique_ptr<dballe::Message>> Results;
     Results results;

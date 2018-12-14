@@ -2,7 +2,7 @@
 #define DBALLE_FORTRAN_COMMONAPI_H
 
 #include "api.h"
-#include <dballe/cursor.h>
+#include <dballe/core/cursor.h>
 #include <dballe/values.h>
 #include <dballe/core/query.h>
 #include <dballe/core/data.h>

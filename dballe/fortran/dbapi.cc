@@ -93,7 +93,7 @@ struct OutputFile
 
 namespace {
 
-struct QuantesonoOperation : public CursorOperation<CursorStation>
+struct QuantesonoOperation : public CursorOperation<dballe::db::CursorStation>
 {
     const DbAPI& api;
 
@@ -104,7 +104,7 @@ struct QuantesonoOperation : public CursorOperation<CursorStation>
 
     int run()
     {
-        cursor = api.tr->query_stations(api.input_query);
+        cursor.reset(dynamic_cast<dballe::db::CursorStation*>(api.tr->query_stations(api.input_query).release()));
         return cursor->remaining();
     }
 

@@ -36,18 +36,6 @@ struct Cursor
     /// Discard the results that have not been read yet
     virtual void discard() = 0;
 
-    /// Query the content of the cursor, as an int. Returns false if the value is unset
-    virtual bool enqi(const char* key, unsigned len, int& res) const = 0;
-
-    /// Query the content of the cursor, as a double. Returns false if the value is unset
-    virtual bool enqd(const char* key, unsigned len, double& res) const = 0;
-
-    /// Query the content of the cursor, as a string. Returns false if the value is unset
-    virtual bool enqs(const char* key, unsigned len, std::string& res) const = 0;
-
-    /// Query the content of the cursor, as a formatted string. Returns false if the value is unset
-    virtual bool enqf(const char* key, unsigned len, std::string& res) const = 0;
-
     /**
      * Get the whole station data in a single call
      */
@@ -126,11 +114,6 @@ struct CursorSummary : public Cursor
 /// Cursor iterating over messages
 struct CursorMessage : public Cursor
 {
-    bool enqi(const char* key, unsigned len, int& res) const override;
-    bool enqd(const char* key, unsigned len, double& res) const override;
-    bool enqs(const char* key, unsigned len, std::string& res) const override;
-    bool enqf(const char* key, unsigned len, std::string& res) const override;
-
     virtual const Message& get_message() const = 0;
     virtual std::unique_ptr<Message> detach_message() = 0;
 

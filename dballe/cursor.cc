@@ -58,11 +58,6 @@ struct EmptyCursorSummary : public EmptyCursor<dballe::CursorSummary>
 
 }
 
-bool CursorMessage::enqi(const char* key, unsigned len, int& res) const { return false; }
-bool CursorMessage::enqd(const char* key, unsigned len, double& res) const { return false; }
-bool CursorMessage::enqs(const char* key, unsigned len, std::string& res) const { return false; }
-bool CursorMessage::enqf(const char* key, unsigned len, std::string& res) const { return false; }
-
 std::unique_ptr<CursorMessage> CursorMessage::make_empty()
 {
     return std::unique_ptr<CursorMessage>(new EmptyCursorMessage);

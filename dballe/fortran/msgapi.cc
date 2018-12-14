@@ -19,7 +19,7 @@ namespace fortran {
 
 namespace {
 
-struct QuantesonoOperation : public CursorOperation<CursorStation>
+struct QuantesonoOperation : public CursorOperation<impl::CursorStation>
 {
     const MsgAPI& api;
 
@@ -33,7 +33,7 @@ struct QuantesonoOperation : public CursorOperation<CursorStation>
         const impl::Message* curmsg = api.curmsg();
         if (!curmsg)
             throw error_consistency("query_stations called without a current message");
-        cursor = curmsg->query_stations(api.input_query);
+        cursor.reset(dynamic_cast<impl::CursorStation*>(curmsg->query_stations(api.input_query).release()));
         return cursor->remaining();
     }
 

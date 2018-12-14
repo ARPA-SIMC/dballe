@@ -182,7 +182,7 @@ struct StationEntries : protected core::SmallSet<StationEntry<Station>, Station,
 
 
 template<typename Station>
-struct Cursor : public dballe::CursorSummary
+struct Cursor : public impl::CursorSummary
 {
     struct Entry
     {

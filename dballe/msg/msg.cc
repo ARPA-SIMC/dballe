@@ -355,17 +355,17 @@ std::unique_ptr<dballe::CursorStation> Message::query_stations(const Query& quer
     return std::unique_ptr<dballe::CursorStation>(new msg::CursorStation(*this));
 }
 
-std::unique_ptr<CursorStationData> Message::query_station_data(const Query& query) const
+std::unique_ptr<dballe::CursorStationData> Message::query_station_data(const Query& query) const
 {
     return std::unique_ptr<dballe::CursorStationData>(new msg::CursorStationData(*this));
 }
 
-std::unique_ptr<CursorData> Message::query_data(const Query& query) const
+std::unique_ptr<dballe::CursorData> Message::query_data(const Query& query) const
 {
     return std::unique_ptr<dballe::CursorData>(new msg::CursorData(*this));
 }
 
-std::unique_ptr<CursorData> Message::query_station_and_data(const Query& query) const
+std::unique_ptr<dballe::CursorData> Message::query_station_and_data(const Query& query) const
 {
     return std::unique_ptr<dballe::CursorData>(new msg::CursorData(*this, true));
 }

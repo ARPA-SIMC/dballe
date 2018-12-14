@@ -2,7 +2,7 @@
 #define DBALLE_DB_DB_H
 
 #include <dballe/fwd.h>
-#include <dballe/cursor.h>
+#include <dballe/core/cursor.h>
 #include <dballe/db.h>
 #include <dballe/db/fwd.h>
 #include <dballe/db/defs.h>
@@ -55,7 +55,7 @@ std::string format_format(Format format);
 Format format_parse(const std::string& str);
 
 
-struct CursorStation : public dballe::CursorStation
+struct CursorStation : public impl::CursorStation
 {
     /// Remove this station and all its data
     virtual void remove() = 0;
@@ -68,7 +68,7 @@ struct CursorStation : public dballe::CursorStation
     virtual unsigned test_iterate(FILE* dump=0) = 0;
 };
 
-struct CursorStationData : public dballe::CursorStationData
+struct CursorStationData : public impl::CursorStationData
 {
     /// Remove this datum
     virtual void remove() = 0;
@@ -101,7 +101,7 @@ struct CursorStationData : public dballe::CursorStationData
     virtual unsigned test_iterate(FILE* dump=0) = 0;
 };
 
-struct CursorData : public dballe::CursorData
+struct CursorData : public impl::CursorData
 {
     /// Remove this datum
     virtual void remove() = 0;
@@ -134,7 +134,7 @@ struct CursorData : public dballe::CursorData
     virtual unsigned test_iterate(FILE* dump=0) = 0;
 };
 
-struct CursorSummary : public dballe::CursorSummary
+struct CursorSummary : public impl::CursorSummary
 {
     /// Remove all data summarised by this entry
     virtual void remove() = 0;

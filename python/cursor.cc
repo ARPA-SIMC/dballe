@@ -580,10 +580,10 @@ dpy_CursorSummaryDBSummary* cursor_create(std::unique_ptr<db::summary::Cursor<DB
     return result.release();
 }
 
-dpy_CursorMessage* cursor_create(std::unique_ptr<CursorMessage> cur)
+dpy_CursorMessage* cursor_create(std::unique_ptr<dballe::CursorMessage> cur)
 {
     py_unique_ptr<dpy_CursorMessage> result(throw_ifnull(PyObject_New(dpy_CursorMessage, dpy_CursorMessage_Type)));
-    result->cur = cur.release();
+    result->cur = impl::CursorMessage::downcast(std::move(cur)).release();
     result->curmsg = nullptr;
     return result.release();
 }

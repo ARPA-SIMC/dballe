@@ -1,7 +1,7 @@
 #ifndef DBALLE_MSG_CURSOR_H
 #define DBALLE_MSG_CURSOR_H
 
-#include <dballe/cursor.h>
+#include <dballe/core/cursor.h>
 #include <dballe/types.h>
 #include <dballe/msg/msg.h>
 #include <dballe/msg/context.h>
@@ -10,7 +10,7 @@ namespace dballe {
 namespace impl {
 namespace msg {
 
-struct CursorStation : public dballe::CursorStation
+struct CursorStation : public impl::CursorStation
 {
     dballe::DBStation station;
     const Values& station_values;
@@ -61,7 +61,7 @@ struct CursorStation : public dballe::CursorStation
 };
 
 
-struct CursorStationData : public dballe::CursorStationData
+struct CursorStationData : public impl::CursorStationData
 {
     dballe::DBStation station;
     const Values& station_values;
@@ -135,7 +135,7 @@ struct CursorDataRow
     }
 };
 
-struct CursorData : public dballe::CursorData
+struct CursorData : public impl::CursorData
 {
     dballe::DBStation station;
     Datetime datetime;

@@ -82,7 +82,7 @@ extern PyTypeObject* dpy_CursorSummarySummary_Type;
 
 typedef struct {
     PyObject_HEAD
-    dballe::CursorMessage* cur;
+    dballe::impl::CursorMessage* cur;
     PyObject* curmsg;
 } dpy_CursorMessage;
 
@@ -118,7 +118,7 @@ dpy_CursorDataDB* cursor_create(std::unique_ptr<db::CursorData> cur);
 dpy_CursorSummaryDB* cursor_create(std::unique_ptr<db::CursorSummary> cur);
 dpy_CursorSummarySummary* cursor_create(std::unique_ptr<db::summary::Cursor<Station>> cur);
 dpy_CursorSummaryDBSummary* cursor_create(std::unique_ptr<db::summary::Cursor<DBStation>> cur);
-dpy_CursorMessage* cursor_create(std::unique_ptr<CursorMessage> cur);
+dpy_CursorMessage* cursor_create(std::unique_ptr<dballe::CursorMessage> cur);
 
 void register_cursor(PyObject* m);
 
