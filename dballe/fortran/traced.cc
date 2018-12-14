@@ -355,7 +355,7 @@ bool TracedAPI::enqc(const char* param, char* res, unsigned res_len)
     }
     if (ret)
     {
-        std::string arg_res = str::encode_cstring(res);
+        std::string arg_res = str::encode_cstring(std::string(res, res_len));
         fprintf(out, "    wassert_true(%s.enqc(\"%s\", res, %u));\n", name.c_str(), arg_param.c_str(), res_len);
         fprintf(out, "    wassert(actual(std::string(res, %u)) == \"%s\");\n", res_len, arg_res.c_str());
     }
