@@ -1,4 +1,5 @@
 #include "cursor.h"
+#include "dballe/core/fortran.h"
 #include "repinfo.h"
 #include "levtr.h"
 #include "dballe/core/access-impl.h"
@@ -16,80 +17,64 @@ namespace cursor {
  * Stations
  */
 
-bool Stations::enqi(const char* key, unsigned len, int& res) const
+template<typename Enq>
+void Stations::enq_unscaled(Enq& enq) const
 {
-    Maybe<Int> r(res);
-    if (r.search_b_values(key, len, values())) return !r.missing();
+    if (enq.search_b_values(values())) return;
+
+    const auto key = enq.key;
+    const auto len = enq.len;
 
     switch (key) { // mklookup
-        case "priority":    r.set(get_priority());
-        case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
-        case "ana_id":      r.set(cur->station.id);
-        case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
-        case "ident":       throw error_consistency("cannot enqi ident");
-        case "lat":         r.set(cur->station.coords.lat);
-        case "lon":         r.set(cur->station.coords.lon);
-        default: break;
+        case "priority":    enq.set_int(get_priority());
+        case "rep_memo":    enq.set_string(cur->station.report);
+        case "ana_id":      enq.set_dballe_int(cur->station.id);
+        case "mobile":      enq.set_bool(cur->station.ident.is_missing());
+        case "ident":       enq.set_ident(cur->station.ident);
+        case "lat":         enq.set_lat(cur->station.coords.lat);
+        case "lon":         enq.set_lon(cur->station.coords.lon);
+        default:            enq.search_alias_values(values());
     }
-    r.maybe_search_values(key, values());
-    return !r.missing();
+}
+
+bool Stations::enqi(const char* key, unsigned len, int& res) const
+{
+    impl::Enqi enq(key, len);
+    enq_unscaled(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
 }
 
 bool Stations::enqd(const char* key, unsigned len, double& res) const
 {
-    Maybe<Double> r(res);
-    if (r.search_b_values(key, len, values())) return !r.missing();
-
-    switch (key) { // mklookup
-        case "priority":    r.set(get_priority());
-        case "rep_memo":    throw error_consistency("cannot enqi rep_memo");
-        case "ana_id":      r.set(cur->station.id);
-        case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
-        case "ident":       throw error_consistency("cannot enqi ident");
-        case "lat":         r.set(cur->station.coords.dlat());
-        case "lon":         r.set(cur->station.coords.dlon());
-        default: break;
-    }
-    r.maybe_search_values(key, values());
-    return !r.missing();
+    impl::Enqd enq(key, len);
+    enq_unscaled(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
 }
 
 bool Stations::enqs(const char* key, unsigned len, std::string& res) const
 {
-    Maybe<String> r(res);
-    if (r.search_b_values(key, len, values())) return !r.missing();
-
-    switch (key) { // mklookup
-        case "priority":    r.set(get_priority());
-        case "rep_memo":    r.set(cur->station.report);
-        case "ana_id":      r.set(cur->station.id);
-        case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
-        case "ident":       r.set_ident(cur->station.ident);
-        case "lat":         r.set(cur->station.coords.lat);
-        case "lon":         r.set(cur->station.coords.lon);
-        default: break;
-    }
-    r.maybe_search_values(key, values());
-    return !r.missing();
+    impl::Enqs enq(key, len);
+    enq_unscaled(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
 }
 
 bool Stations::enqf(const char* key, unsigned len, std::string& res) const
 {
-    Maybe<String> r(res);
-    if (r.search_b_values(key, len, values())) return !r.missing();
-
-    switch (key) { // mklookup
-        case "priority":    r.set(get_priority());
-        case "rep_memo":    r.set(cur->station.report);
-        case "ana_id":      r.set(cur->station.id);
-        case "mobile":      r.set(cur->station.ident.is_missing() ? 0 : 1);
-        case "ident":       r.set_ident(cur->station.ident);
-        case "lat":         r.set_latlon(cur->station.coords.dlat());
-        case "lon":         r.set_latlon(cur->station.coords.dlon());
-        default: break;
-    }
-    r.maybe_search_values(key, values());
-    return !r.missing();
+    impl::Enqf enq(key, len);
+    enq_unscaled(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
 }
 
 

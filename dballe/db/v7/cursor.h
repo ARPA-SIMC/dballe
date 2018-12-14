@@ -123,6 +123,9 @@ struct Stations : public Base<CursorStation, StationRow>
     dballe::DBStation get_station() const override { return this->cur->station; }
     DBValues get_values() const override;
     void load(Tracer<>& trc, const StationQueryBuilder& qb);
+
+    template<typename Enq> void enq_unscaled(Enq& enq) const;
+
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
