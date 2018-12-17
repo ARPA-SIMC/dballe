@@ -16,6 +16,34 @@ using namespace dballe::tests;
 
 namespace {
 
+struct TempStdin
+{
+    TempStdin(const char* fname, const char* mode)
+    {
+        wassert_true(freopen(fname, mode, stdin));
+    }
+
+    ~TempStdin()
+    {
+        wassert_true(freopen("/dev/stdin", "r", stdin));
+    }
+};
+
+#if 0
+struct TempStdout
+{
+    TempStdout(const char* fname, const char* mode)
+    {
+        wassert_true(freopen(fname, mode, stdout));
+    }
+
+    ~TempStdout()
+    {
+        wassert_true(freopen("/dev/stdout", "w", stdout));
+    }
+};
+#endif
+
 struct TempBind
 {
     int fd;
@@ -417,8 +445,7 @@ this->add_method("messages_read_messages_stdin", [](Fixture& f) {
     fortran::DbAPI api(f.tr, "write", "write", "write");
 
     // Connect stdin to an input file
-    wreport::sys::File in(tests::datafile("bufr/synotemp.bufr"), O_RDONLY);
-    TempBind tb(0, in);
+    TempStdin ts(tests::datafile("bufr/synotemp.bufr").c_str(), "rb");
 
     // 2 messages, 1 subset each
     api.messages_open_input("", "r", Encoding::BUFR);
