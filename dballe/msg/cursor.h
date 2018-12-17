@@ -47,6 +47,7 @@ struct CursorStation : public impl::CursorStation
         at_start = false;
     }
 
+    template<typename Enq> void enq_generic(Enq& enq) const;
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
@@ -106,6 +107,7 @@ struct CursorStationData : public impl::CursorStationData
         cur = station_values.end();
     }
 
+    template<typename Enq> void enq_generic(Enq& enq) const;
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
@@ -192,6 +194,7 @@ struct CursorData : public impl::CursorData
         cur = rows.end();
     }
 
+    template<typename Enq> void enq_generic(Enq& enq) const;
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;

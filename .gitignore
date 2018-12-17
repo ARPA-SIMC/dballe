@@ -45,7 +45,7 @@ Makefile
 /dballe/core/shortcuts.cc
 /dballe/msg/msg-extravars.h
 /dballe/msg/context-extravars.h
-/dballe/msg/cursor-access.cc
+/dballe/msg/cursor-access.tcc
 /dballe/db/v7/cursor-access.tcc
 /dballe/db/summary-access.tcc
 /dballe/fortran/commonapi-access.cc

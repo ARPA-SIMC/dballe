@@ -36,7 +36,7 @@ core/shortcuts-access.cc: core/shortcuts-access.in.cc mklookup
 msg/msg-extravars.h: vars.csv mkvars
 	$(top_srcdir)/dballe/mkvars -t msg-extravars.h $< -o $@
 
-msg/cursor-access.cc: msg/cursor-access.in.cc mklookup
+msg/cursor-access.tcc: msg/cursor-access.in.tcc mklookup
 	$(top_srcdir)/dballe/mklookup $< -o $@
 
 db/v7/cursor-access.tcc: db/v7/cursor-access.in.tcc mklookup
@@ -54,14 +54,14 @@ core/aliases.cc: core/aliases.gperf
 BUILT_SOURCES = core/aliases.cc \
 				core/shortcuts.h core/shortcuts.cc core/shortcuts-access.in.cc core/shortcuts-access.cc msg/msg-extravars.h \
 				core/query-access.cc core/data-access.cc \
-				msg/cursor-access.cc db/v7/cursor-access.tcc \
+				msg/cursor-access.tcc db/v7/cursor-access.tcc \
 				db/summary-access.tcc fortran/commonapi-access.cc
 EXTRA_DIST += mklookup mkvars vars.csv \
 			  core/aliases.gperf core/aliases.cc \
 			  core/shortcuts.h core/shortcuts.cc core/shortcuts-access.in.cc core/shortcuts-access.cc msg/msg-extravars.h \
 			  core/query-access.in.cc core/query-access.cc \
 			  core/data-access.in.cc core/data-access.cc \
-			  msg/cursor-access.in.cc msg/cursor-access.cc \
+			  msg/cursor-access.in.tcc msg/cursor-access.tcc \
 			  db/v7/cursor-access.in.tcc db/v7/cursor-access.tcc \
 			  db/summary-access.in.tcc db/summary-access.tcc \
 			  fortran/commonapi-access.in.cc fortran/commonapi-access.cc
@@ -113,7 +113,6 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/string.h \
 	core/trace.h \
 	core/json.h \
-	core/access-impl.h \
 	msg/fwd.h \
 	msg/bulletin.h \
 	msg/context.h \
@@ -220,7 +219,6 @@ libdballe_la_SOURCES = \
 	msg/context.cc \
 	msg/msg.cc \
 	msg/cursor.cc \
-	msg/cursor-access.cc \
 	msg/wr_codec.cc \
 	msg/wr_importers/base.cc \
 	msg/wr_importers/synop.cc \
