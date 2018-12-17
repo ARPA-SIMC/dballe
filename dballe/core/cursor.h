@@ -7,7 +7,7 @@
 namespace dballe {
 namespace impl {
 
-struct CursorFortran
+struct CursorAccess
 {
     /// Query the content of the cursor, as an int. Returns false if the value is unset
     virtual bool enqi(const char* key, unsigned len, int& res) const = 0;
@@ -23,7 +23,7 @@ struct CursorFortran
 };
 
 /// Cursor iterating over stations
-struct CursorStation : public dballe::CursorStation, public CursorFortran
+struct CursorStation : public dballe::CursorStation, public CursorAccess
 {
     /// Downcast a unique_ptr pointer
     inline static std::unique_ptr<CursorStation> downcast(std::unique_ptr<dballe::CursorStation> c)
@@ -36,7 +36,7 @@ struct CursorStation : public dballe::CursorStation, public CursorFortran
 };
 
 /// Cursor iterating over station data values
-struct CursorStationData : public dballe::CursorStationData, public CursorFortran
+struct CursorStationData : public dballe::CursorStationData, public CursorAccess
 {
     /// Downcast a unique_ptr pointer
     inline static std::unique_ptr<CursorStationData> downcast(std::unique_ptr<dballe::CursorStationData> c)
@@ -49,7 +49,7 @@ struct CursorStationData : public dballe::CursorStationData, public CursorFortra
 };
 
 /// Cursor iterating over data values
-struct CursorData : public dballe::CursorData, public CursorFortran
+struct CursorData : public dballe::CursorData, public CursorAccess
 {
     /// Downcast a unique_ptr pointer
     inline static std::unique_ptr<CursorData> downcast(std::unique_ptr<dballe::CursorData> c)
@@ -62,7 +62,7 @@ struct CursorData : public dballe::CursorData, public CursorFortran
 };
 
 /// Cursor iterating over summary entries
-struct CursorSummary : public dballe::CursorSummary, public CursorFortran
+struct CursorSummary : public dballe::CursorSummary, public CursorAccess
 {
     /// Downcast a unique_ptr pointer
     inline static std::unique_ptr<CursorSummary> downcast(std::unique_ptr<dballe::CursorSummary> c)
@@ -75,7 +75,7 @@ struct CursorSummary : public dballe::CursorSummary, public CursorFortran
 };
 
 /// Cursor iterating over messages
-struct CursorMessage : public dballe::CursorMessage, public CursorFortran
+struct CursorMessage : public dballe::CursorMessage, public CursorAccess
 {
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;

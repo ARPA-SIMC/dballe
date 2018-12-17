@@ -3,6 +3,7 @@
 #include "dballe/core/var.h"
 #include "dballe/core/query.h"
 #include "dballe/core/json.h"
+#include "dballe/core/fortran.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 #include <algorithm>
@@ -345,6 +346,51 @@ Cursor<Station>::Cursor(const summary::StationEntries<Station>& entries, const Q
         }
     }
 }
+
+template<typename Station>
+bool Cursor<Station>::enqi(const char* key, unsigned len, int& res) const
+{
+    impl::Enqi enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
+}
+
+template<typename Station>
+bool Cursor<Station>::enqd(const char* key, unsigned len, double& res) const
+{
+    impl::Enqd enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
+}
+
+template<typename Station>
+bool Cursor<Station>::enqs(const char* key, unsigned len, std::string& res) const
+{
+    impl::Enqs enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
+}
+
+template<typename Station>
+bool Cursor<Station>::enqf(const char* key, unsigned len, std::string& res) const
+{
+    impl::Enqf enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
+}
+
 
 template class Cursor<dballe::Station>;
 template class Cursor<dballe::DBStation>;

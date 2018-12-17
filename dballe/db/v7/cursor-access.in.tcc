@@ -2,7 +2,6 @@
 #include "dballe/core/fortran.h"
 #include "repinfo.h"
 #include "levtr.h"
-#include "dballe/core/access-impl.h"
 #include <cstring>
 
 using namespace wreport;
