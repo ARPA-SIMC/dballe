@@ -18,7 +18,7 @@ namespace cursor {
  */
 
 template<typename Enq>
-void Stations::enq_generic(Enq& enq) const
+void StationRows::enq_generic(Enq& enq) const
 {
     if (enq.search_b_values(values())) return;
 
@@ -43,7 +43,7 @@ void Stations::enq_generic(Enq& enq) const
  */
 
 template<typename Enq>
-void StationData::enq_generic(Enq& enq) const
+void StationDataRows::enq_generic(Enq& enq) const
 {
     if (enq.search_b_value(cur->value)) return;
 
@@ -69,7 +69,7 @@ void StationData::enq_generic(Enq& enq) const
  */
 
 template<typename Enq>
-void Data::enq_generic(Enq& enq) const
+void BaseDataRows::enq_generic(Enq& enq) const
 {
     if (enq.search_b_value(cur->value)) return;
 
@@ -108,7 +108,7 @@ void Data::enq_generic(Enq& enq) const
  */
 
 template<typename Enq>
-void Summary::enq_generic(Enq& enq) const
+void SummaryRows::enq_generic(Enq& enq) const
 {
     const auto key = enq.key;
     const auto len = enq.len;

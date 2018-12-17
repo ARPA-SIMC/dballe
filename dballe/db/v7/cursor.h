@@ -4,6 +4,8 @@
 #include <dballe/types.h>
 #include <dballe/db/db.h>
 #include <dballe/db/v7/transaction.h>
+#include <dballe/db/v7/repinfo.h>
+#include <dballe/db/v7/levtr.h>
 #include <dballe/values.h>
 #include <memory>
 
@@ -11,6 +13,12 @@ namespace dballe {
 namespace db {
 namespace v7 {
 namespace cursor {
+
+struct Stations;
+struct StationData;
+struct Data;
+struct Best;
+struct Summary;
 
 /**
  * Row resulting from a station query
@@ -68,12 +76,8 @@ struct SummaryRow
 };
 
 
-/**
- * Structure used to build and execute a query, and to iterate through the
- * results
- */
-template<typename Interface, typename Row>
-struct Base : public Interface
+template<typename Row>
+struct Rows
 {
     /// Database to operate on
     std::shared_ptr<v7::Transaction> tr;
@@ -87,18 +91,179 @@ struct Base : public Interface
     /// True if we are at the start of the iteration
     bool at_start = true;
 
+    Rows(std::shared_ptr<v7::Transaction> tr) : tr(tr) {}
+
+    const Row* operator->() const { return &*cur; }
+
+    int get_priority() const { return tr->repinfo().get_priority(cur->station.report); }
+
+    bool next()
+    {
+        if (at_start)
+            at_start = false;
+        else if (cur != results.end())
+            ++cur;
+        return cur != results.end();
+    }
+
+    void discard()
+    {
+        at_start = false;
+        cur = results.end();
+    }
+};
+
+struct StationRows : public Rows<StationRow>
+{
+    using Rows::Rows;
+    const DBValues& values() const;
+    void load(Tracer<>& trc, const StationQueryBuilder& qb);
+    template<typename Enq> void enq_generic(Enq& enq) const;
+};
+
+struct StationDataRows : public Rows<StationDataRow>
+{
+    using Rows::Rows;
+    void load(Tracer<>& trc, const DataQueryBuilder& qb);
+    template<typename Enq> void enq_generic(Enq& enq) const;
+};
+
+template<typename Row>
+struct LevTrRows : public Rows<Row>
+{
+    using Rows<Row>::Rows;
+
+    // Cached levtr for the current row
+    mutable const LevTrEntry* levtr = nullptr;
+
+    bool next()
+    {
+        levtr = nullptr;
+        return Rows<Row>::next();
+    }
+
+    void discard()
+    {
+        levtr = nullptr;
+        Rows<Row>::discard();
+    }
+
+    const LevTrEntry& get_levtr() const
+    {
+        if (levtr == nullptr)
+            // We prefetch levtr info for all IDs, so we do not need to hit the database here
+            levtr = &(this->tr->levtr().lookup_cache(this->cur->id_levtr));
+        return *levtr;
+    }
+};
+
+struct BaseDataRows : public LevTrRows<DataRow>
+{
+    using LevTrRows::LevTrRows;
+    template<typename Enq> void enq_generic(Enq& enq) const;
+};
+
+struct DataRows : public BaseDataRows
+{
+    using BaseDataRows::BaseDataRows;
+    void load(Tracer<>& trc, const DataQueryBuilder& qb);
+};
+
+struct BestRows : public BaseDataRows
+{
+    using BaseDataRows::BaseDataRows;
+
+    int insert_cur_prio;
+
+    /// Append or replace the last result according to priority. Returns false if the value has been ignored.
+    bool add_to_results(const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var);
+
+    void load(Tracer<>& trc, const DataQueryBuilder& qb);
+};
+
+struct SummaryRows : public LevTrRows<SummaryRow>
+{
+    using LevTrRows::LevTrRows;
+    void load(Tracer<>& trc, const SummaryQueryBuilder& qb);
+    template<typename Enq> void enq_generic(Enq& enq) const;
+};
+
+
+template<typename Cursor>
+struct ImplTraits
+{
+};
+
+template<>
+struct ImplTraits<Stations>
+{
+    typedef CursorStation Interface;
+    typedef StationRow Row;
+    typedef StationRows Rows;
+};
+
+template<>
+struct ImplTraits<StationData>
+{
+    typedef CursorStationData Interface;
+    typedef StationDataRow Row;
+    typedef StationDataRows Rows;
+};
+
+template<>
+struct ImplTraits<Data>
+{
+    typedef CursorData Interface;
+    typedef DataRow Row;
+    typedef DataRows Rows;
+};
+
+template<>
+struct ImplTraits<Best>
+{
+    typedef CursorData Interface;
+    typedef DataRow Row;
+    typedef BestRows Rows;
+};
+
+template<>
+struct ImplTraits<Summary>
+{
+    typedef CursorSummary Interface;
+    typedef SummaryRow Row;
+    typedef SummaryRows Rows;
+};
+
+
+/**
+ * Structure used to build and execute a query, and to iterate through the
+ * results
+ */
+template<typename Impl>
+struct Base : public ImplTraits<Impl>::Interface
+{
+    typedef typename ImplTraits<Impl>::Row Row;
+    typedef typename ImplTraits<Impl>::Rows Rows;
+
+    Rows rows;
+
     Base(std::shared_ptr<v7::Transaction> tr)
-        : tr(tr)
+        : rows(tr)
     {
     }
 
     virtual ~Base() {}
 
     int remaining() const override;
-    bool next() override;
+    bool next() override { return rows.next(); }
     void discard() override;
 
-    int get_priority() const;
+    dballe::DBStation get_station() const override { return rows->station; }
+
+    bool enqi(const char* key, unsigned len, int& res) const override;
+    bool enqd(const char* key, unsigned len, double& res) const override;
+    bool enqs(const char* key, unsigned len, std::string& res) const override;
+    bool enqf(const char* key, unsigned len, std::string& res) const override;
 
     /**
      * Iterate the cursor until the end, returning the number of items.
@@ -108,133 +273,95 @@ struct Base : public Interface
     unsigned test_iterate(FILE* dump=0) override;
 };
 
-extern template class Base<CursorStation, StationRow>;
-extern template class Base<CursorStationData, StationDataRow>;
-extern template class Base<CursorData, DataRow>;
-extern template class Base<CursorSummary, SummaryRow>;
+extern template class Base<Stations>;
+extern template class Base<StationData>;
+extern template class Base<Data>;
+extern template class Base<Best>;
+extern template class Base<Summary>;
 
 
-/**
- * CursorStation implementation
- */
-struct Stations : public Base<CursorStation, StationRow>
+/// CursorStation implementation
+struct Stations : public Base<Stations>
 {
     using Base::Base;
-    dballe::DBStation get_station() const override { return this->cur->station; }
     DBValues get_values() const override;
-    void load(Tracer<>& trc, const StationQueryBuilder& qb);
 
-    template<typename Enq> void enq_generic(Enq& enq) const;
-    bool enqi(const char* key, unsigned len, int& res) const override;
-    bool enqd(const char* key, unsigned len, double& res) const override;
-    bool enqs(const char* key, unsigned len, std::string& res) const override;
-    bool enqf(const char* key, unsigned len, std::string& res) const override;
     void remove() override;
-
-protected:
-    const DBValues& values() const;
 };
 
-
-/**
- * CursorStationData implementation
- */
-struct StationData : public Base<CursorStationData, StationDataRow>
+/// CursorStationData implementation
+struct StationData : public Base<StationData>
 {
     bool with_attributes;
 
     StationData(DataQueryBuilder& qb, bool with_attributes);
-    std::shared_ptr<dballe::db::Transaction> get_transaction() const override { return tr; }
-    void load(Tracer<>& trc, const DataQueryBuilder& qb);
-    dballe::DBStation get_station() const override { return this->cur->station; }
-    wreport::Varcode get_varcode() const override { return cur->value.code(); }
-    wreport::Var get_var() const override { return *cur->value; }
-    int attr_reference_id() const override { return cur->value.data_id; }
+    std::shared_ptr<dballe::db::Transaction> get_transaction() const override { return rows.tr; }
+    wreport::Varcode get_varcode() const override { return rows->value.code(); }
+    wreport::Var get_var() const override { return *rows->value; }
+    int attr_reference_id() const override { return rows->value.data_id; }
     void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read) override;
-    template<typename Enq> void enq_generic(Enq& enq) const;
-    bool enqi(const char* key, unsigned len, int& res) const override;
-    bool enqd(const char* key, unsigned len, double& res) const override;
-    bool enqs(const char* key, unsigned len, std::string& res) const override;
-    bool enqf(const char* key, unsigned len, std::string& res) const override;
     void remove() override;
 };
 
-
-template<typename Interface, typename Row>
-struct LevtrBase : public Base<Interface, Row>
-{
-    using Base<Interface, Row>::Base;
-
-    // Cached levtr for the current row
-    mutable const LevTrEntry* levtr = nullptr;
-
-    bool next() override
-    {
-        levtr = nullptr;
-        return Base<Interface, Row>::next();
-    }
-
-    void discard() override
-    {
-        levtr = nullptr;
-        Base<Interface, Row>::discard();
-    }
-
-    const LevTrEntry& get_levtr() const;
-    Level get_level() const override;
-    Trange get_trange() const override;
-};
-
-
-/**
- * CursorData implementation
- */
-struct Data : public LevtrBase<CursorData, DataRow>
+/// CursorData implementation
+struct Data : public Base<Data>
 {
     bool with_attributes;
 
     Data(DataQueryBuilder& qb, bool with_attributes);
 
-    std::shared_ptr<dballe::db::Transaction> get_transaction() const override { return tr; }
+    std::shared_ptr<dballe::db::Transaction> get_transaction() const override { return rows.tr; }
 
-    void load(Tracer<>& trc, const DataQueryBuilder& qb);
-
-    dballe::DBStation get_station() const override { return this->cur->station; }
-    Datetime get_datetime() const override { return cur->datetime; }
-    wreport::Varcode get_varcode() const override { return cur->value.code(); }
-    wreport::Var get_var() const override { return *cur->value; }
-    int attr_reference_id() const override { return cur->value.data_id; }
+    Datetime get_datetime() const override { return rows->datetime; }
+    wreport::Varcode get_varcode() const override { return rows->value.code(); }
+    wreport::Var get_var() const override { return *rows->value; }
+    int attr_reference_id() const override { return rows->value.data_id; }
+    Level get_level() const override { return rows.get_levtr().level; }
+    Trange get_trange() const override { return rows.get_levtr().trange; }
 
     void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read) override;
 
     template<typename Enq> void enq_generic(Enq& enq) const;
-    bool enqi(const char* key, unsigned len, int& res) const override;
-    bool enqd(const char* key, unsigned len, double& res) const override;
-    bool enqs(const char* key, unsigned len, std::string& res) const override;
-    bool enqf(const char* key, unsigned len, std::string& res) const override;
     void remove() override;
 };
 
-
-struct Summary : public LevtrBase<CursorSummary, SummaryRow>
+/// CursorData with query=best implementation
+struct Best : public Base<Best>
 {
-    using LevtrBase<CursorSummary, SummaryRow>::LevtrBase;
+    bool with_attributes;
 
-    dballe::DBStation get_station() const override { return this->cur->station; }
-    DatetimeRange get_datetimerange() const override
-    {
-        return this->cur->dtrange;
-    }
-    wreport::Varcode get_varcode() const override { return this->cur->code; }
-    size_t get_count() const override { return this->cur->count; }
+    Best(DataQueryBuilder& qb, bool with_attributes);
 
-    void load(Tracer<>& trc, const SummaryQueryBuilder& qb);
+    std::shared_ptr<dballe::db::Transaction> get_transaction() const override { return rows.tr; }
+
+    Datetime get_datetime() const override { return rows->datetime; }
+    wreport::Varcode get_varcode() const override { return rows->value.code(); }
+    wreport::Var get_var() const override { return *rows->value; }
+    int attr_reference_id() const override { return rows->value.data_id; }
+    Level get_level() const override { return rows.get_levtr().level; }
+    Trange get_trange() const override { return rows.get_levtr().trange; }
+
+    void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read) override;
 
     template<typename Enq> void enq_generic(Enq& enq) const;
-    bool enqi(const char* key, unsigned len, int& res) const override;
-    bool enqd(const char* key, unsigned len, double& res) const override;
-    bool enqs(const char* key, unsigned len, std::string& res) const override;
-    bool enqf(const char* key, unsigned len, std::string& res) const override;
+    void remove() override;
+};
+
+/// CursorSummary implementation
+struct Summary : public Base<Summary>
+{
+    using Base<Summary>::Base;
+
+    DatetimeRange get_datetimerange() const override
+    {
+        return this->rows->dtrange;
+    }
+    Level get_level() const override { return rows.get_levtr().level; }
+    Trange get_trange() const override { return rows.get_levtr().trange; }
+    wreport::Varcode get_varcode() const override { return rows->code; }
+    size_t get_count() const override { return rows->count; }
+
+    template<typename Enq> void enq_generic(Enq& enq) const;
     void remove() override;
 };
 
