@@ -1,25 +1,32 @@
 #ifndef DBALLE_FORTRAN_ENQ_H
 #define DBALLE_FORTRAN_ENQ_H
 
-#include "dballe/core/enq.h"
+#include <dballe/core/enq.h>
+#include <dballe/fortran/api.h>
 
 namespace dballe {
 namespace fortran {
 
-struct Enqs : public impl::Enq
+struct Enqc : public impl::Enq
 {
     using Enq::Enq;
-    std::string res;
+    char* res;
+    unsigned res_len;
+
+    Enqc(const char* key, unsigned len, char* res, unsigned res_len)
+        : Enq(key, len), res(res), res_len(res_len)
+    {
+    }
 
     void set_bool(bool val)
     {
-        res = val ? "1" : "0";
+        API::to_fortran(val ? "1" : "0", res, res_len);
         missing = false;
     }
 
     void set_int(int val)
     {
-        res = std::to_string(val);
+        API::to_fortran(val, res, res_len);
         missing = false;
     }
 
@@ -27,13 +34,13 @@ struct Enqs : public impl::Enq
     {
         if (val == MISSING_INT)
             return;
-        res = std::to_string(val);
+        API::to_fortran(val, res, res_len);
         missing = false;
     }
 
     void set_string(const std::string& val)
     {
-        res = val;
+        API::to_fortran(val, res, res_len);
         missing = false;
     }
 
@@ -41,7 +48,7 @@ struct Enqs : public impl::Enq
     {
         if (ident.is_missing())
             return;
-        res = ident.get();
+        API::to_fortran(ident.get(), res, res_len);
         missing = false;
     }
 
@@ -49,25 +56,25 @@ struct Enqs : public impl::Enq
     {
         char buf[7];
         dballe::format_bcode(val, buf);
-        res = buf;
+        API::to_fortran(buf, res, res_len);
         missing = false;
     }
 
     void set_var(const wreport::Var* val)
     {
-        wreport::error_consistency::throwf("cannot enqs `%s`", key);
+        wreport::error_consistency::throwf("cannot enqc `%s`", key);
     }
 
     void set_attrs(const wreport::Var* val)
     {
-        wreport::error_consistency::throwf("cannot enqs `%s`", key);
+        wreport::error_consistency::throwf("cannot enqc `%s`", key);
     }
 
     void set_lat(int lat)
     {
         if (lat == MISSING_INT)
             return;
-        res = std::to_string(lat);
+        API::to_fortran(lat, res, res_len);
         missing = false;
     }
 
@@ -75,19 +82,17 @@ struct Enqs : public impl::Enq
     {
         if (lon == MISSING_INT)
             return;
-        res = std::to_string(lon);
+        API::to_fortran(lon, res, res_len);
         missing = false;
     }
 
     template<typename Station>
-    void set_coords(const Station& s) { wreport::error_consistency::throwf("cannot enqs `%s`", key); }
-
+    void set_coords(const Station& s) { wreport::error_consistency::throwf("cannot enqc `%s`", key); }
     template<typename Station>
-    void set_station(const Station& s) { wreport::error_consistency::throwf("cannot enqs `%s`", key); }
-
-    void set_datetime(const Datetime& dt) { wreport::error_consistency::throwf("cannot enqs `%s`", key); }
-    void set_level(const Level& dt) { wreport::error_consistency::throwf("cannot enqs `%s`", key); }
-    void set_trange(const Trange& dt) { wreport::error_consistency::throwf("cannot enqs `%s`", key); }
+    void set_station(const Station& s) { wreport::error_consistency::throwf("cannot enqc `%s`", key); }
+    void set_datetime(const Datetime& dt) { wreport::error_consistency::throwf("cannot enqc `%s`", key); }
+    void set_level(const Level& dt) { wreport::error_consistency::throwf("cannot enqc `%s`", key); }
+    void set_trange(const Trange& dt) { wreport::error_consistency::throwf("cannot enqc `%s`", key); }
 
     template<typename Values>
     bool search_b_values(const Values& values)
@@ -100,7 +105,7 @@ struct Enqs : public impl::Enq
         if (var && var->isset())
         {
             missing = false;
-            res = var->enqs();
+            API::to_fortran(var->enqc(), res, res_len);
         }
         return true;
     }
@@ -118,7 +123,7 @@ struct Enqs : public impl::Enq
         if (var && var->isset())
         {
             missing = false;
-            res = var->enqs();
+            API::to_fortran(var->enqc(), res, res_len);
         }
         return true;
     }
@@ -131,7 +136,7 @@ struct Enqs : public impl::Enq
         if (var && var->isset())
         {
             missing = false;
-            res = var->enqs();
+            API::to_fortran(var->enqc(), res, res_len);
         }
     }
 
@@ -144,7 +149,7 @@ struct Enqs : public impl::Enq
         if (var && var->isset())
         {
             missing = false;
-            res = var->enqs();
+            API::to_fortran(var->enqc(), res, res_len);
         }
     }
 };

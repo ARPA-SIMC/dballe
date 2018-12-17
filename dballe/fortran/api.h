@@ -73,6 +73,7 @@ struct API
      */
     const char* test_enqc(const char* param, unsigned len);
 
+    static void to_fortran(int32_t val, char* buf, unsigned buf_len);
     static void to_fortran(const char* str, char* buf, unsigned buf_len);
     static void to_fortran(const std::string& str, char* buf, unsigned buf_len);
 };

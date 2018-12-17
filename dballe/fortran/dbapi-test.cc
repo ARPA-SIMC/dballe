@@ -945,14 +945,10 @@ this->add_method("negative_values", [](Fixture& f) {
         vals.trange = Trange::instant();
         vals.datetime = Datetime(2015, 4, 25, 12, 30, 45);
         vals.values.set("B07030", -5.2);
-        vals.values.set("B12101", 295.1);
+        vals.values.set("B07031", 295.1);
         f.tr->insert_data(vals);
         f.tr->insert_station_data(vals);
     }
-
-    int ires;
-    double dres;
-    std::string sres;
 
     {
         fortran::DbAPI db(f.tr, "read", "read", "read");
@@ -962,10 +958,10 @@ this->add_method("negative_values", [](Fixture& f) {
         wassert(actual(db.enqi("B07030")) == -52);
         wassert(actual(db.enqd("B07030")) == -5.2);
         wassert(actual(db.test_enqc("B07030", 10)) == "-52");
-        wassert(actual(db.next_data()) == WR_VAR(0, 12, 101));
-        wassert(actual(db.enqi("B12101")) == 2951);
-        wassert(actual(db.enqd("B12101")) == 295.1);
-        wassert(actual(db.test_enqc("B12101", 10)) == "2951");
+        wassert(actual(db.next_data()) == WR_VAR(0, 7, 31));
+        wassert(actual(db.enqi("B07031")) == 2951);
+        wassert(actual(db.enqd("B07031")) == 295.1);
+        wassert(actual(db.test_enqc("B07031", 10)) == "2951");
     }
 
     {
@@ -975,10 +971,10 @@ this->add_method("negative_values", [](Fixture& f) {
         wassert(actual(db.enqi("B07030")) == -52);
         wassert(actual(db.enqd("B07030")) == -5.2);
         wassert(actual(db.test_enqc("B07030", 10)) == "-52");
-        wassert(actual(db.next_data()) == WR_VAR(0, 12, 101));
-        wassert(actual(db.enqi("B12101")) == 2951);
-        wassert(actual(db.enqd("B12101")) == 295.1);
-        wassert(actual(db.test_enqc("B12101", 10)) == "2951");
+        wassert(actual(db.next_data()) == WR_VAR(0, 7, 31));
+        wassert(actual(db.enqi("B07031")) == 2951);
+        wassert(actual(db.enqd("B07031")) == 295.1);
+        wassert(actual(db.test_enqc("B07031", 10)) == "2951");
     }
 });
 

@@ -114,12 +114,9 @@ struct CursorOperation : public Operation
     {
         if (!cursor)
             throw wreport::error_consistency("enqc called before running a query");
-        Enqs enq(param, strlen(param));
+        Enqc enq(param, strlen(param), res, res_len);
         cursor->enq_generic(enq);
-        if (enq.missing)
-            return false;
-        API::to_fortran(enq.res, res, res_len);
-        return true;
+        return !enq.missing;
     }
     void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const override
     {
