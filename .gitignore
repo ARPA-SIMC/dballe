@@ -57,7 +57,6 @@ Makefile
 /python/python-dballe.rst
 /python/data-access.cc
 /python/query-access.cc
-/python/cursor-access.cc
 /tables/B0000000000200014001.txt
 /tables/B000000002001400.txt
 /tables/B990204.txt

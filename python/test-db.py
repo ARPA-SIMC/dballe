@@ -81,7 +81,7 @@ class CommonDBTestMixin(DballeDBMixin):
             self.assertEqual(result.enqd("lat"), 12.34560)
             self.assertEqual(result.enqs("lat"), "1234560")
             self.assertEqual(result.enqf("lat"), "12.34560")
-            var = result["var"]
+            var = result["variable"]
             self.assertEqual(var.code, "B02005")
             self.assertEqual(var.enq(), Decimal("0.5"))
             # FIXME: this should trigger a query: how do we test it?
@@ -102,7 +102,7 @@ class CommonDBTestMixin(DballeDBMixin):
             self.assertEqual(result.enqd("lat"), 12.34560)
             self.assertEqual(result.enqs("lat"), "1234560")
             self.assertEqual(result.enqf("lat"), "12.34560")
-            var = result["var"]
+            var = result["variable"]
             self.assertEqual(var.code, expected[idx]["code"])
             self.assertEqual(var.enq(), expected[idx]["val"])
             # FIXME: this should trigger a query: how do we test it?
@@ -118,7 +118,7 @@ class CommonDBTestMixin(DballeDBMixin):
         self.assertEqual(cur.remaining, 2)
         for idx, result in enumerate(cur):
             self.assertEqual(cur.remaining, 2-idx-1)
-            var = result["var"]
+            var = result["variable"]
             self.assertEqual(var.code, expected[idx]["code"])
             self.assertEqual(var.enq(), expected[idx]["val"])
             # FIXME: this should NOT trigger a query: how do we test it?
@@ -262,7 +262,7 @@ class CommonDBTestMixin(DballeDBMixin):
             with self.db.query_data() as cur:
                 rec = next(cur)
                 context_id = rec["context_id"]
-                var = rec["var"]
+                var = rec["variable"]
             self.db.attr_query_data(context_id)  # cannot verify the result, but expecting not to raise
             self.assertEqual(var.code, "B12101")
             self.assertEqual(var.enqd(), 274.15)
@@ -272,7 +272,7 @@ class CommonDBTestMixin(DballeDBMixin):
             with self.db.query_data() as cur:
                 rec = next(cur)
                 context_id = rec["context_id"]
-                var = rec["var"]
+                var = rec["variable"]
             self.db.attr_query_data(context_id)  # cannot verify the result, but expecting not to raise)
             self.assertEqual(var.code, "B12101")
             self.assertEqual(var.enqd(), 273.15)
@@ -389,12 +389,12 @@ class CommonDBTestMixin(DballeDBMixin):
         # See #114
         with self.db.query_data({"var": "B01011"}) as cur:
             self.assertEqual(cur.remaining, 1)
-            self.assertEqual(cur["var"].code, "B01011")
+            self.assertEqual(cur["variable"].code, "B01011")
             self.assertCountEqual(cur["attrs"], [])
 
         with self.db.query_data({"var": "B01011", "query": "attrs"}) as cur:
             self.assertEqual(cur.remaining, 1)
-            self.assertEqual(cur["var"].code, "B01011")
+            self.assertEqual(cur["variable"].code, "B01011")
             self.assertCountEqual((repr(x) for x in cur["attrs"]), ["Var('B33007', 50)", "Var('B33036', 75)"])
 
     def test_delete_by_context_id(self):
@@ -475,7 +475,7 @@ class AttrTestMixin(object):
             with self.db.query_data() as cur:
                 rec = next(cur)
                 context_id = rec["context_id"]
-                var = rec["var"]
+                var = rec["variable"]
             a = self.db.attr_query_data(context_id)
             self.assertEqual(var.code, "B12101")
             self.assertEqual(var.enq(), 274.15)
@@ -486,7 +486,7 @@ class AttrTestMixin(object):
             with self.db.query_data() as cur:
                 rec = next(cur)
                 context_id = rec["context_id"]
-                var = rec["var"]
+                var = rec["variable"]
             a = self.db.attr_query_data(context_id)
             self.assertEqual(var.code, "B12101")
             self.assertEqual(var.enq(), 273.15)

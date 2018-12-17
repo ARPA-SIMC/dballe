@@ -650,7 +650,7 @@ def read(cursor, dims, filter=None, checkConflicts=True, attributes=None):
         if filter and not filter(rec):
             continue
 
-        v = rec["var"]
+        v = rec["variable"]
 
         # Instantiate the index objects here for every variable
         # when it appears the first time, sharing those indexes that

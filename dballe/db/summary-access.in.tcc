@@ -24,12 +24,16 @@ void Cursor<Station>::enq_generic(Enq& enq) const
     switch (key) { // mklookup
         case "priority":    return;
         case "rep_memo":    enq.set_string(cur->station_entry.station.report);
-        case "report":    enq.set_string(cur->station_entry.station.report);
+        case "report":      enq.set_string(cur->station_entry.station.report);
         case "ana_id":      enq.set_dballe_int(get_station_id(cur->station_entry.station));
         case "mobile":      enq.set_bool(!cur->station_entry.station.ident.is_missing());
         case "ident":       enq.set_ident(cur->station_entry.station.ident);
         case "lat":         enq.set_lat(cur->station_entry.station.coords.lat);
         case "lon":         enq.set_lon(cur->station_entry.station.coords.lon);
+        case "coords":      enq.set_coords(cur->station_entry.station);
+        case "station":     enq.set_station(cur->station_entry.station);
+        case "datetimemax": if (cur->var_entry.dtrange.is_missing()) return; else enq.set_datetime(cur->var_entry.dtrange.max.year);
+        case "datetimemin": if (cur->var_entry.dtrange.is_missing()) return; else enq.set_datetime(cur->var_entry.dtrange.min.year);
         case "yearmax":     if (cur->var_entry.dtrange.is_missing()) return; else enq.set_int(cur->var_entry.dtrange.max.year);
         case "yearmin":     if (cur->var_entry.dtrange.is_missing()) return; else enq.set_int(cur->var_entry.dtrange.min.year);
         case "monthmax":    if (cur->var_entry.dtrange.is_missing()) return; else enq.set_int(cur->var_entry.dtrange.max.month);
@@ -42,10 +46,12 @@ void Cursor<Station>::enq_generic(Enq& enq) const
         case "minumin":     if (cur->var_entry.dtrange.is_missing()) return; else enq.set_int(cur->var_entry.dtrange.min.minute);
         case "secmax":      if (cur->var_entry.dtrange.is_missing()) return; else enq.set_int(cur->var_entry.dtrange.max.second);
         case "secmin":      if (cur->var_entry.dtrange.is_missing()) return; else enq.set_int(cur->var_entry.dtrange.min.second);
+        case "level":       enq.set_level(cur->var_entry.var.level);
         case "leveltype1":  enq.set_dballe_int(cur->var_entry.var.level.ltype1);
         case "l1":          enq.set_dballe_int(cur->var_entry.var.level.l1);
         case "leveltype2":  enq.set_dballe_int(cur->var_entry.var.level.ltype2);
         case "l2":          enq.set_dballe_int(cur->var_entry.var.level.l2);
+        case "trange":      enq.set_trange(cur->var_entry.var.trange);
         case "pindicator":  enq.set_dballe_int(cur->var_entry.var.trange.pind);
         case "p1":          enq.set_dballe_int(cur->var_entry.var.trange.p1);
         case "p2":          enq.set_dballe_int(cur->var_entry.var.trange.p2);

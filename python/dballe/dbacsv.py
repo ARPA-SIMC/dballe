@@ -178,20 +178,20 @@ class ColumnVar(Column):
     LABEL = "Variable"
 
     def add(self, row):
-        self.values.add(row["var"].code)
+        self.values.add(row["var"])
 
     def column_data(self, rec):
-        return [rec["var"].code]
+        return [rec["var"]]
 
 
 class ColumnValue(Column):
     LABEL = "Value"
 
     def add(self, row):
-        self.values.add(row["var"].format(""))
+        self.values.add(row["variable"].format(""))
 
     def column_data(self, rec):
-        return [rec["var"].format("")]
+        return [rec["variable"].format("")]
 
 
 class ColumnStationData(Column):
@@ -305,7 +305,7 @@ class Exporter:
                 query = dict(ana_id=id)
                 items = {}
                 for record in tr.query_station_data(query):
-                    v = record["var"]
+                    v = record["variable"]
                     items[v.code] = v
                     col = station_var_cols.get(v.code, None)
                     if col is None:

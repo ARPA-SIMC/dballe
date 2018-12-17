@@ -66,6 +66,11 @@ struct Enqi
         wreport::error_consistency::throwf("cannot enqi `%s`", key);
     }
 
+    void set_attrs(const wreport::Var* val)
+    {
+        wreport::error_consistency::throwf("cannot enqi `%s`", key);
+    }
+
     void set_lat(int lat)
     {
         if (lat == MISSING_INT)
@@ -81,6 +86,16 @@ struct Enqi
         res = lon;
         missing = false;
     }
+
+    template<typename Station>
+    void set_coords(const Station& s) { wreport::error_consistency::throwf("cannot enqi `%s`", key); }
+
+    template<typename Station>
+    void set_station(const Station& s) { wreport::error_consistency::throwf("cannot enqi `%s`", key); }
+
+    void set_datetime(const Datetime& dt) { wreport::error_consistency::throwf("cannot enqi `%s`", key); }
+    void set_level(const Level& dt) { wreport::error_consistency::throwf("cannot enqi `%s`", key); }
+    void set_trange(const Trange& dt) { wreport::error_consistency::throwf("cannot enqi `%s`", key); }
 
     template<typename Values>
     bool search_b_values(const Values& values)
@@ -194,6 +209,11 @@ struct Enqd
         wreport::error_consistency::throwf("cannot enqd `%s`", key);
     }
 
+    void set_attrs(const wreport::Var* val)
+    {
+        wreport::error_consistency::throwf("cannot enqd `%s`", key);
+    }
+
     void set_lat(int lat)
     {
         if (lat == MISSING_INT)
@@ -209,6 +229,16 @@ struct Enqd
         res = Coords::lon_from_int(lon);
         missing = false;
     }
+
+    template<typename Station>
+    void set_coords(const Station& s) { wreport::error_consistency::throwf("cannot enqd `%s`", key); }
+
+    template<typename Station>
+    void set_station(const Station& s) { wreport::error_consistency::throwf("cannot enqd `%s`", key); }
+
+    void set_datetime(const Datetime& dt) { wreport::error_consistency::throwf("cannot enqd `%s`", key); }
+    void set_level(const Level& dt) { wreport::error_consistency::throwf("cannot enqd `%s`", key); }
+    void set_trange(const Trange& dt) { wreport::error_consistency::throwf("cannot enqd `%s`", key); }
 
     template<typename Values>
     bool search_b_values(const Values& values)
@@ -329,6 +359,11 @@ struct Enqs
         wreport::error_consistency::throwf("cannot enqs `%s`", key);
     }
 
+    void set_attrs(const wreport::Var* val)
+    {
+        wreport::error_consistency::throwf("cannot enqs `%s`", key);
+    }
+
     void set_lat(int lat)
     {
         if (lat == MISSING_INT)
@@ -344,6 +379,16 @@ struct Enqs
         res = std::to_string(lon);
         missing = false;
     }
+
+    template<typename Station>
+    void set_coords(const Station& s) { wreport::error_consistency::throwf("cannot enqs `%s`", key); }
+
+    template<typename Station>
+    void set_station(const Station& s) { wreport::error_consistency::throwf("cannot enqs `%s`", key); }
+
+    void set_datetime(const Datetime& dt) { wreport::error_consistency::throwf("cannot enqs `%s`", key); }
+    void set_level(const Level& dt) { wreport::error_consistency::throwf("cannot enqs `%s`", key); }
+    void set_trange(const Trange& dt) { wreport::error_consistency::throwf("cannot enqs `%s`", key); }
 
     template<typename Values>
     bool search_b_values(const Values& values)
@@ -464,6 +509,11 @@ struct Enqf
         wreport::error_consistency::throwf("cannot enqf `%s`", key);
     }
 
+    void set_attrs(const wreport::Var* val)
+    {
+        wreport::error_consistency::throwf("cannot enqf `%s`", key);
+    }
+
     void set_lat(int lat)
     {
         if (lat == MISSING_INT)
@@ -483,6 +533,16 @@ struct Enqf
         res = buf;
         missing = false;
     }
+
+    template<typename Station>
+    void set_coords(const Station& s) { wreport::error_consistency::throwf("cannot enqf `%s`", key); }
+
+    template<typename Station>
+    void set_station(const Station& s) { wreport::error_consistency::throwf("cannot enqf `%s`", key); }
+
+    void set_datetime(const Datetime& dt) { wreport::error_consistency::throwf("cannot enqf `%s`", key); }
+    void set_level(const Level& dt) { wreport::error_consistency::throwf("cannot enqf `%s`", key); }
+    void set_trange(const Trange& dt) { wreport::error_consistency::throwf("cannot enqf `%s`", key); }
 
     template<typename Values>
     bool search_b_values(const Values& values)

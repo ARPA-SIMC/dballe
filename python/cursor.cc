@@ -53,8 +53,11 @@ struct Enqpy
     void set_dballe_int(int val)
     {
         if (val == MISSING_INT)
-            return;
-        res = throw_ifnull(PyLong_FromLong(val));
+        {
+            res = Py_None;
+            Py_INCREF(res);
+        } else
+            res = throw_ifnull(PyLong_FromLong(val));
         missing = false;
     }
 
@@ -67,8 +70,11 @@ struct Enqpy
     void set_ident(const Ident& ident)
     {
         if (ident.is_missing())
-            return;
-        res = throw_ifnull(PyUnicode_FromString(ident.get()));
+        {
+            res = Py_None;
+            Py_INCREF(res);
+        } else
+            res = throw_ifnull(PyUnicode_FromString(ident.get()));
         missing = false;
     }
 
@@ -87,6 +93,13 @@ struct Enqpy
         missing = false;
     }
 
+    void set_attrs(const wreport::Var* val)
+    {
+        if (!val) return;
+        res = attrs_to_python(*val);
+        missing = false;
+    }
+
     void set_lat(int lat)
     {
         if (lat == MISSING_INT)
@@ -100,6 +113,38 @@ struct Enqpy
         if (lon == MISSING_INT)
             return;
         res = dballe_int_lon_to_python(lon);
+        missing = false;
+    }
+
+    template<typename Station>
+    void set_coords(const Station& s)
+    {
+        res = coords_to_python(s.coords);
+        missing = false;
+    }
+
+    template<typename Station>
+    void set_station(const Station& s)
+    {
+        res = station_to_python(s);
+        missing = false;
+    }
+
+    void set_datetime(const Datetime& dt)
+    {
+        res = datetime_to_python(dt);
+        missing = false;
+    }
+
+    void set_level(const Level& lev)
+    {
+        res = level_to_python(lev);
+        missing = false;
+    }
+
+    void set_trange(const Trange& tr)
+    {
+        res = trange_to_python(tr);
         missing = false;
     }
 
