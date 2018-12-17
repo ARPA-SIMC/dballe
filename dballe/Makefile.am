@@ -155,6 +155,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	cmdline/processor.h \
 	cmdline/dbadb.h \
 	fortran/api.h \
+	fortran/enq.h \
 	fortran/dbapi.h \
 	fortran/traced.h \
 	fortran/commonapi.h \

@@ -62,6 +62,7 @@ clean-local:
 EXTRA_DIST += \
     doc-dballe \
     impl-utils.h \
+    enq.h \
     common.h \
     types.h \
     binarymessage.h \

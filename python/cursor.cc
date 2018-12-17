@@ -1,5 +1,6 @@
 #include <Python.h>
 #include "cursor.h"
+#include "enq.h"
 #include "types.h"
 #include "db.h"
 #include "message.h"
@@ -25,185 +26,6 @@ PyTypeObject* dpy_CursorMessage_Type = nullptr;
 }
 
 namespace {
-
-struct Enqpy
-{
-    const char* key;
-    unsigned len;
-    PyObject* res = nullptr;
-    bool missing = true;
-
-    Enqpy(const char* key, unsigned len)
-        : key(key), len(len)
-    {
-    }
-
-    void set_bool(bool val)
-    {
-        res = val ? Py_True : Py_False;
-        Py_INCREF(res);
-        missing = false;
-    }
-
-    void set_int(int val)
-    {
-        res = throw_ifnull(PyLong_FromLong(val));
-        missing = false;
-    }
-
-    void set_dballe_int(int val)
-    {
-        if (val == MISSING_INT)
-        {
-            res = Py_None;
-            Py_INCREF(res);
-        } else
-            res = throw_ifnull(PyLong_FromLong(val));
-        missing = false;
-    }
-
-    void set_string(const std::string& val)
-    {
-        res = string_to_python(val);
-        missing = false;
-    }
-
-    void set_ident(const Ident& ident)
-    {
-        if (ident.is_missing())
-        {
-            res = Py_None;
-            Py_INCREF(res);
-        } else
-            res = throw_ifnull(PyUnicode_FromString(ident.get()));
-        missing = false;
-    }
-
-    void set_varcode(wreport::Varcode val)
-    {
-        char buf[7];
-        dballe::format_bcode(val, buf);
-        res = throw_ifnull(PyUnicode_FromStringAndSize(buf, 6));
-        missing = false;
-    }
-
-    void set_var(const wreport::Var* val)
-    {
-        if (!val) return;
-        res = (PyObject*)throw_ifnull(wrpy->var_create_copy(*val));
-        missing = false;
-    }
-
-    void set_attrs(const wreport::Var* val)
-    {
-        if (!val) return;
-        res = attrs_to_python(*val);
-        missing = false;
-    }
-
-    void set_lat(int lat)
-    {
-        if (lat == MISSING_INT)
-            return;
-        res = dballe_int_lat_to_python(lat);
-        missing = false;
-    }
-
-    void set_lon(int lon)
-    {
-        if (lon == MISSING_INT)
-            return;
-        res = dballe_int_lon_to_python(lon);
-        missing = false;
-    }
-
-    template<typename Station>
-    void set_coords(const Station& s)
-    {
-        res = coords_to_python(s.coords);
-        missing = false;
-    }
-
-    template<typename Station>
-    void set_station(const Station& s)
-    {
-        res = station_to_python(s);
-        missing = false;
-    }
-
-    void set_datetime(const Datetime& dt)
-    {
-        res = datetime_to_python(dt);
-        missing = false;
-    }
-
-    void set_level(const Level& lev)
-    {
-        res = level_to_python(lev);
-        missing = false;
-    }
-
-    void set_trange(const Trange& tr)
-    {
-        res = trange_to_python(tr);
-        missing = false;
-    }
-
-    template<typename Values>
-    bool search_b_values(const Values& values)
-    {
-        if (key[0] != 'B' || len != 6)
-            return false;
-
-        wreport::Varcode code = WR_STRING_TO_VAR(key + 1);
-        if (const wreport::Var* var = values.maybe_var(code))
-        {
-            res = (PyObject*)throw_ifnull(wrpy->var_create_copy(*var));
-            missing = false;
-        }
-        return true;
-    }
-
-    bool search_b_value(const dballe::Value& value)
-    {
-        if (key[0] != 'B' || len != 6)
-            return false;
-
-        wreport::Varcode code = WR_STRING_TO_VAR(key + 1);
-        if (code != value.code())
-            wreport::error_notfound::throwf("key %s not found on this query result", key);
-
-        if (const wreport::Var* var = value.get())
-        {
-            res = (PyObject*)throw_ifnull(wrpy->var_create_copy(*var));
-            missing = false;
-        }
-        return true;
-    }
-
-    template<typename Values>
-    void search_alias_values(const Values& values)
-    {
-        wreport::Varcode code = dballe::resolve_varcode(key);
-        if (const wreport::Var* var = values.maybe_var(code))
-        {
-            res = (PyObject*)throw_ifnull(wrpy->var_create_copy(*var));
-            missing = false;
-        }
-    }
-
-    void search_alias_value(const dballe::Value& value)
-    {
-        wreport::Varcode code = dballe::resolve_varcode(key);
-        if (code != value.code())
-            wreport::error_notfound::throwf("key %s not found on this query result", key);
-        if (const wreport::Var* var = value.get())
-        {
-            res = (PyObject*)throw_ifnull(wrpy->var_create_copy(*var));
-            missing = false;
-        }
-    }
-};
 
 template<typename Impl>
 void ensure_valid_cursor(Impl* self)
@@ -479,7 +301,7 @@ struct enqs : MethKwargs<Impl>
             if (!PyArg_ParseTupleAndKeywords(args, kw, "s#", const_cast<char**>(kwlist), &key, &len))
                 return nullptr;
 
-            impl::Enqs enq(key, len);
+            Enqs enq(key, len);
             self->cur->enq_generic(enq);
             if (enq.missing)
                 Py_RETURN_NONE;
@@ -506,7 +328,7 @@ struct enqf : MethKwargs<Impl>
             if (!PyArg_ParseTupleAndKeywords(args, kw, "s#", const_cast<char**>(kwlist), &key, &len))
                 return nullptr;
 
-            impl::Enqf enq(key, len);
+            Enqf enq(key, len);
             self->cur->enq_generic(enq);
             if (enq.missing)
                 Py_RETURN_NONE;

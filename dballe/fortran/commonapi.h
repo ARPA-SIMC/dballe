@@ -2,6 +2,7 @@
 #define DBALLE_FORTRAN_COMMONAPI_H
 
 #include "api.h"
+#include "enq.h"
 #include <dballe/core/cursor.h>
 #include <dballe/core/enq.h>
 #include <dballe/values.h>
@@ -113,7 +114,7 @@ struct CursorOperation : public Operation
     {
         if (!cursor)
             throw wreport::error_consistency("enqc called before running a query");
-        impl::Enqs enq(param, strlen(param));
+        Enqs enq(param, strlen(param));
         cursor->enq_generic(enq);
         if (enq.missing)
             return false;
