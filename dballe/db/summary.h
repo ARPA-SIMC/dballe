@@ -182,7 +182,7 @@ struct StationEntries : protected core::SmallSet<StationEntry<Station>, Station,
 
 
 template<typename Station>
-struct Cursor : public dballe::CursorSummary
+struct Cursor : public impl::CursorSummary
 {
     struct Entry
     {
@@ -266,10 +266,7 @@ struct Cursor : public dballe::CursorSummary
     DatetimeRange get_datetimerange() const override { return cur->var_entry.dtrange; }
     size_t get_count() const override { return cur->var_entry.count; }
 
-    bool enqi(const char* key, unsigned len, int& res) const override;
-    bool enqd(const char* key, unsigned len, double& res) const override;
-    bool enqs(const char* key, unsigned len, std::string& res) const override;
-    bool enqf(const char* key, unsigned len, std::string& res) const override;
+    template<typename Enq> void enq_generic(Enq& enq) const;
 };
 
 

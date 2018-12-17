@@ -145,6 +145,10 @@ inline T* throw_ifnull(T* o)
 template<typename T> inline T from_python(PyObject*) { throw std::runtime_error("method not implemented"); }
 
 /// Convert an utf8 string to a python str object
+PyObject* string_to_python(const char* str);
+inline PyObject* to_python(const char* s) { return string_to_python(s); }
+
+/// Convert an utf8 string to a python str object
 PyObject* string_to_python(const std::string& str);
 inline PyObject* to_python(const std::string& s) { return string_to_python(s); }
 

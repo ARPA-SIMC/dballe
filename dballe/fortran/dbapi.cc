@@ -7,6 +7,7 @@
 #include "dballe/core/query.h"
 #include "dballe/core/data.h"
 #include "dballe/db/db.h"
+#include "dballe/db/v7/cursor.h"
 #include "dballe/msg/msg.h"
 #include <cstring>
 
@@ -93,7 +94,7 @@ struct OutputFile
 
 namespace {
 
-struct QuantesonoOperation : public CursorOperation<CursorStation>
+struct QuantesonoOperation : public CursorOperation<dballe::db::v7::cursor::Stations>
 {
     const DbAPI& api;
 
@@ -104,7 +105,7 @@ struct QuantesonoOperation : public CursorOperation<CursorStation>
 
     int run()
     {
-        cursor = api.tr->query_stations(api.input_query);
+        cursor = dballe::db::v7::cursor::Stations::downcast(api.tr->query_stations(api.input_query));
         return cursor->remaining();
     }
 
@@ -122,11 +123,11 @@ template<typename Cursor>
 struct CursorTraits {};
 
 template<>
-struct CursorTraits<db::CursorStationData>
+struct CursorTraits<db::v7::cursor::StationData>
 {
-    static inline std::unique_ptr<db::CursorStationData> query(db::Transaction& tr, const core::Query& query)
+    static inline std::unique_ptr<db::v7::cursor::StationData> query(db::Transaction& tr, const core::Query& query)
     {
-        return std::unique_ptr<db::CursorStationData>(dynamic_cast<db::CursorStationData*>(tr.query_station_data(query).release()));
+        return db::v7::cursor::StationData::downcast(tr.query_station_data(query));
     }
     static inline void attr_insert(db::Transaction& tr, int id, const Values& values)
     {
@@ -139,11 +140,11 @@ struct CursorTraits<db::CursorStationData>
 };
 
 template<>
-struct CursorTraits<db::CursorData>
+struct CursorTraits<db::v7::cursor::Data>
 {
-    static inline std::unique_ptr<db::CursorData> query(db::Transaction& tr, const core::Query& query)
+    static inline std::unique_ptr<db::v7::cursor::Data> query(db::Transaction& tr, const core::Query& query)
     {
-        return std::unique_ptr<db::CursorData>(dynamic_cast<db::CursorData*>(tr.query_data(query).release()));
+        return db::v7::cursor::Data::downcast(tr.query_data(query));
     }
     static inline void attr_insert(db::Transaction& tr, int id, const Values& values)
     {
@@ -169,7 +170,7 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
 
     int run()
     {
-        this->cursor.reset(CursorTraits<Cursor>::query(*api.tr, api.input_query).release());
+        this->cursor = CursorTraits<Cursor>::query(*api.tr, api.input_query);
         return this->cursor->remaining();
     }
 
@@ -463,9 +464,9 @@ int DbAPI::query_data()
 {
     validate_input_query();
     if (station_context)
-        return reset_operation(new VoglioquestoOperation<db::CursorStationData>(*this));
+        return reset_operation(new VoglioquestoOperation<db::v7::cursor::StationData>(*this));
     else
-        return reset_operation(new VoglioquestoOperation<db::CursorData>(*this));
+        return reset_operation(new VoglioquestoOperation<db::v7::cursor::Data>(*this));
 }
 
 void DbAPI::insert_data()
@@ -578,3 +579,5 @@ std::unique_ptr<API> DbAPI::fortran_connect(const char* url, const char* anaflag
 
 }
 }
+
+#include "dballe/db/v7/cursor-access.tcc"

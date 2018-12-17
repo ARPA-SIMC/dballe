@@ -2,7 +2,9 @@
 #define DBALLE_FORTRAN_COMMONAPI_H
 
 #include "api.h"
-#include <dballe/cursor.h>
+#include "enq.h"
+#include <dballe/core/cursor.h>
+#include <dballe/core/enq.h>
 #include <dballe/values.h>
 #include <dballe/core/query.h>
 #include <dballe/core/data.h>
@@ -91,31 +93,30 @@ struct CursorOperation : public Operation
     {
         if (!cursor)
             throw wreport::error_consistency("enqi called before running a query");
-        int res;
-        if (!cursor->enqi(param, strlen(param), res))
+
+        impl::Enqi enq(param, strlen(param));
+        cursor->enq_generic(enq);
+        if (enq.missing)
             return API::missing_int;
-        return res;
+        return enq.res;
     }
     double enqd(const char* param) const override
     {
         if (!cursor)
             throw wreport::error_consistency("enqd called before running a query");
-        double res;
-        if (!cursor->enqd(param, strlen(param), res))
-        {
+        impl::Enqd enq(param, strlen(param));
+        cursor->enq_generic(enq);
+        if (enq.missing)
             return API::missing_double;
-        }
-        return res;
+        return enq.res;
     }
     bool enqc(const char* param, char* res, unsigned res_len) const override
     {
         if (!cursor)
             throw wreport::error_consistency("enqc called before running a query");
-        std::string value;
-        if (!cursor->enqs(param, strlen(param), value))
-            return false;
-        API::to_fortran(value, res, res_len);
-        return true;
+        Enqc enq(param, strlen(param), res, res_len);
+        cursor->enq_generic(enq);
+        return !enq.missing;
     }
     void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const override
     {

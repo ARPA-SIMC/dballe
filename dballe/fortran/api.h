@@ -64,6 +64,16 @@ struct API
     virtual const char* describe_var(const char* varcode, const char* value) = 0;
     virtual void commit() = 0;
 
+    /**
+     * Wrap enqc in a way that makes it easier to use in unit tests.
+     *
+     * Returns nullptr if the variable is unset, or a C string otherwise. The
+     * result is in a statically allocated buffer that is invalidated at the
+     * next test_enqc
+     */
+    const char* test_enqc(const char* param, unsigned len);
+
+    static void to_fortran(int32_t val, char* buf, unsigned buf_len);
     static void to_fortran(const char* str, char* buf, unsigned buf_len);
     static void to_fortran(const std::string& str, char* buf, unsigned buf_len);
 };

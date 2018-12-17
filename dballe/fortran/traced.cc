@@ -160,7 +160,7 @@ struct FuncLogger
 
     void _log_args(Encoding encoding)
     {
-        args << File::encoding_name(encoding);
+        args << "Encoding::" << File::encoding_name(encoding);
     }
 
     void _log_args(const char* arg)
@@ -344,24 +344,19 @@ bool TracedAPI::enqc(const char* param, char* res, unsigned res_len)
     FILE*& out = tracer.trace_file;
     std::string arg_param = str::encode_cstring(param);
     bool ret;
-    fputs("{\n", out);
-    fprintf(out, "    char res[%u];\n", res_len);
     try {
         ret = api->enqc(param, res, res_len);
     } catch (std::exception& e) {
-        fprintf(out, "    wassert_throws(std::exception, %s.enqc(\"%s\", res, %u)); // %s\n", name.c_str(), arg_param.c_str(), res_len, e.what());
-        fputs("}\n", out);
+        fprintf(out, "wassert_throws(std::exception, %s.test_enqc(\"%s\", %u)); // %s\n", name.c_str(), arg_param.c_str(), res_len, e.what());
         throw;
     }
     if (ret)
     {
-        std::string arg_res = str::encode_cstring(res);
-        fprintf(out, "    wassert_true(%s.enqc(\"%s\", res, %u));\n", name.c_str(), arg_param.c_str(), res_len);
-        fprintf(out, "    wassert(actual(std::string(res, %u)) == \"%s\");\n", res_len, arg_res.c_str());
+        std::string arg_res = str::encode_cstring(std::string(res, res_len));
+        fprintf(out, "wassert(actual(%s.test_enqc(\"%s\", %u) == \"%s\");\n", name.c_str(), arg_param.c_str(), res_len, arg_res.c_str());
     }
     else
-        fprintf(out, "    wassert_false(%s.enqc(\"%s\", res, %u));\n", name.c_str(), arg_param.c_str(), res_len);
-    fputs("}\n", out);
+        fprintf(out, "wassert_false(%s.test_enqc(\"%s\", %u));\n", name.c_str(), arg_param.c_str(), res_len);
     return ret;
 }
 

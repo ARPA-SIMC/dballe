@@ -1,9 +1,12 @@
 #include <Python.h>
 #include "cursor.h"
+#include "enq.h"
 #include "types.h"
 #include "db.h"
 #include "message.h"
 #include "common.h"
+#include "dballe/core/enq.h"
+#include "dballe/db/v7/cursor.h"
 #include <algorithm>
 #include "impl-utils.h"
 
@@ -244,10 +247,11 @@ struct enqi : MethKwargs<Impl>
             if (!PyArg_ParseTupleAndKeywords(args, kw, "s#", const_cast<char**>(kwlist), &key, &len))
                 return nullptr;
 
-            int res;
-            if (!self->cur->enqi(key, len, res))
+            impl::Enqi enq(key, len);
+            self->cur->enq_generic(enq);
+            if (enq.missing)
                 Py_RETURN_NONE;
-            return PyLong_FromLong(res);
+            return PyLong_FromLong(enq.res);
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -270,10 +274,11 @@ struct enqd : MethKwargs<Impl>
             if (!PyArg_ParseTupleAndKeywords(args, kw, "s#", const_cast<char**>(kwlist), &key, &len))
                 return nullptr;
 
-            double res;
-            if (!self->cur->enqd(key, len, res))
+            impl::Enqd enq(key, len);
+            self->cur->enq_generic(enq);
+            if (enq.missing)
                 Py_RETURN_NONE;
-            return PyFloat_FromDouble(res);
+            return PyFloat_FromDouble(enq.res);
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -296,10 +301,11 @@ struct enqs : MethKwargs<Impl>
             if (!PyArg_ParseTupleAndKeywords(args, kw, "s#", const_cast<char**>(kwlist), &key, &len))
                 return nullptr;
 
-            std::string res;
-            if (!self->cur->enqs(key, len, res))
+            Enqs enq(key, len);
+            self->cur->enq_generic(enq);
+            if (enq.missing)
                 Py_RETURN_NONE;
-            return PyUnicode_FromStringAndSize(res.data(), res.size());
+            return PyUnicode_FromStringAndSize(enq.res.data(), enq.res.size());
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -322,10 +328,11 @@ struct enqf : MethKwargs<Impl>
             if (!PyArg_ParseTupleAndKeywords(args, kw, "s#", const_cast<char**>(kwlist), &key, &len))
                 return nullptr;
 
-            std::string res;
-            if (!self->cur->enqf(key, len, res))
+            Enqf enq(key, len);
+            self->cur->enq_generic(enq);
+            if (enq.missing)
                 Py_RETURN_NONE;
-            return PyUnicode_FromStringAndSize(res.data(), res.size());
+            return PyUnicode_FromStringAndSize(enq.res.data(), enq.res.size());
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -398,7 +405,15 @@ be used to access the result values.
             ensure_valid_cursor(self);
             Py_ssize_t len;
             const char* key = throw_ifnull(PyUnicode_AsUTF8AndSize(pykey, &len));
-            return enqpy(*self->cur, key, len);
+            // return enqpy(*self->cur, key, len);
+            Enqpy enq(key, len);
+            self->cur->enq_generic(enq);
+            if (enq.missing)
+            {
+                PyErr_Format(PyExc_KeyError, "key %s not found", key);
+                throw PythonException();
+            }
+            return enq.res;
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -538,28 +553,28 @@ DefinitionMessage*           definition_message = nullptr;
 namespace dballe {
 namespace python {
 
-dpy_CursorStationDB* cursor_create(std::unique_ptr<db::CursorStation> cur)
+dpy_CursorStationDB* cursor_create(std::unique_ptr<db::v7::cursor::Stations> cur)
 {
     py_unique_ptr<dpy_CursorStationDB> result(throw_ifnull(PyObject_New(dpy_CursorStationDB, dpy_CursorStationDB_Type)));
     result->cur = cur.release();
     return result.release();
 }
 
-dpy_CursorStationDataDB* cursor_create(std::unique_ptr<db::CursorStationData> cur)
+dpy_CursorStationDataDB* cursor_create(std::unique_ptr<db::v7::cursor::StationData> cur)
 {
     py_unique_ptr<dpy_CursorStationDataDB> result(throw_ifnull(PyObject_New(dpy_CursorStationDataDB, dpy_CursorStationDataDB_Type)));
     result->cur = cur.release();
     return result.release();
 }
 
-dpy_CursorDataDB* cursor_create(std::unique_ptr<db::CursorData> cur)
+dpy_CursorDataDB* cursor_create(std::unique_ptr<db::v7::cursor::Data> cur)
 {
     py_unique_ptr<dpy_CursorDataDB> result(throw_ifnull(PyObject_New(dpy_CursorDataDB, dpy_CursorDataDB_Type)));
     result->cur = cur.release();
     return result.release();
 }
 
-dpy_CursorSummaryDB* cursor_create(std::unique_ptr<db::CursorSummary> cur)
+dpy_CursorSummaryDB* cursor_create(std::unique_ptr<db::v7::cursor::Summary> cur)
 {
     py_unique_ptr<dpy_CursorSummaryDB> result(throw_ifnull(PyObject_New(dpy_CursorSummaryDB, dpy_CursorSummaryDB_Type)));
     result->cur = cur.release();
@@ -580,10 +595,10 @@ dpy_CursorSummaryDBSummary* cursor_create(std::unique_ptr<db::summary::Cursor<DB
     return result.release();
 }
 
-dpy_CursorMessage* cursor_create(std::unique_ptr<CursorMessage> cur)
+dpy_CursorMessage* cursor_create(std::unique_ptr<dballe::CursorMessage> cur)
 {
     py_unique_ptr<dpy_CursorMessage> result(throw_ifnull(PyObject_New(dpy_CursorMessage, dpy_CursorMessage_Type)));
-    result->cur = cur.release();
+    result->cur = impl::CursorMessage::downcast(std::move(cur)).release();
     result->curmsg = nullptr;
     return result.release();
 }
@@ -617,3 +632,6 @@ void register_cursor(PyObject* m)
 
 }
 }
+
+#include "dballe/db/v7/cursor-access.tcc"
+#include "dballe/db/summary-access.tcc"

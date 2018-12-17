@@ -1,7 +1,7 @@
 #ifndef DBALLE_MSG_CURSOR_H
 #define DBALLE_MSG_CURSOR_H
 
-#include <dballe/cursor.h>
+#include <dballe/core/cursor.h>
 #include <dballe/types.h>
 #include <dballe/msg/msg.h>
 #include <dballe/msg/context.h>
@@ -10,7 +10,7 @@ namespace dballe {
 namespace impl {
 namespace msg {
 
-struct CursorStation : public dballe::CursorStation
+struct CursorStation : public impl::CursorStation
 {
     dballe::DBStation station;
     const Values& station_values;
@@ -47,10 +47,7 @@ struct CursorStation : public dballe::CursorStation
         at_start = false;
     }
 
-    bool enqi(const char* key, unsigned len, int& res) const override;
-    bool enqd(const char* key, unsigned len, double& res) const override;
-    bool enqs(const char* key, unsigned len, std::string& res) const override;
-    bool enqf(const char* key, unsigned len, std::string& res) const override;
+    template<typename Enq> void enq_generic(Enq& enq) const;
 
     DBStation get_station() const override { return station; }
 
@@ -58,10 +55,19 @@ struct CursorStation : public dballe::CursorStation
     {
         return DBValues(station_values);
     }
+
+    /// Downcast a unique_ptr pointer
+    inline static std::unique_ptr<CursorStation> downcast(std::unique_ptr<dballe::CursorStation> c)
+    {
+        CursorStation* res = dynamic_cast<CursorStation*>(c.get());
+        if (!res) throw std::runtime_error("Attempted to downcast the wrong kind of cursor");
+        c.release();
+        return std::unique_ptr<CursorStation>(res);
+    }
 };
 
 
-struct CursorStationData : public dballe::CursorStationData
+struct CursorStationData : public impl::CursorStationData
 {
     dballe::DBStation station;
     const Values& station_values;
@@ -106,15 +112,21 @@ struct CursorStationData : public dballe::CursorStationData
         cur = station_values.end();
     }
 
-    bool enqi(const char* key, unsigned len, int& res) const override;
-    bool enqd(const char* key, unsigned len, double& res) const override;
-    bool enqs(const char* key, unsigned len, std::string& res) const override;
-    bool enqf(const char* key, unsigned len, std::string& res) const override;
+    template<typename Enq> void enq_generic(Enq& enq) const;
 
     DBStation get_station() const override { return station; }
 
     wreport::Varcode get_varcode() const override { return (*cur)->code(); }
     wreport::Var get_var() const override { return **cur; }
+
+    /// Downcast a unique_ptr pointer
+    inline static std::unique_ptr<CursorStationData> downcast(std::unique_ptr<dballe::CursorStationData> c)
+    {
+        CursorStationData* res = dynamic_cast<CursorStationData*>(c.get());
+        if (!res) throw std::runtime_error("Attempted to downcast the wrong kind of cursor");
+        c.release();
+        return std::unique_ptr<CursorStationData>(res);
+    }
 };
 
 
@@ -135,7 +147,7 @@ struct CursorDataRow
     }
 };
 
-struct CursorData : public dballe::CursorData
+struct CursorData : public impl::CursorData
 {
     dballe::DBStation station;
     Datetime datetime;
@@ -192,10 +204,7 @@ struct CursorData : public dballe::CursorData
         cur = rows.end();
     }
 
-    bool enqi(const char* key, unsigned len, int& res) const override;
-    bool enqd(const char* key, unsigned len, double& res) const override;
-    bool enqs(const char* key, unsigned len, std::string& res) const override;
-    bool enqf(const char* key, unsigned len, std::string& res) const override;
+    template<typename Enq> void enq_generic(Enq& enq) const;
 
     DBStation get_station() const override { return station; }
 
@@ -204,6 +213,15 @@ struct CursorData : public dballe::CursorData
     Level get_level() const override { return cur->level; }
     Trange get_trange() const override { return cur->trange; }
     Datetime get_datetime() const override { return datetime; }
+
+    /// Downcast a unique_ptr pointer
+    inline static std::unique_ptr<CursorData> downcast(std::unique_ptr<dballe::CursorData> c)
+    {
+        CursorData* res = dynamic_cast<CursorData*>(c.get());
+        if (!res) throw std::runtime_error("Attempted to downcast the wrong kind of cursor");
+        c.release();
+        return std::unique_ptr<CursorData>(res);
+    }
 };
 
 

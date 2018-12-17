@@ -27,7 +27,6 @@ _dballe_la_SOURCES = \
     dballe.cc \
     db.cc \
     cursor.cc \
-    cursor-access.cc \
     explorer.cc
 _dballe_la_CPPFLAGS = $(PYTHON_CFLAGS)
 _dballe_la_LDFLAGS = -module -avoid-version -export-symbols-regex init_dballe
@@ -39,14 +38,10 @@ data-access.cc: data-access.in.cc $(top_srcdir)/dballe/mklookup
 query-access.cc: query-access.in.cc $(top_srcdir)/dballe/mklookup
 	$(top_srcdir)/dballe/mklookup $< -o $@
 
-cursor-access.cc: cursor-access.in.cc $(top_srcdir)/dballe/mklookup
-	$(top_srcdir)/dballe/mklookup $< -o $@
-
 BUILT_SOURCES = data-access.cc query-access.cc
 EXTRA_DIST += \
 	data-access.in.cc data-access.cc \
-	query-access.in.cc query-access.cc \
-	cursor-access.in.cc cursor-access.cc
+	query-access.in.cc query-access.cc
 
 doc_DATA = python-dballe.rst
 
@@ -67,6 +62,7 @@ clean-local:
 EXTRA_DIST += \
     doc-dballe \
     impl-utils.h \
+    enq.h \
     common.h \
     types.h \
     binarymessage.h \

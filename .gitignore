@@ -45,8 +45,8 @@ Makefile
 /dballe/core/shortcuts.cc
 /dballe/msg/msg-extravars.h
 /dballe/msg/context-extravars.h
-/dballe/msg/cursor-access.cc
-/dballe/db/v7/cursor-access.cc
+/dballe/msg/cursor-access.tcc
+/dballe/db/v7/cursor-access.tcc
 /dballe/db/summary-access.tcc
 /dballe/fortran/commonapi-access.cc
 /dballe/test-dballe
@@ -57,7 +57,6 @@ Makefile
 /python/python-dballe.rst
 /python/data-access.cc
 /python/query-access.cc
-/python/cursor-access.cc
 /tables/B0000000000200014001.txt
 /tables/B000000002001400.txt
 /tables/B990204.txt

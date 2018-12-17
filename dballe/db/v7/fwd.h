@@ -19,6 +19,13 @@ struct LevTrEntry;
 struct SQLTrace;
 struct Driver;
 
+namespace cursor {
+struct Stations;
+struct StationData;
+struct Data;
+struct Summary;
+}
+
 namespace batch {
 struct Station;
 struct StationDatum;
