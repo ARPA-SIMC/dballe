@@ -24,6 +24,7 @@ void Cursor<Station>::enq_generic(Enq& enq) const
     switch (key) { // mklookup
         case "priority":    return;
         case "rep_memo":    enq.set_string(cur->station_entry.station.report);
+        case "report":    enq.set_string(cur->station_entry.station.report);
         case "ana_id":      enq.set_dballe_int(get_station_id(cur->station_entry.station));
         case "mobile":      enq.set_bool(!cur->station_entry.station.ident.is_missing());
         case "ident":       enq.set_ident(cur->station_entry.station.ident);
@@ -48,7 +49,7 @@ void Cursor<Station>::enq_generic(Enq& enq) const
         case "pindicator":  enq.set_dballe_int(cur->var_entry.var.trange.pind);
         case "p1":          enq.set_dballe_int(cur->var_entry.var.trange.p1);
         case "p2":          enq.set_dballe_int(cur->var_entry.var.trange.p2);
-        case "var":         enq.set_var(cur->var_entry.var.varcode);
+        case "var":         enq.set_varcode(cur->var_entry.var.varcode);
         case "context_id":  enq.set_int(cur->var_entry.count);
         case "count":       enq.set_int(cur->var_entry.count);
         default:            wreport::error_notfound::throwf("key %s not found on this query result", key);

@@ -77,6 +77,7 @@ struct CursorSummary : public dballe::CursorSummary, public CursorAccess
 /// Cursor iterating over messages
 struct CursorMessage : public dballe::CursorMessage, public CursorAccess
 {
+    template<typename Enq> void enq_generic(Enq& enq) const {}
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;

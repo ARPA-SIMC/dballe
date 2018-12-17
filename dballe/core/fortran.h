@@ -56,7 +56,12 @@ struct Enqi
         wreport::error_consistency::throwf("cannot enqi `%s`", key);
     }
 
-    void set_var(wreport::Varcode val)
+    void set_varcode(wreport::Varcode val)
+    {
+        wreport::error_consistency::throwf("cannot enqi `%s`", key);
+    }
+
+    void set_var(const wreport::Var* val)
     {
         wreport::error_consistency::throwf("cannot enqi `%s`", key);
     }
@@ -179,7 +184,12 @@ struct Enqd
         wreport::error_consistency::throwf("cannot enqd `%s`", key);
     }
 
-    void set_var(wreport::Varcode val)
+    void set_varcode(wreport::Varcode val)
+    {
+        wreport::error_consistency::throwf("cannot enqd `%s`", key);
+    }
+
+    void set_var(const wreport::Var* val)
     {
         wreport::error_consistency::throwf("cannot enqd `%s`", key);
     }
@@ -306,12 +316,17 @@ struct Enqs
         missing = false;
     }
 
-    void set_var(wreport::Varcode val)
+    void set_varcode(wreport::Varcode val)
     {
         char buf[7];
         dballe::format_bcode(val, buf);
         res = buf;
         missing = false;
+    }
+
+    void set_var(const wreport::Var* val)
+    {
+        wreport::error_consistency::throwf("cannot enqs `%s`", key);
     }
 
     void set_lat(int lat)
@@ -436,12 +451,17 @@ struct Enqf
         missing = false;
     }
 
-    void set_var(wreport::Varcode val)
+    void set_varcode(wreport::Varcode val)
     {
         char buf[7];
         dballe::format_bcode(val, buf);
         res = buf;
         missing = false;
+    }
+
+    void set_var(const wreport::Var* val)
+    {
+        wreport::error_consistency::throwf("cannot enqf `%s`", key);
     }
 
     void set_lat(int lat)

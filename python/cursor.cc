@@ -4,6 +4,7 @@
 #include "db.h"
 #include "message.h"
 #include "common.h"
+#include "dballe/db/v7/cursor.h"
 #include <algorithm>
 #include "impl-utils.h"
 
@@ -23,6 +24,140 @@ PyTypeObject* dpy_CursorMessage_Type = nullptr;
 }
 
 namespace {
+
+struct Enqpy
+{
+    const char* key;
+    unsigned len;
+    PyObject* res = nullptr;
+    bool missing = true;
+
+    Enqpy(const char* key, unsigned len)
+        : key(key), len(len)
+    {
+    }
+
+    void set_bool(bool val)
+    {
+        res = val ? Py_True : Py_False;
+        Py_INCREF(res);
+        missing = false;
+    }
+
+    void set_int(int val)
+    {
+        res = throw_ifnull(PyLong_FromLong(val));
+        missing = false;
+    }
+
+    void set_dballe_int(int val)
+    {
+        if (val == MISSING_INT)
+            return;
+        res = throw_ifnull(PyLong_FromLong(val));
+        missing = false;
+    }
+
+    void set_string(const std::string& val)
+    {
+        res = string_to_python(val);
+        missing = false;
+    }
+
+    void set_ident(const Ident& ident)
+    {
+        if (ident.is_missing())
+            return;
+        res = throw_ifnull(PyUnicode_FromString(ident.get()));
+        missing = false;
+    }
+
+    void set_varcode(wreport::Varcode val)
+    {
+        char buf[7];
+        dballe::format_bcode(val, buf);
+        res = throw_ifnull(PyUnicode_FromStringAndSize(buf, 6));
+        missing = false;
+    }
+
+    void set_var(const wreport::Var* val)
+    {
+        if (!val) return;
+        res = (PyObject*)throw_ifnull(wrpy->var_create_copy(*val));
+        missing = false;
+    }
+
+    void set_lat(int lat)
+    {
+        if (lat == MISSING_INT)
+            return;
+        res = dballe_int_lat_to_python(lat);
+        missing = false;
+    }
+
+    void set_lon(int lon)
+    {
+        if (lon == MISSING_INT)
+            return;
+        res = dballe_int_lon_to_python(lon);
+        missing = false;
+    }
+
+    template<typename Values>
+    bool search_b_values(const Values& values)
+    {
+        if (key[0] != 'B' || len != 6)
+            return false;
+
+        wreport::Varcode code = WR_STRING_TO_VAR(key + 1);
+        if (const wreport::Var* var = values.maybe_var(code))
+        {
+            res = (PyObject*)throw_ifnull(wrpy->var_create_copy(*var));
+            missing = false;
+        }
+        return true;
+    }
+
+    bool search_b_value(const dballe::Value& value)
+    {
+        if (key[0] != 'B' || len != 6)
+            return false;
+
+        wreport::Varcode code = WR_STRING_TO_VAR(key + 1);
+        if (code != value.code())
+            wreport::error_notfound::throwf("key %s not found on this query result", key);
+
+        if (const wreport::Var* var = value.get())
+        {
+            res = (PyObject*)throw_ifnull(wrpy->var_create_copy(*var));
+            missing = false;
+        }
+        return true;
+    }
+
+    template<typename Values>
+    void search_alias_values(const Values& values)
+    {
+        wreport::Varcode code = dballe::resolve_varcode(key);
+        if (const wreport::Var* var = values.maybe_var(code))
+        {
+            res = (PyObject*)throw_ifnull(wrpy->var_create_copy(*var));
+            missing = false;
+        }
+    }
+
+    void search_alias_value(const dballe::Value& value)
+    {
+        wreport::Varcode code = dballe::resolve_varcode(key);
+        if (code != value.code())
+            wreport::error_notfound::throwf("key %s not found on this query result", key);
+        if (const wreport::Var* var = value.get())
+        {
+            res = (PyObject*)throw_ifnull(wrpy->var_create_copy(*var));
+            missing = false;
+        }
+    }
+};
 
 template<typename Impl>
 void ensure_valid_cursor(Impl* self)
@@ -398,7 +533,15 @@ be used to access the result values.
             ensure_valid_cursor(self);
             Py_ssize_t len;
             const char* key = throw_ifnull(PyUnicode_AsUTF8AndSize(pykey, &len));
-            return enqpy(*self->cur, key, len);
+            // return enqpy(*self->cur, key, len);
+            Enqpy enq(key, len);
+            self->cur->enq_generic(enq);
+            if (enq.missing)
+            {
+                PyErr_Format(PyExc_KeyError, "key %s not found", key);
+                throw PythonException();
+            }
+            return enq.res;
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -538,28 +681,28 @@ DefinitionMessage*           definition_message = nullptr;
 namespace dballe {
 namespace python {
 
-dpy_CursorStationDB* cursor_create(std::unique_ptr<db::CursorStation> cur)
+dpy_CursorStationDB* cursor_create(std::unique_ptr<db::v7::cursor::Stations> cur)
 {
     py_unique_ptr<dpy_CursorStationDB> result(throw_ifnull(PyObject_New(dpy_CursorStationDB, dpy_CursorStationDB_Type)));
     result->cur = cur.release();
     return result.release();
 }
 
-dpy_CursorStationDataDB* cursor_create(std::unique_ptr<db::CursorStationData> cur)
+dpy_CursorStationDataDB* cursor_create(std::unique_ptr<db::v7::cursor::StationData> cur)
 {
     py_unique_ptr<dpy_CursorStationDataDB> result(throw_ifnull(PyObject_New(dpy_CursorStationDataDB, dpy_CursorStationDataDB_Type)));
     result->cur = cur.release();
     return result.release();
 }
 
-dpy_CursorDataDB* cursor_create(std::unique_ptr<db::CursorData> cur)
+dpy_CursorDataDB* cursor_create(std::unique_ptr<db::v7::cursor::Data> cur)
 {
     py_unique_ptr<dpy_CursorDataDB> result(throw_ifnull(PyObject_New(dpy_CursorDataDB, dpy_CursorDataDB_Type)));
     result->cur = cur.release();
     return result.release();
 }
 
-dpy_CursorSummaryDB* cursor_create(std::unique_ptr<db::CursorSummary> cur)
+dpy_CursorSummaryDB* cursor_create(std::unique_ptr<db::v7::cursor::Summary> cur)
 {
     py_unique_ptr<dpy_CursorSummaryDB> result(throw_ifnull(PyObject_New(dpy_CursorSummaryDB, dpy_CursorSummaryDB_Type)));
     result->cur = cur.release();
@@ -617,3 +760,6 @@ void register_cursor(PyObject* m)
 
 }
 }
+
+#include "dballe/db/v7/cursor-access.tcc"
+#include "dballe/db/summary-access.tcc"

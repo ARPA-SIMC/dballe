@@ -68,6 +68,11 @@ void set_std_exception(const std::exception& e)
     PyErr_SetString(PyExc_RuntimeError, e.what());
 }
 
+PyObject* string_to_python(const char* str)
+{
+    return throw_ifnull(PyUnicode_FromString(str));
+}
+
 PyObject* string_to_python(const std::string& str)
 {
     return throw_ifnull(PyUnicode_FromStringAndSize(str.data(), str.size()));

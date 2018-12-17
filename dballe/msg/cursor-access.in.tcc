@@ -16,6 +16,7 @@ void CursorStation::enq_generic(Enq& enq) const
     switch (key) { // mklookup
         case "priority":    return;
         case "rep_memo":    enq.set_string(station.report);
+        case "report":      enq.set_string(station.report);
         case "ana_id":      enq.set_dballe_int(station.id);
         case "mobile":      enq.set_bool(!station.ident.is_missing());
         case "ident":       enq.set_ident(station.ident);
@@ -34,12 +35,14 @@ void CursorStationData::enq_generic(Enq& enq) const
     switch (key) { // mklookup
         case "priority":    return;
         case "rep_memo":    enq.set_string(station.report);
+        case "report":      enq.set_string(station.report);
         case "ana_id":      enq.set_dballe_int(station.id);
         case "mobile":      enq.set_bool(!station.ident.is_missing());
         case "ident":       enq.set_ident(station.ident);
         case "lat":         enq.set_lat(station.coords.lat);
         case "lon":         enq.set_lon(station.coords.lon);
-        case "var":         enq.set_var((*cur)->code());
+        case "var":         enq.set_varcode(cur->code());
+        case "variable":    enq.set_var(cur->get());
         case "context_id":  return;
         default:            enq.search_alias_value(*cur);
     }
@@ -54,6 +57,7 @@ void CursorData::enq_generic(Enq& enq) const
     switch (key) { // mklookup
         case "priority":    return;
         case "rep_memo":    enq.set_string(station.report);
+        case "report":      enq.set_string(station.report);
         case "ana_id":      enq.set_dballe_int(station.id);
         case "mobile":      enq.set_bool(!station.ident.is_missing());
         case "ident":       enq.set_ident(station.ident);
@@ -72,7 +76,8 @@ void CursorData::enq_generic(Enq& enq) const
         case "pindicator":  enq.set_dballe_int(cur->trange.pind);
         case "p1":          enq.set_dballe_int(cur->trange.p1);
         case "p2":          enq.set_dballe_int(cur->trange.p2);
-        case "var":         enq.set_var((*(cur->var))->code());
+        case "var":         enq.set_varcode(cur->var->code());
+        case "variable":    enq.set_var(cur->var->get());
         case "context_id":  return;
         default:            enq.search_alias_value(*(cur->var));
     }

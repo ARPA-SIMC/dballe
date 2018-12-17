@@ -17,7 +17,6 @@ namespace cursor {
 struct Stations;
 struct StationData;
 struct Data;
-struct Best;
 struct Summary;
 
 /**
@@ -166,19 +165,14 @@ struct BaseDataRows : public LevTrRows<DataRow>
 struct DataRows : public BaseDataRows
 {
     using BaseDataRows::BaseDataRows;
-    void load(Tracer<>& trc, const DataQueryBuilder& qb);
-};
-
-struct BestRows : public BaseDataRows
-{
-    using BaseDataRows::BaseDataRows;
 
     int insert_cur_prio;
 
     /// Append or replace the last result according to priority. Returns false if the value has been ignored.
-    bool add_to_results(const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var);
+    bool add_to_best_results(const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var);
 
     void load(Tracer<>& trc, const DataQueryBuilder& qb);
+    void load_best(Tracer<>& trc, const DataQueryBuilder& qb);
 };
 
 struct SummaryRows : public LevTrRows<SummaryRow>
@@ -197,7 +191,8 @@ struct ImplTraits
 template<>
 struct ImplTraits<Stations>
 {
-    typedef CursorStation Interface;
+    typedef dballe::CursorStation Interface;
+    typedef db::CursorStation Parent;
     typedef StationRow Row;
     typedef StationRows Rows;
 };
@@ -205,7 +200,8 @@ struct ImplTraits<Stations>
 template<>
 struct ImplTraits<StationData>
 {
-    typedef CursorStationData Interface;
+    typedef dballe::CursorStationData Interface;
+    typedef db::CursorStationData Parent;
     typedef StationDataRow Row;
     typedef StationDataRows Rows;
 };
@@ -213,23 +209,17 @@ struct ImplTraits<StationData>
 template<>
 struct ImplTraits<Data>
 {
-    typedef CursorData Interface;
+    typedef dballe::CursorData Interface;
+    typedef db::CursorData Parent;
     typedef DataRow Row;
     typedef DataRows Rows;
 };
 
 template<>
-struct ImplTraits<Best>
-{
-    typedef CursorData Interface;
-    typedef DataRow Row;
-    typedef BestRows Rows;
-};
-
-template<>
 struct ImplTraits<Summary>
 {
-    typedef CursorSummary Interface;
+    typedef dballe::CursorSummary Interface;
+    typedef db::CursorSummary Parent;
     typedef SummaryRow Row;
     typedef SummaryRows Rows;
 };
@@ -240,10 +230,11 @@ struct ImplTraits<Summary>
  * results
  */
 template<typename Impl>
-struct Base : public ImplTraits<Impl>::Interface
+struct Base : public ImplTraits<Impl>::Parent
 {
     typedef typename ImplTraits<Impl>::Row Row;
     typedef typename ImplTraits<Impl>::Rows Rows;
+    typedef typename ImplTraits<Impl>::Interface Interface;
 
     Rows rows;
 
@@ -260,6 +251,7 @@ struct Base : public ImplTraits<Impl>::Interface
 
     dballe::DBStation get_station() const override { return rows->station; }
 
+    template<typename Enq> void enq_generic(Enq& enq) const { return rows.enq_generic(enq); }
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
@@ -271,12 +263,20 @@ struct Base : public ImplTraits<Impl>::Interface
      * If dump is a FILE pointer, also dump the cursor values to it
      */
     unsigned test_iterate(FILE* dump=0) override;
+
+    /// Downcast a unique_ptr pointer
+    inline static std::unique_ptr<Impl> downcast(std::unique_ptr<Interface> c)
+    {
+        Impl* res = dynamic_cast<Impl*>(c.get());
+        if (!res) throw std::runtime_error("Attempted to downcast the wrong kind of cursor");
+        c.release();
+        return std::unique_ptr<Impl>(res);
+    }
 };
 
 extern template class Base<Stations>;
 extern template class Base<StationData>;
 extern template class Base<Data>;
-extern template class Base<Best>;
 extern template class Base<Summary>;
 
 
@@ -320,30 +320,6 @@ struct Data : public Base<Data>
     Trange get_trange() const override { return rows.get_levtr().trange; }
 
     void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read) override;
-
-    template<typename Enq> void enq_generic(Enq& enq) const;
-    void remove() override;
-};
-
-/// CursorData with query=best implementation
-struct Best : public Base<Best>
-{
-    bool with_attributes;
-
-    Best(DataQueryBuilder& qb, bool with_attributes);
-
-    std::shared_ptr<dballe::db::Transaction> get_transaction() const override { return rows.tr; }
-
-    Datetime get_datetime() const override { return rows->datetime; }
-    wreport::Varcode get_varcode() const override { return rows->value.code(); }
-    wreport::Var get_var() const override { return *rows->value; }
-    int attr_reference_id() const override { return rows->value.data_id; }
-    Level get_level() const override { return rows.get_levtr().level; }
-    Trange get_trange() const override { return rows.get_levtr().trange; }
-
-    void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read) override;
-
-    template<typename Enq> void enq_generic(Enq& enq) const;
     void remove() override;
 };
 
@@ -360,8 +336,6 @@ struct Summary : public Base<Summary>
     Trange get_trange() const override { return rows.get_levtr().trange; }
     wreport::Varcode get_varcode() const override { return rows->code; }
     size_t get_count() const override { return rows->count; }
-
-    template<typename Enq> void enq_generic(Enq& enq) const;
     void remove() override;
 };
 

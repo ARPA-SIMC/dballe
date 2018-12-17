@@ -27,6 +27,7 @@ void StationRows::enq_generic(Enq& enq) const
     switch (key) { // mklookup
         case "priority":    enq.set_int(get_priority());
         case "rep_memo":    enq.set_string(cur->station.report);
+        case "report":      enq.set_string(cur->station.report);
         case "ana_id":      enq.set_dballe_int(cur->station.id);
         case "mobile":      enq.set_bool(cur->station.ident.is_missing());
         case "ident":       enq.set_ident(cur->station.ident);
@@ -52,12 +53,14 @@ void StationDataRows::enq_generic(Enq& enq) const
     switch (key) { // mklookup
         case "priority":    enq.set_int(get_priority());
         case "rep_memo":    enq.set_string(cur->station.report);
+        case "report":      enq.set_string(cur->station.report);
         case "ana_id":      enq.set_dballe_int(cur->station.id);
         case "mobile":      enq.set_bool(cur->station.ident.is_missing());
         case "ident":       enq.set_ident(cur->station.ident);
         case "lat":         enq.set_lat(cur->station.coords.lat);
         case "lon":         enq.set_lon(cur->station.coords.lon);
-        case "var":         enq.set_var(cur->value.code());
+        case "var":         enq.set_varcode(cur->value.code());
+        case "variable":    enq.set_var(cur->value.get());
         case "context_id":  enq.set_dballe_int(cur->value.data_id);
         default:            enq.search_alias_value(cur->value);
     }
@@ -78,6 +81,7 @@ void BaseDataRows::enq_generic(Enq& enq) const
     switch (key) { // mklookup
         case "priority":    enq.set_int(get_priority());
         case "rep_memo":    enq.set_string(cur->station.report);
+        case "report":      enq.set_string(cur->station.report);
         case "ana_id":      enq.set_dballe_int(cur->station.id);
         case "mobile":      enq.set_bool(cur->station.ident.is_missing());
         case "ident":       enq.set_ident(cur->station.ident);
@@ -96,7 +100,8 @@ void BaseDataRows::enq_generic(Enq& enq) const
         case "pindicator":  enq.set_dballe_int(get_levtr().trange.pind);
         case "p1":          enq.set_dballe_int(get_levtr().trange.p1);
         case "p2":          enq.set_dballe_int(get_levtr().trange.p2);
-        case "var":         enq.set_var(cur->value.code());
+        case "var":         enq.set_varcode(cur->value.code());
+        case "variable":    enq.set_var(cur->value.get());
         case "context_id":  enq.set_dballe_int(cur->value.data_id);
         default:            enq.search_alias_value(cur->value);
     }
@@ -115,6 +120,7 @@ void SummaryRows::enq_generic(Enq& enq) const
     switch (key) { // mklookup
         case "priority":    enq.set_int(get_priority());
         case "rep_memo":    enq.set_string(cur->station.report);
+        case "report":      enq.set_string(cur->station.report);
         case "ana_id":      enq.set_dballe_int(cur->station.id);
         case "mobile":      enq.set_bool(cur->station.ident.is_missing());
         case "ident":       enq.set_ident(cur->station.ident);
@@ -139,7 +145,7 @@ void SummaryRows::enq_generic(Enq& enq) const
         case "pindicator":  enq.set_dballe_int(get_levtr().trange.pind);
         case "p1":          enq.set_dballe_int(get_levtr().trange.p1);
         case "p2":          enq.set_dballe_int(get_levtr().trange.p2);
-        case "var":         enq.set_var(cur->code);
+        case "var":         enq.set_varcode(cur->code);
         case "context_id":  enq.set_int(cur->count);
         case "count":       enq.set_int(cur->count);
         default:            wreport::error_notfound::throwf("key %s not found on this query result", key);

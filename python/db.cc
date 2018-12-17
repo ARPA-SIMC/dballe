@@ -13,6 +13,7 @@
 #include "dballe/exporter.h"
 #include "dballe/msg/msg.h"
 #include "dballe/db/defs.h"
+#include "dballe/db/v7/cursor.h"
 #include <algorithm>
 #include <wreport/bulletin.h>
 #include "impl-utils.h"
@@ -267,7 +268,7 @@ struct query_stations : MethQuery<query_stations<Impl>, Impl>
         ReleaseGIL gil;
         auto res = self->db->query_stations(query);
         gil.lock();
-        return (PyObject*)cursor_create(std::unique_ptr<db::CursorStation>(dynamic_cast<db::CursorStation*>(res.release())));
+        return (PyObject*)cursor_create(db::v7::cursor::Stations::downcast(std::move(res)));
     }
 };
 
@@ -282,7 +283,7 @@ struct query_station_data : MethQuery<query_station_data<Impl>, Impl>
         ReleaseGIL gil;
         auto res = self->db->query_station_data(query);
         gil.lock();
-        return (PyObject*)cursor_create(std::unique_ptr<db::CursorStationData>(dynamic_cast<db::CursorStationData*>(res.release())));
+        return (PyObject*)cursor_create(db::v7::cursor::StationData::downcast(std::move(res)));
     }
 };
 
@@ -297,7 +298,7 @@ struct query_data : MethQuery<query_data<Impl>, Impl>
         ReleaseGIL gil;
         auto res = self->db->query_data(query);
         gil.lock();
-        return (PyObject*)cursor_create(std::unique_ptr<db::CursorData>(dynamic_cast<db::CursorData*>(res.release())));
+        return (PyObject*)cursor_create(db::v7::cursor::Data::downcast(std::move(res)));
     }
 };
 
@@ -312,7 +313,7 @@ struct query_summary : MethQuery<query_summary<Impl>, Impl>
         ReleaseGIL gil;
         auto res = self->db->query_summary(query);
         gil.lock();
-        return (PyObject*)cursor_create(std::unique_ptr<db::CursorSummary>(dynamic_cast<db::CursorSummary*>(res.release())));
+        return (PyObject*)cursor_create(db::v7::cursor::Summary::downcast(std::move(res)));
     }
 };
 

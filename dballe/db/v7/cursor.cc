@@ -86,7 +86,7 @@ void DataRows::load(Tracer<>& trc, const DataQueryBuilder& qb)
     tr->levtr().prefetch_ids(trc, ids);
 }
 
-bool BestRows::add_to_results(const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)
+bool DataRows::add_to_best_results(const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)
 {
     int prio = tr->repinfo().get_priority(station.report);
 
@@ -111,12 +111,12 @@ append:
     return true;
 }
 
-void BestRows::load(Tracer<>& trc, const DataQueryBuilder& qb)
+void DataRows::load_best(Tracer<>& trc, const DataQueryBuilder& qb)
 {
     results.clear();
     set<int> ids;
     tr->data().run_data_query(trc, qb, [&](const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
-        if (add_to_results(station, id_levtr, datetime, id_data, move(var)))
+        if (add_to_best_results(station, id_levtr, datetime, id_data, move(var)))
             ids.insert(id_levtr);
     });
     at_start = true;
@@ -212,7 +212,6 @@ unsigned Base<Impl>::test_iterate(FILE* dump)
 template class Base<Stations>;
 template class Base<StationData>;
 template class Base<Data>;
-template class Base<Best>;
 template class Base<Summary>;
 
 
@@ -297,26 +296,6 @@ void Data::remove()
 }
 
 
-Best::Best(DataQueryBuilder& qb, bool with_attributes)
-    : Base(qb.tr), with_attributes(with_attributes) {}
-
-void Best::query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read)
-{
-    if (!force_read && with_attributes)
-    {
-        for (const Var* a = rows->value->next_attr(); a != NULL; a = a->next_attr())
-            dest(std::unique_ptr<wreport::Var>(new Var(*a)));
-    } else {
-        rows.tr->attr_query_data(attr_reference_id(), dest);
-    }
-}
-
-void Best::remove()
-{
-    rows.tr->remove_data_by_id(rows->value.data_id);
-}
-
-
 void Summary::remove()
 {
     core::Query query;
@@ -386,16 +365,13 @@ unique_ptr<dballe::CursorData> run_data_query(Tracer<>& trc, std::shared_ptr<v7:
     }
 
     unique_ptr<CursorData> res;
+    auto resptr = new Data(qb, modifiers & DBA_DB_MODIFIER_WITH_ATTRIBUTES);
+    res.reset(resptr);
+
     if (modifiers & DBA_DB_MODIFIER_BEST)
-    {
-        auto resptr = new Best(qb, modifiers & DBA_DB_MODIFIER_WITH_ATTRIBUTES);
-        res.reset(resptr);
+        resptr->rows.load_best(trc, qb);
+    else
         resptr->rows.load(trc, qb);
-    } else {
-        auto resptr = new Data(qb, modifiers & DBA_DB_MODIFIER_WITH_ATTRIBUTES);
-        res.reset(resptr);
-        resptr->rows.load(trc, qb);
-    }
     return std::move(res);
 }
 
