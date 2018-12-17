@@ -14,11 +14,6 @@ struct EmptyCursor : public Interface
     bool next() override { return false; }
     void discard() override {}
 
-    bool enqi(const char* key, unsigned len, int& res) const override { return false; }
-    bool enqd(const char* key, unsigned len, double& res) const override { return false; }
-    bool enqs(const char* key, unsigned len, std::string& res) const override { return false; }
-    bool enqf(const char* key, unsigned len, std::string& res) const override { return false; }
-
     DBStation get_station() const override { return DBStation(); }
 };
 
@@ -83,12 +78,6 @@ std::unique_ptr<CursorMessage> CursorMessage::make_empty()
 {
     return std::unique_ptr<CursorMessage>(new EmptyCursorMessage);
 }
-
-bool CursorMessage::enqi(const char* key, unsigned len, int& res) const { return false; }
-bool CursorMessage::enqd(const char* key, unsigned len, double& res) const { return false; }
-bool CursorMessage::enqs(const char* key, unsigned len, std::string& res) const { return false; }
-bool CursorMessage::enqf(const char* key, unsigned len, std::string& res) const { return false; }
-
 
 }
 }

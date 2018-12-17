@@ -93,9 +93,9 @@ nobase_dist_dballeinclude_HEADERS = \
 	core/fwd.h \
 	core/error.h \
 	core/shortcuts.h \
+	core/enq.h \
 	core/cursor.h \
 	core/aliases.h \
-	core/fortran.h \
 	core/benchmark.h \
 	core/defs.h \
 	core/var.h \
@@ -195,7 +195,6 @@ libdballe_la_SOURCES = \
 	core/error.cc \
 	core/cursor.cc \
 	core/aliases.cc \
-	core/fortran.cc \
 	core/shortcuts.cc \
 	core/shortcuts-access.cc \
 	core/benchmark.cc \
@@ -339,7 +338,6 @@ test_dballe_SOURCES = \
 	db-test.cc \
 	core/cursor-test.cc \
 	core/aliases-test.cc \
-	core/fortran-test.cc \
 	core/defs-test.cc \
 	core/var-test.cc \
 	core/values-test.cc \

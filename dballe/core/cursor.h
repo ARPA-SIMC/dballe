@@ -7,23 +7,8 @@
 namespace dballe {
 namespace impl {
 
-struct CursorAccess
-{
-    /// Query the content of the cursor, as an int. Returns false if the value is unset
-    virtual bool enqi(const char* key, unsigned len, int& res) const = 0;
-
-    /// Query the content of the cursor, as a double. Returns false if the value is unset
-    virtual bool enqd(const char* key, unsigned len, double& res) const = 0;
-
-    /// Query the content of the cursor, as a string. Returns false if the value is unset
-    virtual bool enqs(const char* key, unsigned len, std::string& res) const = 0;
-
-    /// Query the content of the cursor, as a formatted string. Returns false if the value is unset
-    virtual bool enqf(const char* key, unsigned len, std::string& res) const = 0;
-};
-
 /// Cursor iterating over stations
-struct CursorStation : public dballe::CursorStation, public CursorAccess
+struct CursorStation : public dballe::CursorStation
 {
     /// Downcast a unique_ptr pointer
     inline static std::unique_ptr<CursorStation> downcast(std::unique_ptr<dballe::CursorStation> c)
@@ -36,7 +21,7 @@ struct CursorStation : public dballe::CursorStation, public CursorAccess
 };
 
 /// Cursor iterating over station data values
-struct CursorStationData : public dballe::CursorStationData, public CursorAccess
+struct CursorStationData : public dballe::CursorStationData
 {
     /// Downcast a unique_ptr pointer
     inline static std::unique_ptr<CursorStationData> downcast(std::unique_ptr<dballe::CursorStationData> c)
@@ -49,7 +34,7 @@ struct CursorStationData : public dballe::CursorStationData, public CursorAccess
 };
 
 /// Cursor iterating over data values
-struct CursorData : public dballe::CursorData, public CursorAccess
+struct CursorData : public dballe::CursorData
 {
     /// Downcast a unique_ptr pointer
     inline static std::unique_ptr<CursorData> downcast(std::unique_ptr<dballe::CursorData> c)
@@ -62,7 +47,7 @@ struct CursorData : public dballe::CursorData, public CursorAccess
 };
 
 /// Cursor iterating over summary entries
-struct CursorSummary : public dballe::CursorSummary, public CursorAccess
+struct CursorSummary : public dballe::CursorSummary
 {
     /// Downcast a unique_ptr pointer
     inline static std::unique_ptr<CursorSummary> downcast(std::unique_ptr<dballe::CursorSummary> c)
@@ -75,13 +60,9 @@ struct CursorSummary : public dballe::CursorSummary, public CursorAccess
 };
 
 /// Cursor iterating over messages
-struct CursorMessage : public dballe::CursorMessage, public CursorAccess
+struct CursorMessage : public dballe::CursorMessage
 {
     template<typename Enq> void enq_generic(Enq& enq) const {}
-    bool enqi(const char* key, unsigned len, int& res) const override;
-    bool enqd(const char* key, unsigned len, double& res) const override;
-    bool enqs(const char* key, unsigned len, std::string& res) const override;
-    bool enqf(const char* key, unsigned len, std::string& res) const override;
 
     /// Downcast a unique_ptr pointer
     inline static std::unique_ptr<CursorMessage> downcast(std::unique_ptr<dballe::CursorMessage> c)

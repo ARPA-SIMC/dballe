@@ -934,6 +934,54 @@ this->add_method("perf_read_attrs", [](Fixture& f) {
     wassert(actual(stats.rows) == 606);
 });
 
+this->add_method("negative_values", [](Fixture& f) {
+    // See issue #144
+    {
+        core::Data vals;
+        vals.station.report = "synop";
+        vals.station.coords = Coords(44.10, 11.50);
+        vals.station.ident = "foo";
+        vals.level = Level(1);
+        vals.trange = Trange::instant();
+        vals.datetime = Datetime(2015, 4, 25, 12, 30, 45);
+        vals.values.set("B07030", -5.2);
+        vals.values.set("B12101", 295.1);
+        f.tr->insert_data(vals);
+        f.tr->insert_station_data(vals);
+    }
+
+    int ires;
+    double dres;
+    std::string sres;
+
+    {
+        fortran::DbAPI db(f.tr, "read", "read", "read");
+        db.set_station_context();
+        wassert(actual(db.query_data()) == 2u);
+        wassert(actual(db.next_data()) == WR_VAR(0, 7, 30));
+        wassert(actual(db.enqi("B07030")) == -52);
+        wassert(actual(db.enqd("B07030")) == -5.2);
+        wassert(actual(db.test_enqc("B07030", 10)) == "-52");
+        wassert(actual(db.next_data()) == WR_VAR(0, 12, 101));
+        wassert(actual(db.enqi("B12101")) == 2951);
+        wassert(actual(db.enqd("B12101")) == 295.1);
+        wassert(actual(db.test_enqc("B12101", 10)) == "2951");
+    }
+
+    {
+        fortran::DbAPI db(f.tr, "read", "read", "read");
+        wassert(actual(db.query_data()) == 2u);
+        wassert(actual(db.next_data()) == WR_VAR(0, 7, 30));
+        wassert(actual(db.enqi("B07030")) == -52);
+        wassert(actual(db.enqd("B07030")) == -5.2);
+        wassert(actual(db.test_enqc("B07030", 10)) == "-52");
+        wassert(actual(db.next_data()) == WR_VAR(0, 12, 101));
+        wassert(actual(db.enqi("B12101")) == 2951);
+        wassert(actual(db.enqd("B12101")) == 295.1);
+        wassert(actual(db.test_enqc("B12101", 10)) == "2951");
+    }
+});
+
 }
 
 template<typename DB>

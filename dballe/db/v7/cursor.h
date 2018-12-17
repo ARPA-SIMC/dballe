@@ -252,10 +252,6 @@ struct Base : public ImplTraits<Impl>::Parent
     dballe::DBStation get_station() const override { return rows->station; }
 
     template<typename Enq> void enq_generic(Enq& enq) const { return rows.enq_generic(enq); }
-    bool enqi(const char* key, unsigned len, int& res) const override;
-    bool enqd(const char* key, unsigned len, double& res) const override;
-    bool enqs(const char* key, unsigned len, std::string& res) const override;
-    bool enqf(const char* key, unsigned len, std::string& res) const override;
 
     /**
      * Iterate the cursor until the end, returning the number of items.

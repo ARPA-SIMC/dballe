@@ -19,7 +19,7 @@ namespace fortran {
 
 namespace {
 
-struct QuantesonoOperation : public CursorOperation<impl::CursorStation>
+struct QuantesonoOperation : public CursorOperation<impl::msg::CursorStation>
 {
     const MsgAPI& api;
 
@@ -33,7 +33,7 @@ struct QuantesonoOperation : public CursorOperation<impl::CursorStation>
         const impl::Message* curmsg = api.curmsg();
         if (!curmsg)
             throw error_consistency("query_stations called without a current message");
-        cursor.reset(dynamic_cast<impl::CursorStation*>(curmsg->query_stations(api.input_query).release()));
+        cursor = impl::msg::CursorStation::downcast(curmsg->query_stations(api.input_query));
         return cursor->remaining();
     }
 
@@ -98,7 +98,7 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
         if (!msg) return API::missing_int;
 
         // this->cursor.reset(CursorTraits<Cursor>::query(*msg, api.input_query).release());
-        this->cursor.reset(dynamic_cast<Cursor*>(msg->query_station_and_data(api.input_query).release()));
+        this->cursor = Cursor::downcast(msg->query_station_and_data(api.input_query));
         return this->cursor->remaining();
     }
 
@@ -462,4 +462,4 @@ void MsgAPI::remove_all()
 }
 }
 
-/* vim:set ts=4 sw=4: */
+#include "dballe/msg/cursor-access.tcc"

@@ -1,5 +1,4 @@
 #include "cursor.h"
-#include "dballe/core/fortran.h"
 #include "repinfo.h"
 #include "levtr.h"
 #include <cstring>

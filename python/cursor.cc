@@ -4,6 +4,7 @@
 #include "db.h"
 #include "message.h"
 #include "common.h"
+#include "dballe/core/enq.h"
 #include "dballe/db/v7/cursor.h"
 #include <algorithm>
 #include "impl-utils.h"
@@ -424,10 +425,11 @@ struct enqi : MethKwargs<Impl>
             if (!PyArg_ParseTupleAndKeywords(args, kw, "s#", const_cast<char**>(kwlist), &key, &len))
                 return nullptr;
 
-            int res;
-            if (!self->cur->enqi(key, len, res))
+            impl::Enqi enq(key, len);
+            self->cur->enq_generic(enq);
+            if (enq.missing)
                 Py_RETURN_NONE;
-            return PyLong_FromLong(res);
+            return PyLong_FromLong(enq.res);
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -450,10 +452,11 @@ struct enqd : MethKwargs<Impl>
             if (!PyArg_ParseTupleAndKeywords(args, kw, "s#", const_cast<char**>(kwlist), &key, &len))
                 return nullptr;
 
-            double res;
-            if (!self->cur->enqd(key, len, res))
+            impl::Enqd enq(key, len);
+            self->cur->enq_generic(enq);
+            if (enq.missing)
                 Py_RETURN_NONE;
-            return PyFloat_FromDouble(res);
+            return PyFloat_FromDouble(enq.res);
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -476,10 +479,11 @@ struct enqs : MethKwargs<Impl>
             if (!PyArg_ParseTupleAndKeywords(args, kw, "s#", const_cast<char**>(kwlist), &key, &len))
                 return nullptr;
 
-            std::string res;
-            if (!self->cur->enqs(key, len, res))
+            impl::Enqs enq(key, len);
+            self->cur->enq_generic(enq);
+            if (enq.missing)
                 Py_RETURN_NONE;
-            return PyUnicode_FromStringAndSize(res.data(), res.size());
+            return PyUnicode_FromStringAndSize(enq.res.data(), enq.res.size());
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -502,10 +506,11 @@ struct enqf : MethKwargs<Impl>
             if (!PyArg_ParseTupleAndKeywords(args, kw, "s#", const_cast<char**>(kwlist), &key, &len))
                 return nullptr;
 
-            std::string res;
-            if (!self->cur->enqf(key, len, res))
+            impl::Enqf enq(key, len);
+            self->cur->enq_generic(enq);
+            if (enq.missing)
                 Py_RETURN_NONE;
-            return PyUnicode_FromStringAndSize(res.data(), res.size());
+            return PyUnicode_FromStringAndSize(enq.res.data(), enq.res.size());
         } DBALLE_CATCH_RETURN_PYO
     }
 };

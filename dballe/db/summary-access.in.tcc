@@ -8,8 +8,8 @@ namespace db {
 namespace summary {
 
 namespace {
-int get_station_id(const Station& station) { return MISSING_INT; }
-int get_station_id(const DBStation& station) { return station.id; }
+inline int get_station_id(const Station& station) { return MISSING_INT; }
+inline int get_station_id(const DBStation& station) { return station.id; }
 }
 
 /*

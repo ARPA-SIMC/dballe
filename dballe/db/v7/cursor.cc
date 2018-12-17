@@ -13,7 +13,6 @@
 #include "dballe/core/var.h"
 #include "dballe/core/data.h"
 #include "dballe/core/query.h"
-#include "dballe/core/fortran.h"
 #include "wreport/var.h"
 #include <unordered_map>
 #include <cstring>
@@ -153,50 +152,6 @@ template<typename Impl>
 void Base<Impl>::discard()
 {
     rows.discard();
-}
-
-template<typename Impl>
-bool Base<Impl>::enqi(const char* key, unsigned len, int& res) const
-{
-    impl::Enqi enq(key, len);
-    rows.enq_generic(enq);
-    if (enq.missing)
-        return false;
-    res = enq.res;
-    return true;
-}
-
-template<typename Impl>
-bool Base<Impl>::enqd(const char* key, unsigned len, double& res) const
-{
-    impl::Enqd enq(key, len);
-    rows.enq_generic(enq);
-    if (enq.missing)
-        return false;
-    res = enq.res;
-    return true;
-}
-
-template<typename Impl>
-bool Base<Impl>::enqs(const char* key, unsigned len, std::string& res) const
-{
-    impl::Enqs enq(key, len);
-    rows.enq_generic(enq);
-    if (enq.missing)
-        return false;
-    res = enq.res;
-    return true;
-}
-
-template<typename Impl>
-bool Base<Impl>::enqf(const char* key, unsigned len, std::string& res) const
-{
-    impl::Enqf enq(key, len);
-    rows.enq_generic(enq);
-    if (enq.missing)
-        return false;
-    res = enq.res;
-    return true;
 }
 
 template<typename Impl>

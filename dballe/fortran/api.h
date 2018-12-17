@@ -2,7 +2,6 @@
 #define DBALLE_FORTRAN_API_H
 
 #include <dballe/fwd.h>
-#include <dballe/core/fortran.h>
 #include <wreport/varinfo.h>
 
 namespace dballe {
@@ -74,8 +73,8 @@ struct API
      */
     const char* test_enqc(const char* param, unsigned len);
 
-    inline static void to_fortran(const char* str, char* buf, unsigned buf_len) { return impl::string_to_fortran(str, buf, buf_len); }
-    inline static void to_fortran(const std::string& str, char* buf, unsigned buf_len) { return impl::string_to_fortran(str, buf, buf_len); }
+    static void to_fortran(const char* str, char* buf, unsigned buf_len);
+    static void to_fortran(const std::string& str, char* buf, unsigned buf_len);
 };
 
 }

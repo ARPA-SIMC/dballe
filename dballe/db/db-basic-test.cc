@@ -311,61 +311,6 @@ this->add_method("delete_by_var", [](Fixture& f) {
     }
 });
 
-this->add_method("negative_values", [](Fixture& f) {
-    // See issue #144
-    {
-        core::Data vals;
-        vals.station.report = "synop";
-        vals.station.coords = Coords(44.10, 11.50);
-        vals.station.ident = "foo";
-        vals.level = Level(1);
-        vals.trange = Trange::instant();
-        vals.datetime = Datetime(2015, 4, 25, 12, 30, 45);
-        vals.values.set("B07030", -5.2);
-        vals.values.set("B12101", 295.1);
-        f.tr->insert_data(vals);
-        f.tr->insert_station_data(vals);
-    }
-
-    int ires;
-    double dres;
-    std::string sres;
-
-    {
-        auto cur = impl::CursorStationData::downcast(f.tr->query_station_data(core::Query()));
-        wassert(actual(cur->remaining()) == 2u);
-        wassert_true(cur->next());
-        wassert(actual(cur->get_varcode()) == WR_VAR(0, 7, 30));
-        wassert_true(cur->enqi("B07030", 6, ires)); wassert(actual(ires) == -52);
-        wassert_true(cur->enqd("B07030", 6, dres)); wassert(actual(dres) == -5.2);
-        wassert_true(cur->enqs("B07030", 6, sres)); wassert(actual(sres) == "-52");
-        wassert_true(cur->enqf("B07030", 6, sres)); wassert(actual(sres) == "-5.2");
-        wassert_true(cur->next());
-        wassert(actual(cur->get_varcode()) == WR_VAR(0, 12, 101));
-        wassert_true(cur->enqi("B12101", 6, ires)); wassert(actual(ires) == 2951);
-        wassert_true(cur->enqd("B12101", 6, dres)); wassert(actual(dres) == 295.1);
-        wassert_true(cur->enqs("B12101", 6, sres)); wassert(actual(sres) == "2951");
-        wassert_true(cur->enqf("B12101", 6, sres)); wassert(actual(sres) == "295.1");
-    }
-
-    {
-        auto cur = impl::CursorData::downcast(f.tr->query_data(core::Query()));
-        wassert(actual(cur->remaining()) == 2u);
-        wassert_true(cur->next());
-        wassert(actual(cur->get_varcode()) == WR_VAR(0, 7, 30));
-        wassert_true(cur->enqi("B07030", 6, ires)); wassert(actual(ires) == -52);
-        wassert_true(cur->enqd("B07030", 6, dres)); wassert(actual(dres) == -5.2);
-        wassert_true(cur->enqs("B07030", 6, sres)); wassert(actual(sres) == "-52");
-        wassert_true(cur->enqf("B07030", 6, sres)); wassert(actual(sres) == "-5.2");
-        wassert_true(cur->next());
-        wassert(actual(cur->get_varcode()) == WR_VAR(0, 12, 101));
-        wassert_true(cur->enqi("B12101", 6, ires)); wassert(actual(ires) == 2951);
-        wassert_true(cur->enqd("B12101", 6, dres)); wassert(actual(dres) == 295.1);
-        wassert_true(cur->enqs("B12101", 6, sres)); wassert(actual(sres) == "2951");
-        wassert_true(cur->enqf("B12101", 6, sres)); wassert(actual(sres) == "295.1");
-    }
-});
-
 }
 
 template<typename DB>
