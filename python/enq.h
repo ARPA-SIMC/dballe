@@ -115,7 +115,7 @@ struct Enqs : public impl::Enq
 
         wreport::Varcode code = WR_STRING_TO_VAR(key + 1);
         if (code != value.code())
-            wreport::error_notfound::throwf("key %s not found on this query result", key);
+            throw_notfound();
 
         const wreport::Var* var = value.get();
         if (var && var->isset())
@@ -142,7 +142,7 @@ struct Enqs : public impl::Enq
     {
         wreport::Varcode code = dballe::resolve_varcode(key);
         if (code != value.code())
-            wreport::error_notfound::throwf("key %s not found on this query result", key);
+            throw_notfound();
         const wreport::Var* var = value.get();
         if (var && var->isset())
         {
@@ -263,7 +263,7 @@ struct Enqf : public impl::Enq
 
         wreport::Varcode code = WR_STRING_TO_VAR(key + 1);
         if (code != value.code())
-            wreport::error_notfound::throwf("key %s not found on this query result", key);
+            throw_notfound();
 
         const wreport::Var* var = value.get();
         if (var && var->isset())
@@ -290,7 +290,7 @@ struct Enqf : public impl::Enq
     {
         wreport::Varcode code = dballe::resolve_varcode(key);
         if (code != value.code())
-            wreport::error_notfound::throwf("key %s not found on this query result", key);
+            throw_notfound();
         const wreport::Var* var = value.get();
         if (var && var->isset())
         {
@@ -439,7 +439,7 @@ struct Enqpy : public impl::Enq
 
         wreport::Varcode code = WR_STRING_TO_VAR(key + 1);
         if (code != value.code())
-            wreport::error_notfound::throwf("key %s not found on this query result", key);
+            throw_notfound();
 
         if (const wreport::Var* var = value.get())
         {
@@ -464,7 +464,8 @@ struct Enqpy : public impl::Enq
     {
         wreport::Varcode code = dballe::resolve_varcode(key);
         if (code != value.code())
-            wreport::error_notfound::throwf("key %s not found on this query result", key);
+            throw_notfound();
+
         if (const wreport::Var* var = value.get())
         {
             res = (PyObject*)throw_ifnull(wrpy->var_create_copy(*var));

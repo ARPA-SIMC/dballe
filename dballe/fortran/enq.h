@@ -9,7 +9,6 @@ namespace fortran {
 struct Enqs : public impl::Enq
 {
     using Enq::Enq;
-
     std::string res;
 
     void set_bool(bool val)
@@ -113,7 +112,7 @@ struct Enqs : public impl::Enq
 
         wreport::Varcode code = WR_STRING_TO_VAR(key + 1);
         if (code != value.code())
-            wreport::error_notfound::throwf("key %s not found on this query result", key);
+            throw_notfound();
 
         const wreport::Var* var = value.get();
         if (var && var->isset())
@@ -140,7 +139,7 @@ struct Enqs : public impl::Enq
     {
         wreport::Varcode code = dballe::resolve_varcode(key);
         if (code != value.code())
-            wreport::error_notfound::throwf("key %s not found on this query result", key);
+            throw_notfound();
         const wreport::Var* var = value.get();
         if (var && var->isset())
         {

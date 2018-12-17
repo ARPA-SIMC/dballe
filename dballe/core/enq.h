@@ -22,6 +22,10 @@ struct Enq
     {
     }
 
+    [[noreturn]] void throw_notfound()
+    {
+        wreport::error_notfound::throwf("key %s not found on this query result", key);
+    }
 };
 
 struct Enqi : public Enq
@@ -123,7 +127,7 @@ struct Enqi : public Enq
 
         wreport::Varcode code = WR_STRING_TO_VAR(key + 1);
         if (code != value.code())
-            wreport::error_notfound::throwf("key %s not found on this query result", key);
+            throw_notfound();
 
         const wreport::Var* var = value.get();
         if (var && var->isset())
@@ -150,7 +154,7 @@ struct Enqi : public Enq
     {
         wreport::Varcode code = dballe::resolve_varcode(key);
         if (code != value.code())
-            wreport::error_notfound::throwf("key %s not found on this query result", key);
+            throw_notfound();
         const wreport::Var* var = value.get();
         if (var && var->isset())
         {
@@ -259,7 +263,7 @@ struct Enqd : public Enq
 
         wreport::Varcode code = WR_STRING_TO_VAR(key + 1);
         if (code != value.code())
-            wreport::error_notfound::throwf("key %s not found on this query result", key);
+            throw_notfound();
 
         const wreport::Var* var = value.get();
         if (var && var->isset())
@@ -286,7 +290,7 @@ struct Enqd : public Enq
     {
         wreport::Varcode code = dballe::resolve_varcode(key);
         if (code != value.code())
-            wreport::error_notfound::throwf("key %s not found on this query result", key);
+            throw_notfound();
         const wreport::Var* var = value.get();
         if (var && var->isset())
         {
