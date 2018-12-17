@@ -207,6 +207,7 @@ struct Data : public LevtrBase<CursorData, DataRow>
 
     void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read) override;
 
+    template<typename Enq> void enq_generic(Enq& enq) const;
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;
@@ -229,6 +230,7 @@ struct Summary : public LevtrBase<CursorSummary, SummaryRow>
 
     void load(Tracer<>& trc, const SummaryQueryBuilder& qb);
 
+    template<typename Enq> void enq_generic(Enq& enq) const;
     bool enqi(const char* key, unsigned len, int& res) const override;
     bool enqd(const char* key, unsigned len, double& res) const override;
     bool enqs(const char* key, unsigned len, std::string& res) const override;

@@ -307,6 +307,46 @@ void Data::query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, 
     }
 }
 
+bool Data::enqi(const char* key, unsigned len, int& res) const
+{
+    impl::Enqi enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
+}
+
+bool Data::enqd(const char* key, unsigned len, double& res) const
+{
+    impl::Enqd enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
+}
+
+bool Data::enqs(const char* key, unsigned len, std::string& res) const
+{
+    impl::Enqs enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
+}
+
+bool Data::enqf(const char* key, unsigned len, std::string& res) const
+{
+    impl::Enqf enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
+}
+
 void Data::remove()
 {
     tr->remove_data_by_id(cur->value.data_id);
@@ -325,6 +365,46 @@ void Summary::load(Tracer<>& trc, const SummaryQueryBuilder& qb)
     cur = results.begin();
 
     this->tr->levtr().prefetch_ids(trc, ids);
+}
+
+bool Summary::enqi(const char* key, unsigned len, int& res) const
+{
+    impl::Enqi enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
+}
+
+bool Summary::enqd(const char* key, unsigned len, double& res) const
+{
+    impl::Enqd enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
+}
+
+bool Summary::enqs(const char* key, unsigned len, std::string& res) const
+{
+    impl::Enqs enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
+}
+
+bool Summary::enqf(const char* key, unsigned len, std::string& res) const
+{
+    impl::Enqf enq(key, len);
+    enq_generic(enq);
+    if (enq.missing)
+        return false;
+    res = enq.res;
+    return true;
 }
 
 void Summary::remove()
