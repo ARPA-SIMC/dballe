@@ -117,6 +117,46 @@ void _set_query(PyObject* dict, dballe::CursorMessage& cur)
     throw PythonException();
 }
 
+void _set_data(PyObject* dict, const DBStation& station)
+{
+    set_dict(dict, "report", station.report);
+    set_dict(dict, "lat", dballe_int_lat_to_python(station.coords.lat));
+    set_dict(dict, "lon", dballe_int_lon_to_python(station.coords.lon));
+    if (!station.ident.is_missing())
+        set_dict(dict, "ident", station.ident.get());
+}
+
+void _set_data(PyObject* dict, const Var& var)
+{
+    if (!var.isset())
+    {
+        PyErr_SetString(PyExc_ValueError, ".data called on an cursor referencing an unset variable");
+        throw PythonException();
+    }
+
+    pyo_unique_ptr pyvalue(throw_ifnull(wrpy->var_value_to_python(var)));
+
+    char bcode[7];
+    format_bcode(var.code(), bcode);
+
+    if (PyDict_SetItemString(dict, bcode, pyvalue))
+        throw PythonException();
+}
+
+void _set_data(PyObject* dict, dballe::db::CursorStationData& cur)
+{
+    _set_data(dict, cur.get_station());
+    _set_data(dict, cur.get_var());
+}
+
+void _set_data(PyObject* dict, dballe::db::CursorData& cur)
+{
+    _set_data(dict, cur.get_station());
+    set_dict(dict, "level", to_python(cur.get_level()));
+    set_dict(dict, "trange", to_python(cur.get_trange()));
+    set_dict(dict, "datetime", to_python(cur.get_datetime()));
+    _set_data(dict, cur.get_var());
+}
 
 
 template<typename Impl>
@@ -130,6 +170,22 @@ struct query : Getter<Impl>
             ensure_valid_cursor(self);
             pyo_unique_ptr result(throw_ifnull(PyDict_New()));
             _set_query(result, *self->cur);
+            return result.release();
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+template<typename Impl>
+struct data : Getter<Impl>
+{
+    constexpr static const char* name = "data";
+    constexpr static const char* doc = "return a dict which can be used to insert into a database the current cursor value";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            ensure_valid_cursor(self);
+            pyo_unique_ptr result(throw_ifnull(PyDict_New()));
+            _set_data(result, *self->cur);
             return result.release();
         } DBALLE_CATCH_RETURN_PYO
     }
@@ -435,7 +491,7 @@ struct DefinitionStationDataDB : public DefinitionBase<DefinitionStationDataDB, 
     constexpr static const char* qual_name = "dballe.CursorStationDataDB";
     constexpr static const char* summary = "cursor iterating dballe.DB query_station_data results";
 
-    GetSetters<remaining<Impl>, query<Impl>> getsetters;
+    GetSetters<remaining<Impl>, query<Impl>, data<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, remove<Impl>, query_attrs<Impl>, insert_attrs<Impl>, remove_attrs<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
@@ -446,7 +502,7 @@ struct DefinitionDataDB : public DefinitionBase<DefinitionDataDB, dpy_CursorData
     constexpr static const char* qual_name = "dballe.CursorDataDB";
     constexpr static const char* summary = "cursor iterating dballe.DB query_data results";
 
-    GetSetters<remaining<Impl>, query<Impl>> getsetters;
+    GetSetters<remaining<Impl>, query<Impl>, data<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, remove<Impl>, query_attrs<Impl>, insert_attrs<Impl>, remove_attrs<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 

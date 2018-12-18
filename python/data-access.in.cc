@@ -11,6 +11,7 @@ void data_setpy(core::Data& data, const char* key, unsigned len, PyObject* val)
 {
     switch (key) { // mklookup
         case "rep_memo":    data.station.report = dballe_nullable_string_from_python(val);
+        case "report":      data.station.report = dballe_nullable_string_from_python(val);
         case "ana_id":      data.station.id = dballe_int_from_python(val);
         case "ident":       data.station.ident = ident_from_python(val);
         case "lat":         set_lat_from_python(val, data.station.coords);
