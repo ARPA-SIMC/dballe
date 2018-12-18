@@ -439,6 +439,65 @@ class CommonDBTestMixin(DballeDBMixin):
         with self.db.query_station_data() as cur:
             self.assertEqual(cur.remaining, 1)
 
+    def test_data(self):
+        with self.db.query_station_data() as cur:
+            self.assertEqual(cur.remaining, 1)
+            for row in cur:
+                self.assertEqual(row.data, {
+                    "report": "synop",
+                    "lat": Decimal("12.34560"),
+                    "lon": Decimal("76.54320"),
+                    "B02005": 0.5,
+                })
+
+        with self.db.query_data({"var": "B01012"}) as cur:
+            self.assertEqual(cur.remaining, 1)
+            for row in cur:
+                self.assertEqual(row.data, {
+                    "report": "synop",
+                    "lat": Decimal("12.34560"),
+                    "lon": Decimal("76.54320"),
+                    "level": dballe.Level(10, 11, 15, 22),
+                    "trange": dballe.Trange(20, 111, 222),
+                    "datetime": datetime.datetime(1945, 4, 25, 8, 0),
+                    "B01012": 500,
+                })
+
+    def test_insert_cursor(self):
+        with self.another_db() as db1:
+            with db1.transaction() as tr1:
+                with self.db.query_station_data() as cur:
+                    for row in cur:
+                        tr1.insert_station_data(row, can_add_stations=True)
+
+                with self.db.query_data() as cur:
+                    for row in cur:
+                        tr1.insert_data(row, can_add_stations=True)
+
+            with db1.transaction() as tr:
+                with tr.query_station_data() as cur:
+                    self.assertEqual(cur.remaining, 1)
+                    for row in cur:
+                        self.assertEqual(row.data, {
+                            "report": "synop",
+                            "lat": Decimal("12.34560"),
+                            "lon": Decimal("76.54320"),
+                            "B02005": 0.5,
+                        })
+
+                with tr.query_data({"var": "B01012"}) as cur:
+                    self.assertEqual(cur.remaining, 1)
+                    for row in cur:
+                        self.assertEqual(row.data, {
+                            "report": "synop",
+                            "lat": Decimal("12.34560"),
+                            "lon": Decimal("76.54320"),
+                            "level": dballe.Level(10, 11, 15, 22),
+                            "trange": dballe.Trange(20, 111, 222),
+                            "datetime": datetime.datetime(1945, 4, 25, 8, 0),
+                            "B01012": 500,
+                        })
+
 
 class FullDBTestMixin(CommonDBTestMixin):
     def test_transaction_enter_exit(self):
