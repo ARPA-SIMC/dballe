@@ -113,7 +113,7 @@ template<typename Impl>
 struct insert_station_data : MethKwargs<Impl>
 {
     constexpr static const char* name = "insert_station_data";
-    constexpr static const char* signature = "record: Dict[str, Any], can_replace: bool=False, can_add_stations: bool=False";
+    constexpr static const char* signature = "record: Union[Dict[str, Any], dballe.Cursor], can_replace: bool=False, can_add_stations: bool=False";
     constexpr static const char* returns = "Dict[str, int]";
     constexpr static const char* summary = "Insert station values in the database";
     constexpr static const char* doc = R"(
@@ -147,7 +147,7 @@ template<typename Impl>
 struct insert_data : MethKwargs<Impl>
 {
     constexpr static const char* name = "insert_data";
-    constexpr static const char* signature = "record: Dict[str, Any], can_replace: bool=False, can_add_stations: bool=False";
+    constexpr static const char* signature = "record: Union[Dict[str, Any], dballe.Cursor], can_replace: bool=False, can_add_stations: bool=False";
     constexpr static const char* returns = "Dict[str, int]";
     constexpr static const char* summary = "Insert data values in the database";
     constexpr static const char* doc = R"(

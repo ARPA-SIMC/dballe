@@ -24,3 +24,6 @@
    * Added `DB.query_messages`
    * DB or Transaction: `.query_*`: query argument is now optional, omit it to
      query everything
+   * Added `Cursor.query` and `Cursor.data`
+   * Allow to pass a `Cursor` instead of a `dict` to `insert_data` and
+     `insert_station_data`, to efficiently copy data between databases.
