@@ -2,7 +2,9 @@ import dballe
 import shlex
 import os
 import sys
+import tempfile
 import unittest
+from contextlib import contextmanager
 
 
 def main(testname):
@@ -146,6 +148,17 @@ class DballeDBMixin:
         db = dballe.DB.connect_test()
         db.reset()
         return db
+
+    @contextmanager
+    def another_db(self):
+        with tempfile.NamedTemporaryFile(dir=".", suffix=".sqlite") as tf:
+            try:
+                dballe.DB.set_default_format(self.orig_db_format)
+                db = dballe.DB.connect_from_url("sqlite:" + tf.name)
+            finally:
+                dballe.DB.set_default_format(self.DB_FORMAT)
+            db.reset()
+            yield db
 
     def setUp(self):
         super().setUp()

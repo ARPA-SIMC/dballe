@@ -5,8 +5,10 @@
 #include "dballe/core/var.h"
 #include "dballe/core/query.h"
 #include "dballe/core/data.h"
+#include "dballe/db/v7/cursor.h"
 #include "common.h"
 #include "types.h"
+#include "cursor.h"
 #include "config.h"
 #include "impl-utils.h"
 
@@ -810,6 +812,27 @@ std::unique_ptr<Data> data_from_python(PyObject* from_python)
             std::string k = string_from_python(key);
             data_setpy(*d, k.data(), k.size(), value);
         }
+        return res;
+    }
+
+    if (dpy_CursorStationDataDB_Check(from_python))
+    {
+        dpy_CursorStationDataDB* cur = (dpy_CursorStationDataDB*)from_python;
+        d->station = cur->cur->get_station();
+        d->station.id = MISSING_INT;
+        d->values.set(*cur->cur->rows->value.get());
+        return res;
+    }
+
+    if (dpy_CursorDataDB_Check(from_python))
+    {
+        dpy_CursorDataDB* cur = (dpy_CursorDataDB*)from_python;
+        d->station = cur->cur->get_station();
+        d->station.id = MISSING_INT;
+        d->datetime = cur->cur->get_datetime();
+        d->level = cur->cur->get_level();
+        d->trange = cur->cur->get_trange();
+        d->values.set(*cur->cur->rows->value.get());
         return res;
     }
 
