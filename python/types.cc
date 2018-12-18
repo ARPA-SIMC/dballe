@@ -1030,51 +1030,91 @@ PyObject* dballe_int_lon_to_python(int lon)
 void set_lat_from_python(PyObject* o, Coords& coords)
 {
     if (!o || o == Py_None)
+    {
         coords = Coords();
-    else if (PyLong_Check(o))
+        return;
+    }
+
+    if (PyLong_Check(o))
     {
         int res = PyLong_AsLong(o);
         if (res == -1 && PyErr_Occurred())
             throw PythonException();
         coords.set_lat(res);
+        return;
     }
-    else if (PyFloat_Check(o))
+
+    if (PyFloat_Check(o))
     {
         double res = PyFloat_AsDouble(o);
         if (res == -1.0 && PyErr_Occurred())
             throw PythonException();
         coords.set_lat(res);
+        return;
     }
-    else
+
+    // We cannot directly test if it is a decimal, but we can try to duck type
+    PyObject* scaleb = PyObject_GetAttrString(o, "scaleb");
+    if (scaleb == nullptr)
     {
-        PyErr_SetString(PyExc_TypeError, "latitude value must be an instance of int, float, or None");
-        throw PythonException();
+        PyErr_Clear();
+    } else {
+        pyo_unique_ptr six(throw_ifnull(PyLong_FromLong(5)));
+        pyo_unique_ptr scaled(throw_ifnull(PyObject_CallFunctionObjArgs(scaleb, six.get(), nullptr)));
+        int res = PyLong_AsLong(scaled);
+        if (res == -1 && PyErr_Occurred())
+            throw PythonException();
+        coords.set_lat(res);
+        return;
     }
+
+    PyErr_SetString(PyExc_TypeError, "latitude value must be an instance of int, float, or None");
+    throw PythonException();
 }
 
 void set_lon_from_python(PyObject* o, Coords& coords)
 {
     if (!o || o == Py_None)
+    {
         coords = Coords();
-    else if (PyLong_Check(o))
+        return;
+    }
+
+    if (PyLong_Check(o))
     {
         int res = PyLong_AsLong(o);
         if (res == -1 && PyErr_Occurred())
             throw PythonException();
         coords.set_lon(res);
+        return;
     }
-    else if (PyFloat_Check(o))
+
+    if (PyFloat_Check(o))
     {
         double res = PyFloat_AsDouble(o);
         if (res == -1.0 && PyErr_Occurred())
             throw PythonException();
         coords.set_lon(res);
+        return;
     }
-    else
+
+    // We cannot directly test if it is a decimal, but we can try to duck type
+    PyObject* scaleb = PyObject_GetAttrString(o, "scaleb");
+    if (scaleb == nullptr)
     {
-        PyErr_SetString(PyExc_TypeError, "longitude value must be an instance of int, float, or None");
-        throw PythonException();
+        PyErr_Clear();
+    } else {
+        pyo_unique_ptr six(throw_ifnull(PyLong_FromLong(5)));
+        pyo_unique_ptr scaled(throw_ifnull(PyObject_CallFunctionObjArgs(scaleb, six.get(), nullptr)));
+        int res = PyLong_AsLong(scaled);
+        if (res == -1 && PyErr_Occurred())
+            throw PythonException();
+        coords.set_lon(res);
+        return;
     }
+
+    PyErr_SetString(PyExc_TypeError, "longitude value must be an instance of int, float, or None");
+    throw PythonException();
 }
 
 unsigned short datetime_int16_from_python(PyObject* o)
