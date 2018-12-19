@@ -10,12 +10,14 @@ class CSVMixin(DballeDBMixin):
     def setUp(self):
         super(CSVMixin, self).setUp()
         from testlib import fill_volnd
-        fill_volnd(self.db)
+        with self.db.transaction() as tr:
+            fill_volnd(tr)
 
     def testExport(self):
         # query["rep_memo"] = "synop"
         out = io.StringIO()
-        dbacsv.export(self.db, {}, out)
+        with self.db.transaction() as tr:
+            dbacsv.export(tr, {}, out)
 
         lines = out.getvalue().splitlines()
         self.assertEqual(lines[0],
@@ -27,38 +29,39 @@ class CSVMixin(DballeDBMixin):
 
     def testAttrs(self):
         self.db.reset()
-        data = dict(
-            rep_memo="synop",
-            lat=0.0, lon=0.0,
-            ident="#000000",
-            level=(103, 2000),
-            trange=(254, 0, 0),
-            datetime=datetime.datetime(1005, 1, 1, 1, 1, 0),
-            B12101=270.96)
-        ids = self.db.insert_data(data, False, True)
-        attrs = {}
-        attrs["B33209"] = 98
-        self.db.attr_insert_data(ids["B12101"], attrs)
+        with self.db.transaction() as tr:
+            data = dict(
+                rep_memo="synop",
+                lat=0.0, lon=0.0,
+                ident="#000000",
+                level=(103, 2000),
+                trange=(254, 0, 0),
+                datetime=datetime.datetime(1005, 1, 1, 1, 1, 0),
+                B12101=270.96)
+            ids = tr.insert_data(data, False, True)
+            attrs = {}
+            attrs["B33209"] = 98
+            tr.attr_insert_data(ids["B12101"], attrs)
 
-        data.update(
-            rep_memo="synop",
-            lat=0.0, lon=0.0,
-            ident="#000000",
-            level=(103, 2000),
-            trange=(254, 0, 0),
-            datetime=datetime.datetime(1005, 1, 1, 1, 1, 1),
-            B12101=271.96)
-        ids = self.db.insert_data(data, False, True)
-        attrs = {}
-        attrs["B33209"] = 100
-        self.db.attr_insert_data(ids["B12101"], attrs)
+            data.update(
+                rep_memo="synop",
+                lat=0.0, lon=0.0,
+                ident="#000000",
+                level=(103, 2000),
+                trange=(254, 0, 0),
+                datetime=datetime.datetime(1005, 1, 1, 1, 1, 1),
+                B12101=271.96)
+            ids = tr.insert_data(data, False, True)
+            attrs = {}
+            attrs["B33209"] = 100
+            tr.attr_insert_data(ids["B12101"], attrs)
 
-        out = io.StringIO()
-        dbacsv.export(self.db, {}, out)
+            out = io.StringIO()
+            dbacsv.export(tr, {}, out)
 
-        lines = out.getvalue().splitlines()
-        self.assertEqual(lines[2], "1005-01-01 01:01:00,270.96,98")
-        self.assertEqual(lines[3], "1005-01-01 01:01:01,271.96,100")
+            lines = out.getvalue().splitlines()
+            self.assertEqual(lines[2], "1005-01-01 01:01:00,270.96,98")
+            self.assertEqual(lines[3], "1005-01-01 01:01:01,271.96,100")
 
 
 class TestCSVV7(CSVMixin, unittest.TestCase):

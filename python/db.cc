@@ -32,6 +32,15 @@ PyTypeObject* dpy_Transaction_Type = nullptr;
 
 namespace {
 
+bool deprecate_on_db(dpy_Transaction*, const char*) { return false; }
+bool deprecate_on_db(dpy_DB*, const char* name)
+{
+    if (PyErr_WarnFormat(PyExc_DeprecationWarning, 1, "calling %s without a transaction is deprecated", name))
+        return true;
+    return false;
+}
+
+
 /**
  * call o.fileno() and return its result.
  *
@@ -123,6 +132,8 @@ database ID of its value.
 )";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
+        if (deprecate_on_db(self, name)) return nullptr;
+
         static const char* kwlist[] = { "data", "can_replace", "can_add_stations", NULL };
         PyObject* pydata;
         int can_replace = 0;
@@ -157,6 +168,8 @@ database ID of its value.
 )";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
+        if (deprecate_on_db(self, name)) return nullptr;
+
         static const char* kwlist[] = { "data", "can_replace", "can_add_stations", NULL };
         PyObject* pydata;
         int can_replace = 0;
@@ -183,6 +196,8 @@ struct MethQuery : public MethKwargs<Impl>
     constexpr static const char* signature = "query: Dict[str, Any]";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
+        if (deprecate_on_db(self, Base::name)) return nullptr;
+
         static const char* kwlist[] = { "query", NULL };
         PyObject* pyquery = nullptr;
         if (!PyArg_ParseTupleAndKeywords(args, kw, "|O", const_cast<char**>(kwlist), &pyquery))
@@ -340,7 +355,7 @@ struct query_attrs : MethKwargs<Impl>
     constexpr static const char* summary = "Query attributes (deprecated)";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
-        if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use DB.attr_query_station or DB.attr_query_data instead of DB.query_attrs", 1))
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use Transaction.attr_query_station or Transaction.attr_query_data instead of DB.query_attrs", 1))
             return nullptr;
 
         static const char* kwlist[] = { "varcode", "reference_id", "attrs", NULL };
@@ -374,6 +389,8 @@ struct attr_query_station : MethKwargs<Impl>
     constexpr static const char* summary = "query station data attributes";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
+        if (deprecate_on_db(self, name)) return nullptr;
+
         static const char* kwlist[] = { "varid", NULL };
         int varid;
         if (!PyArg_ParseTupleAndKeywords(args, kw, "i", const_cast<char**>(kwlist), &varid))
@@ -398,6 +415,8 @@ struct attr_query_data : MethKwargs<Impl>
     constexpr static const char* doc = "query data attributes";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
+        if (deprecate_on_db(self, name)) return nullptr;
+
         static const char* kwlist[] = { "varid", NULL };
         int varid;
         if (!PyArg_ParseTupleAndKeywords(args, kw, "i", const_cast<char**>(kwlist), &varid))
@@ -421,7 +440,7 @@ struct attr_insert : MethKwargs<Impl>
     constexpr static const char* doc = "Insert new attributes into the database (deprecated)";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
-        if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use DB.attr_insert_station or DB.attr_insert_data instead of DB.attr_insert", 1))
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use Transaction.attr_insert_station or Transaction.attr_insert_data instead of DB.attr_insert", 1))
             return nullptr;
 
         static const char* kwlist[] = { "varcode", "attrs", "varid", NULL };
@@ -457,6 +476,8 @@ struct attr_insert_station : MethKwargs<Impl>
     constexpr static const char* summary = "Insert new attributes into the database";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
+        if (deprecate_on_db(self, name)) return nullptr;
+
         static const char* kwlist[] = { "varid", "attrs", NULL };
         int varid;
         PyObject* attrs;
@@ -480,6 +501,8 @@ struct attr_insert_data : MethKwargs<Impl>
     constexpr static const char* summary = "Insert new attributes into the database";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
+        if (deprecate_on_db(self, name)) return nullptr;
+
         static const char* kwlist[] = { "varid", "attrs", NULL };
         int varid;
         PyObject* attrs;
@@ -503,7 +526,7 @@ struct attr_remove : MethKwargs<Impl>
     constexpr static const char* doc = "Remove attributes (deprecated)";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
-        if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use DB.attr_remove_station or DB.attr_remove_data instead of DB.attr_remove", 1))
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use Transaction.attr_remove_station or Transaction.attr_remove_data instead of DB.attr_remove", 1))
             return nullptr;
 
         static const char* kwlist[] = { "varcode", "varid", "attrs", NULL };
@@ -531,6 +554,8 @@ struct attr_remove_station : MethKwargs<Impl>
     constexpr static const char* summary = "Remove attributes from station variables";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
+        if (deprecate_on_db(self, name)) return nullptr;
+
         static const char* kwlist[] = { "varid", "attrs", NULL };
         int varid;
         PyObject* attrs;
@@ -554,6 +579,8 @@ struct attr_remove_data : MethKwargs<Impl>
     constexpr static const char* summary = "Remove attributes from data variables";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
+        if (deprecate_on_db(self, name)) return nullptr;
+
         static const char* kwlist[] = { "varid", "attrs", NULL };
         int varid;
         PyObject* attrs;

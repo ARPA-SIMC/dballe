@@ -258,8 +258,8 @@ class ColumnAttribute(Column):
 
 
 class Exporter:
-    def __init__(self, db):
-        self.db = db
+    def __init__(self, tr):
+        self.tr = tr
         self.title = ""
         self.cols = []
         # { Station id: { varcode: value } }
@@ -354,39 +354,38 @@ class Exporter:
         else:
             writer = UnicodeCSVWriter(fd)
 
-        with self.db.transaction() as tr:
-            self.compute_columns(tr, query)
+        self.compute_columns(self.tr, query)
 
-            # Don't query an empty result set
-            if self.rowcount == 0:
-                print("Result is empty.", file=sys.stderr)
-                return
+        # Don't query an empty result set
+        if self.rowcount == 0:
+            print("Result is empty.", file=sys.stderr)
+            return
 
-            row_headers = []
+        row_headers = []
+        for c in self.csv_columns:
+            row_headers.extend(c.column_labels())
+
+        # Print the title if we have it
+        if self.title_columns:
+            title = "; ".join(c.title() for c in self.title_columns)
+            row = ["" for x in row_headers]
+            row[0] = title
+            writer.writerow(row)
+
+        # Print the column headers
+        writer.writerow(row_headers)
+
+        for rec in self.tr.query_data(query):
+            row = []
             for c in self.csv_columns:
-                row_headers.extend(c.column_labels())
-
-            # Print the title if we have it
-            if self.title_columns:
-                title = "; ".join(c.title() for c in self.title_columns)
-                row = ["" for x in row_headers]
-                row[0] = title
-                writer.writerow(row)
-
-            # Print the column headers
-            writer.writerow(row_headers)
-
-            for rec in tr.query_data(query):
-                row = []
-                for c in self.csv_columns:
-                    row.extend(c.column_data(rec))
-                writer.writerow(row)
+                row.extend(c.column_data(rec))
+            writer.writerow(row)
 
 
-def export(db, query, fd):
+def export(tr, query, fd):
     """
     Perform a DB-All.e query using the given db and query query, and output
     the results in CSV format on the given file object
     """
-    e = Exporter(db)
+    e = Exporter(tr)
     e.output(query, fd)
