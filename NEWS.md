@@ -27,3 +27,10 @@
    * Added `Cursor.query` and `Cursor.data`
    * Allow to pass a `Cursor` instead of a `dict` to `insert_data` and
      `insert_station_data`, to efficiently copy data between databases.
+   * Deprecated `DB.insert_station_data`, `DB.insert_data`,
+     `DB.remove_station_data`, `DB.remove_data`, `DB.query_stations`,
+     `DB.query_station_data`, `DB.query_data`, `DB.query_summary`,
+     `DB.query_messages`, `DB.attr_query_station`, `DB.attr_query_data`,
+     `DB.attr_insert_station`, `DB.attr_insert_data`, `DB.attr_remove_station`,
+     `DB.attr_remove_data`.
+     Use the same methods in `dballe.Transaction` instead.
