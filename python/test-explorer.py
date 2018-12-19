@@ -7,26 +7,26 @@ from testlib import DballeDBMixin, test_pathname
 class BaseExplorerTestMixin(DballeDBMixin):
     def setUp(self):
         super().setUp()
+        with self.db.transaction() as tr:
+            data = dict(
+                    lat=12.34560, lon=76.54320,
+                    datetime=datetime.datetime(1945, 4, 25, 8, 0, 0),
+                    level=(10, 11, 15, 22),
+                    trange=(20, 111, 222),
+                    rep_memo="synop",
+                    B01011="test1",
+                    B01012=500)
+            tr.insert_data(data, False, True)
 
-        data = dict(
-                lat=12.34560, lon=76.54320,
-                datetime=datetime.datetime(1945, 4, 25, 8, 0, 0),
-                level=(10, 11, 15, 22),
-                trange=(20, 111, 222),
-                rep_memo="synop",
-                B01011="test1",
-                B01012=500)
-        self.db.insert_data(data, False, True)
-
-        data = dict(
-                lat=12.34560, lon=76.54320,
-                ident="foo",
-                datetime=datetime.datetime(1945, 4, 25, 12, 0, 0),
-                level=(10, 11, 15, 22),
-                trange=(20, 111, 223),
-                rep_memo="amdar",
-                B01012=500)
-        self.db.insert_data(data, False, True)
+            data = dict(
+                    lat=12.34560, lon=76.54320,
+                    ident="foo",
+                    datetime=datetime.datetime(1945, 4, 25, 12, 0, 0),
+                    level=(10, 11, 15, 22),
+                    trange=(20, 111, 223),
+                    rep_memo="amdar",
+                    B01012=500)
+            tr.insert_data(data, False, True)
 
     def assertExplorerContents(self, explorer, count_unfiltered=3, count_filtered=1):
         self.assertCountEqual(explorer.all_stations, [

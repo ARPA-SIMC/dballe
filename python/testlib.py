@@ -41,7 +41,7 @@ def not_so_random(seed):
         yield float(seed) / float(m)
 
 
-def fill_volnd(db):
+def fill_volnd(tr):
     import datetime
 
     # We want a predictable dataset
@@ -49,7 +49,7 @@ def fill_volnd(db):
     rattr = not_so_random(2)
 
     # Wipe the test database
-    db.remove_all()
+    tr.remove_all()
 
     attrs = {}
     rec = {}
@@ -76,13 +76,13 @@ def fill_volnd(db):
     def maybe_insert(rec, aname):
         if next(rdata) > 0.9:
             return
-        ids = db.insert_data(rec, False, True)
+        ids = tr.insert_data(rec, False, True)
         attrs.clear()
         attrs[aname] = next(rattr) * 100.
         for code in rec:
             if not code.startswith("B"):
                 continue
-            db.attr_insert_data(ids[code], attrs)
+            tr.attr_insert_data(ids[code], attrs)
 
     # Enter some sample data
     for net, lat, lon in contexts():
@@ -135,7 +135,7 @@ def fill_volnd(db):
     # pseudoana export and mixed data types
     rec.clear()
     rec.update(ana_id=1, B01001=12, B01002=123, B01019="Test of long station name", rep_memo="synop")
-    db.insert_station_data(rec, False, True)
+    tr.insert_station_data(rec, False, True)
 
 
 class DballeDBMixin:
@@ -148,6 +148,11 @@ class DballeDBMixin:
         db = dballe.DB.connect_test()
         db.reset()
         return db
+
+    @contextmanager
+    def transaction(self):
+        with self.db.transaction() as tr:
+            yield tr
 
     @contextmanager
     def another_db(self):

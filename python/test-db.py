@@ -3,33 +3,51 @@ import dballe
 import io
 import datetime
 import unittest
+import warnings
+from contextlib import contextmanager
 from decimal import Decimal
 from testlib import DballeDBMixin, test_pathname
 
 
 class CommonDBTestMixin(DballeDBMixin):
+    @contextmanager
+    def deprecated_on_db(self):
+        with warnings.catch_warnings(record=True) as warning_list:
+            yield
+        if self.raise_db_method_deprecation_warnings:
+            for w in warning_list:
+                if w.category != DeprecationWarning:
+                    continue
+                if "without a transaction is deprecated" not in w.message.args[0]:
+                    continue
+                # found = w["message"]
+                break
+            else:
+                self.fail("DeprecationWarning not raised")
+
     def setUp(self):
         super(CommonDBTestMixin, self).setUp()
+        self.raise_db_method_deprecation_warnings = True
 
-        data = dict(
-                lat=12.34560, lon=76.54320,
-                datetime=datetime.datetime(1945, 4, 25, 8, 0, 0),
-                level=(10, 11, 15, 22),
-                trange=(20, 111, 222),
-                rep_memo="synop",
-                B01011="Hey Hey!!",
-                B01012=500)
-        ids = self.db.insert_data(data, False, True)
+        with self.transaction() as tr:
+            data = dict(
+                    lat=12.34560, lon=76.54320,
+                    datetime=datetime.datetime(1945, 4, 25, 8, 0, 0),
+                    level=(10, 11, 15, 22),
+                    trange=(20, 111, 222),
+                    rep_memo="synop",
+                    B01011="Hey Hey!!",
+                    B01012=500)
+            ids = tr.insert_data(data, False, True)
+            tr.insert_station_data({"ana_id": ids["ana_id"], "B02005": 0.5})
 
-        self.db.insert_station_data({"ana_id": ids["ana_id"], "B02005": 0.5})
+            data.clear()
+            data["B33007"] = 50
+            data["B33036"] = 75
+            tr.attr_insert_data(ids["B01011"], data)
 
-        data.clear()
-        data["B33007"] = 50
-        data["B33036"] = 75
-        self.db.attr_insert_data(ids["B01011"], data)
-
-        for rec in self.db.query_data(dict(var="B01011")):
-            self.attr_ref = rec["context_id"]
+            for rec in tr.query_data(dict(var="B01011")):
+                self.attr_ref = rec["context_id"]
 
     def testQueryExport(self):
         self.db.export_to_file({}, "BUFR", "/dev/null")
@@ -43,7 +61,8 @@ class CommonDBTestMixin(DballeDBMixin):
         self.assertTrue(out.getvalue().startswith(b"BUFR"))
 
     def testQueryStations(self):
-        cur = self.db.query_stations()
+        with self.deprecated_on_db():
+            cur = self.db.query_stations()
         self.assertEqual(cur.remaining, 1)
         count = 0
         for idx, result in enumerate(cur):
@@ -58,7 +77,8 @@ class CommonDBTestMixin(DballeDBMixin):
         self.assertEqual(count, 1)
 
     def testQueryDecimal(self):
-        cur = self.db.query_stations({"lat": Decimal("12.34560"), "lon": Decimal("76.54320")})
+        with self.deprecated_on_db():
+            cur = self.db.query_stations({"lat": Decimal("12.34560"), "lon": Decimal("76.54320")})
         self.assertEqual(cur.remaining, 1)
         count = 0
         for idx, result in enumerate(cur):
@@ -73,7 +93,8 @@ class CommonDBTestMixin(DballeDBMixin):
         self.assertEqual(count, 1)
 
     def testQueryStationData(self):
-        cur = self.db.query_station_data({"latmin": 10.0})
+        with self.deprecated_on_db():
+            cur = self.db.query_station_data({"latmin": 10.0})
         self.assertEqual(cur.remaining, 1)
         for idx, result in enumerate(cur):
             self.assertEqual(cur.remaining, 0)
@@ -94,7 +115,8 @@ class CommonDBTestMixin(DballeDBMixin):
             {"code": "B01012", "val": 500, "attrs": {}},
         ]
 
-        cur = self.db.query_data({"latmin": 10.0})
+        with self.deprecated_on_db():
+            cur = self.db.query_data({"latmin": 10.0})
         self.assertEqual(cur.remaining, 2)
         for idx, result in enumerate(cur):
             self.assertEqual(cur.remaining, 2-idx-1)
@@ -114,7 +136,8 @@ class CommonDBTestMixin(DballeDBMixin):
             {"code": "B01012", "val": 500, "attrs": {}},
         ]
 
-        cur = self.db.query_data({"latmin": 10.0, "query": "attrs"})
+        with self.deprecated_on_db():
+            cur = self.db.query_data({"latmin": 10.0, "query": "attrs"})
         self.assertEqual(cur.remaining, 2)
         for idx, result in enumerate(cur):
             self.assertEqual(cur.remaining, 2-idx-1)
@@ -125,11 +148,13 @@ class CommonDBTestMixin(DballeDBMixin):
             self.assertEqual({k: v.enq() for k, v in result.query_attrs().items()}, expected[idx]["attrs"])
 
     def testQueryDataLimit(self):
-        cur = self.db.query_data({"limit": 1})
+        with self.deprecated_on_db():
+            cur = self.db.query_data({"limit": 1})
         self.assertEqual(cur.remaining, 1)
 
     def testQueryAttrs(self):
-        data = self.db.attr_query_data(self.attr_ref)
+        with self.deprecated_on_db():
+            data = self.db.attr_query_data(self.attr_ref)
         self.assertCountEqual(data.keys(), ["B33007", "B33036"])
 
         expected = {}
@@ -146,7 +171,8 @@ class CommonDBTestMixin(DballeDBMixin):
 
     def testQueryCursorAttrs(self):
         # Query a variable
-        cur = self.db.query_data({"var": "B01011"})
+        with self.deprecated_on_db():
+            cur = self.db.query_data({"var": "B01011"})
         data = next(cur)
         self.assertTrue(data)
 
@@ -166,14 +192,15 @@ class CommonDBTestMixin(DballeDBMixin):
 
     def testQuerySummary(self):
         res = {}
-        for result in self.db.query_summary({"query": "details"}):
-            self.assertEqual(result["lat"], Decimal("12.34560"))
-            self.assertEqual(result.enqi("lat"), 1234560)
-            self.assertEqual(result.enqd("lat"), 12.34560)
-            self.assertEqual(result.enqs("lat"), "1234560")
-            self.assertEqual(result.enqf("lat"), "12.34560")
-            res[(result["ana_id"], result["rep_memo"], result["level"], result["trange"], result["var"])] = (
-                result["datetimemin"], result["datetimemax"], result["count"])
+        with self.deprecated_on_db():
+            for result in self.db.query_summary({"query": "details"}):
+                self.assertEqual(result["lat"], Decimal("12.34560"))
+                self.assertEqual(result.enqi("lat"), 1234560)
+                self.assertEqual(result.enqd("lat"), 12.34560)
+                self.assertEqual(result.enqs("lat"), "1234560")
+                self.assertEqual(result.enqf("lat"), "12.34560")
+                res[(result["ana_id"], result["rep_memo"], result["level"], result["trange"], result["var"])] = (
+                    result["datetimemin"], result["datetimemax"], result["count"])
         self.assertEqual(
                 res[(1, "synop", dballe.Level(10, 11, 15, 22), dballe.Trange(20, 111, 222), 'B01011')],
                 (datetime.datetime(1945, 4, 25, 8, 0), datetime.datetime(1945, 4, 25, 8, 0), 1))
@@ -182,7 +209,8 @@ class CommonDBTestMixin(DballeDBMixin):
                 (datetime.datetime(1945, 4, 25, 8, 0), datetime.datetime(1945, 4, 25, 8, 0), 1))
 
     def testQueryMessages(self):
-        cur = self.db.query_messages({"latmin": 10.0})
+        with self.deprecated_on_db():
+            cur = self.db.query_messages({"latmin": 10.0})
         self.assertEqual(cur.remaining, 1)
         for idx, result in enumerate(cur):
             self.assertEqual(cur.remaining, 2-idx-1)
@@ -194,86 +222,103 @@ class CommonDBTestMixin(DballeDBMixin):
             self.assertEqual(msg.report, "synop")
 
     def testCursorStationsRemove(self):
-        with self.db.query_stations() as cur:
-            cur.remove()
+        with self.deprecated_on_db():
+            with self.db.query_stations() as cur:
+                cur.remove()
 
     def testCursorStationDataRemove(self):
-        with self.db.query_station_data() as cur:
-            cur.remove()
+        with self.deprecated_on_db():
+            with self.db.query_station_data() as cur:
+                cur.remove()
 
     def testCursorDataRemove(self):
-        with self.db.query_data() as cur:
-            cur.remove()
+        with self.deprecated_on_db():
+            with self.db.query_data() as cur:
+                cur.remove()
 
     def testCursorSummaryRemove(self):
-        with self.db.query_summary() as cur:
-            cur.remove()
+        with self.deprecated_on_db():
+            with self.db.query_summary() as cur:
+                cur.remove()
 
     def testAttrRemove(self):
-        self.db.attr_remove_data(self.attr_ref, ("B33007",))
+        with self.deprecated_on_db():
+            self.db.attr_remove_data(self.attr_ref, ("B33007",))
 
     def testAttrInsertCursorStation(self):
-        with self.db.query_station_data() as cur:
-            for row in cur:
-                row.insert_attrs({"B33007": 42})
+        with self.deprecated_on_db():
+            with self.db.query_station_data() as cur:
+                for row in cur:
+                    row.insert_attrs({"B33007": 42})
 
     def testAttrInsertCursorData(self):
-        with self.db.query_data() as cur:
-            for row in cur:
-                row.insert_attrs({"B33007": 42})
+        with self.deprecated_on_db():
+            with self.db.query_data() as cur:
+                for row in cur:
+                    row.insert_attrs({"B33007": 42})
 
     def testAttrRemoveCursorStation(self):
-        with self.db.query_station_data() as cur:
-            for row in cur:
-                row.remove_attrs()
+        with self.deprecated_on_db():
+            with self.db.query_station_data() as cur:
+                for row in cur:
+                    row.remove_attrs()
 
     def testAttrRemoveCursorData(self):
-        with self.db.query_data() as cur:
-            for row in cur:
-                row.remove_attrs()
+        with self.deprecated_on_db():
+            with self.db.query_data() as cur:
+                for row in cur:
+                    row.remove_attrs()
 
     def testLoadFile(self):
         with io.open(test_pathname("bufr/vad.bufr"), "rb") as fp:
             self.db.remove_all()
             self.db.load(fp)
-            self.assertTrue(self.db.query_data().remaining > 0)
+            with self.deprecated_on_db():
+                self.assertTrue(self.db.query_data().remaining > 0)
 
     def testLoadFileLike(self):
         with io.open(test_pathname("bufr/vad.bufr"), "rb") as fp:
             s = io.BytesIO(fp.read())
             self.db.remove_all()
             self.db.load(s)
-            self.assertTrue(self.db.query_data().remaining > 0)
+            with self.deprecated_on_db():
+                self.assertTrue(self.db.query_data().remaining > 0)
 
     def testLoadFileWithAttrs(self):
         with io.open(test_pathname("bufr/issue91-withB33196.bufr"), "rb") as fp:
             self.db.remove_all()
             self.db.load(fp, attrs=True)
-            with self.db.query_data() as cur:
-                rec = next(cur)
-                context_id = rec["context_id"]
-            a = self.db.attr_query_data(context_id)
+            with self.deprecated_on_db():
+                with self.db.query_data() as cur:
+                    rec = next(cur)
+                    context_id = rec["context_id"]
+            with self.deprecated_on_db():
+                a = self.db.attr_query_data(context_id)
             self.assertTrue("B33196" in a)
 
     def testLoadFileOverwrite(self):
         with io.open(test_pathname("bufr/issue91-withoutB33196.bufr"), "rb") as fp:
             self.db.remove_all()
             self.db.load(fp, overwrite=True)
-            with self.db.query_data() as cur:
-                rec = next(cur)
-                context_id = rec["context_id"]
-                var = rec["variable"]
-            self.db.attr_query_data(context_id)  # cannot verify the result, but expecting not to raise
+            with self.deprecated_on_db():
+                with self.db.query_data() as cur:
+                    rec = next(cur)
+                    context_id = rec["context_id"]
+                    var = rec["variable"]
+            with self.deprecated_on_db():
+                self.db.attr_query_data(context_id)  # cannot verify the result, but expecting not to raise
             self.assertEqual(var.code, "B12101")
             self.assertEqual(var.enqd(), 274.15)
 
         with io.open(test_pathname("bufr/issue91-withB33196.bufr"), "rb") as fp:
             self.db.load(fp, overwrite=True)
-            with self.db.query_data() as cur:
-                rec = next(cur)
-                context_id = rec["context_id"]
-                var = rec["variable"]
-            self.db.attr_query_data(context_id)  # cannot verify the result, but expecting not to raise)
+            with self.deprecated_on_db():
+                with self.db.query_data() as cur:
+                    rec = next(cur)
+                    context_id = rec["context_id"]
+                    var = rec["variable"]
+            with self.deprecated_on_db():
+                self.db.attr_query_data(context_id)  # cannot verify the result, but expecting not to raise)
             self.assertEqual(var.code, "B12101")
             self.assertEqual(var.enqd(), 273.15)
 
@@ -298,7 +343,8 @@ class CommonDBTestMixin(DballeDBMixin):
         with F(test_pathname("bufr/vad.bufr")) as f:
             self.db.remove_all()
             self.db.load(f)
-            self.assertTrue(self.db.query_data().remaining > 0)
+            with self.deprecated_on_db():
+                self.assertTrue(self.db.query_data().remaining > 0)
 
     def testLoadAutodetect(self):
         # BUFR, autodetectable
@@ -346,13 +392,15 @@ class CommonDBTestMixin(DballeDBMixin):
     def testQueryVolnd(self):
         from testlib import fill_volnd
         self.db.remove_all()
-        fill_volnd(self.db)
+        with self.transaction() as tr:
+            fill_volnd(tr)
         query = {}
         query["var"] = "B10004"
         query["datetime"] = datetime.datetime(2007, 1, 1, 0, 0, 0)
         reports = []
-        for cur in self.db.query_data(query):
-            reports.append(cur["rep_memo"])
+        with self.deprecated_on_db():
+            for cur in self.db.query_data(query):
+                reports.append(cur["rep_memo"])
         s = "synop"
         t = "temp"
         self.assertEqual(reports, [s, s, s, s, s, s, t, t, t, t, t])
@@ -363,46 +411,53 @@ class CommonDBTestMixin(DballeDBMixin):
             for binmsg in fp:
                 for msg in importer.from_binary(binmsg):
                     self.db.import_messages(msg)
-        self.assertEqual(self.db.query_data({}).remaining, 371)
+        with self.deprecated_on_db():
+            self.assertEqual(self.db.query_data({}).remaining, 371)
 
     def test_import_message_sequence(self):
         importer = dballe.Importer("BUFR")
         with dballe.File(test_pathname("bufr/vad.bufr")) as fp:
             for binmsg in fp:
                 self.db.import_messages(importer.from_binary(binmsg))
-        self.assertEqual(self.db.query_data({}).remaining, 371)
+        with self.deprecated_on_db():
+            self.assertEqual(self.db.query_data({}).remaining, 371)
 
     def test_import_message_iter(self):
         importer = dballe.Importer("BUFR")
         with dballe.File(test_pathname("bufr/vad.bufr")) as fp:
             for binmsg in fp:
                 self.db.import_messages((x for x in importer.from_binary(binmsg)))
-        self.assertEqual(self.db.query_data({}).remaining, 371)
+        with self.deprecated_on_db():
+            self.assertEqual(self.db.query_data({}).remaining, 371)
 
     def test_import_importerfile(self):
         importer = dballe.Importer("BUFR")
         with dballe.File(test_pathname("bufr/vad.bufr")) as fp:
             self.db.import_messages(importer.from_file(fp))
-        self.assertEqual(self.db.query_data({}).remaining, 371)
+        with self.deprecated_on_db():
+            self.assertEqual(self.db.query_data({}).remaining, 371)
 
     def test_query_attrs(self):
         # See #114
-        with self.db.query_data({"var": "B01011"}) as cur:
-            self.assertEqual(cur.remaining, 1)
-            self.assertEqual(cur["variable"].code, "B01011")
-            self.assertCountEqual(cur["attrs"], [])
+        with self.deprecated_on_db():
+            with self.db.query_data({"var": "B01011"}) as cur:
+                self.assertEqual(cur.remaining, 1)
+                self.assertEqual(cur["variable"].code, "B01011")
+                self.assertCountEqual(cur["attrs"], [])
 
-        with self.db.query_data({"var": "B01011", "query": "attrs"}) as cur:
-            self.assertEqual(cur.remaining, 1)
-            self.assertEqual(cur["variable"].code, "B01011")
-            self.assertCountEqual((repr(x) for x in cur["attrs"]), ["Var('B33007', 50)", "Var('B33036', 75)"])
+        with self.deprecated_on_db():
+            with self.db.query_data({"var": "B01011", "query": "attrs"}) as cur:
+                self.assertEqual(cur.remaining, 1)
+                self.assertEqual(cur["variable"].code, "B01011")
+                self.assertCountEqual((repr(x) for x in cur["attrs"]), ["Var('B33007', 50)", "Var('B33036', 75)"])
 
     def test_delete_by_context_id(self):
         # See issue #140
         records_to_del = []
-        with self.db.query_data() as cur:
-            for rec in cur:
-                records_to_del.append(rec.query)
+        with self.deprecated_on_db():
+            with self.db.query_data() as cur:
+                for rec in cur:
+                    records_to_del.append(rec.query)
         self.assertEqual(len(records_to_del), 2)
 
         query = records_to_del[0]
@@ -417,62 +472,75 @@ class CommonDBTestMixin(DballeDBMixin):
             "var": "B01011",
         })
 
-        self.db.remove_data(records_to_del[0])
-        self.assertEqual(self.db.query_data().remaining, 1)
+        with self.deprecated_on_db():
+            self.db.remove_data(records_to_del[0])
+        with self.deprecated_on_db():
+            self.assertEqual(self.db.query_data().remaining, 1)
 
     def test_delete_by_var(self):
         # See issue #141
-        with self.db.query_data() as cur:
-            self.assertEqual(cur.remaining, 2)
-        self.db.remove_data({"var": "B01011"})
-        with self.db.query_data() as cur:
-            self.assertEqual(cur.remaining, 1)
+        with self.deprecated_on_db():
+            with self.db.query_data() as cur:
+                self.assertEqual(cur.remaining, 2)
+        with self.deprecated_on_db():
+            self.db.remove_data({"var": "B01011"})
+        with self.deprecated_on_db():
+            with self.db.query_data() as cur:
+                self.assertEqual(cur.remaining, 1)
 
         data = {
             "lat": 12.34560, "lon": 76.54320, "rep_memo": "synop",
             "B01011": "Hey Hey!!",
         }
-        self.db.insert_station_data(data, False, True)
-        with self.db.query_station_data() as cur:
-            self.assertEqual(cur.remaining, 2)
-        self.db.remove_station_data({"var": "B02005"})
-        with self.db.query_station_data() as cur:
-            self.assertEqual(cur.remaining, 1)
+        with self.deprecated_on_db():
+            self.db.insert_station_data(data, False, True)
+        with self.deprecated_on_db():
+            with self.db.query_station_data() as cur:
+                self.assertEqual(cur.remaining, 2)
+        with self.deprecated_on_db():
+            self.db.remove_station_data({"var": "B02005"})
+        with self.deprecated_on_db():
+            with self.db.query_station_data() as cur:
+                self.assertEqual(cur.remaining, 1)
 
     def test_data(self):
-        with self.db.query_station_data() as cur:
-            self.assertEqual(cur.remaining, 1)
-            for row in cur:
-                self.assertEqual(row.data, {
-                    "report": "synop",
-                    "lat": Decimal("12.34560"),
-                    "lon": Decimal("76.54320"),
-                    "B02005": 0.5,
-                })
+        with self.deprecated_on_db():
+            with self.db.query_station_data() as cur:
+                self.assertEqual(cur.remaining, 1)
+                for row in cur:
+                    self.assertEqual(row.data, {
+                        "report": "synop",
+                        "lat": Decimal("12.34560"),
+                        "lon": Decimal("76.54320"),
+                        "B02005": 0.5,
+                    })
 
-        with self.db.query_data({"var": "B01012"}) as cur:
-            self.assertEqual(cur.remaining, 1)
-            for row in cur:
-                self.assertEqual(row.data, {
-                    "report": "synop",
-                    "lat": Decimal("12.34560"),
-                    "lon": Decimal("76.54320"),
-                    "level": dballe.Level(10, 11, 15, 22),
-                    "trange": dballe.Trange(20, 111, 222),
-                    "datetime": datetime.datetime(1945, 4, 25, 8, 0),
-                    "B01012": 500,
-                })
+        with self.deprecated_on_db():
+            with self.db.query_data({"var": "B01012"}) as cur:
+                self.assertEqual(cur.remaining, 1)
+                for row in cur:
+                    self.assertEqual(row.data, {
+                        "report": "synop",
+                        "lat": Decimal("12.34560"),
+                        "lon": Decimal("76.54320"),
+                        "level": dballe.Level(10, 11, 15, 22),
+                        "trange": dballe.Trange(20, 111, 222),
+                        "datetime": datetime.datetime(1945, 4, 25, 8, 0),
+                        "B01012": 500,
+                    })
 
     def test_insert_cursor(self):
         with self.another_db() as db1:
             with db1.transaction() as tr1:
-                with self.db.query_station_data() as cur:
-                    for row in cur:
-                        tr1.insert_station_data(row, can_add_stations=True)
+                with self.deprecated_on_db():
+                    with self.db.query_station_data() as cur:
+                        for row in cur:
+                            tr1.insert_station_data(row, can_add_stations=True)
 
-                with self.db.query_data() as cur:
-                    for row in cur:
-                        tr1.insert_data(row, can_add_stations=True)
+                with self.deprecated_on_db():
+                    with self.db.query_data() as cur:
+                        for row in cur:
+                            tr1.insert_data(row, can_add_stations=True)
 
             with db1.transaction() as tr:
                 with tr.query_station_data() as cur:
@@ -501,13 +569,15 @@ class CommonDBTestMixin(DballeDBMixin):
     def test_insert_cursor_data(self):
         with self.another_db() as db1:
             with db1.transaction() as tr1:
-                with self.db.query_station_data() as cur:
-                    for row in cur:
-                        tr1.insert_station_data(row.data, can_add_stations=True)
+                with self.deprecated_on_db():
+                    with self.db.query_station_data() as cur:
+                        for row in cur:
+                            tr1.insert_station_data(row.data, can_add_stations=True)
 
-                with self.db.query_data() as cur:
-                    for row in cur:
-                        tr1.insert_data(row.data, can_add_stations=True)
+                with self.deprecated_on_db():
+                    with self.db.query_data() as cur:
+                        for row in cur:
+                            tr1.insert_data(row.data, can_add_stations=True)
 
             with db1.transaction() as tr:
                 with tr.query_station_data() as cur:
@@ -545,7 +615,8 @@ class FullDBTestMixin(CommonDBTestMixin):
                 "rep_memo": "synop",
                 "B01011": "test",
             })
-        self.assertEqual(len(list(self.db.query_data({"rep_memo": "synop"}))), 3)
+        with self.deprecated_on_db():
+            self.assertEqual(len(list(self.db.query_data({"rep_memo": "synop"}))), 3)
 
         with self.assertRaises(RuntimeError):
             with self.db.transaction() as tr:
@@ -558,7 +629,8 @@ class FullDBTestMixin(CommonDBTestMixin):
                     "B01011": "test",
                 })
                 raise RuntimeError("test rollback")
-        self.assertEqual(len(list(self.db.query_data({"rep_memo": "synop"}))), 3)
+        with self.deprecated_on_db():
+            self.assertEqual(len(list(self.db.query_data({"rep_memo": "synop"}))), 3)
 
 
 class AttrTestMixin(object):
@@ -566,31 +638,43 @@ class AttrTestMixin(object):
         with io.open(test_pathname("bufr/issue91-withoutB33196.bufr"), "rb") as fp:
             self.db.remove_all()
             self.db.load(fp, attrs=True, overwrite=True)
-            with self.db.query_data() as cur:
-                rec = next(cur)
-                context_id = rec["context_id"]
-                var = rec["variable"]
-            a = self.db.attr_query_data(context_id)
+            with self.deprecated_on_db():
+                with self.db.query_data() as cur:
+                    rec = next(cur)
+                    context_id = rec["context_id"]
+                    var = rec["variable"]
+            with self.deprecated_on_db():
+                a = self.db.attr_query_data(context_id)
             self.assertEqual(var.code, "B12101")
             self.assertEqual(var.enq(), 274.15)
             self.assertTrue("B33196" not in a)
 
         with io.open(test_pathname("bufr/issue91-withB33196.bufr"), "rb") as fp:
             self.db.load(fp, attrs=True, overwrite=True)
-            with self.db.query_data() as cur:
-                rec = next(cur)
-                context_id = rec["context_id"]
-                var = rec["variable"]
-            a = self.db.attr_query_data(context_id)
+            with self.deprecated_on_db():
+                with self.db.query_data() as cur:
+                    rec = next(cur)
+                    context_id = rec["context_id"]
+                    var = rec["variable"]
+            with self.deprecated_on_db():
+                a = self.db.attr_query_data(context_id)
             self.assertEqual(var.code, "B12101")
             self.assertEqual(var.enq(), 273.15)
             self.assertTrue("B33196" in a)
 
 
 class TransactionTestMixin(object):
+    def setUp(self):
+        super().setUp()
+        self.raise_db_method_deprecation_warnings = False
+
     def get_db(self):
         db = super(TransactionTestMixin, self).get_db()
         return db.transaction()
+
+    @contextmanager
+    def transaction(self):
+        yield self.db
 
 #    def testConcurrentWrites(self):
 # This deadlocks
