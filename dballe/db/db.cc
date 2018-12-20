@@ -142,7 +142,10 @@ std::shared_ptr<DB> DB::connect_test()
 
     const char* envurl = getenv("DBA_DB");
     if (envurl != NULL)
-        return dynamic_pointer_cast<dballe::db::DB>(dballe::DB::connect_from_url(envurl));
+    {
+        auto options = DBConnectOptions::create(envurl);
+        return dynamic_pointer_cast<dballe::db::DB>(dballe::DB::connect(*options));
+    }
     else
         return connect_from_file("test.sqlite");
 }

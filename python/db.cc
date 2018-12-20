@@ -958,7 +958,8 @@ struct connect_from_url : ClassMethKwargs
 
         try {
             ReleaseGIL gil;
-            shared_ptr<db::DB> db = dynamic_pointer_cast<db::DB>(DB::connect_from_url(url));
+            auto opts = DBConnectOptions::create(url);
+            shared_ptr<db::DB> db = dynamic_pointer_cast<db::DB>(DB::connect(*opts));
             gil.lock();
             return (PyObject*)db_create(db);
         } DBALLE_CATCH_RETURN_PYO

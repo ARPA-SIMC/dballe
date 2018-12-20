@@ -13,7 +13,7 @@ struct Tracer
 
     virtual std::unique_ptr<API> wrap_api(int handle, std::unique_ptr<API> api) = 0;
 
-    std::unique_ptr<API> begin(int dbahandle, int handle, const char* url, const char* anaflag, const char* dataflag, const char* attrflag);
+    std::unique_ptr<API> begin(int dbahandle, int handle, const DBConnectOptions& options, const char* anaflag, const char* dataflag, const char* attrflag);
     std::unique_ptr<API> begin_messages(int handle, const char* filename, const char* mode, const char* type);
 
     virtual void log_connect_url(int handle, const char* chosen_dsn) = 0;

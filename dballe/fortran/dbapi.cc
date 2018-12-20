@@ -568,11 +568,11 @@ void DbAPI::messages_write_next(const char* template_name)
     }
 }
 
-std::unique_ptr<API> DbAPI::fortran_connect(const char* url, const char* anaflag, const char* dataflag, const char* attrflag)
+std::unique_ptr<API> DbAPI::fortran_connect(const DBConnectOptions& options, const char* anaflag, const char* dataflag, const char* attrflag)
 {
     unsigned perms = DbAPI::compute_permissions(anaflag, dataflag, attrflag);
     bool readonly = !(perms & (fortran::DbAPI::PERM_ANA_WRITE | fortran::DbAPI::PERM_DATA_ADD | fortran::DbAPI::PERM_DATA_WRITE | fortran::DbAPI::PERM_ATTR_WRITE));
-    auto db = DB::connect_from_url(url);
+    auto db = DB::connect(options);
     auto tr = dynamic_pointer_cast<db::Transaction>(db->transaction(readonly));
     return std::unique_ptr<API>(new fortran::DbAPI(tr, perms));
 }

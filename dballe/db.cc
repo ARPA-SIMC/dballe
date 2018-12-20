@@ -1,8 +1,24 @@
 #include "db.h"
 #include "db/db.h"
 #include "sql/sql.h"
+#include "core/string.h"
 
 namespace dballe {
+
+void DBConnectOptions::reset_actions()
+{
+    wipe = false;
+}
+
+std::unique_ptr<DBConnectOptions> DBConnectOptions::create(const std::string& url)
+{
+    std::unique_ptr<DBConnectOptions> res(new DBConnectOptions);
+    res->url = url;
+    std::string wipe = url_pop_query_string(res->url, "wipe");
+    res->wipe = !wipe.empty();
+    return res;
+}
+
 
 const DBImportOptions DBImportOptions::defaults;
 
@@ -10,6 +26,7 @@ std::unique_ptr<DBImportOptions> DBImportOptions::create()
 {
     return std::unique_ptr<DBImportOptions>(new DBImportOptions);
 }
+
 
 const DBInsertOptions DBInsertOptions::defaults;
 
@@ -48,14 +65,17 @@ DB::~DB()
 {
 }
 
-std::shared_ptr<DB> DB::connect_from_url(const std::string& url)
+std::shared_ptr<DB> DB::connect(const DBConnectOptions& opts)
 {
-    if (url == "mem:")
+    if (opts.url == "mem:")
     {
         return db::DB::connect_memory();
     } else {
-        std::unique_ptr<sql::Connection> conn(sql::Connection::create_from_url(url));
-        return db::DB::create(move(conn));
+        std::unique_ptr<sql::Connection> conn(sql::Connection::create_from_url(opts.url));
+        auto res = db::DB::create(move(conn));
+        if (opts.wipe)
+            res->reset();
+        return res;
     }
 }
 
