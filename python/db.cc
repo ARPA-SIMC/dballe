@@ -948,6 +948,32 @@ struct connect_from_url : ClassMethKwargs
     constexpr static const char* name = "connect_from_url";
     constexpr static const char* signature = "url: str";
     constexpr static const char* returns = "dballe.DB";
+    constexpr static const char* summary = "create a DB to access a database identified by a DB-All.e URL (deprecated, use connect instead)";
+    static PyObject* run(PyTypeObject* cls, PyObject* args, PyObject* kw)
+    {
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use connect instead of connect_from_url", 1))
+            return nullptr;
+
+        static const char* kwlist[] = { "url", nullptr };
+        const char* url;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "s", const_cast<char**>(kwlist), &url))
+            return nullptr;
+
+        try {
+            ReleaseGIL gil;
+            auto opts = DBConnectOptions::create(url);
+            shared_ptr<db::DB> db = dynamic_pointer_cast<db::DB>(DB::connect(*opts));
+            gil.lock();
+            return (PyObject*)db_create(db);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct connect : ClassMethKwargs
+{
+    constexpr static const char* name = "connect";
+    constexpr static const char* signature = "url: str";
+    constexpr static const char* returns = "dballe.DB";
     constexpr static const char* summary = "create a DB to access a database identified by a DB-All.e URL";
     static PyObject* run(PyTypeObject* cls, PyObject* args, PyObject* kw)
     {
@@ -1085,7 +1111,7 @@ versions in `dballe.DB`_ are implemented by automatically creating a temporary
 transaction and running the equivalent `dballe.Transaction`_ method inside it.
 
 dballe.DB objects are not constructed explicitly, but via one of the
-DB.connect_from_file, DB.connect_from_url, or DB.connect_test class methods.
+DB.connect_from_file, DB.connect, or DB.connect_test class methods.
 
 Examples:
 
@@ -1114,7 +1140,7 @@ Examples:
     GetSetters<> getsetters;
     Methods<
         get_default_format, set_default_format,
-        connect_from_file, connect_from_url, connect_test, is_url,
+        connect_from_file, connect, connect_from_url, connect_test, is_url,
         disappear, reset, vacuum,
         transaction,
         insert_station_data<Impl>, insert_data<Impl>,
