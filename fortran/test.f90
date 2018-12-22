@@ -9,7 +9,6 @@
       integer :: ier
       character (len=1000) :: buf
 
-!      print *,"siamo a ",message
       ier = idba_error_code()
       if (ier.ne.0) then
          print *,ier," in ",message

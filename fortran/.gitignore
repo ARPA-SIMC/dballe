@@ -11,6 +11,8 @@
 /check_segfault1
 /check_spiegab
 /check_transactions1
+/check_connect_wipe
+/check_fdballe_oldapi
 /dballef.mod
 /genattr
 /dbtest.mod

@@ -42,7 +42,7 @@ TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 #TESTS = $(check_PROGRAMS)
 dbtestlib = test.f90 dbtest.f90 dballef.mod
 
-check_PROGRAMS = check_real0 check_range check_fdballe check_attrs check_set check_missing check_missing_msg check_segfault1 check_multiplehandler check_spiegab check_messages check_transactions1
+check_PROGRAMS = check_real0 check_range check_fdballe check_fdballe_oldapi check_attrs check_set check_missing check_missing_msg check_segfault1 check_multiplehandler check_spiegab check_messages check_transactions1 check_connect_wipe
 
 check_real0_SOURCES = $(dbtestlib) check_real0.f90
 check_real0_LDADD = libdballef.la
@@ -55,6 +55,10 @@ check_range_FCFLAGS = -g
 check_fdballe_SOURCES = $(dbtestlib) check_fdballe.f90
 check_fdballe_LDADD = libdballef.la
 check_fdballe_FCFLAGS = -g
+
+check_fdballe_oldapi_SOURCES = $(dbtestlib) check_fdballe_oldapi.f90
+check_fdballe_oldapi_LDADD = libdballef.la
+check_fdballe_oldapi_FCFLAGS = -g
 
 check_attrs_SOURCES = $(dbtestlib) check_attrs.f90
 check_attrs_LDADD = libdballef.la
@@ -95,6 +99,10 @@ check_multiplehandler_FCFLAGS = -g
 check_transactions1_SOURCES = $(dbtestlib) check_transactions1.f90
 check_transactions1_LDADD = libdballef.la
 check_transactions1_FCFLAGS = -g
+
+check_connect_wipe_SOURCES = $(dbtestlib) check_connect_wipe.f90
+check_connect_wipe_LDADD = libdballef.la
+check_connect_wipe_FCFLAGS = -g
 
 
 ## Automake/make is not currently able to build these, they miss the
