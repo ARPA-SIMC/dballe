@@ -13,7 +13,7 @@ namespace dballe {
 static bool parse_wipe(const std::string& strval)
 {
     std::string val = str::lower(strval);
-    if (val.empty()) return false;
+    if (val.empty()) return true;
     if (val == "1") return true;
     if (val == "yes") return true;
     if (val == "true") return true;
@@ -41,8 +41,11 @@ std::unique_ptr<DBConnectOptions> DBConnectOptions::create(const std::string& ur
     }
     std::unique_ptr<DBConnectOptions> res(new DBConnectOptions);
     res->url = url;
-    std::string wipe = url_pop_query_string(res->url, "wipe");
-    res->wipe = parse_wipe(wipe);
+    std::string wipe;
+    if (url_pop_query_string(res->url, "wipe", wipe))
+        res->wipe = parse_wipe(wipe);
+    else
+        res->wipe = false;
     return res;
 }
 

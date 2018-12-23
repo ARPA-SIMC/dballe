@@ -60,9 +60,13 @@ add_method("parse_wipe", []{
     wassert(actual(opts->url) == "sqlite://test.sqlite");
     wassert_true(opts->wipe);
 
-    // opts = DBConnectOptions::create("sqlite://test.sqlite?wipe");
-    // wassert(actual(opts->url) == "sqlite://test.sqlite");
-    // wassert_true(opts->wipe);
+    opts = DBConnectOptions::create("sqlite://test.sqlite?wipe");
+    wassert(actual(opts->url) == "sqlite://test.sqlite");
+    wassert_true(opts->wipe);
+
+    opts = DBConnectOptions::create("sqlite://test.sqlite?wipe=");
+    wassert(actual(opts->url) == "sqlite://test.sqlite");
+    wassert_true(opts->wipe);
 
     opts = DBConnectOptions::create("sqlite://test.sqlite?wipe=true");
     wassert(actual(opts->url) == "sqlite://test.sqlite");

@@ -103,3 +103,6 @@ Its url is just `mem:`.
 
 You can add a `wipe` query string argument to the connection URL to have
 DB-All.e create or recreate the database on connection.
+
+You can also use `?wipe` without argument. Note that `?wipe=` with an
+empty argument also triggers a wipe.
