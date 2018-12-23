@@ -83,7 +83,12 @@ SQLiteConnection::~SQLiteConnection()
 void SQLiteConnection::open_file(const std::string& pathname, int flags)
 {
     url = "sqlite://" + pathname;
-    int res = sqlite3_open_v2(pathname.c_str(), &db, flags, nullptr);
+    size_t qs_begin = pathname.find('?');
+    int res;
+    if (qs_begin == string::npos)
+        res = sqlite3_open_v2(pathname.c_str(), &db, flags, nullptr);
+    else
+        res = sqlite3_open_v2(pathname.substr(0, qs_begin).c_str(), &db, flags, nullptr);
     if (res != SQLITE_OK)
     {
         // From http://www.sqlite.org/c3ref/open.html

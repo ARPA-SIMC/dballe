@@ -1,4 +1,5 @@
 #include "dballe/core/tests.h"
+#include "dballe/db.h"
 #include "sqlite.h"
 
 using namespace std;
@@ -155,6 +156,7 @@ add_method("query_has_tables", [](Fixture& f) {
     wassert(actual(f.conn.has_table("this_should_not_exist")).isfalse());
     wassert(actual(f.conn.has_table("dballe_test")).istrue());
 });
+
 add_method("query_settings", [](Fixture& f) {
     // Test settings
     f.conn.drop_table_if_exists("dballe_settings");
@@ -167,6 +169,7 @@ add_method("query_settings", [](Fixture& f) {
 
     wassert(actual(f.conn.get_setting("test_key")) == "42");
 });
+
 add_method("auto_increment", [](Fixture& f) {
     // Test auto_increment
     f.conn.exec("CREATE TABLE dballe_testai (id INTEGER PRIMARY KEY, val INTEGER)");
@@ -174,6 +177,17 @@ add_method("auto_increment", [](Fixture& f) {
     wassert(actual(f.conn.get_last_insert_id()) == 1);
     f.conn.exec("INSERT INTO dballe_testai (val) VALUES (43)");
     wassert(actual(f.conn.get_last_insert_id()) == 2);
+});
+
+add_method("connect", [](Fixture& f) {
+    auto conn = Connection::create(*DBConnectOptions::create("sqlite:test.sqlite"));
+    wassert_true(conn->server_type == sql::ServerType::SQLITE);
+    conn = Connection::create(*DBConnectOptions::create("sqlite://test.sqlite"));
+    wassert_true(conn->server_type == sql::ServerType::SQLITE);
+    conn = Connection::create(*DBConnectOptions::create("sqlite://test.sqlite?a=b,c=d"));
+    wassert_true(conn->server_type == sql::ServerType::SQLITE);
+    conn = Connection::create(*DBConnectOptions::create("sqlite:test.sqlite?a=b,c=d"));
+    wassert_true(conn->server_type == sql::ServerType::SQLITE);
 });
 
 }
