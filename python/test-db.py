@@ -737,14 +737,6 @@ class DballeV7TransactionTest(TransactionTestMixin, CommonDBTestMixin, AttrTestM
     DB_FORMAT = "V7"
 
 
-class DballeMEMTest(FullDBTestMixin, AttrTestMixin, unittest.TestCase):
-    DB_FORMAT = "MEM"
-
-
-class DballeMEMTransactionTest(TransactionTestMixin, CommonDBTestMixin, AttrTestMixin, unittest.TestCase):
-    DB_FORMAT = "MEM"
-
-
 if __name__ == "__main__":
     from testlib import main
     main("test-db")

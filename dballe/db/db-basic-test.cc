@@ -402,6 +402,40 @@ this->add_method("vacuum", [](Fixture& f) {
     }
 });
 
+// Test simple queries
+this->add_method("wipe", [](Fixture& f) {
+    // We are connected to an empty database
+
+    // Insert some data
+    core::Data data;
+    data.station.report = "synop";
+    data.station.coords = Coords(12.34560, 76.54320);
+    data.values.set("B01019", "Station 1");
+    wassert(f.db->insert_station_data(data));
+
+    // Disconnect
+    f.db.reset();
+
+    // Reconnect with wipe
+    auto db = DB::create_db(f.backend, true);
+
+    // Test that is is empty
+    wassert(actual(db->query_station_data(core::Query())->remaining()) == 0u);
+
+    // Reinsert
+    data.clear_ids();
+    wassert(db->insert_station_data(data));
+
+    // Disconnect
+    db.reset();
+
+    // Reconnect without wipe
+    db = DB::create_db(f.backend, false);
+
+    // Test that the data is there
+    wassert(actual(db->query_station_data(core::Query())->remaining()) == 1u);
+});
+
 }
 
 }

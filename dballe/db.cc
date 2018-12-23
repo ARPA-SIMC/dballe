@@ -1,8 +1,69 @@
 #include "db.h"
 #include "db/db.h"
 #include "sql/sql.h"
+#include "core/string.h"
+#include "wreport/utils/string.h"
+#include <cstring>
+#include <cstdlib>
+
+using namespace wreport;
 
 namespace dballe {
+
+static bool parse_wipe(const std::string& strval)
+{
+    std::string val = str::lower(strval);
+    if (val.empty()) return true;
+    if (val == "1") return true;
+    if (val == "yes") return true;
+    if (val == "true") return true;
+    if (val == "0") return false;
+    if (val == "no") return false;
+    if (val == "false") return false;
+    wreport::error_consistency::throwf("unsupported value for wipe: %s (supported: 1/0, true/false, yes/no)", strval.c_str());
+}
+
+void DBConnectOptions::reset_actions()
+{
+    wipe = false;
+}
+
+std::unique_ptr<DBConnectOptions> DBConnectOptions::create(const std::string& url)
+{
+    if (strncmp(url.c_str(), "test:", 5) == 0)
+    {
+        const char* envurl = getenv("DBA_DB");
+        if (!envurl)
+            return create("sqlite://test.sqlite");
+        if (strncmp(envurl, "test:", 5) == 0)
+            throw wreport::error_consistency("please do not set DBA_DB to a URL starting with test:");
+        return create(envurl);
+    }
+    std::unique_ptr<DBConnectOptions> res(new DBConnectOptions);
+    res->url = url;
+    std::string wipe;
+    if (url_pop_query_string(res->url, "wipe", wipe))
+        res->wipe = parse_wipe(wipe);
+    else
+        res->wipe = false;
+    return res;
+}
+
+std::unique_ptr<DBConnectOptions> DBConnectOptions::test_create(const char* backend)
+{
+    std::string envname = "DBA_DB";
+    if (backend)
+    {
+        envname += "_";
+        envname += backend;
+    }
+    const char* envurl = getenv(envname.c_str());
+    if (!envurl)
+        wreport::error_consistency::throwf("Environment variable %s is not set", envname.c_str());
+    return create(envurl);
+}
+
+
 
 const DBImportOptions DBImportOptions::defaults;
 
@@ -10,6 +71,7 @@ std::unique_ptr<DBImportOptions> DBImportOptions::create()
 {
     return std::unique_ptr<DBImportOptions>(new DBImportOptions);
 }
+
 
 const DBInsertOptions DBInsertOptions::defaults;
 
@@ -48,14 +110,17 @@ DB::~DB()
 {
 }
 
-std::shared_ptr<DB> DB::connect_from_url(const std::string& url)
+std::shared_ptr<DB> DB::connect(const DBConnectOptions& opts)
 {
-    if (url == "mem:")
+    if (opts.url == "mem:")
     {
         return db::DB::connect_memory();
     } else {
-        std::unique_ptr<sql::Connection> conn(sql::Connection::create_from_url(url));
-        return db::DB::create(move(conn));
+        std::unique_ptr<sql::Connection> conn(sql::Connection::create(opts));
+        auto res = db::DB::create(move(conn));
+        if (opts.wipe)
+            res->reset();
+        return res;
     }
 }
 

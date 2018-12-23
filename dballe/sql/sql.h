@@ -5,6 +5,7 @@
 #define DBALLE_SQL_H
 
 #include <dballe/core/error.h>
+#include <dballe/fwd.h>
 #include <dballe/sql/fwd.h>
 #include <string>
 #include <memory>
@@ -112,10 +113,7 @@ public:
     virtual void explain(const std::string& query, FILE* out) = 0;
 
     /// Create a new connection from a URL
-    static std::unique_ptr<Connection> create_from_url(const char* url);
-
-    /// Create a new connection from a URL
-    static std::unique_ptr<Connection> create_from_url(const std::string& url);
+    static std::unique_ptr<Connection> create(const DBConnectOptions& options);
 };
 
 /**

@@ -73,7 +73,8 @@ static std::shared_ptr<db::DB> connect()
         chosen_url = op_url;
 
     /* If url looks like a url, treat it accordingly */
-    auto db = dynamic_pointer_cast<db::DB>(DB::connect_from_url(chosen_url));
+    auto options = DBConnectOptions::create(chosen_url);
+    auto db = dynamic_pointer_cast<db::DB>(DB::connect(*options));
 
     // Wipe database if requested
     if (op_wipe_first)

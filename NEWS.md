@@ -34,3 +34,7 @@
      `DB.attr_insert_station`, `DB.attr_insert_data`, `DB.attr_remove_station`,
      `DB.attr_remove_data`.
      Use the same methods in `dballe.Transaction` instead.
+ * The use of `?wipe` is now [documented](doc/fapi_connect.mdx) and supported
+   in C++, Python, Fortran, and command line. The value of `wipe` is now parsed
+   to prevent unexpectedly clearing a database when using something like
+   `?wipe=no`.

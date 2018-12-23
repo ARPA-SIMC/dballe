@@ -9,6 +9,52 @@
 namespace dballe {
 
 /**
+ * Options controlling how to connect to a database
+ *
+ * To allow to add members this structure without breaking the ABI, creation of
+ * new instances is restricted to DBConnectOptions::create().
+ */
+struct DBConnectOptions
+{
+    /**
+     * URL to use to connect to the database.
+     *
+     * See doc/fapi_connect.md for details.
+     */
+    std::string url;
+
+    /// Wipe database on connection
+    bool wipe = false;
+
+    /**
+     * Disable all the one-off actions set to perform on connection.
+     *
+     * Call this after the first connection, if you need to reuse the
+     * DBConnectOptions multiple times.
+     */
+    void reset_actions();
+
+    /**
+     * Create a DBConnectOptions parsing the given URL.
+     */
+    static std::unique_ptr<DBConnectOptions> create(const std::string& url);
+
+    /**
+     * Create a DBConnectOptions for running unit tests. Optionally allows to
+     * select a backend database.
+     */
+    static std::unique_ptr<DBConnectOptions> test_create(const char* backend=nullptr);
+
+protected:
+    DBConnectOptions() = default;
+    DBConnectOptions(const DBConnectOptions&) = default;
+    DBConnectOptions(DBConnectOptions&&) = default;
+    DBConnectOptions& operator=(const DBConnectOptions&) = default;
+    DBConnectOptions& operator=(DBConnectOptions&&) = default;
+};
+
+
+/**
  * Options controlling how messages are imported in the database.
  *
  * To allow to add members this structure without breaking the ABI, creation of
@@ -247,13 +293,9 @@ struct DB: public std::enable_shared_from_this<DB>
     virtual ~DB();
 
     /**
-     * Create from an url-like specification, as described in
-     * doc/fapi_connect.md
-     *
-     * @param url
-     *   The url-like connection descriptor
+     * Create a new DB
      */
-    static std::shared_ptr<DB> connect_from_url(const std::string& url);
+    static std::shared_ptr<DB> connect(const DBConnectOptions& opts);
 
     /**
      * Begin a transaction on this database, and return a Transaction object

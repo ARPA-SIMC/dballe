@@ -68,10 +68,6 @@ class TestCSVV7(CSVMixin, unittest.TestCase):
     DB_FORMAT = "V7"
 
 
-class TestCSVMEM(CSVMixin, unittest.TestCase):
-    DB_FORMAT = "MEM"
-
-
 if __name__ == "__main__":
     from testlib import main
     main("test-csv")

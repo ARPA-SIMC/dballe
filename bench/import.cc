@@ -14,8 +14,10 @@ struct BenchmarkImport : public dballe::benchmark::Task
     unsigned minutes;
 
     BenchmarkImport(const char* name, const char* pathname, unsigned hours=24, unsigned minutes=1)
-        : db(dballe::db::DB::connect_test()), m_name(name), m_pathname(pathname), hours(hours), minutes(minutes)
+        : m_name(name), m_pathname(pathname), hours(hours), minutes(minutes)
     {
+        auto options = dballe::DBConnectOptions::test_create();
+        db = dballe::db::DB::downcast(dballe::DB::connect(*options));
     }
 
     const char* name() const override { return m_name; }

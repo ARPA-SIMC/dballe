@@ -167,14 +167,6 @@ class DballeV7DBExplorerTest(DBExplorerTestMixin, unittest.TestCase):
     DB_FORMAT = "V7"
 
 
-class DballeMEMExplorerTest(ExplorerTestMixin, unittest.TestCase):
-    DB_FORMAT = "MEM"
-
-
-class DballeMEMDBExplorerTest(DBExplorerTestMixin, unittest.TestCase):
-    DB_FORMAT = "MEM"
-
-
 if __name__ == "__main__":
     from testlib import main
     main("test-explorer")

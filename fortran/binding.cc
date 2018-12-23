@@ -3,7 +3,6 @@
 #include "dballe/fortran/dbapi.h"
 #include "dballe/fortran/traced.h"
 #include "dballe/core/var.h"
-#include "dballe/core/string.h"
 #include "dballe/db/db.h"
 
 #include <cstring>  // memset
@@ -65,7 +64,13 @@ using namespace std;
 
 struct HSession : public fortran::HBase
 {
-    std::string url;
+    std::unique_ptr<DBConnectOptions> options;
+
+    void stop()
+    {
+        options.reset();
+        fortran::HBase::stop();
+    }
 };
 
 struct fortran::Handler<HSession, MAX_SESSION> hsess;
@@ -158,17 +163,10 @@ int idba_connect(int* dbahandle, const char* url)
 
         tracer->log_connect_url(*dbahandle, url);
 
-        hs.url = url;
-
-        std::string wipe = url_pop_query_string(hs.url, "wipe");
-        if (!wipe.empty())
-        {
-            // Disappear then reset, to allow migrating a db from V6 to V7
-            auto db = dynamic_pointer_cast<db::DB>(DB::connect_from_url(hs.url.c_str()));
-            db->disappear();
-            db = dynamic_pointer_cast<db::DB>(DB::connect_from_url(hs.url.c_str()));
-            db->reset();
-        }
+        // Test connection and perform one-off actions if requested
+        hs.options = DBConnectOptions::create(url);
+        DB::connect(*hs.options);
+        hs.options->reset_actions();
 
         /* Open the database session */
         return fortran::success();
@@ -259,7 +257,7 @@ int idba_begin(int dbahandle, int* handle, const char* anaflag, const char* data
         HSession& hs = hsess.get(dbahandle);
         HSimple& h = hsimp.get(*handle);
 
-        std::unique_ptr<dballe::fortran::API> api = tracer->begin(dbahandle, *handle, hs.url.c_str(), anaflag, dataflag, attrflag);
+        std::unique_ptr<dballe::fortran::API> api = tracer->begin(dbahandle, *handle, *hs.options, anaflag, dataflag, attrflag);
         h.api = api.release();
 
         return fortran::success();

@@ -44,7 +44,7 @@ public:
     bool messages_read_next() override;
     void messages_write_next(const char* template_name=0) override;
 
-    static std::unique_ptr<API> fortran_connect(const char* url, const char* anaflag, const char* dataflag, const char* attrflag);
+    static std::unique_ptr<API> fortran_connect(const DBConnectOptions& options, const char* anaflag, const char* dataflag, const char* attrflag);
 
     friend class Operation;
 };

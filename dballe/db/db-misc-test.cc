@@ -941,7 +941,7 @@ this->add_method("fd_leaks", [](Fixture& f) {
     // Assume a max open file limit of 1100
     for (unsigned i = 0; i < 1100; ++i)
     {
-        auto db = DB::create_db(f.backend);
+        auto db = DB::create_db(f.backend, false);
         vals.clear_ids();
         wassert(db->insert_station_data(vals, opts));
     }

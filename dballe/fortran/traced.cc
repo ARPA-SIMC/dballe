@@ -12,10 +12,10 @@ using namespace wreport;
 namespace dballe {
 namespace fortran {
 
-std::unique_ptr<API> Tracer::begin(int dbahandle, int handle, const char* url, const char* anaflag, const char* dataflag, const char* attrflag)
+std::unique_ptr<API> Tracer::begin(int dbahandle, int handle, const DBConnectOptions& options, const char* anaflag, const char* dataflag, const char* attrflag)
 {
     log_begin(dbahandle, handle, anaflag, dataflag, attrflag);
-    return wrap_api(handle, fortran::DbAPI::fortran_connect(url, anaflag, dataflag, attrflag));
+    return wrap_api(handle, fortran::DbAPI::fortran_connect(options, anaflag, dataflag, attrflag));
 }
 
 std::unique_ptr<API> Tracer::begin_messages(int handle, const char* filename, const char* mode, const char* type)

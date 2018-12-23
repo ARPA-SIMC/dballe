@@ -48,7 +48,7 @@ struct V7DB
     typedef db::v7::DB DB;
     typedef db::v7::Transaction TR;
     static const auto format = db::Format::V7;
-    static std::shared_ptr<DB> create_db(const std::string& backend);
+    static std::shared_ptr<DB> create_db(const std::string& backend, bool wipe);
 };
 
 template<typename DB>
