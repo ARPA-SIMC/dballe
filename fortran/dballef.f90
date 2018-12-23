@@ -53,7 +53,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_presentati_orig(dbahandle, url) BIND(C,name='idba_presentati')
+  FUNCTION idba_presentati_orig(dbahandle, url) BIND(C,name='idba_connect')
   IMPORT
   INTEGER(kind=c_int) :: dbahandle
   CHARACTER(kind=c_char) :: url(*)
@@ -69,7 +69,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_arrivederci(dbahandle) BIND(C,name='idba_arrivederci')
+  FUNCTION idba_arrivederci(dbahandle) BIND(C,name='idba_disconnect')
   IMPORT
   INTEGER(kind=c_int) :: dbahandle
   END FUNCTION idba_arrivederci
@@ -88,7 +88,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_preparati_orig(dbahandle, handle, anaflag, dataflag, attrflag) BIND(C,name='idba_preparati')
+  FUNCTION idba_preparati_orig(dbahandle, handle, anaflag, dataflag, attrflag) BIND(C,name='idba_begin')
   IMPORT
   INTEGER(kind=c_int),VALUE :: dbahandle
   INTEGER(kind=c_int) :: handle
@@ -111,7 +111,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_messaggi_orig(handle, filename, mode, typ) BIND(C,name='idba_messaggi')
+  FUNCTION idba_messaggi_orig(handle, filename, mode, typ) BIND(C,name='idba_begin_messages')
   IMPORT
   INTEGER(kind=c_int) :: handle
   CHARACTER(kind=c_char) :: filename(*)
@@ -130,7 +130,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_fatto(dbahandle) BIND(C,name='idba_fatto')
+  FUNCTION idba_fatto(dbahandle) BIND(C,name='idba_commit')
   IMPORT
   INTEGER(kind=c_int) :: dbahandle
   INTEGER(kind=c_int) :: idba_fatto
@@ -288,7 +288,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_setcontextana(handle) BIND(C,name='idba_setcontextana')
+  FUNCTION idba_setcontextana(handle) BIND(C,name='idba_set_station_context')
   IMPORT
   INTEGER(kind=c_int),VALUE :: handle
   INTEGER(kind=c_int) :: idba_setcontextana
@@ -409,7 +409,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_scopa_orig(handle, repinfofile) BIND(C,name='idba_scopa')
+  FUNCTION idba_scopa_orig(handle, repinfofile) BIND(C,name='idba_reinit_db')
   IMPORT
   INTEGER(kind=c_int),VALUE :: handle
   CHARACTER(kind=c_char) :: repinfofile(*)
@@ -427,7 +427,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_quantesono(handle, count) BIND(C,name='idba_quantesono')
+  FUNCTION idba_quantesono(handle, count) BIND(C,name='idba_query_stations')
   IMPORT
   INTEGER(kind=c_int),VALUE :: handle
   INTEGER(kind=c_int),INTENT(out) :: count
@@ -444,7 +444,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_elencamele(handle) BIND(C,name='idba_elencamele')
+  FUNCTION idba_elencamele(handle) BIND(C,name='idba_next_station')
   IMPORT
   INTEGER(kind=c_int),VALUE :: handle
   INTEGER(kind=c_int) :: idba_elencamele
@@ -461,7 +461,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_voglioquesto(handle, count) BIND(C,name='idba_voglioquesto')
+  FUNCTION idba_voglioquesto(handle, count) BIND(C,name='idba_query_data')
   IMPORT
   INTEGER(kind=c_int),VALUE :: handle
   INTEGER(kind=c_int),INTENT(out) :: count
@@ -480,7 +480,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_dammelo_orig(handle, param, param_len) BIND(C,name='idba_dammelo')
+  FUNCTION idba_dammelo_orig(handle, param, param_len) BIND(C,name='idba_next_data')
   IMPORT
   INTEGER(kind=c_int),VALUE :: handle
   CHARACTER(kind=c_char) :: param(*)
@@ -498,7 +498,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_prendilo(handle) BIND(C,name='idba_prendilo')
+  FUNCTION idba_prendilo(handle) BIND(C,name='idba_insert_data')
   IMPORT
   INTEGER(kind=c_int),VALUE :: handle
   INTEGER(kind=c_int) :: idba_prendilo
@@ -514,7 +514,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_dimenticami(handle) BIND(C,name='idba_dimenticami')
+  FUNCTION idba_dimenticami(handle) BIND(C,name='idba_remove_data')
   IMPORT
   INTEGER(kind=c_int),VALUE :: handle
   INTEGER(kind=c_int) :: idba_dimenticami
@@ -531,7 +531,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_voglioancora(handle, count) BIND(C,name='idba_voglioancora')
+  FUNCTION idba_voglioancora(handle, count) BIND(C,name='idba_query_attributes')
   IMPORT
   INTEGER(kind=c_int),VALUE :: handle
   INTEGER(kind=c_int),INTENT(out) :: count
@@ -550,7 +550,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_ancora_orig(handle, param, param_len) BIND(C,name='idba_ancora')
+  FUNCTION idba_ancora_orig(handle, param, param_len) BIND(C,name='idba_next_attribute')
   IMPORT
   INTEGER(kind=c_int),VALUE :: handle
   CHARACTER(kind=c_char) :: param(*)
@@ -568,7 +568,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_critica(handle) BIND(C,name='idba_critica')
+  FUNCTION idba_critica(handle) BIND(C,name='idba_insert_attributes')
   IMPORT
   INTEGER(kind=c_int),VALUE :: handle
   INTEGER(kind=c_int) :: idba_critica
@@ -584,7 +584,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_scusa(handle) BIND(C,name='idba_scusa')
+  FUNCTION idba_scusa(handle) BIND(C,name='idba_remove_attributes')
   IMPORT
   INTEGER(kind=c_int),VALUE :: handle
   INTEGER(kind=c_int) :: idba_scusa
@@ -649,7 +649,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_spiegal_orig(handle, ltype1, l1, ltype2, l2, res, res_len) BIND(C,name='idba_spiegal')
+  FUNCTION idba_spiegal_orig(handle, ltype1, l1, ltype2, l2, res, res_len) BIND(C,name='idba_describe_level')
   IMPORT
   INTEGER(kind=c_int),VALUE :: handle
   INTEGER(kind=c_int),VALUE :: ltype1
@@ -676,7 +676,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_spiegat_orig(handle, ptype, p1, p2, res, res_len) BIND(C,name='idba_spiegat')
+  FUNCTION idba_spiegat_orig(handle, ptype, p1, p2, res, res_len) BIND(C,name='idba_describe_timerange')
   IMPORT
   INTEGER(kind=c_int),VALUE :: handle
   INTEGER(kind=c_int),VALUE :: ptype
@@ -701,7 +701,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_spiegab_orig(handle, varcode, var, res, res_len) BIND(C,name='idba_spiegab')
+  FUNCTION idba_spiegab_orig(handle, varcode, var, res, res_len) BIND(C,name='idba_describe_var')
   IMPORT
   INTEGER(kind=c_int),VALUE :: handle
   CHARACTER(kind=c_char) :: varcode(*)
