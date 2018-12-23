@@ -1,4 +1,5 @@
 #include "dballe/core/tests.h"
+#include "db.h"
 #include <cstring>
 
 using namespace dballe;
@@ -16,7 +17,43 @@ class Tests : public TestCase
 void Tests::register_tests()
 {
 
-add_method("empty", []{
+add_method("dbconnectoptions", []{
+    auto opts = DBConnectOptions::create("sqlite://test.sqlite");
+    wassert(actual(opts->url) == "sqlite://test.sqlite");
+    wassert_false(opts->wipe);
+    opts->reset_actions();
+    wassert_false(opts->wipe);
+
+    opts = DBConnectOptions::create("postgresql:///testuser@testhost/testdb?port=5433");
+    wassert(actual(opts->url) == "postgresql:///testuser@testhost/testdb?port=5433");
+    wassert_false(opts->wipe);
+    opts->reset_actions();
+    wassert_false(opts->wipe);
+
+    opts = DBConnectOptions::create("mysql://host/db?user=testuser&password=testpass");
+    wassert(actual(opts->url) == "mysql://host/db?user=testuser&password=testpass");
+    wassert_false(opts->wipe);
+    opts->reset_actions();
+    wassert_false(opts->wipe);
+
+    opts = DBConnectOptions::create("sqlite://test.sqlite?wipe=yes");
+    wassert(actual(opts->url) == "sqlite://test.sqlite");
+    wassert_true(opts->wipe);
+    opts->reset_actions();
+    wassert_false(opts->wipe);
+
+    opts = DBConnectOptions::create("postgresql:///testuser@testhost/testdb?port=5433&wipe=yes");
+    wassert(actual(opts->url) == "postgresql:///testuser@testhost/testdb?port=5433");
+    wassert_true(opts->wipe);
+    opts->reset_actions();
+    wassert_false(opts->wipe);
+
+    opts = DBConnectOptions::create("mysql://host/db?wipe=yes&user=testuser&password=testpass");
+    wassert(actual(opts->url) == "mysql://host/db?user=testuser&password=testpass");
+    wassert_true(opts->wipe);
+    opts->reset_actions();
+    wassert_false(opts->wipe);
+
 });
 
 }
