@@ -1001,7 +1001,8 @@ struct connect_test : ClassMethNoargs
     {
         try {
             ReleaseGIL gil;
-            std::shared_ptr<db::DB> db = db::DB::connect_test();
+            auto options = DBConnectOptions::test_create();
+            shared_ptr<db::DB> db = dynamic_pointer_cast<db::DB>(DB::connect(*options));
             gil.lock();
             return (PyObject*)db_create(db);
         } DBALLE_CATCH_RETURN_PYO
@@ -1111,7 +1112,7 @@ versions in `dballe.DB`_ are implemented by automatically creating a temporary
 transaction and running the equivalent `dballe.Transaction`_ method inside it.
 
 dballe.DB objects are not constructed explicitly, but via one of the
-DB.connect_from_file, DB.connect, or DB.connect_test class methods.
+DB.connect or DB.connect_test class methods.
 
 Examples:
 

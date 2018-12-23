@@ -36,7 +36,8 @@ struct ImportSynopOneStation: public Scenario
 
     void import()
     {
-        auto db = db::DB::connect_test();
+        auto options = DBConnectOptions::test_create();
+        auto db = db::DB::downcast(DB::connect(*options));
         db->reset();
         auto t = db->transaction();
         auto opts = DBImportOptions::create();
@@ -75,7 +76,8 @@ struct ImportSynopManyTimes: public Scenario
 
     void import()
     {
-        auto db = db::DB::connect_test();
+        auto options = DBConnectOptions::test_create();
+        auto db = db::DB::downcast(DB::connect(*options));
         db->reset();
         auto opts = DBImportOptions::create();
         opts->report = "synop";

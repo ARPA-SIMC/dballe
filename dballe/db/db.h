@@ -269,11 +269,6 @@ public:
     static std::shared_ptr<DB> connect_memory();
 
     /**
-     * Start a test session with DB-All.e
-     */
-    static std::shared_ptr<DB> connect_test(const char* backend=nullptr, bool wipe=false);
-
-    /**
      * Create a database from an open Connection
      */
     static std::shared_ptr<DB> create(std::unique_ptr<sql::Connection> conn);
@@ -401,6 +396,23 @@ public:
 
     /// Return the default repinfo file pathname
     static const char* default_repinfo_file();
+
+    /// Downcast a unique_ptr pointer
+    inline static std::unique_ptr<db::DB> downcast(std::unique_ptr<dballe::DB> db)
+    {
+        db::DB* res = dynamic_cast<db::DB*>(db.get());
+        if (!res) throw std::runtime_error("Attempted to downcast the wrong kind of DB");
+        db.release();
+        return std::unique_ptr<db::DB>(res);
+    }
+
+    /// Downcast a shared_ptr pointer
+    inline static std::shared_ptr<db::DB> downcast(std::shared_ptr<dballe::DB> db)
+    {
+        auto res = std::dynamic_pointer_cast<db::DB>(db);
+        if (!res) throw std::runtime_error("Attempted to downcast the wrong kind of DB");
+        return res;
+    }
 };
 
 }
