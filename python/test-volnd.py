@@ -347,10 +347,6 @@ class TestReadV7(ReadMixin, unittest.TestCase):
     DB_FORMAT = "V7"
 
 
-class TestReadMEM(ReadMixin, unittest.TestCase):
-    DB_FORMAT = "MEM"
-
-
 if __name__ == "__main__":
     from testlib import main
     main("test-volnd")
