@@ -95,3 +95,11 @@ memdb is an internal memory-only storage that can be used to process small
 amounts of data without requiring a database server or a file.
 
 Its url is just `mem:`.
+
+
+## URL actions
+
+### `?wipe=yes/true/1`
+
+You can add a `wipe` query string argument to the connection URL to have
+DB-All.e create or recreate the database on connection.
