@@ -169,13 +169,12 @@ bool BaseDBFixture<DB>::has_driver()
 template<typename DB>
 void BaseDBFixture<DB>::create_db()
 {
-    db = DB::create_db(backend);
+    db = DB::create_db(backend, true);
     /*
     if (auto d = dynamic_cast<db::v7::DB*>(db.get()))
         if (auto c = dynamic_cast<sql::SQLiteConnection*>(d->conn))
             c->trace();
     */
-    db->reset();
 }
 
 template<typename DB>
@@ -227,11 +226,11 @@ void DBFixture<DB>::populate_database(TestDataSet& data_set)
     wassert(data_set.populate_db(*this->db));
 }
 
-std::shared_ptr<dballe::db::v7::DB> V7DB::create_db(const std::string& backend)
+std::shared_ptr<dballe::db::v7::DB> V7DB::create_db(const std::string& backend, bool wipe)
 {
     auto options = DBConnectOptions::test_create(backend.c_str());
-    auto conn = dballe::sql::Connection::create(*options);
-    return std::make_shared<dballe::db::v7::DB>(move(conn));
+    options->wipe = wipe;
+    return std::dynamic_pointer_cast<dballe::db::v7::DB>(dballe::DB::connect(*options));
 }
 
 
