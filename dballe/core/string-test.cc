@@ -47,6 +47,11 @@ add_method("url_pop_query_string", []() {
     res = url_pop_query_string(url, "foo");
     wassert(actual(res) == "bar");
     wassert(actual(url) == "http://example.org?foo=baz");
+
+    url = "http://example.org?foobar=bar&foo=baz";
+    res = url_pop_query_string(url, "foo");
+    wassert(actual(res) == "baz");
+    wassert(actual(url) == "http://example.org?foobar=bar");
 });
 
 }

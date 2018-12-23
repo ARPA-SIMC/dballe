@@ -53,7 +53,44 @@ add_method("dbconnectoptions", []{
     wassert_true(opts->wipe);
     opts->reset_actions();
     wassert_false(opts->wipe);
+});
 
+add_method("parse_wipe", []{
+    auto opts = DBConnectOptions::create("sqlite://test.sqlite?wipe=yes");
+    wassert(actual(opts->url) == "sqlite://test.sqlite");
+    wassert_true(opts->wipe);
+
+    // opts = DBConnectOptions::create("sqlite://test.sqlite?wipe");
+    // wassert(actual(opts->url) == "sqlite://test.sqlite");
+    // wassert_true(opts->wipe);
+
+    opts = DBConnectOptions::create("sqlite://test.sqlite?wipe=true");
+    wassert(actual(opts->url) == "sqlite://test.sqlite");
+    wassert_true(opts->wipe);
+
+    opts = DBConnectOptions::create("sqlite://test.sqlite?wipe=tRUe");
+    wassert(actual(opts->url) == "sqlite://test.sqlite");
+    wassert_true(opts->wipe);
+
+    opts = DBConnectOptions::create("sqlite://test.sqlite?wipe=1");
+    wassert(actual(opts->url) == "sqlite://test.sqlite");
+    wassert_true(opts->wipe);
+
+    opts = DBConnectOptions::create("sqlite://test.sqlite?wipe=false");
+    wassert(actual(opts->url) == "sqlite://test.sqlite");
+    wassert_false(opts->wipe);
+
+    opts = DBConnectOptions::create("sqlite://test.sqlite?wipe=0");
+    wassert(actual(opts->url) == "sqlite://test.sqlite");
+    wassert_false(opts->wipe);
+
+    opts = DBConnectOptions::create("sqlite://test.sqlite?wipe=no");
+    wassert(actual(opts->url) == "sqlite://test.sqlite");
+    wassert_false(opts->wipe);
+
+    opts = DBConnectOptions::create("sqlite://test.sqlite?wipe=NO");
+    wassert(actual(opts->url) == "sqlite://test.sqlite");
+    wassert_false(opts->wipe);
 });
 
 }

@@ -2,10 +2,26 @@
 #include "db/db.h"
 #include "sql/sql.h"
 #include "core/string.h"
+#include "wreport/utils/string.h"
 #include <cstring>
 #include <cstdlib>
 
+using namespace wreport;
+
 namespace dballe {
+
+static bool parse_wipe(const std::string& strval)
+{
+    std::string val = str::lower(strval);
+    if (val.empty()) return false;
+    if (val == "1") return true;
+    if (val == "yes") return true;
+    if (val == "true") return true;
+    if (val == "0") return false;
+    if (val == "no") return false;
+    if (val == "false") return false;
+    wreport::error_consistency::throwf("unsupported value for wipe: %s (supported: 1/0, true/false, yes/no)", strval.c_str());
+}
 
 void DBConnectOptions::reset_actions()
 {
@@ -26,7 +42,7 @@ std::unique_ptr<DBConnectOptions> DBConnectOptions::create(const std::string& ur
     std::unique_ptr<DBConnectOptions> res(new DBConnectOptions);
     res->url = url;
     std::string wipe = url_pop_query_string(res->url, "wipe");
-    res->wipe = !wipe.empty();
+    res->wipe = parse_wipe(wipe);
     return res;
 }
 
