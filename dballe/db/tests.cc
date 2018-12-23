@@ -16,24 +16,6 @@ using namespace std;
 
 namespace dballe {
 namespace tests {
-namespace {
-
-std::unique_ptr<dballe::sql::Connection> get_test_connection(const std::string& backend)
-{
-    std::string envname = "DBA_DB";
-    if (!backend.empty())
-    {
-        envname = "DBA_DB_";
-        envname += backend;
-    }
-    const char* envurl = getenv(envname.c_str());
-    if (envurl == NULL)
-        error_consistency::throwf("Environment variable %s is not set", envname.c_str());
-    return dballe::sql::Connection::create_from_url(envurl);
-}
-
-}
-
 
 impl::Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const dballe::Query& query)
 {
@@ -247,7 +229,8 @@ void DBFixture<DB>::populate_database(TestDataSet& data_set)
 
 std::shared_ptr<dballe::db::v7::DB> V7DB::create_db(const std::string& backend)
 {
-    auto conn = get_test_connection(backend);
+    auto options = DBConnectOptions::test_create(backend.c_str());
+    auto conn = dballe::sql::Connection::create(*options);
     return std::make_shared<dballe::db::v7::DB>(move(conn));
 }
 

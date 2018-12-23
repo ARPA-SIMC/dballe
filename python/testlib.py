@@ -159,7 +159,7 @@ class DballeDBMixin:
         with tempfile.NamedTemporaryFile(dir=".", suffix=".sqlite") as tf:
             try:
                 dballe.DB.set_default_format(self.orig_db_format)
-                db = dballe.DB.connect_from_url("sqlite:" + tf.name)
+                db = dballe.DB.connect("sqlite:" + tf.name)
             finally:
                 dballe.DB.set_default_format(self.DB_FORMAT)
             db.reset()

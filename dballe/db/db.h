@@ -271,7 +271,7 @@ public:
     /**
      * Start a test session with DB-All.e
      */
-    static std::shared_ptr<DB> connect_test();
+    static std::shared_ptr<DB> connect_test(const char* backend=nullptr, bool wipe=false);
 
     /**
      * Create a database from an open Connection

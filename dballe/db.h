@@ -34,7 +34,16 @@ struct DBConnectOptions
      */
     void reset_actions();
 
+    /**
+     * Create a DBConnectOptions parsing the given URL.
+     */
     static std::unique_ptr<DBConnectOptions> create(const std::string& url);
+
+    /**
+     * Create a DBConnectOptions for running unit tests. Optionally allows to
+     * select a backend database.
+     */
+    static std::unique_ptr<DBConnectOptions> test_create(const char* backend=nullptr);
 
 protected:
     DBConnectOptions() = default;

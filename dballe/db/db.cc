@@ -135,19 +135,18 @@ shared_ptr<DB> DB::connect_memory()
     return res;
 }
 
-std::shared_ptr<DB> DB::connect_test()
+std::shared_ptr<DB> DB::connect_test(const char* backend, bool wipe)
 {
     if (default_format == Format::MEM)
         return connect_memory();
 
     const char* envurl = getenv("DBA_DB");
-    if (envurl != NULL)
-    {
-        auto options = DBConnectOptions::create(envurl);
-        return dynamic_pointer_cast<dballe::db::DB>(dballe::DB::connect(*options));
-    }
-    else
-        return connect_from_file("test.sqlite");
+    if (!envurl)
+       envurl = "sqlite:test.sqlite";
+
+    std::unique_ptr<DBConnectOptions> options = DBConnectOptions::create(envurl);
+    options->wipe = wipe;
+    return dynamic_pointer_cast<dballe::db::DB>(dballe::DB::connect(*options));
 }
 
 const char* DB::default_repinfo_file()
