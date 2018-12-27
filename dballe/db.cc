@@ -30,22 +30,23 @@ void DBConnectOptions::reset_actions()
 
 std::unique_ptr<DBConnectOptions> DBConnectOptions::create(const std::string& url)
 {
-    if (strncmp(url.c_str(), "test:", 5) == 0)
-    {
-        const char* envurl = getenv("DBA_DB");
-        if (!envurl)
-            return create("sqlite://test.sqlite");
-        if (strncmp(envurl, "test:", 5) == 0)
-            throw wreport::error_consistency("please do not set DBA_DB to a URL starting with test:");
-        return create(envurl);
-    }
     std::unique_ptr<DBConnectOptions> res(new DBConnectOptions);
     res->url = url;
+
     std::string wipe;
     if (url_pop_query_string(res->url, "wipe", wipe))
         res->wipe = parse_wipe(wipe);
     else
         res->wipe = false;
+
+    if (strncmp(url.c_str(), "test:", 5) == 0)
+    {
+        const char* envurl = getenv("DBA_DB");
+        if (!envurl)
+            res->url = "sqlite://test.sqlite";
+        else
+            res->url = envurl;
+    }
     return res;
 }
 
