@@ -60,7 +60,7 @@ std::unique_ptr<DBConnectOptions> DBConnectOptions::test_create(const char* back
     }
     const char* envurl = getenv(envname.c_str());
     if (!envurl)
-        wreport::error_consistency::throwf("Environment variable %s is not set", envname.c_str());
+        envurl = "test:";
     return create(envurl);
 }
 
