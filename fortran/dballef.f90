@@ -53,15 +53,6 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_presentati_orig(dbahandle, url) BIND(C,name='idba_connect')
-  IMPORT
-  INTEGER(kind=c_int) :: dbahandle
-  CHARACTER(kind=c_char) :: url(*)
-  INTEGER(kind=c_int) :: idba_presentati_orig
-  END FUNCTION idba_presentati_orig
-END INTERFACE
-
-INTERFACE
   FUNCTION idba_disconnect(dbahandle) BIND(C,name='idba_disconnect')
   IMPORT
   INTEGER(kind=c_int) :: dbahandle
@@ -69,7 +60,7 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_arrivederci(dbahandle) BIND(C,name='idba_disconnect')
+  FUNCTION idba_arrivederci(dbahandle) BIND(C,name='idba_arrivederci')
   IMPORT
   INTEGER(kind=c_int) :: dbahandle
   END FUNCTION idba_arrivederci
@@ -88,18 +79,6 @@ INTERFACE
 END INTERFACE
 
 INTERFACE
-  FUNCTION idba_preparati_orig(dbahandle, handle, anaflag, dataflag, attrflag) BIND(C,name='idba_begin')
-  IMPORT
-  INTEGER(kind=c_int),VALUE :: dbahandle
-  INTEGER(kind=c_int) :: handle
-  CHARACTER(kind=c_char) :: anaflag(*)
-  CHARACTER(kind=c_char) :: dataflag(*)
-  CHARACTER(kind=c_char) :: attrflag(*)
-  INTEGER(kind=c_int) :: idba_preparati_orig
-  END FUNCTION idba_preparati_orig
-END INTERFACE
-
-INTERFACE
   FUNCTION idba_begin_messages_orig(handle, filename, mode, typ) BIND(C,name='idba_begin_messages')
   IMPORT
   INTEGER(kind=c_int) :: handle
@@ -108,17 +87,6 @@ INTERFACE
   CHARACTER(kind=c_char) :: typ(*)
   INTEGER(kind=c_int) :: idba_begin_messages_orig
   END FUNCTION idba_begin_messages_orig
-END INTERFACE
-
-INTERFACE
-  FUNCTION idba_messaggi_orig(handle, filename, mode, typ) BIND(C,name='idba_begin_messages')
-  IMPORT
-  INTEGER(kind=c_int) :: handle
-  CHARACTER(kind=c_char) :: filename(*)
-  CHARACTER(kind=c_char) :: mode(*)
-  CHARACTER(kind=c_char) :: typ(*)
-  INTEGER(kind=c_int) :: idba_messaggi_orig
-  END FUNCTION idba_messaggi_orig
 END INTERFACE
 
 INTERFACE
@@ -406,15 +374,6 @@ INTERFACE
   CHARACTER(kind=c_char) :: repinfofile(*)
   INTEGER(kind=c_int) :: idba_reinit_db_orig
   END FUNCTION idba_reinit_db_orig
-END INTERFACE
-
-INTERFACE
-  FUNCTION idba_scopa_orig(handle, repinfofile) BIND(C,name='idba_reinit_db')
-  IMPORT
-  INTEGER(kind=c_int),VALUE :: handle
-  CHARACTER(kind=c_char) :: repinfofile(*)
-  INTEGER(kind=c_int) :: idba_scopa_orig
-  END FUNCTION idba_scopa_orig
 END INTERFACE
 
 INTERFACE
@@ -735,15 +694,6 @@ END FUNCTION fchartrimtostr
 
 
 ! fortran-style interface to generic dba functions
-FUNCTION idba_presentati(dbahandle, url)
-INTEGER(kind=c_int) :: dbahandle
-CHARACTER(kind=c_char,len=*) :: url
-INTEGER(kind=c_int) :: idba_presentati
-
-idba_presentati = idba_presentati_orig(dbahandle, fchartrimtostr(url))
-
-END FUNCTION idba_presentati
-
 FUNCTION idba_connect(dbahandle, url)
 INTEGER(kind=c_int) :: dbahandle
 CHARACTER(kind=c_char,len=*) :: url
@@ -752,6 +702,15 @@ INTEGER(kind=c_int) :: idba_connect
 idba_connect = idba_connect_orig(dbahandle, fchartrimtostr(url))
 
 END FUNCTION idba_connect
+
+FUNCTION idba_presentati(dbahandle, url)
+INTEGER(kind=c_int) :: dbahandle
+CHARACTER(kind=c_char,len=*) :: url
+INTEGER(kind=c_int) :: idba_presentati
+
+idba_presentati = idba_connect_orig(dbahandle, fchartrimtostr(url))
+
+END FUNCTION idba_presentati
 
 FUNCTION idba_begin(dbahandle, handle, anaflag, dataflag, attrflag)
 INTEGER(kind=c_int) :: dbahandle
@@ -774,7 +733,7 @@ CHARACTER(kind=c_char,len=*) :: dataflag
 CHARACTER(kind=c_char,len=*) :: attrflag
 INTEGER(kind=c_int) :: idba_preparati
 
-idba_preparati = idba_preparati_orig(dbahandle, handle, fchartrimtostr(anaflag), &
+idba_preparati = idba_begin_orig(dbahandle, handle, fchartrimtostr(anaflag), &
  fchartrimtostr(dataflag), fchartrimtostr(attrflag))
 
 END FUNCTION idba_preparati
@@ -798,7 +757,7 @@ CHARACTER(kind=c_char,len=*) :: mode
 CHARACTER(kind=c_char,len=*) :: typ
 INTEGER(kind=c_int) :: idba_messaggi
 
-idba_messaggi = idba_messaggi_orig(handle, fchartrimtostr(filename), &
+idba_messaggi = idba_begin_messages_orig(handle, fchartrimtostr(filename), &
  fchartrimtostr(mode), fchartrimtostr(typ))
 
 END FUNCTION idba_messaggi
@@ -930,7 +889,7 @@ INTEGER(kind=c_int) :: handle
 CHARACTER(kind=c_char,len=*) :: repinfofile
 INTEGER(kind=c_int) :: idba_scopa
 
-idba_scopa = idba_scopa_orig(handle, fchartrimtostr(repinfofile))
+idba_scopa = idba_reinit_db_orig(handle, fchartrimtostr(repinfofile))
 
 END FUNCTION idba_scopa
 
