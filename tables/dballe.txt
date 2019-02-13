@@ -565,3 +565,33 @@
  048205 [SIM] Conta Vitacee                                              NUMERIC                    0            0  20 NUMERIC                   0          7
  048206 [SIM] Conta Corilacee_Carpino                                    NUMERIC                    0            0  20 NUMERIC                   0          7
  048207 [SIM] Conta Corilacee_Ostria                                     NUMERIC                    0            0  20 NUMERIC                   0          7
+ 049192 Number of particles with diameter < 0.3 um                       NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049193 Number of particles with diameter > 0.3 < 0.5 um                 NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049194 Number of particles with diameter > 0.5 < 1.0 um                 NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049195 Number of particles with diameter > 1.0 < 2.5 um                 NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049196 Number of particles with diameter > 2.5 < 5.0 um                 NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049197 Number of particles with diameter > 5.0 < 10.0 um                NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049198 Number of particles with diameter > 0.35 < 0.46 um               NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049199 Number of particles with diameter > 0.46 < 0.66 um               NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049200 Number of particles with diameter > 0.66 < 1.0 um                NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049201 Number of particles with diameter > 1.0 < 1.3 um                 NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049202 Number of particles with diameter > 1.3 < 1.7 um                 NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049203 Number of particles with diameter > 1.7 < 2.3 um                 NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049204 Number of particles with diameter > 2.3 < 3.0 um                 NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049205 Number of particles with diameter > 3.0 < 4.0 um                 NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049206 Number of particles with diameter > 4.0 < 5.2 um                 NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049207 Number of particles with diameter > 5.2 < 6.5 um                 NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049208 Number of particles with diameter > 6.5 < 8.0 um                 NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049209 Number of particles with diameter > 8.0 < 10.0 um                NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049210 Number of particles with diameter > 10 < 12 um                   NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049211 Number of particles with diameter > 12 < 14 um                   NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049212 Number of particles with diameter > 14 < 16 um                   NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049213 Number of particles with diameter > 16 < 18 um                   NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049214 Number of particles with diameter > 18 < 20 um                   NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049215 Number of particles with diameter > 20 < 22 um                   NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049216 Number of particles with diameter > 22 < 25 um                   NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049217 Number of particles with diameter > 25 < 28 um                   NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049218 Number of particles with diameter > 28 < 31 um                   NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049219 Number of particles with diameter > 31 < 34 um                   NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049220 Number of particles with diameter > 34 < 37 um                   NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049221 Number of particles with diameter > 37 < 40 um                   NUMERIC                   -1            0  16 NUMERIC                  -1          5
