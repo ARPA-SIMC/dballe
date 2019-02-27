@@ -1,4 +1,4 @@
-# Work in progress
+# New in version 8.0
 
 * Added `NEWS.md` file
 * Rationalised keyword usage in Fortran API. See [Input/Output query parameters
