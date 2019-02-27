@@ -1,42 +1,33 @@
 #include <dballe/msg/tests.h>
-#include <dballe/core/record.h>
-#include <dballe/core/values.h>
+#include <dballe/values.h>
+#include <dballe/core/data.h>
+#include <dballe/db/fwd.h>
+#include <dballe/db/v7/fwd.h>
 #include <dballe/db/db.h>
+#include <dballe/db/summary.h>
 #include <dballe/sql/fwd.h>
 #include <utility>
 #include <functional>
 
 namespace dballe {
-struct DB;
-
-namespace db {
-
-namespace v7 {
-struct Driver;
-class DB;
-class Transaction;
-}
-
-}
-
 namespace tests {
 
-Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const dballe::Query& query);
-Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const char* query);
+impl::Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const dballe::Query& query);
+impl::Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const char* query);
 
 /// Base for datasets used to populate test databases
 struct TestDataSet
 {
     /// Arbitrarily named station values
-    std::map<std::string, StationValues> stations;
+    std::map<std::string, core::Data> stations;
     /// Arbitrarily named data values
-    std::map<std::string, DataValues> data;
+    std::map<std::string, core::Data> data;
 
     TestDataSet() {}
     virtual ~TestDataSet() {}
 
     void populate_db(DB& db);
-    virtual void populate_transaction(db::Transaction& tr);
+    virtual void populate_transaction(Transaction& tr);
 };
 
 struct EmptyTestDataset
@@ -56,8 +47,8 @@ struct V7DB
 {
     typedef db::v7::DB DB;
     typedef db::v7::Transaction TR;
-    static const auto format = db::V7;
-    static std::shared_ptr<DB> create_db(const std::string& backend);
+    static const auto format = db::Format::V7;
+    static std::shared_ptr<DB> create_db(const std::string& backend, bool wipe);
 };
 
 template<typename DB>
@@ -109,54 +100,58 @@ struct DBFixture : public BaseDBFixture<DB>
 };
 
 
-struct ActualCursor : public Actual<dballe::db::Cursor&>
+struct ActualCursor : public Actual<dballe::Cursor&>
 {
     using Actual::Actual;
 
     /// Check cursor context after a query_stations
-    void station_keys_match(const Station& expected);
-
-    /// Check cursor context after a query_stations
-    void station_vars_match(const StationValues& expected);
+    void station_keys_match(const DBStation& expected);
 
     /// Check cursor data context after a query_data
-    void data_context_matches(const DataValues& expected);
+    void data_context_matches(const Data& expected);
 
     /// Check cursor data variable after a query_data
-    void data_var_matches(const StationValues& expected, wreport::Varcode code) {
-        data_var_matches(*expected.values[code].var);
+    void data_var_matches(const Data& expected, wreport::Varcode code) {
+        data_var_matches(core::Data::downcast(expected).values.var(code));
     }
-    /// Check cursor data variable after a query_data
-    void data_var_matches(const DataValues& expected, wreport::Varcode code) {
-        data_var_matches(*expected.values[code].var);
-    }
-    /// Check cursor data variable after a query_data
-    void data_var_matches(const DataValues& expected) {
-        if (auto c = dynamic_cast<dballe::db::CursorValue*>(&_actual))
-            data_var_matches(*expected.values[c->get_varcode()].var);
+    /// Check cursor data variable(s) after a query_data
+    void data_var_matches(const DBValues& expected) {
+        if (auto c = dynamic_cast<dballe::db::CursorStation*>(&_actual))
+        {
+            DBValues actual_values = c->get_values();
+            if (!actual_values.vars_equal(expected))
+                // Quick hack to get proper formatting of mismatch
+                wassert(actual(c->get_values()) == expected);
+        }
+        else if (auto c = dynamic_cast<dballe::CursorStationData*>(&_actual))
+            data_var_matches(expected.var(c->get_varcode()));
+        else if (auto c = dynamic_cast<dballe::CursorData*>(&_actual))
+            data_var_matches(expected.var(c->get_varcode()));
         else
             throw wreport::error_consistency("cannot call data_var_matches on this kind of cursor");
     }
     /// Check cursor data variable after a query_data
     void data_var_matches(const Values& expected, wreport::Varcode code) {
-        data_var_matches(*expected[code].var);
+        data_var_matches(expected.var(code));
     }
     /// Check cursor data variable after a query_data
     void data_var_matches(const wreport::Var& expected);
 
     /// Check cursor data context and variable after a query_data
-    void data_matches(const DataValues& ds)
+    void data_matches(const Data& ds)
     {
-        if (auto c = dynamic_cast<dballe::db::CursorValue*>(&_actual))
+        if (auto c = dynamic_cast<dballe::CursorStationData*>(&_actual))
+            data_matches(ds, c->get_varcode());
+        else if (auto c = dynamic_cast<dballe::CursorData*>(&_actual))
             data_matches(ds, c->get_varcode());
         else
             throw wreport::error_consistency("cannot call data_matches on this kind of cursor");
     }
     /// Check cursor data context and variable after a query_data
-    void data_matches(const DataValues& ds, wreport::Varcode code);
+    void data_matches(const Data& ds, wreport::Varcode code);
 };
 
-typedef std::function<void(const std::vector<core::Record>&)> result_checker;
+typedef std::function<void(const db::DBSummary&)> result_checker;
 
 template<typename DB>
 struct ActualDB : public Actual<std::shared_ptr<DB>>
@@ -176,16 +171,16 @@ struct ActualDB : public Actual<std::shared_ptr<DB>>
     void try_summary_query(const std::string& query, unsigned expected, result_checker checker=nullptr);
 };
 
-inline ActualCursor actual(dballe::db::Cursor& actual) { return ActualCursor(actual); }
-inline ActualCursor actual(dballe::db::CursorStation& actual) { return ActualCursor(actual); }
-inline ActualCursor actual(dballe::db::CursorStationData& actual) { return ActualCursor(actual); }
-inline ActualCursor actual(dballe::db::CursorData& actual) { return ActualCursor(actual); }
-inline ActualCursor actual(dballe::db::CursorSummary& actual) { return ActualCursor(actual); }
-inline ActualCursor actual(std::unique_ptr<dballe::db::Cursor>& actual) { return ActualCursor(*actual); }
-inline ActualCursor actual(std::unique_ptr<dballe::db::CursorStation>& actual) { return ActualCursor(*actual); }
-inline ActualCursor actual(std::unique_ptr<dballe::db::CursorStationData>& actual) { return ActualCursor(*actual); }
-inline ActualCursor actual(std::unique_ptr<dballe::db::CursorData>& actual) { return ActualCursor(*actual); }
-inline ActualCursor actual(std::unique_ptr<dballe::db::CursorSummary>& actual) { return ActualCursor(*actual); }
+inline ActualCursor actual(dballe::Cursor& actual) { return ActualCursor(actual); }
+inline ActualCursor actual(dballe::CursorStation& actual) { return ActualCursor(actual); }
+inline ActualCursor actual(dballe::CursorStationData& actual) { return ActualCursor(actual); }
+inline ActualCursor actual(dballe::CursorData& actual) { return ActualCursor(actual); }
+inline ActualCursor actual(dballe::CursorSummary& actual) { return ActualCursor(actual); }
+inline ActualCursor actual(std::unique_ptr<dballe::Cursor>& actual) { return ActualCursor(*actual); }
+inline ActualCursor actual(std::unique_ptr<dballe::CursorStation>& actual) { return ActualCursor(*actual); }
+inline ActualCursor actual(std::unique_ptr<dballe::CursorStationData>& actual) { return ActualCursor(*actual); }
+inline ActualCursor actual(std::unique_ptr<dballe::CursorData>& actual) { return ActualCursor(*actual); }
+inline ActualCursor actual(std::unique_ptr<dballe::CursorSummary>& actual) { return ActualCursor(*actual); }
 inline ActualDB<dballe::DB> actual(std::shared_ptr<dballe::DB> actual) { return ActualDB<dballe::DB>(actual); }
 ActualDB<dballe::DB> actual(std::shared_ptr<dballe::db::v7::DB> actual);
 inline ActualDB<dballe::db::Transaction> actual(std::shared_ptr<dballe::db::Transaction> actual) { return ActualDB<dballe::db::Transaction>(actual); }

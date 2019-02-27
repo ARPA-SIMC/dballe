@@ -18,16 +18,14 @@ dballeincludedir = $(includedir)/dballe
 # Include the F90 interface file as well
 dist_dballeinclude_HEADERS = dballef.h dballeff.h
 
-dist_noinst_HEADERS = common.h handles.h error.h trace.h
+dist_noinst_HEADERS = handles.h error.h
 
 nodist_include_HEADERS = dballef.mod
 
 lib_LTLIBRARIES = libdballef.la
 
 libdballef_la_SOURCES = \
-	common.cc \
 	error.cc \
-	trace.cc \
 	binding.cc \
 	dballef.f90
 libdballef_la_LIBADD = ../dballe/libdballe.la
@@ -41,16 +39,10 @@ dballef.mod: libdballef.la
 
 TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
-check_PROGRAMS = check_missing_msg
-
 #TESTS = $(check_PROGRAMS)
 dbtestlib = test.f90 dbtest.f90 dballef.mod
 
-check_missing_msg_SOURCES = test.f90 check_missing_msg.f90
-check_missing_msg_LDADD = libdballef.la
-check_missing_msg_FCFLAGS = -g
-
-check_PROGRAMS += check_real0 check_range check_fdballe check_attrs check_missing check_segfault1 check_multiplehandler check_spiegab check_messages check_transactions1
+check_PROGRAMS = check_real0 check_range check_fdballe check_fdballe_oldapi check_attrs check_set check_missing check_missing_msg check_segfault1 check_multiplehandler check_spiegab check_messages check_transactions1 check_connect_wipe
 
 check_real0_SOURCES = $(dbtestlib) check_real0.f90
 check_real0_LDADD = libdballef.la
@@ -64,13 +56,25 @@ check_fdballe_SOURCES = $(dbtestlib) check_fdballe.f90
 check_fdballe_LDADD = libdballef.la
 check_fdballe_FCFLAGS = -g
 
+check_fdballe_oldapi_SOURCES = $(dbtestlib) check_fdballe_oldapi.f90
+check_fdballe_oldapi_LDADD = libdballef.la
+check_fdballe_oldapi_FCFLAGS = -g
+
 check_attrs_SOURCES = $(dbtestlib) check_attrs.f90
 check_attrs_LDADD = libdballef.la
 check_attrs_FCFLAGS = -g
 
+check_set_SOURCES = $(dbtestlib) check_set.f90
+check_set_LDADD = libdballef.la
+check_set_FCFLAGS = -g
+
 check_missing_SOURCES = $(dbtestlib) check_missing.f90
 check_missing_LDADD = libdballef.la
 check_missing_FCFLAGS = -g
+
+check_missing_msg_SOURCES = test.f90 check_missing_msg.f90
+check_missing_msg_LDADD = libdballef.la
+check_missing_msg_FCFLAGS = -g
 
 check_segfault1_SOURCES = $(dbtestlib) check_segfault1.f90
 check_segfault1_LDADD = libdballef.la
@@ -84,9 +88,9 @@ check_messages_SOURCES = $(dbtestlib) check_messages.f90
 check_messages_LDADD = libdballef.la
 check_messages_FCFLAGS = -g
 
-check_messages_stdinstdout_SOURCES = $(dbtestlib) check_messages_stdinstdout.f90
-check_messages_stdinstdout_LDADD = libdballef.la
-check_messages_stdinstdout_FCFLAGS = -g
+# check_messages_stdinstdout_SOURCES = $(dbtestlib) check_messages_stdinstdout.f90
+# check_messages_stdinstdout_LDADD = libdballef.la
+# check_messages_stdinstdout_FCFLAGS = -g
 
 check_multiplehandler_SOURCES = $(dbtestlib) check_multiplehandler.f90
 check_multiplehandler_LDADD = libdballef.la
@@ -95,6 +99,10 @@ check_multiplehandler_FCFLAGS = -g
 check_transactions1_SOURCES = $(dbtestlib) check_transactions1.f90
 check_transactions1_LDADD = libdballef.la
 check_transactions1_FCFLAGS = -g
+
+check_connect_wipe_SOURCES = $(dbtestlib) check_connect_wipe.f90
+check_connect_wipe_LDADD = libdballef.la
+check_connect_wipe_FCFLAGS = -g
 
 
 ## Automake/make is not currently able to build these, they miss the
@@ -131,8 +139,6 @@ EXTRA_DIST = fortran.dox check-utils.h
 CLEANFILES = *.mod
 
 check-local:
-	for test in $(check_PROGRAMS); do \
-		$(TESTS_ENVIRONMENT) $$test ; \
-	done
+	$(TESTS_ENVIRONMENT) -v $(check_PROGRAMS)
 
 endif

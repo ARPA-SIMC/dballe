@@ -1,23 +1,5 @@
-/*
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "dballe/msg/wr_codec.h"
+#include "dballe/core/shortcuts.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
 #include <wreport/bulletin.h>
@@ -30,6 +12,7 @@ using namespace std;
 #define METAR_DESC "Metar (0.140)"
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -39,7 +22,7 @@ struct Metar : public Template
 {
     bool is_crex;
 
-    Metar(const ExporterOptions& opts, const Messages& msgs)
+    Metar(const dballe::ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
     virtual const char* name() const { return METAR_NAME; }
@@ -77,38 +60,36 @@ struct Metar : public Template
 
         bulletin.load_tables();
     }
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         Template::to_subset(msg, subset);
 
         // Look for significant levels
         const msg::Context* c_wtr = NULL;
-        for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
-                i != msg.data.end(); ++i)
+        for (const auto& ctx: msg.data)
         {
-            const msg::Context* c = *i;
-            if (c->find(WR_VAR(0, 20, 9)))
-                c_wtr = c;
+            if (ctx.values.maybe_var(WR_VAR(0, 20, 9)))
+                c_wtr = &ctx;
         }
 
-        /*  0 */ add(WR_VAR(0,  1, 63), DBA_MSG_ST_NAME_ICAO);
-        /*  1 */ add(WR_VAR(0,  2,  1), DBA_MSG_ST_TYPE);
+        /*  0 */ add(WR_VAR(0,  1, 63), sc::st_name_icao);
+        /*  1 */ add(WR_VAR(0,  2,  1), sc::st_type);
         do_D01011();
         do_D01012();
-        /*  7 */ add(WR_VAR(0,  5,  2), DBA_MSG_LATITUDE);
-        /*  8 */ add(WR_VAR(0,  6,  2), DBA_MSG_LONGITUDE);
-        /*  9 */ add(WR_VAR(0,  7,  1), DBA_MSG_HEIGHT_STATION);
+        /*  7 */ add(WR_VAR(0,  5,  2), sc::latitude);
+        /*  8 */ add(WR_VAR(0,  6,  2), sc::longitude);
+        /*  9 */ add(WR_VAR(0,  7,  1), sc::height_station);
         /* 10 */ subset.store_variable_i(WR_VAR(0,  7,  6), 10);
-        /* 11 */ add(WR_VAR(0, 11,  1), DBA_MSG_WIND_DIR);
-        /* 12 */ add(WR_VAR(0, 11, 16), DBA_MSG_EX_CCW_WIND);
-        /* 13 */ add(WR_VAR(0, 11, 17), DBA_MSG_EX_CW_WIND);
-        /* 14 */ add(WR_VAR(0, 11,  2), DBA_MSG_WIND_SPEED);
-        /* 15 */ add(WR_VAR(0, 11, 41), DBA_MSG_WIND_GUST_MAX_SPEED);
+        /* 11 */ add(WR_VAR(0, 11,  1), sc::wind_dir);
+        /* 12 */ add(WR_VAR(0, 11, 16), sc::ex_ccw_wind);
+        /* 13 */ add(WR_VAR(0, 11, 17), sc::ex_cw_wind);
+        /* 14 */ add(WR_VAR(0, 11,  2), sc::wind_speed);
+        /* 15 */ add(WR_VAR(0, 11, 41), sc::wind_gust_max_speed);
         /* 16 */ subset.store_variable_i(WR_VAR(0,  7,  6), 2);
-        /* 15 */ add(WR_VAR(0, 12,  1), DBA_MSG_TEMP_2M);
-        /* 16 */ add(WR_VAR(0, 12,  3), DBA_MSG_DEWPOINT_2M);
-        /* 17 */ add(WR_VAR(0, 10, 52), DBA_MSG_QNH);
-        /* 18 */ add(WR_VAR(0, 20,  9), c_wtr, DBA_MSG_METAR_WTR);
+        /* 15 */ add(WR_VAR(0, 12,  1), sc::temp_2m);
+        /* 16 */ add(WR_VAR(0, 12,  3), sc::dewpoint_2m);
+        /* 17 */ add(WR_VAR(0, 10, 52), sc::qnh);
+        /* 18 */ add(WR_VAR(0, 20,  9), c_wtr, sc::metar_wtr);
 
         if (!is_crex)
         {
@@ -131,7 +112,7 @@ struct Metar : public Template
 void register_metar(TemplateRegistry& r)
 {
     r.register_factory(0, METAR_NAME, METAR_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new Metar(opts, msgs));
             });
 }
@@ -139,5 +120,4 @@ void register_metar(TemplateRegistry& r)
 }
 }
 }
-
-/* vim:set ts=4 sw=4: */
+}

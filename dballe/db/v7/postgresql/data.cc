@@ -6,7 +6,7 @@
 #include "dballe/db/v7/repinfo.h"
 #include "dballe/sql/postgresql.h"
 #include "dballe/sql/querybuf.h"
-#include "dballe/record.h"
+#include "dballe/values.h"
 #include "dballe/core/values.h"
 #include "dballe/core/varmatch.h"
 #include <algorithm>
@@ -145,6 +145,18 @@ void PostgreSQLDataCommon<Parent>::remove(Tracer<>& trc, const v7::IdQueryBuilde
 }
 
 template<typename Parent>
+void PostgreSQLDataCommon<Parent>::remove_by_id(Tracer<>& trc, int id)
+{
+    char query[64];
+    snprintf(query, 64, "DELETE FROM %s WHERE id=%d", Parent::table_name, id);
+
+    // Iterate all the data_id results, deleting the related data and attributes
+    Tracer<> trc_sel(trc ? trc->trace_delete(query, 1) : nullptr);
+    conn.exec_no_data(query);
+}
+
+
+template<typename Parent>
 void PostgreSQLDataCommon<Parent>::update(Tracer<>& trc, std::vector<typename Parent::BatchValue>& vars, bool with_attrs)
 {
     Querybuf qb(512);
@@ -165,7 +177,7 @@ void PostgreSQLDataCommon<Parent>::update(Tracer<>& trc, std::vector<typename Pa
             qb.append(",");
             if (v.var->next_attr())
             {
-                values::Encoder enc;
+                core::value::Encoder enc;
                 enc.append_attributes(*v.var);
                 conn.append_escaped(qb, enc.buf);
             } else
@@ -241,7 +253,7 @@ void PostgreSQLStationData::insert(Tracer<>& trc, int id_station, std::vector<ba
         dq.append(",");
         if (with_attrs && v->var->next_attr())
         {
-            values::Encoder enc;
+            core::value::Encoder enc;
             enc.append_attributes(*v->var);
             conn.append_escaped(dq, enc.buf);
         } else
@@ -295,7 +307,7 @@ void PostgreSQLStationData::run_station_data_query(Tracer<>& trc, const v7::Data
             const char* value = res.get_string(row, 7);
             auto var = newvar(code, value);
             if (qb.select_attrs)
-                values::Decoder::decode_attrs(res.get_bytea(row, 8), *var);
+                core::value::Decoder::decode_attrs(res.get_bytea(row, 8), *var);
 
             // Postprocessing filter of attr_filter
             if (qb.attr_filter && !qb.match_attrs(*var))
@@ -386,7 +398,7 @@ void PostgreSQLData::insert(Tracer<>& trc, int id_station, const Datetime& datet
         dq.append(",");
         if (with_attrs && v->var->next_attr())
         {
-            values::Encoder enc;
+            core::value::Encoder enc;
             enc.append_attributes(*v->var);
             conn.append_escaped(dq, enc.buf);
         } else
@@ -440,7 +452,7 @@ void PostgreSQLData::run_data_query(Tracer<>& trc, const v7::DataQueryBuilder& q
             const char* value = res.get_string(row, 9);
             auto var = newvar(code, value);
             if (qb.select_attrs)
-                values::Decoder::decode_attrs(res.get_bytea(row, 10), *var);
+                core::value::Decoder::decode_attrs(res.get_bytea(row, 10), *var);
 
             // Postprocessing filter of attr_filter
             if (qb.attr_filter && !qb.match_attrs(*var))

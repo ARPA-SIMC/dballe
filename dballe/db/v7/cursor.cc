@@ -9,9 +9,9 @@
 #include "dballe/db/v7/levtr.h"
 #include "dballe/db/v7/data.h"
 #include "dballe/types.h"
-#include "dballe/record.h"
 #include "dballe/var.h"
 #include "dballe/core/var.h"
+#include "dballe/core/data.h"
 #include "dballe/core/query.h"
 #include "wreport/var.h"
 #include <unordered_map>
@@ -36,468 +36,235 @@ namespace db {
 namespace v7 {
 namespace cursor {
 
-namespace {
-
-/**
- * Simple typedef to make typing easier, and also to help some versions of swig
- * match this complex type
- */
-typedef std::vector<wreport::Varcode> AttrList;
-
-
-/**
- * Structure used to build and execute a query, and to iterate through the
- * results
- */
-template<typename Interface>
-struct Base : public Interface
+void StationRows::load(Tracer<>& trc, const StationQueryBuilder& qb)
 {
-    /// Database to operate on
-    std::shared_ptr<v7::Transaction> tr;
-
-    /** Modifier flags to enable special query behaviours */
-    const unsigned int modifiers;
-
-    Base(std::shared_ptr<v7::Transaction> tr, unsigned int modifiers)
-        : tr(tr), modifiers(modifiers)
-    {
-    }
-
-    virtual ~Base() {}
-
-    std::shared_ptr<dballe::db::Transaction> get_transaction() const override { return tr; }
-
-    /**
-     * Iterate the cursor until the end, returning the number of items.
-     *
-     * If dump is a FILE pointer, also dump the cursor values to it
-     */
-    unsigned test_iterate(FILE* dump=0) override = 0;
-};
-
-
-template<typename Interface, typename Result>
-struct VectorBase : public Base<Interface>
-{
-    using Base<Interface>::Base;
-
-    std::vector<Result> results;
-    typename std::vector<Result>::const_iterator cur;
-    bool at_start;
-
-    int remaining() const override
-    {
-        if (at_start)
-            return results.size();
-        else
-            return results.end() - cur - 1;
-    }
-
-    bool next() override
-    {
-        if (at_start)
-            at_start = false;
-        else
-            ++cur;
-        return cur != results.end();
-    }
-
-    void discard_rest() override
-    {
-        at_start = false;
-        cur = results.end();
-    }
-
-    dballe::DBStation get_station() const override
-    {
-        dballe::DBStation station;
-        station.report = get_rep_memo();
-        station.id = get_station_id();
-        station.coords = cur->station.coords;
-        station.ident = cur->station.ident;
-        return station;
-    }
-
-    int get_station_id() const override { return cur->get_station_id(); }
-    const char* get_rep_memo() const override { return cur->station.report.c_str(); }
-    double get_lat() const override { return cur->station.coords.dlat(); }
-    double get_lon() const override { return cur->station.coords.dlon(); }
-    const char* get_ident(const char* def=0) const override
-    {
-        if (cur->station.ident.is_missing())
-            return def;
-        else
-            return cur->station.ident.get();
-    }
-
-    void to_record(Record& rec) override
-    {
-        cur->to_record(*this->tr, rec);
-    }
-
-    unsigned test_iterate(FILE* dump=0) override
-    {
-        unsigned count;
-        for (count = 0; next(); ++count)
-            if (dump)
-                cur->dump(dump);
-        return count;
-    }
-};
-
-
-struct StationResult
-{
-    dballe::DBStation station;
-
-    StationResult(const dballe::DBStation& station) : station(station) {}
-
-    void dump(FILE* out) const
-    {
-        fprintf(out, "%02d %8.8s %02.4f %02.4f %-10s\n", station.id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get());
-    }
-
-    int get_station_id() const { return station.id; }
-    void to_record(v7::Transaction& tr, Record& rec) const
-    {
-        tr.repinfo().to_record(station.report, rec);
-        station.to_record(rec);
-        Tracer<> trc(tr.trc ? tr.trc->trace_add_station_vars() : nullptr);
-        tr.station().add_station_vars(trc, station.id, rec);
-    }
-};
-
-struct Stations : public VectorBase<CursorStation, StationResult>
-{
-    using VectorBase::VectorBase;
-
-    void load(Tracer<>& trc, const StationQueryBuilder& qb)
-    {
-        results.clear();
-        this->tr->station().run_station_query(trc, qb, [&](const dballe::DBStation& desc) {
-            results.emplace_back(desc);
-        });
-        at_start = true;
-        cur = results.begin();
-    }
-};
-
-
-struct StationDataResult
-{
-    dballe::DBStation station;
-    int id_data;
-    Var* var;
-
-    StationDataResult(const dballe::DBStation& station, int id_data, Var* var) : station(station), id_data(id_data), var(var) {}
-    StationDataResult(const StationDataResult&) = delete;
-    StationDataResult(StationDataResult&& o) : station(o.station), id_data(o.id_data), var(o.var) { o.var = nullptr; }
-    StationDataResult& operator=(const StationDataResult&) = delete;
-    StationDataResult& operator=(StationDataResult&& o)
-    {
-        if (this == &o) return *this;
-        delete var;
-        var = o.var;
-        o.var = nullptr;
-        station = o.station;
-        id_data = o.id_data;
-        return *this;
-    }
-    ~StationDataResult() { delete var; }
-
-    int get_station_id() const { return station.id; }
-
-    void to_record(v7::Transaction& tr, Record& rec) const
-    {
-        tr.repinfo().to_record(station.report, rec);
-        station.to_record(rec);
-        rec.seti("context_id", id_data);
-
-        char bname[7];
-        format_bcode(var->code(), bname);
-        rec.setc("var", bname);
-
-        rec.clear_vars();
-        // TODO: this could be optimized with a move, but it would mean that
-        // to_record can only be called once. That is currently the case, but
-        // not explicitly specified anywhere, so the change needs to happen
-        // when we can check what breaks.
-        rec.set(*var);
-    }
-
-    void dump(FILE* out) const
-    {
-        fprintf(out, "%02d %8.8s %02.4f %02.4f %-10s %4d ",
-                station.id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get(), id_data);
-        var->print_without_attrs(out, "\n");
-    }
-};
-
-template<typename Interface, typename Result>
-struct BaseData : public VectorBase<Interface, Result>
-{
-    BaseData(DataQueryBuilder& qb, unsigned int modifiers)
-        : VectorBase<Interface, Result>(qb.tr, modifiers)
-    {
-    }
-};
-
-
-struct StationData : public BaseData<CursorStationData, StationDataResult>
-{
-    using BaseData::BaseData;
-
-    void load(Tracer<>& trc, const DataQueryBuilder& qb)
-    {
-        results.clear();
-        this->tr->station_data().run_station_data_query(trc, qb, [&](const dballe::DBStation& station, int id_data, std::unique_ptr<wreport::Var> var) {
-            results.emplace_back(station, id_data, var.release());
-        });
-        at_start = true;
-        cur = results.begin();
-    }
-
-    wreport::Varcode get_varcode() const override { return cur->var->code(); }
-    wreport::Var get_var() const override { return *cur->var; }
-    int attr_reference_id() const override { return cur->id_data; }
-
-    void attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&& dest, bool force_read) override
-    {
-        if (!force_read && modifiers & DBA_DB_MODIFIER_WITH_ATTRIBUTES)
-        {
-            for (const Var* a = cur->var->next_attr(); a != NULL; a = a->next_attr())
-                dest(std::unique_ptr<wreport::Var>(new Var(*a)));
-        } else {
-            tr->attr_query_station(attr_reference_id(), std::move(dest));
-        }
-    }
-};
-
-
-struct DataResult : public StationDataResult
-{
-    int id_levtr;
-    Datetime datetime;
-
-    using StationDataResult::StationDataResult;
-
-    DataResult(const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, Var* var)
-        : StationDataResult(station, id_data, var), id_levtr(id_levtr), datetime(datetime) {}
-
-    void to_record(v7::Transaction& tr, Record& rec) const
-    {
-        StationDataResult::to_record(tr, rec);
-        rec.set_datetime(datetime);
-    }
-
-    void dump(FILE* out) const
-    {
-        fprintf(out, "%02d %8.8s %02.4f %02.4f %-10s %4d %4d ",
-                station.id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get(), id_levtr, id_data);
-        datetime.print_iso8601(out, ' ');
-        fprintf(out, " ");
-        var->print_without_attrs(out, "\n");
-    }
-};
-
-
-struct Data : public BaseData<CursorData, DataResult>
-{
-    using BaseData::BaseData;
-
-    void load(Tracer<>& trc, const DataQueryBuilder& qb)
-    {
-        results.clear();
-        set<int> ids;
-        this->tr->data().run_data_query(trc, qb, [&](const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
-            results.emplace_back(station, id_levtr, datetime, id_data, var.release());
-            ids.insert(id_levtr);
-        });
-        at_start = true;
-        cur = results.begin();
-
-        this->tr->levtr().prefetch_ids(trc, ids);
-    }
-
-    const LevTrEntry& get_levtr(int id_levtr) const
-    {
-        // We prefetch levtr info for all IDs, so we do not need to hit the database here
-        return tr->levtr().lookup_cache(id_levtr);
-    }
-
-    Level get_level() const override { return get_levtr(cur->id_levtr).level; }
-    Trange get_trange() const override { return get_levtr(cur->id_levtr).trange; }
-    Datetime get_datetime() const override { return cur->datetime; }
-    wreport::Varcode get_varcode() const override { return cur->var->code(); }
-    wreport::Var get_var() const override { return *cur->var; }
-    int attr_reference_id() const override { return cur->id_data; }
-
-    void to_record(Record& rec) override
-    {
-        VectorBase::to_record(rec);
-        const LevTrEntry& levtr = get_levtr(cur->id_levtr);
-        rec.set_level(levtr.level);
-        rec.set_trange(levtr.trange);
-    }
-
-    void attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&& dest, bool force_read) override
-    {
-        if (!force_read && modifiers & DBA_DB_MODIFIER_WITH_ATTRIBUTES)
-        {
-            for (const Var* a = cur->var->next_attr(); a != NULL; a = a->next_attr())
-                dest(std::unique_ptr<wreport::Var>(new Var(*a)));
-        } else {
-            tr->attr_query_data(attr_reference_id(), std::move(dest));
-        }
-    }
-};
-
-struct Best : public Data
-{
-    using Data::Data;
-
-    int insert_cur_prio;
-
-    /// Append or replace the last result according to priotity. Returns false if the value has been ignored.
-    bool add_to_results(const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)
-    {
-        int prio = tr->repinfo().get_priority(station.report);
-
-        if (results.empty()) goto append;
-        if (station.coords != results.back().station.coords) goto append;
-        if (station.ident != results.back().station.ident) goto append;
-        if (id_levtr != results.back().id_levtr) goto append;
-        if (datetime != results.back().datetime) goto append;
-        if (var->code() != results.back().var->code()) goto append;
-
-        if (prio <= insert_cur_prio) return false;
-
-        // Replace
-        results.back().station = station;
-        results.back().id_data = id_data;
-        delete results.back().var;
-        results.back().var = var.release();
-        insert_cur_prio = prio;
-        return true;
-
-    append:
-        results.emplace_back(station, id_levtr, datetime, id_data, var.release());
-        insert_cur_prio = prio;
-        return true;
-    }
-
-    void load(Tracer<>& trc, const DataQueryBuilder& qb)
-    {
-        results.clear();
-        set<int> ids;
-        this->tr->data().run_data_query(trc, qb, [&](const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
-            if (add_to_results(station, id_levtr, datetime, id_data, move(var)))
-                ids.insert(id_levtr);
-        });
-        at_start = true;
-        cur = results.begin();
-
-        this->tr->levtr().prefetch_ids(trc, ids);
-    }
-
-    void attr_query(std::function<void(std::unique_ptr<wreport::Var>)>&& dest, bool force_read) override
-    {
-        if (!force_read && modifiers & DBA_DB_MODIFIER_WITH_ATTRIBUTES)
-        {
-            for (const Var* a = cur->var->next_attr(); a != NULL; a = a->next_attr())
-                dest(std::unique_ptr<wreport::Var>(new Var(*a)));
-        } else {
-            tr->attr_query_data(attr_reference_id(), std::move(dest));
-        }
-    }
-};
-
-
-struct SummaryResult
-{
-    dballe::DBStation station;
-    int id_levtr;
-    wreport::Varcode code;
-    DatetimeRange datetime;
-    size_t count = 0;
-
-    SummaryResult(const dballe::DBStation& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count)
-        : station(station), id_levtr(id_levtr), code(code), datetime(datetime), count(count) {}
-
-    int get_station_id() const { return station.id; }
-
-    void to_record(v7::Transaction& tr, Record& rec) const
-    {
-        tr.repinfo().to_record(station.report, rec);
-        station.to_record(rec);
-
-        char bname[7];
-        format_bcode(code, bname);
-        rec.setc("var", bname);
-
-        if (count > 0)
-        {
-            rec.seti("context_id", count);
-            rec.set(datetime);
-        }
-    }
-
-    void dump(FILE* out) const
-    {
-        fprintf(out, "%02d %8.8s %02.4f %02.4f %-10s %4d %d%02d%03d\n",
-                station.id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get(), id_levtr, WR_VAR_FXY(code));
-    }
-};
-
-struct Summary : public VectorBase<CursorSummary, SummaryResult>
-{
-    using VectorBase::VectorBase;
-
-    const LevTrEntry& get_levtr(int id_levtr) const
-    {
-        // We prefetch levtr info for all IDs, so we do not need to hit the database here
-        return tr->levtr().lookup_cache(id_levtr);
-    }
-
-    Level get_level() const override { return get_levtr(cur->id_levtr).level; }
-    Trange get_trange() const override { return get_levtr(cur->id_levtr).trange; }
-
-    DatetimeRange get_datetimerange() const override
-    {
-        return this->cur->datetime;
-    }
-    wreport::Varcode get_varcode() const override { return this->cur->code; }
-    size_t get_count() const override { return this->cur->count; }
-
-    void to_record(Record& rec) override
-    {
-        VectorBase::to_record(rec);
-        const LevTrEntry& levtr = get_levtr(cur->id_levtr);
-        rec.set_level(levtr.level);
-        rec.set_trange(levtr.trange);
-    }
-
-    void load(Tracer<>& trc, const SummaryQueryBuilder& qb)
-    {
-        results.clear();
-        set<int> ids;
-        this->tr->data().run_summary_query(trc, qb, [&](const dballe::DBStation& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count) {
-            results.emplace_back(station, id_levtr, code, datetime, count);
-            ids.insert(id_levtr);
-        });
-        at_start = true;
-        cur = results.begin();
-
-        this->tr->levtr().prefetch_ids(trc, ids);
-    }
-};
-
+    results.clear();
+    tr->station().run_station_query(trc, qb, [&](const dballe::DBStation& desc) {
+        results.emplace_back(desc);
+    });
+    at_start = true;
+    cur = results.begin();
 }
 
-unique_ptr<CursorStation> run_station_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
+const DBValues& StationRows::values() const
+{
+    if (!cur->values.get())
+    {
+        cur->values.reset(new DBValues);
+        Tracer<> trc(tr->trc ? tr->trc->trace_add_station_vars() : nullptr);
+        // FIXME: this could be made more efficient by querying all matching
+        // station values, and merging rows during load, so it would only do
+        // one query to the database
+        tr->station().add_station_vars(trc, cur->station.id, *cur->values);
+    }
+    return *cur->values;
+}
+
+
+void StationDataRows::load(Tracer<>& trc, const DataQueryBuilder& qb)
+{
+    results.clear();
+    tr->station_data().run_station_data_query(trc, qb, [&](const dballe::DBStation& station, int id_data, std::unique_ptr<wreport::Var> var) {
+        results.emplace_back(station, id_data, std::move(var));
+    });
+    at_start = true;
+    cur = results.begin();
+}
+
+void DataRows::load(Tracer<>& trc, const DataQueryBuilder& qb)
+{
+    results.clear();
+    std::set<int> ids;
+    tr->data().run_data_query(trc, qb, [&](const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+        results.emplace_back(station, id_levtr, datetime, id_data, std::move(var));
+        ids.insert(id_levtr);
+    });
+    at_start = true;
+    cur = results.begin();
+
+    tr->levtr().prefetch_ids(trc, ids);
+}
+
+bool DataRows::add_to_best_results(const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)
+{
+    int prio = tr->repinfo().get_priority(station.report);
+
+    if (results.empty()) goto append;
+    if (station.coords != results.back().station.coords) goto append;
+    if (station.ident != results.back().station.ident) goto append;
+    if (id_levtr != results.back().id_levtr) goto append;
+    if (datetime != results.back().datetime) goto append;
+    if (var->code() != results.back().value.code()) goto append;
+
+    if (prio <= insert_cur_prio) return false;
+
+    // Replace
+    results.back().station = station;
+    results.back().value = DBValue(id_data, std::move(var));
+    insert_cur_prio = prio;
+    return true;
+
+append:
+    results.emplace_back(station, id_levtr, datetime, id_data, std::move(var));
+    insert_cur_prio = prio;
+    return true;
+}
+
+void DataRows::load_best(Tracer<>& trc, const DataQueryBuilder& qb)
+{
+    results.clear();
+    set<int> ids;
+    tr->data().run_data_query(trc, qb, [&](const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+        if (add_to_best_results(station, id_levtr, datetime, id_data, move(var)))
+            ids.insert(id_levtr);
+    });
+    at_start = true;
+    cur = results.begin();
+
+    tr->levtr().prefetch_ids(trc, ids);
+}
+
+void SummaryRows::load(Tracer<>& trc, const SummaryQueryBuilder& qb)
+{
+    results.clear();
+    set<int> ids;
+    tr->data().run_summary_query(trc, qb, [&](const dballe::DBStation& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t count) {
+        results.emplace_back(station, id_levtr, code, datetime, count);
+        ids.insert(id_levtr);
+    });
+    at_start = true;
+    cur = results.begin();
+
+    tr->levtr().prefetch_ids(trc, ids);
+}
+
+
+template<typename Impl>
+int Base<Impl>::remaining() const
+{
+    if (rows.at_start)
+        return rows.results.size();
+    else
+        return rows.results.end() - rows.cur - 1;
+}
+
+template<typename Impl>
+void Base<Impl>::discard()
+{
+    rows.discard();
+}
+
+template<typename Impl>
+unsigned Base<Impl>::test_iterate(FILE* dump)
+{
+    unsigned count;
+    for (count = 0; next(); ++count)
+        if (dump)
+            rows->dump(dump);
+    return count;
+}
+
+template class Base<Stations>;
+template class Base<StationData>;
+template class Base<Data>;
+template class Base<Summary>;
+
+
+void StationRow::dump(FILE* out) const
+{
+    fprintf(out, "%02d %8.8s %02.4f %02.4f %-10s\n", station.id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get());
+}
+
+void StationDataRow::dump(FILE* out) const
+{
+    fprintf(out, "%02d %8.8s %02.4f %02.4f %-10s ",
+            station.id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get());
+    value.print(out);
+}
+
+void DataRow::dump(FILE* out) const
+{
+    fprintf(out, "%02d %8.8s %02.4f %02.4f %-10s %4d ",
+            station.id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get(), id_levtr);
+    datetime.print_iso8601(out, ' ');
+    fprintf(out, " ");
+    value.print(out);
+}
+
+void SummaryRow::dump(FILE* out) const
+{
+    fprintf(out, "%02d %8.8s %02.4f %02.4f %-10s %4d %d%02d%03d\n",
+            station.id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get(), id_levtr, WR_VAR_FXY(code));
+}
+
+DBValues Stations::get_values() const
+{
+    return rows.values();
+}
+
+void Stations::remove()
+{
+    core::Query query;
+    query.ana_id = rows->station.id;
+    rows.tr->remove_station_data(query);
+    rows.tr->remove_data(query);
+}
+
+
+StationData::StationData(DataQueryBuilder& qb, bool with_attributes)
+    : Base(qb.tr), with_attributes(with_attributes) {}
+
+void StationData::query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read)
+{
+    if (!force_read && with_attributes)
+    {
+        for (const wreport::Var* a = rows->value->next_attr(); a != NULL; a = a->next_attr())
+            dest(std::unique_ptr<wreport::Var>(new Var(*a)));
+    } else {
+        rows.tr->attr_query_station(attr_reference_id(), dest);
+    }
+}
+
+void StationData::remove()
+{
+    rows.tr->remove_station_data_by_id(rows->value.data_id);
+}
+
+
+Data::Data(DataQueryBuilder& qb, bool with_attributes)
+    : Base(qb.tr), with_attributes(with_attributes) {}
+
+void Data::query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read)
+{
+    if (!force_read && with_attributes)
+    {
+        for (const Var* a = rows->value->next_attr(); a != NULL; a = a->next_attr())
+            dest(std::unique_ptr<wreport::Var>(new Var(*a)));
+    } else {
+        rows.tr->attr_query_data(attr_reference_id(), dest);
+    }
+}
+
+void Data::remove()
+{
+    rows.tr->remove_data_by_id(rows->value.data_id);
+}
+
+
+void Summary::remove()
+{
+    core::Query query;
+    query.ana_id = rows->station.id;
+    auto levtr = rows.get_levtr();
+    query.level = levtr.level;
+    query.trange = levtr.trange;
+    query.varcodes.insert(rows->code);
+    rows.tr->remove_data(query);
+}
+
+unique_ptr<dballe::CursorStation> run_station_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
-
     StationQueryBuilder qb(tr, q, modifiers);
     qb.build();
 
@@ -507,13 +274,13 @@ unique_ptr<CursorStation> run_station_query(Tracer<>& trc, std::shared_ptr<v7::T
         tr->db->conn->explain(qb.sql_query, stderr);
     }
 
-    auto resptr = new Stations(tr, modifiers);
-    unique_ptr<CursorStation> res(resptr);
-    resptr->load(trc, qb);
-    return res;
+    auto resptr = new Stations(tr);
+    unique_ptr<db::CursorStation> res(resptr);
+    resptr->rows.load(trc, qb);
+    return std::move(res);
 }
 
-unique_ptr<CursorStationData> run_station_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
+unique_ptr<dballe::CursorStationData> run_station_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     DataQueryBuilder qb(tr, q, modifiers, true);
@@ -525,7 +292,7 @@ unique_ptr<CursorStationData> run_station_data_query(Tracer<>& trc, std::shared_
         tr->db->conn->explain(qb.sql_query, stderr);
     }
 
-    unique_ptr<CursorStationData> res;
+    unique_ptr<db::CursorStationData> res;
     if (modifiers & DBA_DB_MODIFIER_BEST)
     {
         throw error_unimplemented("best queries of station vars");
@@ -533,14 +300,14 @@ unique_ptr<CursorStationData> run_station_data_query(Tracer<>& trc, std::shared_
         //res.reset(resptr);
         //resptr->load(qb);
     } else {
-        auto resptr = new StationData(qb, modifiers);
+        auto resptr = new StationData(qb, modifiers & DBA_DB_MODIFIER_WITH_ATTRIBUTES);
         res.reset(resptr);
-        resptr->load(trc, qb);
+        resptr->rows.load(trc, qb);
     }
-    return res;
+    return std::move(res);
 }
 
-unique_ptr<CursorData> run_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
+unique_ptr<dballe::CursorData> run_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     DataQueryBuilder qb(tr, q, modifiers, false);
@@ -553,20 +320,17 @@ unique_ptr<CursorData> run_data_query(Tracer<>& trc, std::shared_ptr<v7::Transac
     }
 
     unique_ptr<CursorData> res;
+    auto resptr = new Data(qb, modifiers & DBA_DB_MODIFIER_WITH_ATTRIBUTES);
+    res.reset(resptr);
+
     if (modifiers & DBA_DB_MODIFIER_BEST)
-    {
-        auto resptr = new Best(qb, modifiers);
-        res.reset(resptr);
-        resptr->load(trc, qb);
-    } else {
-        auto resptr = new Data(qb, modifiers);
-        res.reset(resptr);
-        resptr->load(trc, qb);
-    }
-    return res;
+        resptr->rows.load_best(trc, qb);
+    else
+        resptr->rows.load(trc, qb);
+    return std::move(res);
 }
 
-unique_ptr<CursorSummary> run_summary_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
+unique_ptr<dballe::CursorSummary> run_summary_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     if (modifiers & DBA_DB_MODIFIER_BEST)
@@ -581,10 +345,10 @@ unique_ptr<CursorSummary> run_summary_query(Tracer<>& trc, std::shared_ptr<v7::T
         tr->db->conn->explain(qb.sql_query, stderr);
     }
 
-    auto resptr = new Summary(tr, modifiers);
+    auto resptr = new Summary(tr);
     unique_ptr<CursorSummary> res(resptr);
-    resptr->load(trc, qb);
-    return res;
+    resptr->rows.load(trc, qb);
+    return std::move(res);
 }
 
 void run_delete_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool station_vars, bool explain)
@@ -602,7 +366,10 @@ void run_delete_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const 
         tr->db->conn->explain(qb.sql_query, stderr);
     }
 
-    tr->data().remove(trc, qb);
+    if (station_vars)
+        tr->station_data().remove(trc, qb);
+    else
+        tr->data().remove(trc, qb);
 }
 
 
@@ -610,3 +377,5 @@ void run_delete_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const 
 }
 }
 }
+
+#include "dballe/db/v7/cursor-access.tcc"

@@ -9,9 +9,9 @@ namespace dballe {
  * Look for the given argument in the URL query string, remove it from the url
  * string and return its value.
  *
- * If the argument is not found, returns the empty string
+ * If the argument is not found, returns false.
  */
-std::string url_pop_query_string(std::string& url, const std::string& name);
+bool url_pop_query_string(std::string& url, const std::string& name, std::string& val);
 
 }
 

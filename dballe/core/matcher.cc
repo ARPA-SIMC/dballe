@@ -104,11 +104,11 @@ struct And : public Matcher
         return res;
     }
 
-    virtual void to_record(dballe::Record& rec) const
+    void to_query(core::Query& query) const override
     {
         for (std::vector<const Matcher*>::const_iterator i = exprs.begin();
                 i != exprs.end(); ++i)
-            (*i)->to_record(rec);
+            (*i)->to_query(query);
     }
 };
 
@@ -119,13 +119,13 @@ struct AnaIDMatcher : public Matcher
 
     AnaIDMatcher(int ana_id) : ana_id(ana_id) {}
 
-    virtual Result match(const Matched& v) const
+    Result match(const Matched& v) const override
     {
         return v.match_station_id(ana_id) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
-    virtual void to_record(Record& rec) const
+    void to_query(core::Query& query) const override
     {
-        rec.set("ana_id", ana_id);
+        query.ana_id = ana_id;
     }
 };
 
@@ -136,17 +136,17 @@ struct WMOMatcher : public Matcher
 
     WMOMatcher(int block, int station=-1) : block(block), station(station) {}
 
-    virtual Result match(const Matched& v) const
+    Result match(const Matched& v) const override
     {
         return v.match_station_wmo(block, station) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
-    virtual void to_record(Record& rec) const
+    void to_query(core::Query& query) const override
     {
-        rec.set("block", block);
+        query.block = block;
         if (station != -1)
-            rec.set("station", station);
+            query.station = station;
         else
-            rec.unset("station");
+            query.station = MISSING_INT;
     }
 };
 
@@ -157,14 +157,14 @@ struct DateMatcher : public Matcher
 
     DateMatcher(const DatetimeRange& range) : range(range) {}
 
-    virtual Result match(const Matched& v) const
+    Result match(const Matched& v) const override
     {
         return v.match_datetime(range) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
 
-    virtual void to_record(Record& rec) const
+    void to_query(core::Query& query) const override
     {
-        rec.set_datetimerange(range);
+        query.dtrange = range;
     }
 };
 
@@ -176,15 +176,15 @@ struct CoordMatcher : public Matcher
     CoordMatcher(const LatRange& latrange, const LonRange& lonrange)
         : latrange(latrange), lonrange(lonrange) {}
 
-    virtual Result match(const Matched& v) const
+    Result match(const Matched& v) const override
     {
         return v.match_coords(latrange, lonrange) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
 
-    virtual void to_record(Record& rec) const
+    void to_query(core::Query& query) const override
     {
-        rec.set_latrange(latrange);
-        rec.set_lonrange(lonrange);
+        query.latrange = latrange;
+        query.lonrange = lonrange;
     }
 };
 
@@ -202,13 +202,13 @@ struct ReteMatcher : public Matcher
 
     ReteMatcher(const std::string& rete) : rete(tolower(rete)) {}
 
-    virtual Result match(const Matched& v) const
+    Result match(const Matched& v) const override
     {
         return v.match_rep_memo(rete.c_str()) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
-    virtual void to_record(Record& rec) const
+    void to_query(core::Query& query) const override
     {
-        rec.set("rep_memo", rete.c_str());
+        query.report = rete;
     }
 };
 
@@ -232,14 +232,14 @@ std::unique_ptr<Matcher> Matcher::create(const dballe::Query& query_gen)
             res->exprs.push_back(new WMOMatcher(query.block));
     }
 
-    if (!query.datetime.is_missing())
-        res->exprs.push_back(new DateMatcher(query.datetime));
+    if (!query.dtrange.is_missing())
+        res->exprs.push_back(new DateMatcher(query.dtrange));
 
     if (!query.latrange.is_missing() || !query.lonrange.is_missing())
         res->exprs.push_back(new CoordMatcher(query.latrange, query.lonrange));
 
-    if (!query.rep_memo.empty())
-        res->exprs.push_back(new ReteMatcher(query.rep_memo));
+    if (!query.report.empty())
+        res->exprs.push_back(new ReteMatcher(query.report));
 
     return unique_ptr<Matcher>(res.release());
 }

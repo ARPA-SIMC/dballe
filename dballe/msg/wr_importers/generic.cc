@@ -1,22 +1,3 @@
-/*
- * Copyright (C) 2005--2015  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "base.h"
 #include "dballe/core/var.h"
 #include "dballe/msg/msg.h"
@@ -29,6 +10,7 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -46,7 +28,7 @@ protected:
     void import_var(const Var& var);
 
 public:
-    GenericImporter(const msg::ImporterOptions& opts) : Importer(opts) {}
+    GenericImporter(const dballe::ImporterOptions& opts) : Importer(opts) {}
     virtual ~GenericImporter() {}
 
     void init() override
@@ -89,13 +71,13 @@ public:
         }
     }
 
-    MsgType scanType(const Bulletin&) const override
+    MessageType scanType(const Bulletin&) const override
     {
-        return MSG_GENERIC;
+        return MessageType::GENERIC;
     }
 };
 
-std::unique_ptr<Importer> Importer::createGeneric(const msg::ImporterOptions& opts)
+std::unique_ptr<Importer> Importer::createGeneric(const dballe::ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new GenericImporter(opts));
 }
@@ -130,7 +112,7 @@ void GenericImporter::import_defined(const Var& var)
             {
                 // Set the rep memo if we found it
                 const char* repmemo = var.enqc();
-                msg->type = Msg::type_from_repmemo(repmemo);
+                msg->type = Message::type_from_repmemo(repmemo);
                 msg->set_rep_memo(repmemo, -1);
             }
             break;
@@ -155,23 +137,24 @@ void GenericImporter::import_var(const Var& var)
         case WR_VAR(0, 8, 1): {
             unique_ptr<Var> nvar(newvar(WR_VAR(0, 8, 42), (int)convert_BUFR08001_to_BUFR08042(var.enqi())));
             nvar->setattrs(var);
-            msg->set(move(nvar), lev, tr);
+            msg->set(lev, tr, move(nvar));
             break;
         }
         // Datetime entries that may have attributes to store
-        case WR_VAR(0,  4,  1): ye = var.enqi(); if (var.next_attr()) msg->set_year_var(var); break;
-        case WR_VAR(0,  4,  2): mo = var.enqi(); if (var.next_attr()) msg->set_month_var(var); break;
-        case WR_VAR(0,  4,  3): da = var.enqi(); if (var.next_attr()) msg->set_day_var(var); break;
-        case WR_VAR(0,  4,  4): ho = var.enqi(); if (var.next_attr()) msg->set_hour_var(var); break;
-        case WR_VAR(0,  4,  5): mi = var.enqi(); if (var.next_attr()) msg->set_minute_var(var); break;
-        case WR_VAR(0,  4,  6): se = var.enqi(); if (var.next_attr()) msg->set_second_var(var); break;
+        case WR_VAR(0,  4,  1): msg->set_year_var(var); break;
+        case WR_VAR(0,  4,  2): msg->set_month_var(var); break;
+        case WR_VAR(0,  4,  3): msg->set_day_var(var); break;
+        case WR_VAR(0,  4,  4): msg->set_hour_var(var); break;
+        case WR_VAR(0,  4,  5): msg->set_minute_var(var); break;
+        case WR_VAR(0,  4,  6): msg->set_second_var(var); break;
         // Anything else
         default:
-            msg->set(var, map_code_to_dballe(var.code()), lev, tr);
+            msg->set(lev, tr, map_code_to_dballe(var.code()), var);
             break;
     }
 }
 
+}
 }
 }
 }

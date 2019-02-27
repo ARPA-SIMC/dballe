@@ -6,8 +6,6 @@
 #include <dballe/sql/fwd.h>
 
 namespace dballe {
-struct Record;
-
 namespace db {
 namespace v7 {
 namespace mysql {
@@ -47,6 +45,7 @@ public:
     void write_attrs(Tracer<>& trc, int id_data, const Values& values) override;
     void remove_all_attrs(Tracer<>& trc, int id_data) override;
     void remove(Tracer<>& trc, const v7::IdQueryBuilder& qb) override;
+    void remove_by_id(Tracer<>& trc, int id) override;
 };
 
 extern template class MySQLDataCommon<StationData>;

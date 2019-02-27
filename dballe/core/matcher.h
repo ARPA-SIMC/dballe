@@ -2,12 +2,10 @@
 #define DBALLE_CORE_MATCHER_H
 
 #include <dballe/types.h>
+#include <dballe/core/fwd.h>
 #include <memory>
 
 namespace dballe {
-struct Record;
-struct Query;
-
 namespace matcher {
 
 enum Result {
@@ -94,12 +92,11 @@ struct Matcher
     virtual ~Matcher() {}
 
     virtual matcher::Result match(const Matched& item) const = 0;
-    virtual void to_record(dballe::Record& query) const = 0;
+    virtual void to_query(dballe::core::Query& query) const = 0;
 
     static std::unique_ptr<Matcher> create(const dballe::Query& query);
 };
 
 }
 
-/* vim:set ts=4 sw=4: */
 #endif

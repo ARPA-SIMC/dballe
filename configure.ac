@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(dballe, [7.37], [enrico@enricozini.org])
+AC_INIT(dballe, [8.0], [enrico@enricozini.org])
 AC_CONFIG_SRCDIR([configure.ac])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_CONFIG_HEADER(config.h)
@@ -159,7 +159,7 @@ then
 fi
 
 dnl Check for python
-AM_PATH_PYTHON([], [], [
+AM_PATH_PYTHON([3], [], [
 	enable_dballe_python=no
 ])
 if test x$enable_dballe_python = xyes
@@ -177,7 +177,7 @@ AM_CONDITIONAL([HAVE_PYTHON3], [test $PYTHON_MAJOR_VERSION = 3])
 
 PKGCONFIG_LIBS="-lm"
 PKGCONFIG_CFLAGS=""
-PKGCONFIG_REQUIRES="libwreport >= 3.6 sqlite3"
+PKGCONFIG_REQUIRES="libwreport >= 3.18 sqlite3"
 AC_SUBST(PKGCONFIG_LIBS)
 AC_SUBST(PKGCONFIG_CFLAGS)
 AC_SUBST(PKGCONFIG_REQUIRES)
@@ -234,44 +234,6 @@ else
 fi
 AM_CONDITIONAL([HAVE_MYSQL], [test x"$have_mysql" = x"yes"])
 
-
-dnl Check for lua
-PKG_CHECK_EXISTS([lua5.2], [have_lua=yes], [have_lua=no])
-if test x$have_lua = xyes
-then
-        PKG_CHECK_MODULES(LUA,lua5.2,,[have_lua=no])
-        PKGCONFIG_REQUIRES="$PKGCONFIG_REQUIRES lua5.2"
-else
-	PKG_CHECK_EXISTS([lua5.1], [have_lua=yes], [have_lua=no])
-	if test x$have_lua = xyes
-	then
-		PKG_CHECK_MODULES(LUA,lua5.1,,[have_lua=no])
-        PKGCONFIG_REQUIRES="$PKGCONFIG_REQUIRES lua5.1 >= 5.1.1"
-	else
-		PKG_CHECK_EXISTS([lua], [have_lua=yes], [have_lua=no])
-		if test x$have_lua = xyes
-		then
-			PKG_CHECK_MODULES(LUA,lua,,[have_lua=no])
-            PKGCONFIG_REQUIRES="$PKGCONFIG_REQUIRES lua >= 5.1.1"
-		else
-			dnl We don't always have the luxury of .pc files for lua, it seems
-			have_lua=yes
-			AC_CHECK_LIB([lua], [lua_gettop], [true], [have_lua=no])
-			AC_CHECK_HEADER([lua.h], [true], [have_lua=no])
-			if test x$have_lua = xyes
-			then
-				LUA_CFLAGS=
-				LUA_LIBS="-llua"
-                PKGCONFIG_LIBS="$PKGCONFIG_LIBS $LUA_LIBS"
-			fi
-		fi
-	fi
-fi
-if test x$have_lua = xyes
-then
-        AC_DEFINE([HAVE_LUA], 1, [lua is available])
-fi
-AM_CONDITIONAL([LUA], [test x"$have_lua" = x"yes"])
 
 dnl Check for popt
 PKG_CHECK_EXISTS([popt], [have_popt=yes], [have_popt=no])
@@ -338,7 +300,7 @@ dnl
 dnl  6. If any interfaces have been removed since the last public release,
 dnl     then set AGE to 0.
 
-LIBDBALLE_VERSION_INFO="7:3:0"
+LIBDBALLE_VERSION_INFO="8:0:0"
 LIBDBALLEF_VERSION_INFO="5:0:0"
 AC_SUBST(LIBDBALLE_VERSION_INFO)
 AC_SUBST(LIBDBALLEF_VERSION_INFO)

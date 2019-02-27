@@ -14,7 +14,7 @@ ArrayFile::~ArrayFile()
 {
 }
 
-File::Encoding ArrayFile::encoding() const { return file_type; }
+Encoding ArrayFile::encoding() const { return file_type; }
 
 void ArrayFile::write(const std::string& msg)
 {

@@ -1,5 +1,5 @@
 EXTRA_DIST = \
-	aof bufr crex csv \
+	bufr crex csv \
 	runtest \
 	test-bufr-table.txt \
 	test-crex-d-table.txt \

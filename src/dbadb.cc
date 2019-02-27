@@ -1,11 +1,9 @@
 #include <dballe/cmdline/dbadb.h>
 #include <dballe/cmdline/processor.h>
 #include <dballe/cmdline/cmdline.h>
-#include <dballe/record.h>
 #include <dballe/file.h>
 #include <dballe/message.h>
 #include <dballe/msg/msg.h>
-#include <dballe/msg/codec.h>
 #include <dballe/db/db.h>
 #include <wreport/error.h>
 #include <wreport/utils/string.h>
@@ -61,7 +59,7 @@ struct poptOption dbTable[] = {
     POPT_TABLEEND
 };
 
-static shared_ptr<DB> connect()
+static std::shared_ptr<db::DB> connect()
 {
     const char* chosen_url;
 
@@ -75,7 +73,8 @@ static shared_ptr<DB> connect()
         chosen_url = op_url;
 
     /* If url looks like a url, treat it accordingly */
-    auto db = DB::connect_from_url(chosen_url);
+    auto options = DBConnectOptions::create(chosen_url);
+    auto db = dynamic_pointer_cast<db::DB>(DB::connect(*options));
 
     // Wipe database if requested
     if (op_wipe_first)
@@ -246,7 +245,7 @@ struct RepinfoCmd : public DatabaseCmd
         /* Get the optional name of the repinfo file.  If missing, the default will be used */
         const char* fname = poptGetArg(optCon);
 
-        auto tr = db->transaction();
+        auto tr = dynamic_pointer_cast<db::Transaction>(db->transaction());
         int added, deleted, updated;
         tr->update_repinfo(fname, &added, &deleted, &updated);
         tr->commit();
@@ -269,7 +268,7 @@ struct ImportCmd : public DatabaseCmd
     {
         DatabaseCmd::add_to_optable(opts);
         opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
-            "format of the input data ('bufr', 'crex', 'aof', 'csv', 'json')", "type" });
+            "format of the input data ('bufr', 'crex', 'csv', 'json')", "type" });
         opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ "overwrite", 'f', POPT_ARG_NONE, &op_overwrite, 0,
@@ -303,24 +302,23 @@ struct ImportCmd : public DatabaseCmd
         reader.import_opts.simplified = !op_precise_import;
 
         // Configure the importer
-        int import_flags = 0;
+        auto opts = DBImportOptions::create();
         if (op_overwrite)
-            import_flags |= DBA_IMPORT_OVERWRITE;
+            opts->overwrite = true;
         if (op_fast)
             setenv("DBA_INSECURE_SQLITE", "true", true);
         if (!op_no_attrs)
-            import_flags |= DBA_IMPORT_ATTRS;
+            opts->import_attributes = true;
         if (op_full_pseudoana)
-            import_flags |= DBA_IMPORT_FULL_PSEUDOANA;
+            opts->update_station = true;
 
         auto db = connect();
 
-        const char* forced_repmemo = NULL;
         if (strcmp(op_report, "") != 0)
-            forced_repmemo = op_report;
+            opts->report = op_report;
 
         Dbadb dbadb(*db);
-        return dbadb.do_import(get_filenames(optCon), reader, import_flags, forced_repmemo);
+        return dbadb.do_import(get_filenames(optCon), reader, *opts);
     }
 };
 
@@ -343,7 +341,7 @@ struct ExportCmd : public DatabaseCmd
         opts.push_back({ "report", 'r', POPT_ARG_STRING, &op_report, 0,
             "force exported data to be of this type of report", "rep" });
         opts.push_back({ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
-            "format of the data in output ('bufr', 'crex', 'aof')", "type" });
+            "format of the data in output ('bufr', 'crex')", "type" });
         opts.push_back({ "template", 't', POPT_ARG_STRING, &op_output_template, 0,
             "template of the data in output (autoselect if not specified, 'list' gives a list)", "name" });
         opts.push_back({ "dump", 0, POPT_ARG_NONE, &op_dump, 0,
@@ -376,7 +374,7 @@ struct ExportCmd : public DatabaseCmd
         {
             return dbadb.do_export_dump(query, stdout);
         } else {
-            File::Encoding type = File::parse_encoding(op_output_type);
+            Encoding type = File::parse_encoding(op_output_type);
             auto file = File::create(type, stdout, false, "w");
             return dbadb.do_export(query, *file, op_output_template, forced_repmemo);
         }
@@ -410,7 +408,7 @@ struct DeleteCmd : public DatabaseCmd
 
         auto db = connect();
         // TODO: check that there is something
-        db->remove(query);
+        db->remove_data(query);
         return 0;
     }
 };
@@ -431,7 +429,7 @@ struct InfoCmd : public DatabaseCmd
 
         auto db = connect();
 
-        string default_format = db::format_format(DB::get_default_format());
+        string default_format = db::format_format(db::DB::get_default_format());
         fprintf(stdout, "Default format for new DBs: %s\n", default_format.c_str());
         db->print_info(stdout);
 
@@ -447,7 +445,7 @@ int main (int argc, const char* argv[])
     dbadb.desc = "Manage the DB-ALLe database";
     dbadb.longdesc =
         "It allows to initialise the database, dump its contents and import and export data "
-        "using BUFR, CREX or AOF encoding";
+        "using BUFR, or CREX encoding";
 
     dbadb.add_subcommand(new DumpCmd);
     dbadb.add_subcommand(new StationsCmd);

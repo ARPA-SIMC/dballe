@@ -8,6 +8,7 @@
 
 #include <wreport/error.h>
 #include <dballe/file.h>
+#include <dballe/fwd.h>
 #include <popt.h>
 #include <memory>
 #include <vector>
@@ -15,13 +16,6 @@
 #include <string>
 
 namespace dballe {
-struct Record;
-struct Query;
-
-namespace core {
-struct Query;
-}
-
 namespace cmdline {
 
 struct Subcommand
@@ -111,7 +105,7 @@ void dba_cmdline_error(poptContext optCon, const char* fmt, ...) __attribute__ (
 /**
  * Return the File::Encoding that corresponds to the name in the string
  */
-File::Encoding string_to_encoding(const char* type);
+Encoding string_to_encoding(const char* type);
 
 /**
  * Get a DB-ALLe query from commandline parameters in the form key=value

@@ -1,5 +1,5 @@
-#include "sql/mysql.h"
-#include "sql/querybuf.h"
+#include "mysql.h"
+#include "querybuf.h"
 #include "dballe/types.h"
 #include <cstring>
 #include <cstdarg>
@@ -493,7 +493,7 @@ struct MySQLTransaction : public Transaction
         conn.exec_no_data("ROLLBACK");
         fired = true;
     }
-    void rollback_nothrow() noexcept
+    void rollback_nothrow() noexcept override
     {
         conn.exec_no_data_nothrow("ROLLBACK");
         fired = true;

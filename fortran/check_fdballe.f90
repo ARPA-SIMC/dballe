@@ -20,12 +20,12 @@
       call dbinit(dbahandle)
 
 !     Open a session
-      ierr = idba_preparati(dbahandle, handle, "write", "write", "write")
-      call ensure_no_error("preparati")
+      ierr = idba_begin(dbahandle, handle, "write", "write", "write")
+      call ensure_no_error("begin")
 
 !     Clear the database
-      ierr = idba_scopa(handle, "") 
-      call ensure_no_error("scopa")
+      ierr = idba_reinit_db(handle, "")
+      call ensure_no_error("reinit_db")
 
 !     Insert some data
       ierr = idba_setd(handle, "lat", 30D00)
@@ -80,8 +80,8 @@
       call ensure_no_error("setc 16")
 
 !     Perform the insert
-      ierr = idba_prendilo(handle)
-      call ensure_no_error("first prendilo")
+      ierr = idba_insert_data(handle)
+      call ensure_no_error("first insert_data")
 
 !     Try to read the id of the pseudoana data just inserted
       ierr = idba_enqi(handle, "ana_id", i)
@@ -92,18 +92,18 @@
 
 !     Insert some QC flags
       ierr = idba_setc(handle, "*B33002", "1")
-      call ensure_no_error("critica setc 0")
+      call ensure_no_error("insert_attributes setc 0")
       ierr = idba_setc(handle, "*B33003", "1")
-      call ensure_no_error("critica setc 1")
-      ierr = idba_setc(handle, "*var", "B01011")
-      ierr = idba_critica(handle)
-!      ierr = idba_critica(handle, "B01011")
-      call ensure_no_error("prima critica")
+      call ensure_no_error("insert_attributes setc 1")
+      ierr = idba_setc(handle, "*var_related", "B01011")
+      call ensure_no_error("insert_attributes setc 2")
+      ierr = idba_insert_attributes(handle)
+!      ierr = idba_insert_attributes(handle, "B01011")
+      call ensure_no_error("prima insert_attributes")
 
 !     Query back the data
-!      ierr = idba_ricominciamo(handle)
       ierr = idba_unsetall(handle)
-      call ensure_no_error("ricominciamo")
+      call ensure_no_error("unsetall")
       ierr = idba_setr(handle, "latmin", 20.0)
       call ensure_no_error("query setf 0")
       ierr = idba_setr(handle, "latmax", 50.0)
@@ -112,28 +112,28 @@
       call ensure_no_error("query setf 2")
       ierr = idba_setr(handle, "lonmax", 20.0)
       call ensure_no_error("query setf 3")
-      ierr = idba_voglioquesto(handle, i)
-      call ensure_no_error("voglioquesto")
+      ierr = idba_query_data(handle, i)
+      call ensure_no_error("query_data")
 
-      call ensure("voglioquesto result", i.eq.1)
+      call ensure("query_data result", i.eq.1)
 
 !     Read the results of the query
 !     TODO: make a for loop instead
       do while (i.gt.0)
-         ierr = idba_dammelo(handle, param)
-         call ensure_no_error("dammelo")
+         ierr = idba_next_data(handle, param)
+         call ensure_no_error("next_data")
          ierr = idba_enqc(handle, param, cval)
-         call ensure_no_error("dammelo enqc 0")
+         call ensure_no_error("next_data enqc 0")
          ierr = idba_enqi(handle, "year", ival)
-         call ensure_no_error("dammelo enqi 1")
+         call ensure_no_error("next_data enqi 1")
          ierr = idba_enqr(handle, "lat", rval)
-         call ensure_no_error("dammelo enqr 2")
+         call ensure_no_error("next_data enqr 2")
          ierr = idba_enqd(handle, "lon", dval)
-         call ensure_no_error("dammelo enqd 3")
+         call ensure_no_error("next_data enqd 3")
          ierr = idba_enqc(handle, "lon", cval)
-         call ensure_no_error("dammelo enqc 4")
+         call ensure_no_error("next_data enqc 4")
          ierr = idba_enqdate(handle, i1, i2, i3, i4, i5, i6)
-         call ensure_no_error("dammelo enqdate")
+         call ensure_no_error("next_data enqdate")
          call ensure("enqdate i1", i1.eq.2006)
          call ensure("enqdate i2", i2.eq.1)
          call ensure("enqdate i3", i3.eq.2)
@@ -141,57 +141,57 @@
          call ensure("enqdate i5", i5.eq.4)
          call ensure("enqdate i6", i6.eq.0)
          ierr = idba_enqlevel(handle, i1, i2, i3, i4)
-         call ensure_no_error("dammelo enqlevel")
+         call ensure_no_error("next_data enqlevel")
          call ensure("enqlevel i1", i1.eq.1)
          call ensure("enqlevel i2", i2.eq.1)
          call ensure("enqlevel i3", i3.eq.1)
          call ensure("enqlevel i4", i4.eq.1)
          ierr = idba_enqtimerange(handle, i1, i2, i3)
-         call ensure_no_error("dammelo enqtimerange")
+         call ensure_no_error("next_data enqtimerange")
          call ensure("enqdate i1", i1.eq.20)
          call ensure("enqdate i2", i2.eq.1)
          call ensure("enqdate i3", i3.eq.1)
-         
+
          ierr = idba_enqi(handle, "ana_id", ival)
-         call ensure_no_error("dammelo enqi ana_id")
+         call ensure_no_error("next_data enqi ana_id")
          call ensure("ana_id", ival.eq.1)
 
          ierr = idba_enqi(handle, "context_id", ival)
-         call ensure_no_error("dammelo enqi context_id")
+         call ensure_no_error("next_data enqi context_id")
 
 !        Save the id for reusing it later
          saved_id = ival
 
-         ierr = idba_voglioancora(handle, i1)
-         call ensure_no_error("voglioancora")
+         ierr = idba_query_attributes(handle, i1)
+         call ensure_no_error("query_attributes")
          do while (i1.gt.0)
-            ierr = idba_ancora(handle, param)
-            call ensure_no_error("ancora")
+            ierr = idba_next_attribute(handle, param)
+            call ensure_no_error("next_attribute")
             ierr = idba_enqc(handle, param, cval)
-            call ensure_no_error("ancora enqc")
+            call ensure_no_error("next_attribute enqc")
             i1 = i1 - 1
          enddo
 
-!        Perform some useless scusa just to test the parser
+!        Perform some useless remove_attributes just to test the parser
          ierr = idba_setc(handle, "*varlist", "*B12345");
-         call ensure_no_error("scusa setc 1")
-         ierr = idba_scusa(handle);
-         call ensure_no_error("scusa 1")
+         call ensure_no_error("remove_attributes setc 1")
+         ierr = idba_remove_attributes(handle);
+         call ensure_no_error("remove_attributes 1")
          ierr = idba_setc(handle, "*varlist", "*B12345,*B54321");
-         call ensure_no_error("scusa setc 2")
-         ierr = idba_scusa(handle);
-         call ensure_no_error("scusa 2")
+         call ensure_no_error("remove_attributes setc 2")
+         ierr = idba_remove_attributes(handle);
+         call ensure_no_error("remove_attributes 2")
 
          i = i - 1
       enddo
 
 !     Remove the QC data for saved_data
       ierr = idba_seti(handle, "*context_id", saved_id);
-      call ensure_no_error("scusa seti 3")
+      call ensure_no_error("remove_attributes seti 3")
       ierr = idba_setc(handle, "*var", "*B01011")
-      call ensure_no_error("scusa setc 3")
-      ierr = idba_scusa(handle);
-      call ensure_no_error("scusa 3")
+      call ensure_no_error("remove_attributes setc 3")
+      ierr = idba_remove_attributes(handle);
+      call ensure_no_error("remove_attributes 3")
 
       ierr = idba_unsetall(handle)
       call ensure_no_error("unsetall quantesono 1")

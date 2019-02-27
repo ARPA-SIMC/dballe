@@ -1,25 +1,7 @@
-/*
- * Copyright (C) 2005--2013  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "dbadb.h"
 #include "dballe/message.h"
 #include "dballe/msg/msg.h"
+#include "dballe/values.h"
 #include "dballe/db/db.h"
 
 #include <cstdlib>
@@ -36,12 +18,11 @@ namespace {
 
 struct Importer : public Action
 {
-    DB& db;
-    int import_flags = 0;
-    const char* forced_repmemo = nullptr;
-    shared_ptr<dballe::db::Transaction> transaction;
+    dballe::DB& db;
+    const DBImportOptions& opts;
+    std::shared_ptr<dballe::Transaction> transaction;
 
-    Importer(DB& db) : db(db) {}
+    Importer(dballe::DB& db, const DBImportOptions& opts) : db(db), opts(opts) {}
 
     virtual bool operator()(const cmdline::Item& item);
     void commit()
@@ -62,7 +43,7 @@ bool Importer::operator()(const Item& item)
         return false;
     }
     try {
-        transaction->import_msgs(*item.msgs, forced_repmemo, import_flags);
+        transaction->import_messages(*item.msgs, opts);
     } catch (std::exception& e) {
         item.processing_failed(e);
     }
@@ -75,14 +56,15 @@ bool Importer::operator()(const Item& item)
 int Dbadb::do_dump(const Query& query, FILE* out)
 {
     auto tr = db.transaction();
-    unique_ptr<db::Cursor> cursor = tr->query_data(query);
-
-    auto res = Record::create();
+    auto cursor = tr->query_data(query);
     for (unsigned i = 0; cursor->next(); ++i)
     {
-        cursor->to_record(*res);
         fprintf(out, "#%u: -----------------------\n", i);
-        res->print(out);
+        fprintf(out, "Station: "); cursor->get_station().print(out);
+        fprintf(out, "Datetime: "); cursor->get_datetime().print(out);
+        fprintf(out, "Level: "); cursor->get_level().print(out);
+        fprintf(out, "Trange: "); cursor->get_trange().print(out);
+        fprintf(out, "Var: "); cursor->get_var().print(out);
     }
 
     tr->rollback();
@@ -93,14 +75,16 @@ int Dbadb::do_dump(const Query& query, FILE* out)
 int Dbadb::do_stations(const Query& query, FILE* out)
 {
     auto tr = db.transaction();
-    unique_ptr<db::Cursor> cursor = tr->query_stations(query);
-
-    auto res = Record::create();
+    auto cursor = tr->query_stations(query);
     for (unsigned i = 0; cursor->next(); ++i)
     {
-        cursor->to_record(*res);
         fprintf(out, "#%u: -----------------------\n", i);
-        res->print(out);
+        fprintf(out, "Station: "); cursor->get_station().print(out);
+        auto values = cursor->get_values();
+        for (const auto& val: values)
+        {
+            fprintf(out, "Var: "); val->print(out);
+        }
     }
 
     tr->rollback();
@@ -109,18 +93,15 @@ int Dbadb::do_stations(const Query& query, FILE* out)
 
 int Dbadb::do_export_dump(const Query& query, FILE* out)
 {
-    db.export_msgs(query, [&](unique_ptr<Message>&& msg) {
-        msg->print(out);
-        return true;
-    });
+    auto cursor = db.query_messages(query);
+    while (cursor->next())
+        cursor->get_message().print(out);
     return 0;
 }
 
-int Dbadb::do_import(const list<string>& fnames, Reader& reader, int import_flags, const char* forced_repmemo)
+int Dbadb::do_import(const list<string>& fnames, Reader& reader, const DBImportOptions& opts)
 {
-    Importer importer(db);
-    importer.import_flags = import_flags;
-    importer.forced_repmemo = forced_repmemo;
+    Importer importer(db, opts);
     reader.read(fnames, importer);
     importer.commit();
     if (reader.verbose)
@@ -138,36 +119,38 @@ int Dbadb::do_import(const list<string>& fnames, Reader& reader, int import_flag
     return reader.has_fail_file() ? 0 : 1;
 }
 
-int Dbadb::do_import(const std::string& fname, Reader& reader, int import_flags, const char* forced_repmemo)
+int Dbadb::do_import(const std::string& fname, Reader& reader, const DBImportOptions& opts)
 {
     list<string> fnames;
     fnames.push_back(fname);
-    return do_import(fnames, reader, import_flags, forced_repmemo);
+    return do_import(fnames, reader, opts);
 }
 
 int Dbadb::do_export(const Query& query, File& file, const char* output_template, const char* forced_repmemo)
 {
-    msg::ExporterOptions opts;
+    impl::ExporterOptions opts;
     if (output_template && output_template[0] != 0)
         opts.template_name = output_template;
 
     if (forced_repmemo)
         forced_repmemo = forced_repmemo;
-    auto exporter = msg::Exporter::create(file.encoding(), opts);
+    auto exporter = Exporter::create(file.encoding(), opts);
 
-    db.export_msgs(query, [&](unique_ptr<Message>&& msg) {
+    auto cursor = db.query_messages(query);
+    while (cursor->next())
+    {
+        auto msg = cursor->detach_message();
         /* Override the message type if the user asks for it */
         if (forced_repmemo != NULL)
         {
-            Msg& m = Msg::downcast(*msg);
-            m.type = Msg::type_from_repmemo(forced_repmemo);
+            impl::Message& m = impl::Message::downcast(*msg);
+            m.type = impl::Message::type_from_repmemo(forced_repmemo);
             m.set_rep_memo(forced_repmemo);
         }
-        Messages msgs;
-        msgs.append(move(msg));
+        std::vector<std::shared_ptr<Message>> msgs;
+        msgs.emplace_back(move(msg));
         file.write(exporter->to_binary(msgs));
-        return true;
-    });
+    }
     return 0;
 }
 

@@ -14,25 +14,25 @@ namespace {
 static inline core::Query query_exact(const Datetime& dt)
 {
     core::Query query;
-    query.datetime = DatetimeRange(dt, dt);
+    query.dtrange = DatetimeRange(dt, dt);
     return query;
 }
 static inline core::Query query_min(const Datetime& dt)
 {
     core::Query query;
-    query.datetime = DatetimeRange(dt, Datetime());
+    query.dtrange = DatetimeRange(dt, Datetime());
     return query;
 }
 static inline core::Query query_max(const Datetime& dt)
 {
     core::Query query;
-    query.datetime = DatetimeRange(Datetime(), dt);
+    query.dtrange = DatetimeRange(Datetime(), dt);
     return query;
 }
 static inline core::Query query_minmax(const Datetime& min, const Datetime& max)
 {
     core::Query query;
-    query.datetime = DatetimeRange(min, max);
+    query.dtrange = DatetimeRange(min, max);
     return query;
 }
 
@@ -40,16 +40,16 @@ struct DateHourDataSet : public TestDataSet
 {
     DateHourDataSet()
     {
-        DataValues d;
-        d.info.coords = Coords(12.34560, 76.54320);
-        d.info.report = "synop";
-        d.info.level = Level(10, 11, 15, 22);
-        d.info.trange = Trange(20, 111, 122);
+        core::Data d;
+        d.station.coords = Coords(12.34560, 76.54320);
+        d.station.report = "synop";
+        d.level = Level(10, 11, 15, 22);
+        d.trange = Trange(20, 111, 122);
         data["1"] = d;
-        data["1"].info.datetime = Datetime(2013, 10, 30, 11);
+        data["1"].datetime = Datetime(2013, 10, 30, 11);
         data["1"].values.set("B12101", 11.5);
         data["2"] = d;
-        data["2"].info.datetime = Datetime(2013, 10, 30, 12);
+        data["2"].datetime = Datetime(2013, 10, 30, 12);
         data["2"].values.set("B12101", 12.5);
     }
 };
@@ -58,16 +58,16 @@ struct DateDayDataSet : public TestDataSet
 {
     DateDayDataSet()
     {
-        DataValues d;
-        d.info.coords = Coords(12.34560, 76.54320);
-        d.info.report = "synop";
-        d.info.level = Level(10, 11, 15, 22);
-        d.info.trange = Trange(20, 111, 122);
+        core::Data d;
+        d.station.coords = Coords(12.34560, 76.54320);
+        d.station.report = "synop";
+        d.level = Level(10, 11, 15, 22);
+        d.trange = Trange(20, 111, 122);
         data["1"] = d;
-        data["1"].info.datetime = Datetime(2013, 10, 23);
+        data["1"].datetime = Datetime(2013, 10, 23);
         data["1"].values.set("B12101", 23.5);
         data["2"] = d;
-        data["2"].info.datetime = Datetime(2013, 10, 24);
+        data["2"].datetime = Datetime(2013, 10, 24);
         data["2"].values.set("B12101", 24.5);
     }
 };
@@ -109,14 +109,14 @@ void OldFixtureTests<DB>::register_tests()
 {
 this->add_method("ana_id", [](Fixture& f) {
     char query[20];
-    snprintf(query, 20, "ana_id=%d", f.test_data.data["synop"].info.id);
+    snprintf(query, 20, "ana_id=%d", f.test_data.data["synop"].station.id);
     TRY_QUERY(query, 2);
     TRY_QUERY("ana_id=4242", 0);
 });
 this->add_method("ana_context", [](Fixture& f) {
     // Query data in station context
     core::Query query;
-    unique_ptr<db::Cursor> cur = f.tr->query_station_data(query);
+    auto cur = f.tr->query_station_data(query);
     wassert(actual(cur->remaining()) == 10);
 });
 this->add_method("year", [](Fixture& f) {
@@ -158,10 +158,10 @@ this->add_method("year", [](Fixture& f) {
 });
 this->add_method("block_station", [](Fixture& f) {
     // Block and station queries
-    TRY_QUERY("B01001=1", 4);
-    TRY_QUERY("B01001=2", 0);
-    TRY_QUERY("B01002=52", 4);
-    TRY_QUERY("B01002=53", 0);
+    TRY_QUERY("block=1", 4);
+    TRY_QUERY("block=2", 0);
+    TRY_QUERY("station=52", 4);
+    TRY_QUERY("station=53", 0);
 });
 this->add_method("ana_filter", [](Fixture& f) {
     // ana_filter queries
@@ -206,8 +206,9 @@ this->add_method("latlon", [](Fixture& f) {
     TRY_QUERY("lonmin=77., lonmax=76.54330", 4);
     TRY_QUERY("lonmin=77., lonmax=76.54320", 4);
     TRY_QUERY("lonmin=77., lonmax=-10", 0);
-    TRY_QUERY("lonmin=0., lonmax=360.", 4);
-    TRY_QUERY("lonmin=-180., lonmax=180.", 4);
+    TRY_QUERY("lonmin=0., lonmax=360.", 0);
+    TRY_QUERY("lonmin=76.54320, lonmax=436.54320", 4);
+    TRY_QUERY("lonmin=-180., lonmax=180.", 0);
 });
 this->add_method("mobile", [](Fixture& f) {
     // fixed/mobile queries
@@ -343,11 +344,10 @@ this->add_method("datetime2", [](Fixture& f) {
 });
 this->add_method("query_ordering", [](Fixture& f) {
     auto insert = [&](const char* str) {
-        core::Record rec;
-        rec.set_from_test_string(str);
-        DataValues vals(rec);
-        wassert(f.tr->insert_data(vals, false, true));
-        return vals;
+        core::Data data;
+        data.set_from_test_string(str);
+        wassert(f.tr->insert_data(data));
+        return data;
     };
     auto vals01 = insert("lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=synop, B12101=280.15");
     auto vals02 = insert("lat=2, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=synop, B12101=280.15");
@@ -360,10 +360,9 @@ this->add_method("query_ordering", [](Fixture& f) {
     auto cur = f.tr->query_data(core::Query());
     wassert(actual(cur->remaining()) == 7);
 
-    core::Record test;
     switch (DB::format)
     {
-        case V7:
+        case Format::V7:
             // v7: ana_id(coords, ident, report), datetime, level, trange, code
             wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals01)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12101=280.15
             wassert(actual(cur->next())); wassert(actual(cur).data_matches(vals07)); // lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=a, B12103=280.15

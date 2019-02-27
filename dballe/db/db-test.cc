@@ -16,7 +16,7 @@ class Tests : public TestCase
     using TestCase::TestCase;
 
     void register_tests() override;
-} tests("db");
+} tests("db_db");
 
 void Tests::register_tests()
 {
@@ -27,4 +27,3 @@ add_method("empty", []{
 }
 
 }
-

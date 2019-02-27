@@ -6,7 +6,7 @@
 #include <system_error>
 #include <algorithm>
 #include "dballe/msg/msg.h"
-#include "dballe/msg/codec.h"
+#include "dballe/importer.h"
 
 using namespace std;
 
@@ -199,9 +199,9 @@ void BasicProgress::test_failed(const Task& t, std::exception& e)
     fprintf(err, "%s: failed: %s\n", t.name(), e.what());
 }
 
-void Messages::load(const std::string& pathname, dballe::File::Encoding encoding, const char* codec_options)
+void Messages::load(const std::string& pathname, dballe::Encoding encoding, const char* codec_options)
 {
-    auto importer = msg::Importer::create(File::BUFR, msg::ImporterOptions::from_string(codec_options));
+    auto importer = Importer::create(Encoding::BUFR, codec_options);
     auto in = File::create(encoding, pathname, "rb");
     in->foreach([&](const BinaryMessage& rmsg) {
         emplace_back(importer->from_binary(rmsg));
@@ -212,14 +212,7 @@ void Messages::load(const std::string& pathname, dballe::File::Encoding encoding
 void Messages::duplicate(size_t size, const Datetime& datetime)
 {
     for (size_t i = 0; i < size; ++i)
-    {
         emplace_back((*this)[i]);
-        for (auto& message: back())
-        {
-            auto msg = dynamic_cast<dballe::Msg*>(&message);
-            msg->set_datetime(datetime);
-        }
-    }
 }
 
 

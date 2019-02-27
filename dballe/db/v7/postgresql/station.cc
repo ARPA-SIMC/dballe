@@ -5,9 +5,8 @@
 #include "dballe/db/v7/db.h"
 #include "dballe/db/v7/repinfo.h"
 #include "dballe/sql/postgresql.h"
-#include "dballe/record.h"
 #include "dballe/core/var.h"
-#include "dballe/core/values.h"
+#include "dballe/values.h"
 #include <wreport/var.h>
 
 using namespace wreport;
@@ -99,21 +98,21 @@ void PostgreSQLStation::get_station_vars(Tracer<>& trc, int id_station, std::fun
         if (!res.is_null(row, 2))
         {
             TRACE("get_station_vars new attribute\n");
-            Values::decode(res.get_bytea(row, 2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
+            DBValues::decode(res.get_bytea(row, 2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
         }
 
         dest(move(var));
     };
 }
 
-void PostgreSQLStation::add_station_vars(Tracer<>& trc, int id_station, Record& rec)
+void PostgreSQLStation::add_station_vars(Tracer<>& trc, int id_station, DBValues& values)
 {
     using namespace dballe::sql::postgresql;
     Tracer<> trc_sel(trc ? trc->trace_select("v7_station_add_station_vars") : nullptr);
     Result res(conn.exec_prepared("v7_station_add_station_vars", id_station));
     if (trc_sel) trc_sel->add_row(res.rowcount());
     for (unsigned row = 0; row < res.rowcount(); ++row)
-        rec.set(newvar((Varcode)res.get_int4(row, 0), res.get_string(row, 1)));
+        values.set(newvar((Varcode)res.get_int4(row, 0), res.get_string(row, 1)));
 }
 
 void PostgreSQLStation::run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::DBStation&)> dest)

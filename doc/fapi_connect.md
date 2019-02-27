@@ -10,7 +10,7 @@ Specifying the URL directly:
 
 Fortran:
 ```fortran
-ierr = idba_presentati(dbhandle, "dbtype://info")
+ierr = idba_connect(dbhandle, "dbtype://info")
 ```
 
 dbadb:
@@ -38,7 +38,7 @@ export DBA_DB="dbtype://info"
 
 Fortran:
 ```fortran
-ierr = idba_presentati(dbhandle, DBA_MVC)
+ierr = idba_connect(dbhandle, DBA_MVC)
 ```
 
 dbadb:
@@ -95,3 +95,14 @@ memdb is an internal memory-only storage that can be used to process small
 amounts of data without requiring a database server or a file.
 
 Its url is just `mem:`.
+
+
+## URL actions
+
+### `?wipe=yes/true/1`
+
+You can add a `wipe` query string argument to the connection URL to have
+DB-All.e create or recreate the database on connection.
+
+You can also use `?wipe` without argument. Note that `?wipe=` with an
+empty argument also triggers a wipe.

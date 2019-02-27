@@ -23,7 +23,6 @@ BuildRequires: doxygen
 BuildRequires: /usr/bin/rst2html
 BuildRequires: pkgconfig(lua) > 5.1.1
 BuildRequires: pkgconfig(libwreport) >= 3.11
-BuildRequires: python-devel
 BuildRequires: %{python3_vers}-devel
 %if 0%{?rhel} == 7
 BuildRequires: popt-devel
@@ -37,14 +36,13 @@ BuildRequires: pkgconfig(mariadb)
 BuildRequires: pkgconfig(sqlite3)
 BuildRequires: help2man
 BuildRequires: libwreport-doc
-BuildRequires: python-wreport3
 BuildRequires: %{python3_vers}-wreport3
 BuildRequires: gcc-gfortran
 BuildRequires: numpy
 BuildRequires: %{python3_vers}-numpy
 
+Requires: %{python3_vers}-dballe = %{?epoch:%epoch:}%{version}-%{release}
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
-Requires: python-dballe
 
 %description
  Database for punctual meteorological data (Command line tools)
@@ -191,26 +189,13 @@ Common data files for all DB-All.e modules
  BUFR and CREX decoding tables, report metadata, level and time range
  descriptions.
 
-%package -n python-dballe
-Summary:  DB-ALL.e Python library
-Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
-Requires: numpy
-Requires: python-wreport3
-
-%description -n python-dballe
- DB-ALL.e Python library for weather research
- DB-All.e is a fast on-disk database where meteorological observed and
- forecast data can be stored, searched, retrieved and updated.
-
- These are the python bindings.
-
 %package -n %{python3_vers}-dballe
 Summary:  DB-ALL.e Python library
 Group:    Applications/Meteo
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
 Requires: %{python3_vers}-numpy
 Requires: %{python3_vers}-wreport3
+Obsoletes: python-dballe < 8.0
 
 %description -n %{python3_vers}-dballe
  DB-ALL.e Python library for weather research
@@ -222,32 +207,15 @@ Requires: %{python3_vers}-wreport3
 %prep
 %setup -q -n %{srcarchivename}
 
-rm -rf %{py3dir}
-cp -a . %{py3dir}
-
 %build
 
 autoreconf -ifv
-
 %configure FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs --disable-static
 make
 make check
 
-pushd %{py3dir}
-autoreconf -ifv
-%configure PYTHON=%{__python3} FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs --disable-static
-popd
-make
-make check -C python
-
 %install
 [ "%{buildroot}" != / ] && rm -rf "%{buildroot}"
-
-pushd %{py3dir}
-make install DESTDIR="%{buildroot}" STRIP=/bin/true
-mkdir -p $RPM_BUILD_ROOT%{_fmoddir}
-mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
-popd
 
 make install DESTDIR="%{buildroot}" STRIP=/bin/true
 mkdir -p $RPM_BUILD_ROOT%{_fmoddir}
@@ -288,7 +256,7 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 %{_includedir}/dballe/sql/*
 %{_includedir}/dballe/db/*
 %{_includedir}/dballe/cmdline/*
-%{_includedir}/dballe/simple/*
+%{_includedir}/dballe/fortran/*
 
 %exclude %{_libdir}/libdballe.la
 %{_libdir}/libdballe.so
@@ -307,20 +275,10 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 %{_fmoddir}/*.mod
 
 
-
 %files -n libdballef4
 %defattr(-,root,root,-)
 %{_libdir}/libdballef*.so.*
 
-
-%files -n python-dballe
-%defattr(-,root,root,-)
-%dir %{python2_sitelib}/dballe
-%{python2_sitelib}/dballe/*
-%dir %{python2_sitearch}
-%exclude %{python2_sitearch}/*.la
-%{python2_sitearch}/*.so*
-%{_bindir}/dbatbl_makeb
 
 %files -n libdballe-doc
 %defattr(-,root,root,-)
@@ -334,7 +292,6 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 %dir %{python3_sitearch}
 %exclude %{python3_sitearch}/*.la
 %{python3_sitearch}/*.so*
-%{_bindir}/dbatbl_makeb
 
 %post
 /sbin/ldconfig

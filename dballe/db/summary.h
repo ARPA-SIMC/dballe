@@ -4,7 +4,6 @@
 #include <dballe/core/fwd.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/query.h>
-#include <dballe/core/values.h>
 #include <dballe/core/smallset.h>
 #include <dballe/db/db.h>
 #include <vector>
@@ -15,6 +14,9 @@ namespace dballe {
 namespace db {
 namespace summary {
 
+/**
+ * Description of a variable, independent of where and when it was measured
+ */
 struct VarDesc
 {
     dballe::Level level;
@@ -36,6 +38,9 @@ struct VarDesc
     bool operator>=(const VarDesc& o) const { return std::tie(level, trange, varcode) >= std::tie(o.level, o.trange, o.varcode); }
 };
 
+/**
+ * Statistics about a variable
+ */
 struct VarEntry
 {
     VarDesc var;
@@ -70,6 +75,11 @@ struct VarEntry
 
 inline const VarDesc& station_entry_get_value(const VarEntry& item) { return item.var; }
 
+/**
+ * Information about a station, and statistics about its variables.
+ *
+ * It behaves similarly to a std::vector<VarEntry>
+ */
 template<typename Station>
 struct StationEntry : protected core::SmallSet<VarEntry, VarDesc, station_entry_get_value>
 {
@@ -91,6 +101,14 @@ struct StationEntry : protected core::SmallSet<VarEntry, VarDesc, station_entry_
 
     StationEntry() = default;
 
+    template<typename OStation>
+    StationEntry(const Station& station, const StationEntry<OStation>& entry)
+        : station(station)
+    {
+        for (const auto& item: entry)
+            this->add(item);
+    }
+
     StationEntry(const Station& station, const VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count)
         : station(station)
     {
@@ -106,7 +124,8 @@ struct StationEntry : protected core::SmallSet<VarEntry, VarDesc, station_entry_
     StationEntry(const StationEntry&) = default;
 
     void add(const VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count);
-    void add(const StationEntry& entries);
+    template<typename OStation>
+    void add(const StationEntry<OStation>& entries);
     void add_filtered(const StationEntry& entries, const dballe::Query& query);
 
     void to_json(core::JSONWriter& writer) const;
@@ -116,28 +135,14 @@ struct StationEntry : protected core::SmallSet<VarEntry, VarDesc, station_entry_
 };
 
 
-#if 0
-    bool same_metadata(const Entry& o) const
-    {
-        return std::tie(station, level, trange, varcode) ==
-               std::tie(o.station, o.level, o.trange, o.varcode);
-    }
-
-    void merge(const Entry& o)
-    {
-        dtrange.merge(o.dtrange);
-        count += o.count;
-    }
-
-#endif
-
-#if 0
-std::ostream& operator<<(std::ostream& out, const Entry& e);
-#endif
-
 template<typename Station>
 inline const Station& station_entries_get_value(const StationEntry<Station>& item) { return item.station; }
 
+/**
+ * Index of all stations known to a summary
+ *
+ * It behaves similarly to a std::vector<StationEntry<Station>>
+ */
 template<typename Station>
 struct StationEntries : protected core::SmallSet<StationEntry<Station>, Station, station_entries_get_value<Station>>
 {
@@ -152,18 +157,121 @@ struct StationEntries : protected core::SmallSet<StationEntry<Station>, Station,
     using Parent::rend;
     using Parent::size;
     using Parent::empty;
-    using Parent::add;
     bool operator==(const StationEntries<Station>& o) const { return Parent::operator==(o); }
     bool operator!=(const StationEntries<Station>& o) const { return Parent::operator!=(o); }
 
+    /// Merge the given entry
     void add(const Station& station, const VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count);
-    void add(const StationEntries& entry);
+
+    /// Merge the given entries
+    template<typename OStation>
+    void add(const StationEntries<OStation>& entry);
+
+    /// Merge the given entries
+    void add(const StationEntries<Station>& entry);
+
+    /// Merge the given entry
+    void add(const StationEntry<Station>& entry);
+
     void add_filtered(const StationEntries& entry, const dballe::Query& query);
 
-    bool has(const Station& station) const { return find(station) != end(); }
+    bool has(const Station& station) const { return this->find(station) != this->end(); }
 
     const StationEntries& sorted() const { if (this->dirty) this->rearrange_dirty(); return *this; }
 };
+
+
+template<typename Station>
+struct Cursor : public impl::CursorSummary
+{
+    struct Entry
+    {
+        const summary::StationEntry<Station>& station_entry;
+        const summary::VarEntry& var_entry;
+        Entry(const summary::StationEntry<Station>& station_entry, const summary::VarEntry& var_entry)
+            : station_entry(station_entry), var_entry(var_entry) {}
+    };
+    std::vector<Entry> results;
+    typename std::vector<Entry>::const_iterator cur;
+    bool at_start = true;
+
+    Cursor(const summary::StationEntries<Station>& entries, const Query& query);
+
+    int remaining() const override
+    {
+        if (at_start) return results.size();
+        return results.end() - cur;
+    }
+
+    bool next() override
+    {
+        if (at_start)
+        {
+            cur = results.begin();
+            at_start = false;
+        }
+        else if (cur != results.end())
+            ++cur;
+        return cur != results.end();
+    }
+
+    void discard() override
+    {
+        cur = results.end();
+    }
+
+    static DBStation _get_dbstation(const DBStation& s) { return s; }
+    static DBStation _get_dbstation(const dballe::Station& station)
+    {
+        DBStation res;
+        res.report = station.report;
+        res.coords = station.coords;
+        res.ident = station.ident;
+        return res;
+    }
+    static int _get_station_id(const DBStation& s) { return s.id; }
+    static int _get_station_id(const dballe::Station& s) { return MISSING_INT; }
+
+    DBStation get_station() const override
+    {
+        return _get_dbstation(cur->station_entry.station);
+    }
+
+#if 0
+    int get_station_id() const override
+    {
+        return _get_station_id(cur->station_entry.station);
+    }
+
+    Coords get_coords() const override { return cur->station_entry.station.coords; }
+    Ident get_ident() const override { return cur->station_entry.station.ident; }
+    std::string get_report() const override { return cur->station_entry.station.report; }
+
+    unsigned test_iterate(FILE* dump=0) override
+    {
+        unsigned count;
+        for (count = 0; next(); ++count)
+            ;
+#if 0
+            if (dump)
+                cur->dump(dump);
+#endif
+        return count;
+    }
+#endif
+
+    Level get_level() const override { return cur->var_entry.var.level; }
+    Trange get_trange() const override { return cur->var_entry.var.trange; }
+    wreport::Varcode get_varcode() const override { return cur->var_entry.var.varcode; }
+    DatetimeRange get_datetimerange() const override { return cur->var_entry.dtrange; }
+    size_t get_count() const override { return cur->var_entry.count; }
+
+    template<typename Enq> void enq_generic(Enq& enq) const;
+};
+
+
+extern template class Cursor<dballe::Station>;
+extern template class Cursor<dballe::DBStation>;
 
 }
 
@@ -191,6 +299,10 @@ protected:
 
 public:
     BaseSummary();
+    BaseSummary(const BaseSummary&) = delete;
+    BaseSummary(BaseSummary&&) = delete;
+    BaseSummary& operator=(const BaseSummary&) = delete;
+    BaseSummary& operator=(BaseSummary&&) = delete;
 
     bool operator==(const BaseSummary& o) const
     {
@@ -198,10 +310,10 @@ public:
     }
 
     const summary::StationEntries<Station>& stations() const { if (dirty) recompute_summaries(); return entries.sorted(); }
-    core::SortedSmallUniqueValueSet<std::string> reports() const { if (dirty) recompute_summaries(); return m_reports; }
-    core::SortedSmallUniqueValueSet<dballe::Level> levels() const { if (dirty) recompute_summaries(); return m_levels; }
-    core::SortedSmallUniqueValueSet<dballe::Trange> tranges() const { if (dirty) recompute_summaries(); return m_tranges; }
-    core::SortedSmallUniqueValueSet<wreport::Varcode> varcodes() const { if (dirty) recompute_summaries(); return m_varcodes; }
+    const core::SortedSmallUniqueValueSet<std::string>& reports() const { if (dirty) recompute_summaries(); return m_reports; }
+    const core::SortedSmallUniqueValueSet<dballe::Level>& levels() const { if (dirty) recompute_summaries(); return m_levels; }
+    const core::SortedSmallUniqueValueSet<dballe::Trange>& tranges() const { if (dirty) recompute_summaries(); return m_tranges; }
+    const core::SortedSmallUniqueValueSet<wreport::Varcode>& varcodes() const { if (dirty) recompute_summaries(); return m_varcodes; }
 
     /**
      * Recompute reports, levels, tranges, and varcodes.
@@ -213,20 +325,33 @@ public:
     const Datetime& datetime_max() const { if (dirty) recompute_summaries(); return dtrange.max; }
     unsigned data_count() const { if (dirty) recompute_summaries(); return count; }
 
+    /**
+     * Query the contents of the summary
+     *
+     * @param query
+     *   The record with the query data (see technical specifications, par. 1.6.4
+     *   "parameter output/input")
+     * @return
+     *   The cursor to use to iterate over the results. The results are the
+     *   same as DB::query_summary.
+     */
+    std::unique_ptr<dballe::CursorSummary> query_summary(const Query& query) const;
+
     /// Add an entry to the summary
     void add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count);
 
     /// Add an entry to the summary taken from the current status of \a cur
-    void add_cursor(const db::CursorSummary& cur);
+    void add_cursor(const dballe::CursorSummary& cur);
 
     /// Add the contents of a Message
     void add_message(const dballe::Message& message);
 
     /// Add the contents of a Messages
-    void add_messages(const dballe::Messages& messages);
+    void add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages);
 
     /// Merge the copy of another summary into this one
-    void add_summary(const BaseSummary& summary);
+    template<typename OSummary>
+    void add_summary(const BaseSummary<OSummary>& summary);
 
     /// Merge the copy of another summary into this one
     void add_filtered(const BaseSummary& summary, const dballe::Query& query);
@@ -239,30 +364,33 @@ public:
      * exist in the summary
      */
     void merge_entries();
-
-    /// Iterate all values in the summary
-    bool iterate(std::function<bool(const summary::Entry&)> f) const;
-
-    /// Iterate all values in the summary that match the given query
-    bool iterate_filtered(const Query& query, std::function<bool(const summary::Entry&)> f) const;
 #endif
 
+    /// Serialize to JSON
     void to_json(core::JSONWriter& writer) const;
 
-    static BaseSummary from_json(core::json::Stream& in);
+    /// Load contents from JSON, merging with the current contents
+    void load_json(core::json::Stream& in);
 
-#if 0
-    DBALLE_TEST_ONLY std::vector<summary::Entry>& test_entries() { return entries; }
-    DBALLE_TEST_ONLY const std::vector<summary::Entry>& test_entries() const { return entries; }
-#endif
     DBALLE_TEST_ONLY void dump(FILE* out) const;
 };
 
+/**
+ * Summary without database station IDs
+ */
 typedef BaseSummary<dballe::Station> Summary;
+
+/**
+ * Summary with database station IDs
+ */
 typedef BaseSummary<dballe::DBStation> DBSummary;
 
 extern template class BaseSummary<dballe::Station>;
+extern template void BaseSummary<dballe::Station>::add_summary(const BaseSummary<dballe::Station>&);
+extern template void BaseSummary<dballe::Station>::add_summary(const BaseSummary<dballe::DBStation>&);
 extern template class BaseSummary<dballe::DBStation>;
+extern template void BaseSummary<dballe::DBStation>::add_summary(const BaseSummary<dballe::Station>&);
+extern template void BaseSummary<dballe::DBStation>::add_summary(const BaseSummary<dballe::DBStation>&);
 
 }
 }

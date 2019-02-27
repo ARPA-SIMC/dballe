@@ -2,17 +2,19 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import unicode_literals
-from fabric.api import local, run, sudo, cd, env, hosts, shell_env
-from fabric.contrib.files import exists
+from fabric.api import local, run, cd, env, hosts, put
+from io import BytesIO
 import git
 import re
 from six.moves import shlex_quote
 
-env.hosts = ["venti", "ventiquattro"]
+env.hosts = ["venti", "ventiquattro", "ventotto", "sette"]
 env.use_ssh_config = True
+
 
 def cmd(*args):
     return " ".join(shlex_quote(a) for a in args)
+
 
 @hosts("venti")
 def test_venti():
@@ -54,6 +56,7 @@ def test_venti():
         run(cmd("make"))
         run(cmd("./run-check"))
 
+
 @hosts("ventiquattro")
 def test_ventiquattro():
     fedora_cxxflags = "-O2 -g -pipe -Wall -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong"\
@@ -67,7 +70,7 @@ def test_ventiquattro():
 
     local(cmd("git", "push", "ventiquattro", "HEAD"))
     with cd(remote_dir):
-        run(cmd("git", "checkout", "-B", "test_venti", repo.head.commit.hexsha))
+        run(cmd("git", "checkout", "-B", "test_ventiquattro", repo.head.commit.hexsha))
         run(cmd("git", "reset", "--hard"))
         run(cmd("git", "clean", "-fx"))
         run(cmd("autoreconf", "-if"))
@@ -94,6 +97,50 @@ def test_ventiquattro():
                 "LDFLAGS=" + fedora_ldflags))
         run(cmd("make"))
         run(cmd("./run-check"))
+
+
+@hosts("ventotto")
+def test_ventotto():
+    repo = git.Repo()
+    remote = repo.remote("ventotto")
+    push_url = remote.config_reader.get("url")
+    remote_dir = re.sub(r"^ssh://[^/]+", "", push_url)
+
+    local(cmd("git", "push", "ventotto", "HEAD"))
+    with cd(remote_dir):
+        run(cmd("git", "checkout", "-B", "test_ventotto", repo.head.commit.hexsha))
+        run(cmd("git", "reset", "--hard"))
+        run(cmd("git", "clean", "-fx"))
+        run(cmd("autoreconf", "-if"))
+        res = run(cmd("rpm", "--eval", "%configure FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs"))
+        put(BytesIO(b"\n".join(res.stdout.splitlines())), "rpm-config")
+        run(cmd("chmod", "0755", "rpm-config"))
+        run(cmd("./rpm-config"))
+        run(cmd("make", "-j2"))
+        run(cmd("./run-check", "-j2"))
+
+
+@hosts("sette")
+def test_sette():
+    repo = git.Repo()
+    remote = repo.remote("sette")
+    push_url = remote.config_reader.get("url")
+    remote_dir = re.sub(r"^ssh://[^/]+", "", push_url)
+
+    local(cmd("git", "push", "sette", "HEAD"))
+    with cd(remote_dir):
+        run(cmd("git", "reset", "--hard"))
+        run(cmd("git", "checkout", "-B", "test_sette", repo.head.commit.hexsha))
+        run(cmd("git", "reset", "--hard"))
+        run(cmd("git", "clean", "-fx"))
+        run(cmd("autoreconf", "-if"))
+        res = run(cmd("rpm", "--eval", "%configure FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs"))
+        put(BytesIO(b"\n".join(res.stdout.splitlines())), "rpm-config")
+        run(cmd("chmod", "0755", "rpm-config"))
+        run(cmd("./rpm-config"))
+        run(cmd("make", "-j2"))
+        run(cmd("./run-check", "-j2"))
+
 
 def test():
     test_venti()

@@ -2,22 +2,17 @@
 #include <wreport/python.h>
 #include "common.h"
 #include "types.h"
-#include "record.h"
 #include "db.h"
 #include "cursor.h"
-#if PY_MAJOR_VERSION >= 3
+#include "binarymessage.h"
+#include "file.h"
+#include "message.h"
+#include "importer.h"
+#include "exporter.h"
 #include "explorer.h"
-#endif
 #include "dballe/types.h"
 #include "dballe/var.h"
 #include "config.h"
-
-#if PY_MAJOR_VERSION >= 3
-    #define PyInt_FromLong PyLong_FromLong
-    #define PyInt_AsLong PyLong_AsLong
-    #define PyInt_Check PyLong_Check
-    #define Py_TPFLAGS_HAVE_ITER 0
-#endif
 
 using namespace std;
 using namespace dballe;
@@ -46,25 +41,20 @@ static PyObject* dballe_var_uncaught(PyTypeObject *type, PyObject *args)
         {
             double v = PyFloat_AsDouble(val);
             if (v == -1.0 && PyErr_Occurred())
-                return NULL;
+                return nullptr;
             return (PyObject*)wrpy->var_create_d(dballe::varinfo(resolve_varcode(var_name)), v);
-        } else if (PyInt_Check(val)) {
-            long v = PyInt_AsLong(val);
+        } else if (PyLong_Check(val)) {
+            long v = PyLong_AsLong(val);
             if (v == -1 && PyErr_Occurred())
-                return NULL;
+                return nullptr;
             return (PyObject*)wrpy->var_create_i(dballe::varinfo(resolve_varcode(var_name)), (int)v);
-        } else if (
-                PyUnicode_Check(val)
-#if PY_MAJOR_VERSION >= 3
-                || PyBytes_Check(val)
-#else
-                || PyString_Check(val)
-#endif
-                ) {
-            string v;
-            if (string_from_python(val, v))
-                return NULL;
-            return (PyObject*)wrpy->var_create_c(dballe::varinfo(resolve_varcode(var_name)), v.c_str());
+        } else if (PyUnicode_Check(val) || PyBytes_Check(val)) {
+            string v = string_from_python(val);
+            return (PyObject*)wrpy->var_create_s(dballe::varinfo(resolve_varcode(var_name)), v);
+        } else if ((Py_TYPE(val) == wrpy->var_type || PyType_IsSubtype(Py_TYPE(val), wrpy->var_type))) {
+            wrpy_Var* res = wrpy->var_create(dballe::varinfo(resolve_varcode(var_name)));
+            res->var.setval(((wrpy_Var*)val)->var);
+            return (PyObject*)res;
         } else if (val == Py_None) {
             return (PyObject*)wrpy->var_create(dballe::varinfo(resolve_varcode(var_name)));
         } else {
@@ -79,11 +69,7 @@ static PyObject* dballe_var(PyTypeObject *type, PyObject *args)
 {
     try {
         return dballe_var_uncaught(type, args);
-    } catch (wreport::error& e) {
-        return raise_wreport_exception(e);
-    } catch (std::exception& se) {
-        return raise_std_exception(se);
-    }
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 #define get_int_or_missing(intvar, ovar) \
@@ -91,7 +77,7 @@ static PyObject* dballe_var(PyTypeObject *type, PyObject *args)
     if (ovar == Py_None) \
         intvar = MISSING_INT; \
     else { \
-        intvar = PyInt_AsLong(ovar); \
+        intvar = PyLong_AsLong(ovar); \
         if (intvar == -1 && PyErr_Occurred()) \
             return NULL; \
     }
@@ -136,14 +122,26 @@ static PyObject* dballe_describe_trange(PyTypeObject *type, PyObject *args, PyOb
 }
 
 static PyMethodDef dballe_methods[] = {
-    {"varinfo", (PyCFunction)dballe_varinfo, METH_VARARGS, "Query the DB-All.e variable table returning a Varinfo" },
-    {"var", (PyCFunction)dballe_var, METH_VARARGS, "Query the DB-All.e variable table returning a Var, optionally initialized with a value" },
-    {"describe_level", (PyCFunction)dballe_describe_level, METH_VARARGS | METH_KEYWORDS, "Return a string description for a level" },
-    {"describe_trange", (PyCFunction)dballe_describe_trange, METH_VARARGS | METH_KEYWORDS, "Return a string description for a time range" },
+    {"varinfo", (PyCFunction)dballe_varinfo, METH_VARARGS, R"(
+varinfo(str) -> str
+
+Query the DB-All.e variable table returning a Varinfo)" },
+    {"var", (PyCFunction)dballe_var, METH_VARARGS, R"(
+var(code, val: Any=None) -> dballe.Var
+
+Query the DB-All.e variable table returning a Var, optionally initialized with a value)" },
+    {"describe_level", (PyCFunction)dballe_describe_level, METH_VARARGS | METH_KEYWORDS, R"(
+describe_level(ltype1: int, l1: int=None, ltype2: int=None, l2: int=None) -> str
+
+Return a string description for a level)" },
+    {"describe_trange", (PyCFunction)dballe_describe_trange, METH_VARARGS | METH_KEYWORDS, R"(
+describe_trange(pind: int, p1: int=None, p2: int=None) -> str
+
+Return a string description for a time range)" },
     { NULL }
 };
 
-#if PY_MAJOR_VERSION >= 3
+
 static PyModuleDef dballe_module = {
     PyModuleDef_HEAD_INIT,
     "_dballe",       /* m_name */
@@ -156,35 +154,25 @@ static PyModuleDef dballe_module = {
     NULL,           /* m_free */
 
 };
-#endif
 
-#if PY_MAJOR_VERSION >= 3
 PyMODINIT_FUNC PyInit__dballe(void)
-#else
-PyMODINIT_FUNC init_dballe(void)
-#endif
 {
     using namespace dballe::python;
 
-    PyObject* m;
+    try {
+        pyo_unique_ptr m(PyModule_Create(&dballe_module));
+        register_types(m);
+        register_binarymessage(m);
+        register_file(m);
+        register_message(m);
+        register_importer(m);
+        register_exporter(m);
+        register_db(m);
+        register_cursor(m);
+        register_explorer(m);
 
-#if PY_MAJOR_VERSION >= 3
-    m = PyModule_Create(&dballe_module);
-#else
-    m = Py_InitModule3("_dballe", dballe_methods,
-            "DB-All.e Python interface.");
-#endif
-
-    register_types(m);
-    register_record(m);
-    register_db(m);
-    register_cursor(m);
-
-#if PY_MAJOR_VERSION >= 3
-    register_explorer(m);
-
-    return m;
-#endif
+        return m.release();
+    } DBALLE_CATCH_RETURN_PYO
 }
 
 }

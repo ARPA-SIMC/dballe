@@ -1,23 +1,5 @@
-/*
- * Copyright (C) 2005--2014  ARPA-SIM <urpsim@smr.arpa.emr.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- * Author: Enrico Zini <enrico@enricozini.com>
- */
-
 #include "common.h"
+#include "dballe/core/shortcuts.h"
 #include "dballe/msg/wr_codec.h"
 #include "dballe/msg/context.h"
 #include <wreport/bulletin.h>
@@ -44,6 +26,7 @@ using namespace std;
 #define SHIP_WMO_DESC "Ship WMO"
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -55,10 +38,10 @@ struct ShipBase : public Template
     CommonSynopExporter synop;
     bool is_crex;
 
-    ShipBase(const ExporterOptions& opts, const Messages& msgs)
+    ShipBase(const dballe::ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         Template::setupBulletin(bulletin);
 
@@ -67,15 +50,14 @@ struct ShipBase : public Template
         bulletin.data_category = 1;
         bulletin.data_subcategory = 255;
     }
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         Template::to_subset(msg, subset);
         synop.init(msg, subset);
 
         // Scan message finding context for the data that follow
-        for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
-                i != msg.data.end(); ++i)
-            synop.scan_context(**i);
+        for (const auto& ctx: msg.data)
+            synop.scan_context(ctx);
     }
 
     void do_D01093()
@@ -89,16 +71,16 @@ struct ShipBase : public Template
 
     void do_ship_head()
     {
-        add(WR_VAR(0,  1, 11), c_station);
+        add(WR_VAR(0,  1, 11), msg->station_data);
         add(WR_VAR(0,  1, 12), c_gnd_instant);
         add(WR_VAR(0,  1, 13), c_gnd_instant);
-        add(WR_VAR(0,  2,  1), c_station);
+        add(WR_VAR(0,  2,  1), msg->station_data);
     }
 };
 
 struct ShipECMWFBase : public ShipBase
 {
-    ShipECMWFBase(const ExporterOptions& opts, const Messages& msgs)
+    ShipECMWFBase(const dballe::ExporterOptions& opts, const Messages& msgs)
         : ShipBase(opts, msgs) {}
 
     virtual void setupBulletin(wreport::Bulletin& bulletin)
@@ -130,46 +112,44 @@ struct ShipECMWFBase : public ShipBase
             bulletin.datadesc.push_back(WR_VAR(0, 33,   7));
         }
     }
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         ShipBase::to_subset(msg, subset);
 
         // Look for significant levels
         const msg::Context* c_wind = NULL;
-        for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
-                i != msg.data.end(); ++i)
+        for (const auto& ctx: msg.data)
         {
-            const msg::Context* c = *i;
-            if (c->find(WR_VAR(0, 11, 1)) || c->find(WR_VAR(0, 11, 2)))
-                c_wind = c;
+            if (ctx.values.maybe_var(WR_VAR(0, 11, 1)) || ctx.values.maybe_var(WR_VAR(0, 11, 2)))
+                c_wind = &ctx;
         }
 
         do_ship_head();
         do_D01011();
         do_D01012();
         do_D01023();
-        /* 11 */ add(WR_VAR(0, 10,  4), DBA_MSG_PRESS);
-        /* 12 */ add(WR_VAR(0, 10, 51), DBA_MSG_PRESS_MSL);
-        /* 13 */ add(WR_VAR(0, 10, 61), DBA_MSG_PRESS_3H);
-        /* 14 */ add(WR_VAR(0, 10, 63), DBA_MSG_PRESS_TEND);
-        /* 15 */ add(WR_VAR(0, 11, 11), c_wind, DBA_MSG_WIND_DIR);
-        /* 16 */ add(WR_VAR(0, 11, 12), c_wind, DBA_MSG_WIND_SPEED);
-        /* 17 */ add(WR_VAR(0, 12,  4), DBA_MSG_TEMP_2M);
-        /* 18 */ add(WR_VAR(0, 12,  6), DBA_MSG_DEWPOINT_2M);
-        /* 19 */ add(WR_VAR(0, 13,  3), DBA_MSG_HUMIDITY);
-        /* 20 */ add(WR_VAR(0, 20,  1), DBA_MSG_VISIBILITY);
-        /* 21 */ add(WR_VAR(0, 20,  3), DBA_MSG_PRES_WTR);
+        /* 11 */ add(WR_VAR(0, 10,  4), sc::press);
+        /* 12 */ add(WR_VAR(0, 10, 51), sc::press_msl);
+        /* 13 */ add(WR_VAR(0, 10, 61), sc::press_3h);
+        /* 14 */ add(WR_VAR(0, 10, 63), sc::press_tend);
+        /* 15 */ add(WR_VAR(0, 11, 11), c_wind, sc::wind_dir);
+        /* 16 */ add(WR_VAR(0, 11, 12), c_wind, sc::wind_speed);
+        /* 17 */ add(WR_VAR(0, 12,  4), sc::temp_2m);
+        /* 18 */ add(WR_VAR(0, 12,  6), sc::dewpoint_2m);
+        /* 19 */ add(WR_VAR(0, 13,  3), sc::humidity);
+        /* 20 */ add(WR_VAR(0, 20,  1), sc::visibility);
+        /* 21 */ add(WR_VAR(0, 20,  3), sc::pres_wtr);
         do_ecmwf_past_wtr();
-        /* 24 */ add(WR_VAR(0, 20, 10), DBA_MSG_CLOUD_N);
+        /* 24 */ add(WR_VAR(0, 20, 10), sc::cloud_n);
         /* 25 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
-        /* 26 */ add(WR_VAR(0, 20, 11), DBA_MSG_CLOUD_NH);
-        /* 27 */ add(WR_VAR(0, 20, 13), DBA_MSG_CLOUD_HH);
-        /* 28 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CL);
-        /* 29 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CM);
-        /* 30 */ add(WR_VAR(0, 20, 12), DBA_MSG_CLOUD_CH);
-        /* 31 */ add(WR_VAR(0, 22, 42), DBA_MSG_WATER_TEMP);
-        /* 32 */ add(WR_VAR(0, 12,  5), DBA_MSG_WET_TEMP_2M);
-        /* 33 */ add(WR_VAR(0, 10,197), DBA_MSG_HEIGHT_ANEM);
+        /* 26 */ add(WR_VAR(0, 20, 11), sc::cloud_nh);
+        /* 27 */ add(WR_VAR(0, 20, 13), sc::cloud_hh);
+        /* 28 */ add(WR_VAR(0, 20, 12), sc::cloud_cl);
+        /* 29 */ add(WR_VAR(0, 20, 12), sc::cloud_cm);
+        /* 30 */ add(WR_VAR(0, 20, 12), sc::cloud_ch);
+        /* 31 */ add(WR_VAR(0, 22, 42), sc::water_temp);
+        /* 32 */ add(WR_VAR(0, 12,  5), sc::wet_temp_2m);
+        /* 33 */ add(WR_VAR(0, 10,197), sc::height_anem);
 
         if (!is_crex)
         {
@@ -188,7 +168,7 @@ struct ShipECMWFBase : public ShipBase
 
 struct ShipAbbr : public ShipECMWFBase
 {
-    ShipAbbr(const ExporterOptions& opts, const Messages& msgs)
+    ShipAbbr(const dballe::ExporterOptions& opts, const Messages& msgs)
         : ShipECMWFBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_ABBR_NAME; }
@@ -205,7 +185,7 @@ struct ShipAbbr : public ShipECMWFBase
 
 struct ShipPlain : public ShipECMWFBase
 {
-    ShipPlain(const ExporterOptions& opts, const Messages& msgs)
+    ShipPlain(const dballe::ExporterOptions& opts, const Messages& msgs)
         : ShipECMWFBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_PLAIN_NAME; }
@@ -222,7 +202,7 @@ struct ShipPlain : public ShipECMWFBase
 
 struct ShipAuto : public ShipECMWFBase
 {
-    ShipAuto(const ExporterOptions& opts, const Messages& msgs)
+    ShipAuto(const dballe::ExporterOptions& opts, const Messages& msgs)
         : ShipECMWFBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_AUTO_NAME; }
@@ -239,7 +219,7 @@ struct ShipAuto : public ShipECMWFBase
 
 struct ShipReduced : public ShipECMWFBase
 {
-    ShipReduced(const ExporterOptions& opts, const Messages& msgs)
+    ShipReduced(const dballe::ExporterOptions& opts, const Messages& msgs)
         : ShipECMWFBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_REDUCED_NAME; }
@@ -256,7 +236,7 @@ struct ShipReduced : public ShipECMWFBase
 
 struct ShipECMWFSecondRecord : public ShipBase
 {
-    ShipECMWFSecondRecord(const ExporterOptions& opts, const Messages& msgs)
+    ShipECMWFSecondRecord(const dballe::ExporterOptions& opts, const Messages& msgs)
         : ShipBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_ECMWF_SECOND_NAME; }
@@ -311,7 +291,7 @@ struct ShipECMWFSecondRecord : public ShipBase
             bulletin.datadesc.push_back(WR_VAR(0, 33,   7));
         }
     }
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         ShipBase::to_subset(msg, subset);
 
@@ -355,13 +335,13 @@ struct ShipWMO : public ShipBase
 {
     bool is_crex;
 
-    ShipWMO(const ExporterOptions& opts, const Messages& msgs)
+    ShipWMO(const dballe::ExporterOptions& opts, const Messages& msgs)
         : ShipBase(opts, msgs) {}
 
     virtual const char* name() const { return SHIP_WMO_NAME; }
     virtual const char* description() const { return SHIP_WMO_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         ShipBase::setupBulletin(bulletin);
 
@@ -377,7 +357,7 @@ struct ShipWMO : public ShipBase
 
         bulletin.load_tables();
     }
-    virtual void to_subset(const Msg& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         ShipBase::to_subset(msg, subset);
 
@@ -427,37 +407,32 @@ struct ShipWMO : public ShipBase
 void register_ship(TemplateRegistry& r)
 {
     r.register_factory(1, "ship", "Synop ship (autodetect)",
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 // Scan msgs and pick the right one
                 bool maybe_plain = true;
                 bool maybe_auto = true;
                 bool maybe_second = true;
-                const Msg& msg = Msg::downcast(msgs[0]);
-                for (std::vector<msg::Context*>::const_iterator i = msg.data.begin();
-                        i != msg.data.end(); ++i)
+                auto msg = Message::downcast(msgs[0]);
+                for (const auto& val: msg->station_data)
                 {
-                    const msg::Context& c = **i;
-                    switch (c.level.ltype1)
+                    switch (val->code())
                     {
-                        case MISSING_INT:
-                            for (std::vector<wreport::Var*>::const_iterator vi = c.data.begin();
-                                    vi != c.data.end(); ++vi)
+                        case WR_VAR(0, 2, 1):
+                            switch (val->enq(0))
                             {
-                                switch ((*vi)->code())
-                                {
-                                    case WR_VAR(0, 2, 1):
-                                        switch ((*vi)->enq(0))
-                                        {
-                                            case 0: maybe_plain = false; break;
-                                            case 1: maybe_auto = false; break;
-                                        }
-                                        break;
-                                    case WR_VAR(0, 2, 2):
-                                        maybe_plain = maybe_auto = maybe_second = false;
-                                        break;
-                                }
+                                case 0: maybe_plain = false; break;
+                                case 1: maybe_auto = false; break;
                             }
                             break;
+                        case WR_VAR(0, 2, 2):
+                            maybe_plain = maybe_auto = maybe_second = false;
+                            break;
+                    }
+                }
+                for (const auto& ctx: msg->data)
+                {
+                    switch (ctx.level.ltype1)
+                    {
                         case 264: maybe_plain = maybe_auto = false; break;
                     }
                 }
@@ -474,36 +449,37 @@ void register_ship(TemplateRegistry& r)
             });
 
     r.register_factory(1, SHIP_PLAIN_NAME, SHIP_PLAIN_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new ShipPlain(opts, msgs));
             });
 
     r.register_factory(1, SHIP_ECMWF_SECOND_NAME, SHIP_ECMWF_SECOND_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new ShipECMWFSecondRecord(opts, msgs));
             });
 
     r.register_factory(1, SHIP_ABBR_NAME, SHIP_ABBR_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new ShipAbbr(opts, msgs));
             });
 
     r.register_factory(1, SHIP_AUTO_NAME, SHIP_AUTO_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new ShipAuto(opts, msgs));
             });
 
     r.register_factory(1, SHIP_REDUCED_NAME, SHIP_REDUCED_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new ShipReduced(opts, msgs));
             });
 
     r.register_factory(1, SHIP_WMO_NAME, SHIP_WMO_DESC,
-            [](const ExporterOptions& opts, const Messages& msgs) {
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
                 return unique_ptr<Template>(new ShipWMO(opts, msgs));
             });
 }
 
+}
 }
 }
 }

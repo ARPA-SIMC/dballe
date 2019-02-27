@@ -29,6 +29,7 @@ public:
     virtual ~File();
 
     std::string pathname() const override { return m_name; }
+    void close() override;
     bool foreach(std::function<bool(const BinaryMessage&)> dest) override;
 
     /**
@@ -52,7 +53,7 @@ public:
     BufrFile(const std::string& name, FILE* fd, bool close_on_exit=true)
         : File(name, fd, close_on_exit) {}
 
-    Encoding encoding() const override { return BUFR; }
+    Encoding encoding() const override { return Encoding::BUFR; }
     BinaryMessage read() override;
     void write(const std::string& msg) override;
 };
@@ -63,7 +64,7 @@ public:
     CrexFile(const std::string& name, FILE* fd, bool close_on_exit=true)
         : File(name, fd, close_on_exit) {}
 
-    Encoding encoding() const override { return CREX; }
+    Encoding encoding() const override { return Encoding::CREX; }
     BinaryMessage read() override;
     void write(const std::string& msg) override;
 };

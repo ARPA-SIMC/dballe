@@ -15,8 +15,16 @@ struct DB;
 struct Repinfo;
 struct Station;
 struct LevTr;
+struct LevTrEntry;
 struct SQLTrace;
 struct Driver;
+
+namespace cursor {
+struct Stations;
+struct StationData;
+struct Data;
+struct Summary;
+}
 
 namespace batch {
 struct Station;

@@ -1,8 +1,10 @@
 #ifndef DBALLE_DB_V7_DATAV7_H
 #define DBALLE_DB_V7_DATAV7_H
 
+#include <dballe/fwd.h>
+#include <dballe/values.h>
+#include <dballe/core/fwd.h>
 #include <dballe/core/defs.h>
-#include <dballe/core/values.h>
 #include <dballe/sql/fwd.h>
 #include <dballe/db/defs.h>
 #include <dballe/db/v7/fwd.h>
@@ -14,9 +16,6 @@
 #include <functional>
 
 namespace dballe {
-struct Record;
-struct Values;
-
 namespace db {
 namespace v7 {
 
@@ -33,6 +32,12 @@ protected:
      * Load attributes from the database into a Values
      */
     void read_attrs_into_values(Tracer<>& trc, int id_data, Values& values);
+
+    /**
+     * Load attributes from the database into a Values, except those whose
+     * Varcode is in `exclude`
+     */
+    void read_attrs_into_values(Tracer<>& trc, int id_data, Values& values, const db::AttrList& exclude);
 
     /**
      * Replace the attributes of a variable with those in Values
@@ -79,6 +84,9 @@ public:
 
     /// Run the query to delete all records selected by the given QueryBuilder
     virtual void remove(Tracer<>& trc, const v7::IdQueryBuilder& qb) = 0;
+
+    /// Run the query to delete the record with the given ID
+    virtual void remove_by_id(Tracer<>& trc, int id) = 0;
 
     /// Dump the entire contents of the table to an output stream
     virtual void dump(FILE* out) = 0;

@@ -1,6 +1,5 @@
 #include "repinfo.h"
 #include "dballe/db/db.h"
-#include "dballe/record.h"
 #include "dballe/core/query.h"
 #include "dballe/core/csv.h"
 #include <wreport/error.h>
@@ -16,19 +15,6 @@ namespace v7 {
 Repinfo::Repinfo(dballe::sql::Connection& conn)
     : conn(conn)
 {
-}
-
-void Repinfo::to_record(const std::string& report, Record& rec)
-{
-    const repinfo::Cache* c = get_by_memo(report.c_str());
-    if (c)
-    {
-        rec.sets("rep_memo", report);
-        rec.seti("priority", c->prio);
-    } else {
-        rec.unset("rep_memo");
-        rec.unset("priority");
-    }
 }
 
 const char* Repinfo::get_rep_memo(int id)
@@ -94,8 +80,8 @@ std::vector<int> Repinfo::ids_by_prio(const core::Query& q)
     for (std::vector<repinfo::Cache>::const_iterator i = cache.begin();
             i != cache.end(); ++i)
     {
-        if (q.prio_min != MISSING_INT && i->prio < q.prio_min) continue;
-        if (q.prio_max != MISSING_INT && i->prio > q.prio_max) continue;
+        if (q.priomin != MISSING_INT && i->prio < q.priomin) continue;
+        if (q.priomax != MISSING_INT && i->prio > q.priomax) continue;
         res.push_back(i->id);
     }
 

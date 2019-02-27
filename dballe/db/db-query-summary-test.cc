@@ -15,40 +15,40 @@ struct DBData : public TestDataSet
 {
     DBData()
     {
-        stations["st1_synop"].info.coords = Coords(12.34560, 76.54320);
-        stations["st1_synop"].info.report = "synop";
+        stations["st1_synop"].station.coords = Coords(12.34560, 76.54320);
+        stations["st1_synop"].station.report = "synop";
         stations["st1_synop"].values.set(newvar("B07030", 42.0)); // height
-        stations["st1_metar"].info = stations["st1_synop"].info;
-        stations["st1_metar"].info.report = "metar";
+        stations["st1_metar"].station = stations["st1_synop"].station;
+        stations["st1_metar"].station.report = "metar";
         stations["st1_metar"].values.set(newvar("block", 1));
         stations["st1_metar"].values.set(newvar("station", 2));
         stations["st1_metar"].values.set(newvar("B07030", 50.0)); // height
-        stations["st2_temp"].info.coords = Coords(23.45670, 65.43210);
-        stations["st2_temp"].info.report = "temp";
+        stations["st2_temp"].station.coords = Coords(23.45670, 65.43210);
+        stations["st2_temp"].station.report = "temp";
         stations["st2_temp"].values.set(newvar("B07030", 100.0)); // height
-        stations["st2_metar"].info = stations["st2_temp"].info;
-        stations["st2_metar"].info.report = "metar";
+        stations["st2_metar"].station = stations["st2_temp"].station;
+        stations["st2_metar"].station.report = "metar";
         stations["st2_metar"].values.set(newvar("block", 3));
         stations["st2_metar"].values.set(newvar("station", 4));
         stations["st2_metar"].values.set(newvar("B07030", 110.0)); // height
-        data["rec1a"].info = stations["st1_metar"].info;
-        data["rec1a"].info.datetime = Datetime(1945, 4, 25, 8);
-        data["rec1a"].info.level = Level(10, 11, 15, 22);
-        data["rec1a"].info.trange = Trange(20, 111, 122);
+        data["rec1a"].station = stations["st1_metar"].station;
+        data["rec1a"].datetime = Datetime(1945, 4, 25, 8);
+        data["rec1a"].level = Level(10, 11, 15, 22);
+        data["rec1a"].trange = Trange(20, 111, 122);
         data["rec1a"].values.set("B12101", 290.0);
         data["rec1a"].values.set("B12103", 280.0);
         data["rec1b"] = data["rec1a"];
-        data["rec1b"].info.datetime = Datetime(1945, 4, 26, 8);
+        data["rec1b"].datetime = Datetime(1945, 4, 26, 8);
         data["rec1b"].values.set("B12101", 291.0);
         data["rec1b"].values.set("B12103", 281.0);
-        data["rec2a"].info = stations["st2_metar"].info;
-        data["rec2a"].info.datetime = Datetime(1945, 4, 25, 8);
-        data["rec2a"].info.level = Level(10, 11, 15, 22);
-        data["rec2a"].info.trange = Trange(20, 111, 122);
+        data["rec2a"].station = stations["st2_metar"].station;
+        data["rec2a"].datetime = Datetime(1945, 4, 25, 8);
+        data["rec2a"].level = Level(10, 11, 15, 22);
+        data["rec2a"].trange = Trange(20, 111, 122);
         data["rec2a"].values.set("B12101", 300.0);
         data["rec2a"].values.set("B12103", 298.0);
         data["rec2b"] = data["rec2a"];
-        data["rec2b"].info.datetime = Datetime(1945, 4, 26, 8);
+        data["rec2b"].datetime = Datetime(1945, 4, 26, 8);
         data["rec2b"].values.set("B12101", 301.0);
         data["rec2b"].values.set("B12103", 291.0);
     }
@@ -65,8 +65,8 @@ struct DBDataFixture : public TransactionFixture<DB, DBData>
     void create_db() override
     {
         TransactionFixture<DB, DBData>::create_db();
-        st1_id = this->test_data.stations["st1_metar"].info.id;
-        st2_id = this->test_data.stations["st2_metar"].info.id;
+        st1_id = this->test_data.stations["st1_metar"].station.id;
+        st2_id = this->test_data.stations["st2_metar"].station.id;
     }
 };
 
@@ -103,25 +103,33 @@ class Tests : public FixtureTestCase<DBDataFixture<DB>>
         this->add_method("query_year", [](Fixture& f) {
             wassert(actual(f.tr).try_summary_query("year=1001", 0));
             wassert(actual(f.tr).try_summary_query("yearmin=1999", 0));
-            auto check_base = [](const vector<core::Record>& res) {
-                wassert(actual(res[0].enq("lat", MISSING_INT)) == 1234560);
-                wassert(actual(res[0].enq("lon", MISSING_INT)) == 7654320);
-                wassert(actual(res[0].get_level()) == Level(10, 11, 15, 22));
-                wassert(actual(res[0].get_trange()) == Trange(20, 111, 122));
-                wassert(actual(res[0].enq("var", "")) == "B12101");
+            auto check_base = [](const db::DBSummary& res) {
+                wassert(actual(res.stations().size()) == 2u);
+                wassert(actual(res.stations().begin()->station.coords) == Coords(12.34560, 76.54320));
+                wassert(actual(res.levels().size()) == 1u);
+                wassert(actual(*res.levels().begin()) == Level(10, 11, 15, 22));
+                wassert(actual(res.tranges().size()) == 1u);
+                wassert(actual(*res.tranges().begin()) == Trange(20, 111, 122));
+                wassert(actual(res.varcodes().size()) == 2u);
+                wassert(actual(*res.varcodes().begin()) == WR_VAR(0, 12, 101));
+                wassert(actual(*(res.varcodes().begin() + 1)) == WR_VAR(0, 12, 103));
             };
-            auto check_nodetails = [&](const vector<core::Record>& res) {
+            auto check_nodetails = [&](const db::DBSummary& res) {
                 wassert(check_base(res));
-                wassert(actual(res[0].isset("context_id")).isfalse());
-                wassert(actual(res[0].isset("yearmin")).isfalse());
-                wassert(actual(res[0].isset("yearmax")).isfalse());
+                wassert(actual(res.data_count()) == 0);
+                wassert_true(res.datetime_min().is_missing());
+                wassert_true(res.datetime_max().is_missing());
             };
-            auto check_details = [&](const vector<core::Record>& res) {
+            auto check_details = [&](const db::DBSummary& res) {
                 wassert(check_base(res));
-                wassert(actual(res[0].enq("context_id", MISSING_INT)) == 2);
-                DatetimeRange dtr = res[0].get_datetimerange();
-                wassert(actual(dtr.min) == Datetime(1945, 4, 25, 8));
-                wassert(actual(dtr.max) == Datetime(1945, 4, 26, 8));
+                wassert(actual(res.data_count()) == 8u);
+                wassert(actual(res.datetime_min()) == Datetime(1945, 4, 25, 8));
+                wassert(actual(res.datetime_max()) == Datetime(1945, 4, 26, 8));
+                auto entry = res.stations().begin();
+                auto varentry = entry->begin();
+                wassert(actual(varentry->count) == 2u);
+                wassert(actual(varentry->dtrange.min) == Datetime(1945, 4, 25, 8));
+                wassert(actual(varentry->dtrange.max) == Datetime(1945, 4, 26, 8));
             };
             wassert(actual(f.tr).try_summary_query("yearmin=1945", 4, check_nodetails));
             wassert(actual(f.tr).try_summary_query("yearmin=1945, query=details", 4, check_details));
@@ -133,10 +141,10 @@ class Tests : public FixtureTestCase<DBDataFixture<DB>>
             wassert(actual(f.tr).try_summary_query("year=1946", 0));
         });
         this->add_method("query_blockstation", [](Fixture& f) {
-            wassert(actual(f.tr).try_summary_query("B01001=1", 2));
-            wassert(actual(f.tr).try_summary_query("B01001=2", 0));
-            wassert(actual(f.tr).try_summary_query("B01002=3", 0));
-            wassert(actual(f.tr).try_summary_query("B01002=4", 2));
+            wassert(actual(f.tr).try_summary_query("block=1", 2));
+            wassert(actual(f.tr).try_summary_query("block=2", 0));
+            wassert(actual(f.tr).try_summary_query("station=3", 0));
+            wassert(actual(f.tr).try_summary_query("station=4", 2));
         });
         this->add_method("query_ana_filter", [](Fixture& f) {
             wassert(actual(f.tr).try_summary_query("ana_filter=block=1", 2));

@@ -6,7 +6,6 @@
 #include "dballe/db/v7/transaction.h"
 #include "dballe/db/v7/db.h"
 #include "dballe/db/v7/qbuilder.h"
-#include "dballe/core/values.h"
 #include "dballe/sql/mysql.h"
 #include "dballe/var.h"
 #include <algorithm>

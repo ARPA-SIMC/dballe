@@ -1,6 +1,8 @@
 #include <dballe/core/tests.h>
 #include <dballe/message.h>
-#include <dballe/msg/codec.h>
+#include <dballe/importer.h>
+#include <dballe/exporter.h>
+#include <dballe/msg/msg.h>
 #include <vector>
 
 namespace wreport {
@@ -10,36 +12,36 @@ struct Vartable;
 namespace dballe {
 namespace tests {
 
-Messages read_msgs(const char* filename, File::Encoding type, const dballe::msg::ImporterOptions& opts=dballe::msg::ImporterOptions());
-Messages read_msgs_csv(const char* filename);
+impl::Messages read_msgs(const char* filename, Encoding type, const dballe::ImporterOptions& opts=dballe::ImporterOptions::defaults);
+impl::Messages read_msgs(const char* filename, Encoding type, const std::string& opts);
+impl::Messages read_msgs_csv(const char* filename);
 
 struct ActualMessage : public Actual<const Message&>
 {
     using Actual::Actual;
 
-    void is_undef(int shortcut) const;
+    void is_undef(const impl::Shortcut& shortcut) const;
 };
 
 inline ActualMessage actual(const Message& message) { return ActualMessage(message); }
 
-std::unique_ptr<wreport::Bulletin> export_msgs(File::Encoding enctype, const Messages& in, const std::string& tag, const dballe::msg::ExporterOptions& opts=dballe::msg::ExporterOptions());
+std::unique_ptr<wreport::Bulletin> export_msgs(Encoding enctype, const impl::Messages& in, const std::string& tag, const dballe::ExporterOptions& opts=dballe::ExporterOptions::defaults);
 #define test_export_msgs(...) wcallchecked(export_msgs(__VA_ARGS__))
 
 void track_different_msgs(const Message& msg1, const Message& msg2, const std::string& prefix);
-void track_different_msgs(const Messages& msgs1, const Messages& msgs2, const std::string& prefix);
+void track_different_msgs(const impl::Messages& msgs1, const impl::Messages& msgs2, const std::string& prefix);
 
 extern const char* bufr_files[];
 extern const char* crex_files[];
-extern const char* aof_files[];
 
-const wreport::Var& want_var(const Message& msg, int shortcut);
+const wreport::Var& want_var(const Message& msg, const impl::Shortcut& shortcut);
 const wreport::Var& want_var(const Message& msg, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr);
 
-inline ActualVar actual(const Message& message, int shortcut) { return ActualVar(want_var(message, shortcut)); }
+inline ActualVar actual(const Message& message, const impl::Shortcut& shortcut) { return ActualVar(want_var(message, shortcut)); }
 inline ActualVar actual(const Message& message, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr) { return ActualVar(want_var(message, code, lev, tr)); }
 
 void dump(const std::string& tag, const Message& msg, const std::string& desc="message");
-void dump(const std::string& tag, const Messages& msgs, const std::string& desc="message");
+void dump(const std::string& tag, const impl::Messages& msgs, const std::string& desc="message");
 void dump(const std::string& tag, const wreport::Bulletin& bul, const std::string& desc="message");
 void dump(const std::string& tag, const BinaryMessage& msg, const std::string& desc="message");
 void dump(const std::string& tag, const std::string& str, const std::string& desc="message");
@@ -47,7 +49,7 @@ void dump(const std::string& tag, const std::string& str, const std::string& des
 struct MessageTweaker
 {
     virtual ~MessageTweaker() {}
-    virtual void tweak(Messages&) {}
+    virtual void tweak(impl::Messages&) {}
     virtual std::string desc() const = 0;
 };
 
@@ -58,21 +60,21 @@ struct MessageTweakers
     ~MessageTweakers();
     // Takes ownership of memory management
     void add(MessageTweaker* tweak);
-    void apply(Messages& msgs);
+    void apply(impl::Messages& msgs);
 };
 
 namespace tweaks {
 
-// Strip attributes from all variables in a Messages
+// Strip attributes from all variables in a impl::Messages
 struct StripAttrs : public MessageTweaker
 {
     std::vector<wreport::Varcode> codes;
 
-    void tweak(Messages& msgs);
+    void tweak(impl::Messages& msgs);
     virtual std::string desc() const { return "StripAttrs"; }
 };
 
-// Strip attributes from all variables in a Messages
+// Strip attributes from all variables in a impl::Messages
 struct StripQCAttrs : public StripAttrs
 {
     StripQCAttrs();
@@ -82,11 +84,11 @@ struct StripQCAttrs : public StripAttrs
 // Strip attributes with substituted values
 struct StripSubstituteAttrs : public MessageTweaker
 {
-    void tweak(Messages& msgs);
+    void tweak(impl::Messages& msgs);
     virtual std::string desc() const { return "StripSubstituteAttrs"; }
 };
 
-// Strip context attributes from all variables in a Messages
+// Strip context attributes from all variables in a impl::Messages
 struct StripContextAttrs : public StripAttrs
 {
     StripContextAttrs();
@@ -100,15 +102,8 @@ struct StripVars : public MessageTweaker
 
     StripVars() {}
     StripVars(std::initializer_list<wreport::Varcode> codes) : codes(codes) {}
-    void tweak(Messages& msgs);
+    void tweak(impl::Messages& msgs);
     virtual std::string desc() const { return "StripVars"; }
-};
-
-// Strip datetime variables in the station context
-struct StripDatetimeVars : public StripVars
-{
-    StripDatetimeVars();
-    virtual std::string desc() const { return "StripDatetimeVars"; }
 };
 
 // Round variables to account for a passage through legacy vars
@@ -116,21 +111,21 @@ struct RoundLegacyVars : public MessageTweaker
 {
     const wreport::Vartable* table;
     RoundLegacyVars();
-    void tweak(Messages& msgs);
+    void tweak(impl::Messages& msgs);
     virtual std::string desc() const { return "RoundLegacyVars"; }
 };
 
 // Remove synop vars present in WMO templates but not in ECMWF templates
 struct RemoveSynopWMOOnlyVars : public MessageTweaker
 {
-    void tweak(Messages& msgs);
+    void tweak(impl::Messages& msgs);
     virtual std::string desc() const { return "RemoveSynopWMOOnlyVars"; }
 };
 
 // Remove temp vars present in WMO templates but not in ECMWF templates
 struct RemoveTempWMOOnlyVars : public MessageTweaker
 {
-    void tweak(Messages& msgs);
+    void tweak(impl::Messages& msgs);
     virtual std::string desc() const { return "RemoveTempWMOOnlyVars"; }
 };
 
@@ -146,14 +141,14 @@ struct RemoveOddTempTemplateOnlyVars : public StripVars
 // cannot be encoded in ECMWF templates
 struct RemoveSynopWMOOddprec : public MessageTweaker
 {
-    void tweak(Messages& msgs);
+    void tweak(impl::Messages& msgs);
     virtual std::string desc() const { return "RemoveSynopWMOOddprec"; }
 };
 
 // Truncate station name to its canonical length
 struct TruncStName : public MessageTweaker
 {
-    void tweak(Messages& msgs);
+    void tweak(impl::Messages& msgs);
     virtual std::string desc() const { return "TruncStName"; }
 };
 
@@ -162,7 +157,7 @@ struct RoundGeopotential : public MessageTweaker
 {
     const wreport::Vartable* table;
     RoundGeopotential();
-    void tweak(Messages& msgs);
+    void tweak(impl::Messages& msgs);
     virtual std::string desc() const { return "RoundGeopotential"; }
 };
 
@@ -171,14 +166,14 @@ struct HeightToGeopotential : public MessageTweaker
 {
     const wreport::Vartable* table;
     HeightToGeopotential();
-    void tweak(Messages& msgs);
+    void tweak(impl::Messages& msgs);
     virtual std::string desc() const { return "HeightToGeopotential"; }
 };
 
 // Round vertical sounding significance with a B08042->B08001->B08042 round trip
 struct RoundVSS : public MessageTweaker
 {
-    void tweak(Messages& msgs);
+    void tweak(impl::Messages& msgs);
     virtual std::string desc() const { return "RoundVSS"; }
 };
 
@@ -188,7 +183,7 @@ struct RemoveContext : public MessageTweaker
     Level lev;
     Trange tr;
     RemoveContext(const Level& lev, const Trange& tr);
-    void tweak(Messages& msgs);
+    void tweak(impl::Messages& msgs);
     virtual std::string desc() const { return "RemoveContext"; }
 };
 
@@ -197,27 +192,27 @@ struct RemoveContext : public MessageTweaker
 struct TestMessage
 {
     std::string name;
-    File::Encoding type;
+    Encoding type;
     BinaryMessage raw;
     wreport::Bulletin* bulletin = 0;
-    Messages msgs;
+    impl::Messages msgs;
 
-    TestMessage(File::Encoding type, const std::string& name);
+    TestMessage(Encoding type, const std::string& name);
     ~TestMessage();
 
-    void read_from_file(const std::string& fname, const msg::ImporterOptions& input_opts);
-    void read_from_raw(const BinaryMessage& msg, const msg::ImporterOptions& input_opts);
-    void read_from_msgs(const Messages& msgs, const msg::ExporterOptions& export_opts);
+    void read_from_file(const std::string& fname, const ImporterOptions& input_opts);
+    void read_from_raw(const BinaryMessage& msg, const ImporterOptions& input_opts);
+    void read_from_msgs(const impl::Messages& msgs, const ExporterOptions& export_opts);
     void dump() const;
 };
 
 struct TestCodec
 {
     std::string fname;
-    File::Encoding type;
+    Encoding type;
     bool verbose = false;
-    msg::ImporterOptions input_opts;
-    msg::ExporterOptions output_opts;
+    impl::ImporterOptions input_opts;
+    impl::ExporterOptions output_opts;
     std::string expected_template;
     int expected_subsets = 1;
     int expected_min_vars = 1;
@@ -231,7 +226,7 @@ struct TestCodec
 
     void do_compare(const TestMessage& msg1, const TestMessage& msg2);
 
-    TestCodec(const std::string& fname, File::Encoding type=File::BUFR);
+    TestCodec(const std::string& fname, Encoding type=Encoding::BUFR);
 
     void configure_ecmwf_to_wmo_tweaks();
 

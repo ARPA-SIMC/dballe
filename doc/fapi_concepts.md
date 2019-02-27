@@ -28,8 +28,8 @@ handle that you will later use to refer to it.
 
 Sessions run with their own database transaction, which means that the changes
 they perform on data are handled in an all-or-nothing fashion. If you close a
-session with [idba_fatto][], then all the changes made will be preserved. If
-you do not call [idba_fatto][], such as if your program unexpectedly
+session with [idba_commit][], then all the changes made will be preserved. If
+you do not call [idba_commit][], such as if your program unexpectedly
 terminates, then all the changes made will be undone.
 
 <a name="report"></a>
@@ -45,7 +45,7 @@ stations are preferred over values measured by a satellite, which in turn is
 preferred over a value computed by a forecast model.
 
 Priorities associated to the report type can be customized when creating the
-database (see [[idba_scopa][]](fapi_reference.md#idba_scopa)).
+database (see [[idba_reinit_db][]](fapi_reference.md#idba_reinit_db)).
 
 <a name="station"></a>
 ### Station
@@ -68,7 +68,7 @@ above sea level, or the center operating it.
 The interface to work with station values is the same as the interface to work
 with normal values, except that date, time, level, and timerange information
 are not set when inserting or querying data, and
-[[idba_setcontextana][]](fapi_reference.md#idba_setcontextana) is called instead, to signal the
+[[idba_set_station_context][]](fapi_reference.md#idba_set_station_context) is called instead, to signal the
 intention of working with station values.
 
 See section \ref{sec-querying} for examples on how to work with values.
@@ -149,8 +149,8 @@ See section [Attributes](#sec_attrs) for examples on how to handle attributes.
 
 Work with DB-All.e happens using *action routines*.  An action routine
 typically reads some input, performs an action and produces some output.
-Example of action routines are [idba_voglioquesto][] to query data from a
-database and [idba_prendilo][] to write data into the database.
+Example of action routines are [idba_query_data][] to query data from a
+database and [idba_insert_data][] to write data into the database.
 
 The input and the output of action routines are collections of parameters which
 have a name and a value.  A list of parameters can be found [in the
@@ -167,8 +167,8 @@ You can set the input parameters using the `idba_set*` functions:
   Set the input parameter to the real value `realvalue`
 * `idba_setd(handle, "param", doublevalue)`:
   Set the input parameter to the `real*8` value `doublevalue`
-* `idba_setcontextana(handle)`:
-  <a name="fun_setcontextana"></a>
+* `idba_set_station_context(handle)`:
+  <a name="fun_set_station_context"></a>
   Sets the date, time, level and time range in the input record to some magic
   values, to signal that we are going to work with station attributes instead
   of normal values.
@@ -210,7 +210,7 @@ To reset one input parameter you can use [idba_unset][]:
       ! We do not want to limit results by latitude this time
       ierr = idba_unset(handle, "latmin")
       ierr = idba_unset(handle, "latmax")
-      ierr = idba_voglioquesto(handle, count)
+      ierr = idba_query_data(handle, count)
 ```
 
 Alternatively, you can reset an input parameter by setting it to one of the
@@ -262,11 +262,11 @@ value".  This is a list of such special values:
 [idba_error_remove_callback]: fapi_reference.md#idba_error_remove_callback
 [idba_default_error_handler]: fapi_reference.md#idba_default_error_handler
 [idba_error_handle_tolerating_overflows]: fapi_reference.md#idba_error_handle_tolerating_overflows
-[idba_presentati]: fapi_reference.md#idba_presentati
-[idba_arrivederci]: fapi_reference.md#idba_arrivederci
-[idba_preparati]: fapi_reference.md#idba_preparati
-[idba_messaggi]: fapi_reference.md#idba_messaggi
-[idba_fatto]: fapi_reference.md#idba_fatto
+[idba_connect]: fapi_reference.md#idba_connect
+[idba_disconnect]: fapi_reference.md#idba_disconnect
+[idba_begin]: fapi_reference.md#idba_begin
+[idba_begin_messages]: fapi_reference.md#idba_begin_messages
+[idba_commit]: fapi_reference.md#idba_commit
 [idba_seti]: fapi_reference.md#idba_seti
 [idba_setb]: fapi_reference.md#idba_setb
 [idba_setr]: fapi_reference.md#idba_setr
@@ -280,7 +280,7 @@ value".  This is a list of such special values:
 [idba_unset]: fapi_reference.md#idba_unset
 [idba_unsetb]: fapi_reference.md#idba_unsetb
 [idba_unsetall]: fapi_reference.md#idba_unsetall
-[idba_setcontextana]: fapi_reference.md#idba_setcontextana
+[idba_set_station_context]: fapi_reference.md#idba_set_station_context
 [idba_setlevel]: fapi_reference.md#idba_setlevel
 [idba_settimerange]: fapi_reference.md#idba_settimerange
 [idba_setdate]: fapi_reference.md#idba_setdate
@@ -289,22 +289,22 @@ value".  This is a list of such special values:
 [idba_enqlevel]: fapi_reference.md#idba_enqlevel
 [idba_enqtimerange]: fapi_reference.md#idba_enqtimerange
 [idba_enqdate]: fapi_reference.md#idba_enqdate
-[idba_scopa]: fapi_reference.md#idba_scopa
-[idba_quantesono]: fapi_reference.md#idba_quantesono
-[idba_elencamele]: fapi_reference.md#idba_elencamele
-[idba_voglioquesto]: fapi_reference.md#idba_voglioquesto
-[idba_dammelo]: fapi_reference.md#idba_dammelo
-[idba_prendilo]: fapi_reference.md#idba_prendilo
-[idba_dimenticami]: fapi_reference.md#idba_dimenticami
+[idba_reinit_db]: fapi_reference.md#idba_reinit_db
+[idba_query_stations]: fapi_reference.md#idba_query_stations
+[idba_next_station]: fapi_reference.md#idba_next_station
+[idba_query_data]: fapi_reference.md#idba_query_data
+[idba_next_data]: fapi_reference.md#idba_next_data
+[idba_insert_data]: fapi_reference.md#idba_insert_data
+[idba_remove_data]: fapi_reference.md#idba_remove_data
 [idba_remove_all]: fapi_reference.md#idba_remove_all
-[idba_voglioancora]: fapi_reference.md#idba_voglioancora
-[idba_ancora]: fapi_reference.md#idba_ancora
-[idba_critica]: fapi_reference.md#idba_critica
-[idba_scusa]: fapi_reference.md#idba_scusa
+[idba_query_attributes]: fapi_reference.md#idba_query_attributes
+[idba_next_attribute]: fapi_reference.md#idba_next_attribute
+[idba_insert_attributes]: fapi_reference.md#idba_insert_attributes
+[idba_remove_attributes]: fapi_reference.md#idba_remove_attributes
 [idba_messages_open_input]: fapi_reference.md#idba_messages_open_input
 [idba_messages_open_output]: fapi_reference.md#idba_messages_open_output
 [idba_messages_read_next]: fapi_reference.md#idba_messages_read_next
 [idba_messages_write_next]: fapi_reference.md#idba_messages_write_next
-[idba_spiegal]: fapi_reference.md#idba_spiegal
-[idba_spiegat]: fapi_reference.md#idba_spiegat
-[idba_spiegab]: fapi_reference.md#idba_spiegab
+[idba_describe_level]: fapi_reference.md#idba_describe_level
+[idba_describe_timerange]: fapi_reference.md#idba_describe_timerange
+[idba_describe_var]: fapi_reference.md#idba_describe_var

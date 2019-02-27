@@ -19,31 +19,31 @@ class Tests : public TestCase
     {
         add_method("empty", []() {
             // Try encoding and decoding an empty generic message
-            unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR);
-            unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);
+            unique_ptr<Importer> importer = Importer::create(Encoding::BUFR);
+            unique_ptr<Exporter> exporter = Exporter::create(Encoding::BUFR);
 
-            Messages msgs;
-            msgs.append(unique_ptr<Message>(new Msg));
+            impl::Messages msgs;
+            msgs.emplace_back(make_shared<impl::Message>());
 
             // Export msg as a generic message
-            BinaryMessage raw(File::BUFR);
+            BinaryMessage raw(Encoding::BUFR);
             raw.data = wcallchecked(exporter->to_binary(msgs));
 
             // Parse it back
-            Messages msgs1 = wcallchecked(importer->from_binary(raw));
+            impl::Messages msgs1 = wcallchecked(importer->from_binary(raw));
 
             // Check that the data are the same
             notes::Collect c(cerr);
-            int diffs = msgs.diff(msgs1);
+            int diffs = impl::msg::messages_diff(msgs, msgs1);
             if (diffs) dballe::tests::track_different_msgs(msgs, msgs1, "genericempty");
             wassert(actual(diffs) == 0);
         });
         add_method("known", []() {
             // Try encoding and decoding a generic message
-            unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR);
-            unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);
+            unique_ptr<Importer> importer = Importer::create(Encoding::BUFR);
+            unique_ptr<Exporter> exporter = Exporter::create(Encoding::BUFR);
 
-            unique_ptr<Msg> msg(new Msg);
+            unique_ptr<impl::Message> msg(new impl::Message);
 
             /* Fill up msg */
             msg->set_press(			15,	45);
@@ -105,11 +105,16 @@ class Tests : public TestCase
             msg->set_flight_roll(	3,		45);
             msg->set_latlon_spec(	3,		45);
             msg->set_datetime(Datetime(3, 3, 3, 3, 3, 0));
-            msg->seti(WR_VAR(0, 4, 1), 3, 45, Level(), Trange());
-            msg->seti(WR_VAR(0, 4, 2), 3, 45, Level(), Trange());
-            msg->seti(WR_VAR(0, 4, 3), 3, 45, Level(), Trange());
-            msg->seti(WR_VAR(0, 4, 4), 3, 45, Level(), Trange());
-            msg->seti(WR_VAR(0, 4, 5), 3, 45, Level(), Trange());
+            auto var = newvar(WR_VAR(0, 4, 1), 3); var->seta(newvar(WR_VAR(0, 33, 7), 45));
+            msg->station_data.set(std::move(var));
+            var = newvar(WR_VAR(0, 4, 2), 3); var->seta(newvar(WR_VAR(0, 33, 7), 45));
+            msg->station_data.set(std::move(var));
+            var = newvar(WR_VAR(0, 4, 3), 3); var->seta(newvar(WR_VAR(0, 33, 7), 45));
+            msg->station_data.set(std::move(var));
+            var = newvar(WR_VAR(0, 4, 4), 3); var->seta(newvar(WR_VAR(0, 33, 7), 45));
+            msg->station_data.set(std::move(var));
+            var = newvar(WR_VAR(0, 4, 5), 3); var->seta(newvar(WR_VAR(0, 33, 7), 45));
+            msg->station_data.set(std::move(var));
             msg->set_latitude(		3,		45);
             msg->set_longitude(		3,		45);
             msg->set_height_station(3,		45);
@@ -118,11 +123,11 @@ class Tests : public TestCase
             msg->set_timesig(		3,		45);
             //CHECKED(dba_msg_set_flight_press(	msg, 3,		45));
 
-            Messages msgs;
-            msgs.append(move(msg));
+            impl::Messages msgs;
+            msgs.emplace_back(move(msg));
 
             /* Export msg as a generic message */
-            BinaryMessage raw(File::BUFR);
+            BinaryMessage raw(Encoding::BUFR);
             raw.data = wcallchecked(exporter->to_binary(msgs));
 
             //FILE* out = fopen("/tmp/zaza.bufr", "wb");
@@ -130,22 +135,22 @@ class Tests : public TestCase
             //fclose(out);
 
             /* Parse it back */
-            Messages msgs1 = wcallchecked(importer->from_binary(raw));
+            impl::Messages msgs1 = wcallchecked(importer->from_binary(raw));
 
             /* Check that the data are the same */
             notes::Collect c(cerr);
-            int diffs = msgs.diff(msgs1);
+            int diffs = impl::msg::messages_diff(msgs, msgs1);
             if (diffs) dballe::tests::track_different_msgs(msgs, msgs1, "generic2");
             wassert(actual(diffs) == 0);
         });
         add_method("attrs", []() {
             // Check that attributes are properly exported
-            unique_ptr<msg::Importer> importer = msg::Importer::create(File::BUFR);
-            unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);
+            unique_ptr<Importer> importer = Importer::create(Encoding::BUFR);
+            unique_ptr<Exporter> exporter = Exporter::create(Encoding::BUFR);
 
             /* Create a new message */
-            unique_ptr<Msg> msg(new Msg);
-            msg->type = MSG_GENERIC;
+            unique_ptr<impl::Message> msg(new impl::Message);
+            msg->type = MessageType::GENERIC;
 
             // Set some metadata
             msg->set_datetime(Datetime(2006, 1, 19, 14, 50));
@@ -161,7 +166,7 @@ class Tests : public TestCase
             var->seta(newvar(WR_VAR(0, 33, 5), 3));
 
             /* Add the variable to the message */
-            msg->set(move(var), Level(1), Trange::instant());
+            msg->set(Level(1), Trange::instant(), move(var));
 
             /* Create a second variable to add to the message */
             var = newvar(WR_VAR(0, 12, 102), 272.0);
@@ -171,21 +176,21 @@ class Tests : public TestCase
             var->seta(newvar(WR_VAR(0, 33, 5), 2));
 
             /* Add the variable to the message */
-            msg->set(move(var), Level(1), Trange::instant());
+            msg->set(Level(1), Trange::instant(), move(var));
 
-            Messages msgs;
-            msgs.append(move(msg));
+            impl::Messages msgs;
+            msgs.emplace_back(move(msg));
 
             // Encode the message
-            BinaryMessage raw(File::BUFR);
+            BinaryMessage raw(Encoding::BUFR);
             raw.data = wcallchecked(exporter->to_binary(msgs));
 
             // Decode the message
-            Messages msgs1 = wcallchecked(importer->from_binary(raw));
+            impl::Messages msgs1 = wcallchecked(importer->from_binary(raw));
 
             // Check that the data are the same
             notes::Collect c(cerr);
-            int diffs = msgs.diff(msgs1);
+            int diffs = impl::msg::messages_diff(msgs, msgs1);
             if (diffs) dballe::tests::track_different_msgs(msgs, msgs1, "genericattr");
             wassert(actual(diffs) == 0);
         });
@@ -193,15 +198,15 @@ class Tests : public TestCase
             // Test a bug in which B01194 ([SIM] Report mnemonic) appears twice
 
             // Import a synop message
-            Messages msgs = read_msgs("bufr/obs0-1.22.bufr", File::BUFR);
+            impl::Messages msgs = read_msgs("bufr/obs0-1.22.bufr", Encoding::BUFR);
             wassert(actual(msgs.size()) > 0);
 
             // Convert it to generic, with a 'ship' rep_memo
-            Msg::downcast(msgs[0]).type = MSG_GENERIC;
-            Msg::downcast(msgs[0]).set_rep_memo("ship");
+            impl::Message::downcast(msgs[0])->type = MessageType::GENERIC;
+            impl::Message::downcast(msgs[0])->set_rep_memo("ship");
 
             // Export it
-            unique_ptr<msg::Exporter> exporter = msg::Exporter::create(File::BUFR);
+            unique_ptr<Exporter> exporter = Exporter::create(Encoding::BUFR);
             unique_ptr<Bulletin> bulletin = exporter->to_bulletin(msgs);
 
             // Ensure that B01194 only appears once

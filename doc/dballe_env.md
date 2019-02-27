@@ -55,19 +55,6 @@ The actual details of what this means can vary. At the moment, the journal is
 disabled entirely, and interrupting a running program can result in a corrupted
 database file.
 
-## `DBA_AOF_ENDIANNESS`
-
-This controls the endianness used when writing `AOF` files.
-
-The possible values are:
-
-* `ARCH`: use the endianness of the current system
-* `LE`: Little Endian
-* `BE`: Big Endian
-`
-
-By default when the variable is not set, `ARCH` is used.
-
 ## `DBA_FORTRAN_TRACE` or `DBALLE_TRACE_FORTRAN`
 
 If present in the environment, the variable points to a file where DB-All.e
@@ -83,13 +70,13 @@ compatibility.
 ## `DBA_FORTRAN_TRANSACTION`
 
 Wrap in a single database transaction everything that happens on a session
-between [idba_preparati][] and [idba_fatto][], unless [idba_preparati][] is
+between [idba_begin][] and [idba_commit][], unless [idba_begin][] is
 called with only `"read"` access levels.
 
 This should make execution faster at least on PostgreSQL and MySQL, and if
-[idba_fatto][] is not called, like if the program aborts because of an error,
+[idba_commit][] is not called, like if the program aborts because of an error,
 then the partial work is rolled back rather than kept in the database.
 
-[idba_preparati]: fapi_reference.md#idba_preparati
-[idba_messaggi]: fapi_reference.md#idba_messaggi
-[idba_fatto]: fapi_reference.md#idba_fatto
+[idba_begin]: fapi_reference.md#idba_begin
+[idba_begin_messages]: fapi_reference.md#idba_begin_messages
+[idba_commit]: fapi_reference.md#idba_commit

@@ -13,40 +13,40 @@ struct Var;
 }
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
 class Importer
 {
 protected:
-    const msg::ImporterOptions& opts;
+    const dballe::ImporterOptions& opts;
     const wreport::Subset* subset;
-    Msg* msg;
-    int ye, mo, da, ho, mi, se;
+    impl::Message* msg;
 
     virtual void init();
     virtual void run() = 0;
 
-    void set(const wreport::Var& var, int shortcut);
+    void set(const wreport::Var& var, const Shortcut& shortcut);
     void set(const wreport::Var& var, wreport::Varcode code, const Level& level, const Trange& trange);
 
 public:
-    Importer(const msg::ImporterOptions& opts) : opts(opts) {}
+    Importer(const dballe::ImporterOptions& opts) : opts(opts) {}
     virtual ~Importer() {}
 
-    virtual MsgType scanType(const wreport::Bulletin& bulletin) const = 0;
+    virtual MessageType scanType(const wreport::Bulletin& bulletin) const = 0;
 
-    void import(const wreport::Subset& subset, Msg& msg);
+    void import(const wreport::Subset& subset, impl::Message& msg);
 
-    static std::unique_ptr<Importer> createSynop(const msg::ImporterOptions&);
-    static std::unique_ptr<Importer> createShip(const msg::ImporterOptions&);
-    static std::unique_ptr<Importer> createMetar(const msg::ImporterOptions&);
-    static std::unique_ptr<Importer> createTemp(const msg::ImporterOptions&);
-    static std::unique_ptr<Importer> createPilot(const msg::ImporterOptions&);
-    static std::unique_ptr<Importer> createFlight(const msg::ImporterOptions&);
-    static std::unique_ptr<Importer> createSat(const msg::ImporterOptions&);
-    static std::unique_ptr<Importer> createPollution(const msg::ImporterOptions&);
-    static std::unique_ptr<Importer> createGeneric(const msg::ImporterOptions&);
+    static std::unique_ptr<Importer> createSynop(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer> createShip(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer> createMetar(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer> createTemp(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer> createPilot(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer> createFlight(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer> createSat(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer> createPollution(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer> createGeneric(const dballe::ImporterOptions&);
 };
 
 class WMOImporter : public Importer
@@ -63,7 +63,7 @@ protected:
     }
 
 public:
-    WMOImporter(const msg::ImporterOptions& opts) : Importer(opts) {}
+    WMOImporter(const dballe::ImporterOptions& opts) : Importer(opts) {}
     virtual ~WMOImporter() {}
 };
 
@@ -155,8 +155,8 @@ struct Interpreted
      * Beging building using a copy of var, and level and timerange from \a
      * shortcut
      */
-    Interpreted(int shortcut, const wreport::Var& var);
-    Interpreted(int shortcut, const wreport::Var& var, const Level& level, const Trange& trange);
+    Interpreted(const Shortcut& shortcut, const wreport::Var& var);
+    Interpreted(const Shortcut& shortcut, const wreport::Var& var, const Level& level, const Trange& trange);
     Interpreted(wreport::Varcode code, const wreport::Var& var, const Level& level, const Trange& trange);
     virtual ~Interpreted();
 
@@ -209,24 +209,25 @@ protected:
     virtual void import_var(const wreport::Var& var);
 
     void set_gen_sensor(const wreport::Var& var, wreport::Varcode code, const Level& defaultLevel, const Trange& trange);
-    void set_gen_sensor(const wreport::Var& var, int shortcut);
-    void set_baro_sensor(const wreport::Var& var, int shortcut);
-    void set_past_weather(const wreport::Var& var, int shortcut);
-    void set_wind(const wreport::Var& var, int shortcut);
-    void set_wind_max(const wreport::Var& var, int shortcut);
+    void set_gen_sensor(const wreport::Var& var, const Shortcut& shortcut);
+    void set_baro_sensor(const wreport::Var& var, const Shortcut& shortcut);
+    void set_past_weather(const wreport::Var& var, const Shortcut& shortcut);
+    void set_wind(const wreport::Var& var, const Shortcut& shortcut);
+    void set_wind_max(const wreport::Var& var, const Shortcut& shortcut);
     void set_pressure(const wreport::Var& var);
-    void set(const wreport::Var& var, int shortcut);
+    void set(const wreport::Var& var, const Shortcut& shortcut);
     void set(const wreport::Var& var, wreport::Varcode code, const Level& level, const Trange& trange);
     void set(std::unique_ptr<Interpreted> val);
 
 public:
-    SynopBaseImporter(const msg::ImporterOptions& opts);
+    SynopBaseImporter(const dballe::ImporterOptions& opts);
     ~SynopBaseImporter();
 
     void init() override;
     void run() override;
 };
 
+}
 }
 }
 }

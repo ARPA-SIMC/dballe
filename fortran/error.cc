@@ -1,6 +1,5 @@
+#include "dballe/fortran/api.h"
 #include "handles.h"
-#include "trace.h"
-#include "common.h"
 #include <wreport/error.h>
 #include <cstdint>
 #include <cstring>
@@ -52,11 +51,9 @@ void error_init()
 
 int error(wreport::error& e)
 {
-    IF_TRACING(log_error(e));
-
-	last_err_code = e.code();
-	strncpy(last_err_msg, e.what(), 1024);
-	size_t todo = herr.in_use;
+    last_err_code = e.code();
+    strncpy(last_err_msg, e.what(), 1023);
+    size_t todo = herr.in_use;
 	for (int i = 0; todo && i < MAX_CALLBACKS; ++i)
 		if (herr.records[i].used)
 		{
@@ -126,7 +123,7 @@ int idba_error_code()
  */
 void idba_error_message(char* message, unsigned message_len)
 {
-    fortran::cstring_to_fortran(last_err_msg, message, message_len);
+    fortran::API::to_fortran(last_err_msg, message, message_len);
 }
 
 /**
@@ -141,7 +138,7 @@ void idba_error_message(char* message, unsigned message_len)
  */
 void idba_error_context(char* message, unsigned message_len)
 {
-    fortran::cstring_to_fortran("", message, message_len);
+    fortran::API::to_fortran("", message, message_len);
 }
 
 /**
@@ -158,7 +155,7 @@ void idba_error_context(char* message, unsigned message_len)
  */
 void idba_error_details(char* message, unsigned message_len)
 {
-    fortran::cstring_to_fortran("", message, message_len);
+    fortran::API::to_fortran("", message, message_len);
 }
 
 /**

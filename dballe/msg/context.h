@@ -9,12 +9,12 @@
 
 #include <dballe/var.h>
 #include <dballe/types.h>
+#include <dballe/values.h>
 #include <vector>
 #include <memory>
 
-struct lua_State;
-
 namespace dballe {
+namespace impl {
 namespace msg {
 
 /**
@@ -31,20 +31,14 @@ protected:
 public:
     Level level;
     Trange trange;
+    Values values;
 
-	/**
-	 * The variables in this context
-	 */
-	std::vector<wreport::Var*> data;
+    Context(const Level& lev, const Trange& tr);
+    Context(const Context& c) = default;
+    Context(Context&& c) = default;
 
-	Context(const Level& lev, const Trange& tr);
-    Context(const Context& c);
-	~Context();
-
-    Context& operator=(const Context& src);
-
-    /// @return true if this is the station context, else false
-    bool is_station() const;
+    Context& operator=(const Context& src) = default;
+    Context& operator=(Context&& src) = default;
 
     /**
      * Compare two dba_msg_context strutures, for use in sorting.
@@ -61,101 +55,9 @@ public:
      * use in sorting.
      *
      * @return
-     *   -1 if l < ltype,l1,l2; 0 if l == ltype,l1,l2; 1 if l > ltype,l1,l2
+     *   -1 if l < lev, tr; 0 if l == lev, tr; 1 if l > lev, tr
      */
     int compare(const Level& lev, const Trange& tr) const;
-
-    /**
-     * Add a Var to the level
-     *
-     * If a variable exists with the same code, it is replaced
-     *
-     * @param var
-     *   The variable to add or replace.
-     */
-    void set(const wreport::Var& var);
-
-    /**
-     * Add a Var to the level
-     *
-     * If a variable exists with the same code, it is replaced
-     *
-     * The Context will take ownership of memory management for \a var
-     *
-     * @param var
-     *   The variable to add or replace.
-     */
-    void set(std::unique_ptr<wreport::Var> var);
-
-    /**
-     * Add or replace an integer value
-     *
-     * @param code
-     *   The wreport::Varcode of the destination value.
-     * @param val
-     *   The integer value of the data
-     */
-    void seti(wreport::Varcode code, int val);
-
-    /**
-     * Add or replace a double value
-     *
-     * @param code
-     *   The wreport::Varcode of the destination value.
-     * @param val
-     *   The double value of the data
-     */
-    void setd(wreport::Varcode code, double val);
-
-    /**
-     * Add or replace a string value
-     *
-     * @param code
-     *   The wreport::Varcode of the destination value.
-     * @param val
-     *   The string value of the data
-     */
-    void setc(wreport::Varcode code, const char* val);
-
-    /**
-     * Find a variable given its varcode
-     *
-     * @param code
-     *   The wreport::Varcode of the variable to query.  See @ref vartable.h
-     * @return
-     *   The variable found, or NULL if it was not found.
-     */
-    const wreport::Var* find(wreport::Varcode code) const;
-
-    /**
-     * Find a variable given its varcode
-     *
-     * @param code
-     *   The wreport::Varcode of the variable to query.  See @ref vartable.h
-     * @return
-     *   The variable found, or NULL if it was not found.
-     */
-    wreport::Var* edit(wreport::Varcode code);
-
-    /**
-     * Remove a variable given its varcode
-     *
-     * @param code
-     *   The wreport::Varcode of the variable to query.  See @ref vartable.h
-     * @return
-     *   True if the variable was removed, false if it was not found.
-     */
-    bool remove(wreport::Varcode code);
-
-    /** 
-     * Find a variable given its shortcut ID
-     *
-     * @param id
-     *   Shortcut ID of the value to set (see @ref vars.h)
-     * @return
-     *   The variable found, or NULL if it was not found.
-     */
-    const wreport::Var* find_by_id(int id) const;
 
     /**
      * If this context is the right context for a vertical sounding significance
@@ -184,41 +86,10 @@ public:
      *   The number of differences found
      */
     unsigned diff(const Context& ctx) const;
-
-    /**
-     * Push the variable as an object in the lua stack
-     */
-    void lua_push(struct lua_State* L);
-
-    /**
-     * Check that the element at \a idx is a dba_msg_context
-     *
-     * @return the dba_msg_context element, or NULL if the check failed
-     */
-    static Context* lua_check(struct lua_State* L, int idx);
-
-#include <dballe/msg/context-extravars.h>
 };
 
-
-
-#if 0
-dba_err dba_msg_context_set(dba_msg msg, dba_var var, dba_varcode code, int ltype, int l1, int l2, int pind, int p1, int p2);
-dba_err dba_msg_context_set_by_id(dba_msg msg, dba_var var, int id);
-dba_err dba_msg_context_set_nocopy_by_id(dba_msg msg, dba_var var, int id);
-dba_err dba_msg_context_seti(dba_msg msg, dba_varcode code, int val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2);
-dba_err dba_msg_context_setd(dba_msg msg, dba_varcode code, double val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2);
-dba_err dba_msg_context_setc(dba_msg msg, dba_varcode code, const char* val, int conf, int ltype, int l1, int l2, int pind, int p1, int p2);
-#endif
-
-#if 0
-
-
-
-#endif
-
+}
 }
 }
 
-// vim:set ts=4 sw=4:
 #endif

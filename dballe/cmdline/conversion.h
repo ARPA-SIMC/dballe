@@ -10,11 +10,6 @@ struct Bulletin;
 namespace dballe {
 struct File;
 
-namespace msg {
-struct Importer;
-struct Exporter;
-}
-
 namespace cmdline {
 
 struct Converter : public Action
@@ -24,7 +19,7 @@ struct Converter : public Action
     const char* dest_template;
     bool bufr2netcdf_categories;
 
-    msg::Exporter* exporter;
+    Exporter* exporter;
 
     Converter() : file(0), dest_rep_memo(0), dest_template(0), bufr2netcdf_categories(false), exporter(0) {}
     ~Converter();
@@ -50,13 +45,13 @@ protected:
      * Perform conversion of decoded data, auto-inferring
      * type/subtype/localsubtype from the Messages contents
      */
-    void process_dba_msg(const BinaryMessage& orig, const Messages& msgs);
+    void process_dba_msg(const BinaryMessage& orig, const std::vector<std::shared_ptr<dballe::Message>>& msgs);
 
     /**
      * Perform conversion of decded data, using the original bulletin for
      * type/subtype/localsubtype information
      */
-    void process_dba_msg_from_bulletin(const BinaryMessage& orig, const wreport::Bulletin& bulletin, const Messages& msgs);
+    void process_dba_msg_from_bulletin(const BinaryMessage& orig, const wreport::Bulletin& bulletin, const std::vector<std::shared_ptr<dballe::Message>>& msgs);
 };
 
 }

@@ -1,0 +1,308 @@
+#!/usr/bin/env python3
+
+"""
+Build C++ code for accessing variables by shortcut.
+"""
+
+import argparse
+import sys
+import re
+import os
+import logging
+from contextlib import contextmanager
+
+log = logging.getLogger("mklookup")
+
+
+class Fail(Exception):
+    pass
+
+
+def int_or_none(val):
+    if val == "-":
+        return None
+    return int(val)
+
+
+def format_int_or_none(val):
+    if val is None:
+        return "MISSING_INT"
+    return str(val)
+
+
+class LevTrBase:
+    def is_missing(self):
+        return all(x is None for x in self.as_tuple())
+
+    def as_type(self):
+        vals = list(self.as_tuple())
+        while vals and vals[-1] is None:
+            vals.pop()
+        return "{name}({vals})".format(name=self.CPP_NAME, vals=",".join(format_int_or_none(x) for x in vals))
+
+    def __str__(self):
+        return ", ".join((format_int_or_none(i) for i in self.as_tuple()))
+
+    def __lt__(self, o):
+        return tuple(-1 if x is None else x for x in (self.as_tuple())) < tuple(-1 if x is None else x for x in (o.as_tuple()))
+
+
+class Level(LevTrBase):
+    CPP_NAME = "Level"
+
+    def __init__(self, ltype1, l1, ltype2, l2):
+        self.ltype1 = int_or_none(ltype1)
+        self.l1 = int_or_none(l1)
+        self.ltype2 = int_or_none(ltype2)
+        self.l2 = int_or_none(l2)
+
+    def as_tuple(self):
+        return (self.ltype1, self.l1, self.ltype2, self.l2)
+
+
+class Trange(LevTrBase):
+    CPP_NAME = "Trange"
+
+    def __init__(self, pind, p1, p2):
+        self.pind = int_or_none(pind)
+        self.p1 = int_or_none(p1)
+        self.p2 = int_or_none(p2)
+
+    def as_tuple(self):
+        return (self.pind, self.p1, self.p2)
+
+
+class Varcode:
+    def __init__(self, name):
+        m = re.match(r"B(\d\d)(\d\d\d)", name)
+        if not m:
+            raise "Invalid B local"
+        self.x = int(m.group(1))
+        self.y = int(m.group(2))
+
+    def __str__(self):
+        return "B%02d%03d" % (self.x, self.y)
+
+    def __lt__(self, o):
+        return (self.x, self.y) < (o.x, o.y)
+
+
+class Var:
+    def __init__(self, line):
+        def cleanint(x):
+            if x == '-':
+                return "MISSING_INT"
+            return str(int(x))
+
+        vals = re.split(r"\s*,\s*", line[:-1].strip())
+
+        self.name, self.type = vals[0:2]
+        self.level = Level(*vals[3:7])
+        self.trange = Trange(*vals[7:10])
+        self.varcode = Varcode(vals[2])
+        self.desc = vals[10]
+
+    def __str__(self):
+        return ", ".join((self.name, str(self.varcode), str(self.level), str(self.trange), self.desc))
+
+    def __lt__(self, o):
+        return (self.level, self.trange, self.varcode) < (o.level, o.trange, o.varcode)
+
+
+class Vars:
+    def __init__(self, file):
+        self.vars = [Var(line) for line in file if not re.match(r"^\s*(?:#.+)?$", line)]
+        self.vars.sort()
+
+    def print_shortcuts_h(self, file):
+        print("""#ifndef DBALLE_CORE_SHORTCUTS_H
+#define DBALLE_CORE_SHORTCUTS_H
+
+#include <dballe/types.h>
+#include <wreport/varinfo.h>
+#include <iosfwd>
+
+namespace dballe {
+namespace impl {
+
+struct Shortcut
+{
+    bool station_data;
+    Level level;
+    Trange trange;
+    wreport::Varcode code;
+
+    static const Shortcut& by_name(const char* name);
+    static const Shortcut& by_name(const std::string& name);
+    static const Shortcut& by_name(const char* name, unsigned len);
+
+    bool operator==(const Shortcut& o) const { return std::tie(station_data, level, trange, code) == std::tie(o.station_data, o.level, o.trange, o.code); }
+};
+
+std::ostream& operator<<(std::ostream& out, const Shortcut& shortcut);
+
+
+namespace sc {
+""", file=file)
+
+        for v in self.vars:
+            print("extern const Shortcut {name};".format(name=v.name.lower()), file=file)
+
+        print("""
+}
+}
+}
+
+#endif""", file=file)
+
+    def print_shortcuts_cc(self, file):
+        print("""#include "shortcuts.h"
+#include "var.h"
+#include <cstring>
+#include <ostream>
+
+namespace dballe {
+namespace impl {
+
+const Shortcut& Shortcut::by_name(const char* name) { return by_name(name, strlen(name)); }
+const Shortcut& Shortcut::by_name(const std::string& name) { return by_name(name.data(), name.size()); }
+
+std::ostream& operator<<(std::ostream& out, const Shortcut& shortcut)
+{
+    char buf[7];
+    format_bcode(shortcut.code, buf);
+    return out << shortcut.level << ":" << shortcut.trange << ":" << buf;
+}
+
+namespace sc {
+
+""", file=file)
+
+        for v in self.vars:
+            print('const Shortcut {name} = {{ {station}, {level}, {trange}, WR_VAR(0, {vx}, {vy}) }};'.format(
+                name=v.name.lower(),
+                station="true" if v.level.is_missing() and v.trange.is_missing() else "false",
+                level=v.level.as_type(),
+                trange=v.trange.as_type(),
+                vx=v.varcode.x, vy=v.varcode.y,
+            ), file=file)
+
+        print("""
+}
+}
+}""", file=file)
+
+    def print_shortcuts_access_in_cc(self, file):
+        print("""#include "shortcuts.h"
+#include <wreport/error.h>
+#include <cstring>
+
+namespace dballe {
+namespace impl {
+
+const Shortcut& Shortcut::by_name(const char* key, unsigned len)
+{
+    switch (key) { // mklookup""", file=file)
+
+        for v in self.vars:
+            print('        case "{name}": return sc::{name};'.format(name=v.name.lower()), file=file)
+
+        print("""        default: wreport::error_notfound::throwf("Shortcut name '%s' not found", key);
+    }
+}
+}
+}""", file=file)
+
+    def print_extravars_h(self, file):
+        types = {"int": "int", "num": "double", "str": "const char*"}
+        ftypes = {"int": "i", "num": "d", "str": "c"}
+        for v in self.vars:
+            print("""
+/** Set the value of "{desc}" from a variable of type {type} */
+inline void set_{name}({type} val, int conf=-1) {{ set{ftype}({level}, {trange}, WR_VAR(0, {vx}, {vy}), val, conf); }}
+/** Set the value of "{desc}" from a wreport::Var */
+inline void set_{name}_var(const wreport::Var& val) {{ set({level}, {trange}, WR_VAR(0, {vx}, {vy}), val); }}
+/** Get the "{desc}" physical value stored in the message */
+inline const wreport::Var* get_{name}_var() const {{ return get({level}, {trange}, WR_VAR(0, {vx}, {vy})); }}
+""" .format(
+                name=v.name.lower(),
+                desc=v.desc,
+                type=types[v.type],
+                ftype=ftypes[v.type],
+                vx=v.varcode.x, vy=v.varcode.y,
+                level=v.level.as_type(),
+                trange=v.trange.as_type(),
+            ), file=file)
+
+
+class Cmd:
+    def __init__(self):
+        parser = argparse.ArgumentParser(
+                description="build C++ code for named import/export of variables")
+        parser.add_argument("--verbose", "-v", action="store_true", help="verbose output")
+        parser.add_argument("--debug", action="store_true", help="debug output")
+        parser.add_argument("-o", "--outfile", action="store", help="output file (default: stdout)")
+        parser.add_argument("-t", "--type", action="store", help="output file type")
+        parser.add_argument("input", nargs="?", help="input file")
+        self.args = parser.parse_args()
+
+        log_format = "%(asctime)-15s %(levelname)s %(message)s"
+        level = logging.WARN
+        if self.args.debug:
+            level = logging.DEBUG
+        elif self.args.verbose:
+            level = logging.INFO
+        logging.basicConfig(level=level, stream=sys.stderr, format=log_format)
+
+    @contextmanager
+    def infile(self):
+        if self.args.input:
+            with open(self.args.input, "rt") as fd:
+                yield fd
+        else:
+            yield sys.stdin
+
+    @contextmanager
+    def outfile(self):
+        if self.args.outfile:
+            with open(self.args.outfile, "wt", encoding="utf8") as fd:
+                try:
+                    yield fd
+                except Exception as e:
+                    if os.path.exists(self.args.outfile):
+                        os.unlink(self.args.outfile)
+                    raise e
+        else:
+            yield sys.stdout
+
+    def main(self):
+        with self.infile() as fd:
+            vars = Vars(fd)
+
+        if self.args.type == "vars.h":
+            meth = vars.print_vars_h
+        elif self.args.type == "msg-extravars.h":
+            meth = vars.print_extravars_h
+        elif self.args.type == "vars.gperf":
+            meth = vars.print_vars_gperf
+        elif self.args.type == "shortcuts.h":
+            meth = vars.print_shortcuts_h
+        elif self.args.type == "shortcuts.cc":
+            meth = vars.print_shortcuts_cc
+        elif self.args.type == "shortcuts-access.in.cc":
+            meth = vars.print_shortcuts_access_in_cc
+        else:
+            raise Fail("Output type {} is not recognised".format(self.args.type))
+
+        with self.outfile() as fd:
+            meth(fd)
+
+
+if __name__ == "__main__":
+    try:
+        cmd = Cmd()
+        cmd.main()
+    except Fail as e:
+        log.error("%s", e)
+        cmd.rollback()
+        sys.exit(1)

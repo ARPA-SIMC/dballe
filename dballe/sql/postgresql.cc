@@ -257,7 +257,7 @@ struct PostgreSQLTransaction : public Transaction
         conn.exec_no_data("ROLLBACK");
         fired = true;
     }
-    void rollback_nothrow()
+    void rollback_nothrow() noexcept override
     {
         conn.pqexec_nothrow("ROLLBACK");
         fired = true;

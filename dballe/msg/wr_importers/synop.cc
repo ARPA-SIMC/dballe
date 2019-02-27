@@ -1,4 +1,5 @@
 #include "base.h"
+#include "dballe/core/shortcuts.h"
 #include "dballe/msg/msg.h"
 #include <wreport/bulletin.h>
 #include <wreport/subset.h>
@@ -8,6 +9,7 @@ using namespace wreport;
 using namespace std;
 
 namespace dballe {
+namespace impl {
 namespace msg {
 namespace wr {
 
@@ -19,16 +21,16 @@ protected:
     virtual void import_var(const Var& var);
 
 public:
-    SynopImporter(const msg::ImporterOptions& opts)
+    SynopImporter(const dballe::ImporterOptions& opts)
         : SynopBaseImporter(opts) {}
     virtual ~SynopImporter() {}
 
-    MsgType scanType(const Bulletin& bulletin) const
+    MessageType scanType(const Bulletin& bulletin) const
     {
         switch (bulletin.data_category)
         {
-            case 0: return MSG_SYNOP;
-            default: return MSG_GENERIC; break;
+            case 0: return MessageType::SYNOP;
+            default: return MessageType::GENERIC; break;
         }
     }
 };
@@ -43,8 +45,8 @@ void SynopImporter::import_var(const Var& var)
         // Cloud type is handled by the generic cloud type handler
 
         // State of ground, snow depth, ground minimum temperature (complete)
-        case WR_VAR(0, 20,  62): set(var, DBA_MSG_STATE_GROUND); break;
-        case WR_VAR(0, 13,  13): set(var, DBA_MSG_TOT_SNOW); break;
+        case WR_VAR(0, 20,  62): set(var, sc::state_ground); break;
+        case WR_VAR(0, 13,  13): set(var, sc::tot_snow); break;
         case WR_VAR(0, 12, 113): set(var, WR_VAR(0, 12, 121), Level(1), Trange(3, 0, 43200)); break;
 
         // Basic synoptic "period" data
@@ -78,9 +80,9 @@ void SynopImporter::import_var(const Var& var)
         case WR_VAR(0, 12, 49):
             set(var, WR_VAR(0, 12, 49), Level(1), Trange(4, -abs(trange.time_period_offset), abs(trange.time_period)));
             break;
-        case WR_VAR(0, 22, 42): set(var, DBA_MSG_WATER_TEMP); break;
-        case WR_VAR(0, 12,  5): set(var, DBA_MSG_WET_TEMP_2M); break;
-        case WR_VAR(0, 10,197): set(var, DBA_MSG_HEIGHT_ANEM); break;
+        case WR_VAR(0, 22, 42): set(var, sc::water_temp); break;
+        case WR_VAR(0, 12,  5): set(var, sc::wet_temp_2m); break;
+        case WR_VAR(0, 10,197): set(var, sc::height_anem); break;
 
         default: SynopBaseImporter::import_var(var); break;
     }
@@ -88,12 +90,13 @@ void SynopImporter::import_var(const Var& var)
 
 } // anonynmous namespace
 
-std::unique_ptr<Importer> Importer::createSynop(const msg::ImporterOptions& opts)
+std::unique_ptr<Importer> Importer::createSynop(const dballe::ImporterOptions& opts)
 {
     return unique_ptr<Importer>(new SynopImporter(opts));
 }
 
 
+}
 }
 }
 }

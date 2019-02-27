@@ -1,54 +1,202 @@
 # Input/output/query parameters
 
-| Name          | Unit      | Format     | Description                 | On insert | On query | On results | Comment                         |
-| ------------- | --------- | ---------- | --------------------------- | --------- | -------- | ---------- | ------------------------------- |
-| priority      | NUMBER    | 10 digits  | Priority of this type of report | ignored   | optional | present    | Every type of report has an associated priority that controls which data are first returned when there is more than one in the same physical space.  It can be changed by editing /etc/dballe/repinfo.csv |
-| priomax       | NUMBER    | 10 digits  | Maximum priority of reports queried | ignored   | optional | absent     |                                 |
-| priomin       | NUMBER    | 10 digits  | Minimum priority of reports queried | ignored   | optional | absent     |                                 |
-| rep_memo      | CCITTIA5  | 20 digits  | Mnemonic alias for type of report | required  | optional | present    |                                 |
-| ana_id        | NUMERIC   | 10 digits  | Station database ID         | optional  | optional | present    | Internal DB-ALLe ID referring to a pseudoana entry, used as a shortcut reference instead of specifying the full data |
-| mobile        | NUMERIC   | 10 digits  | Station is mobile           | required  | optional | present    | Set to 1 if the station is mobile, such as a ship or a flight; else 0 |
-| ident         | CCITTIA5  | 64 digits  | Identifier of flight or ship | required if mobile=1 | optional | present if mobile=1 |                                 |
-| lat           | DEGREE    | ##.#####   | Latitude                    | required  | optional | present    | on insert, it has priority over ana_id |
-| lon           | DEGREE    | ###.#####  | Longitude                   | required  | optional | present    | on insert, it has priority over ana_id |
-| latmax        | DEGREE    | ##.#####   | Maximum latitude queried    | ignored   | optional | absent     |                                 |
-| latmin        | DEGREE    | ##.#####   | Minimum latitude queried    | ignored   | optional | absent     |                                 |
-| lonmax        | DEGREE    | ###.#####  | Maximum longitude queried   | ignored   | optional | absent     |                                 |
-| lonmin        | DEGREE    | ###.#####  | Minimum longitude queried   | ignored   | optional | absent     |                                 |
-| year          | YEAR      | 4 digits   | Year                        | required  | optional | present    |                                 |
-| month         | MONTH     | 2 digits   | Month                       | required  | optional | present    |                                 |
-| day           | DAY       | 2 digits   | Day                         | required  | optional | present    |                                 |
-| hour          | HOUR      | 2 digits   | Hour                        | required  | optional | present    |                                 |
-| min           | MINUTE    | 2 digits   | Minutes                     | required  | optional | present    |                                 |
-| sec           | SECOND    | 2 digits   | Seconds                     | required  | optional | present    |                                 |
-| yearmax       | YEAR      | 4 digits   | Maximum year queried        | ignored   | optional | absent     |                                 |
-| yearmin       | YEAR      | 4 digits   | Year or minimum year queried | ignored   | optional | absent     |                                 |
-| monthmax      | MONTH     | 2 digits   | Maximum month queried       | ignored   | optional | absent     |                                 |
-| monthmin      | MONTH     | 2 digits   | Minimum month queried       | ignored   | optional | absent     |                                 |
-| daymax        | DAY       | 2 digits   | Maximum day queried         | ignored   | optional | absent     |                                 |
-| daymin        | DAY       | 2 digits   | Minimum day queried         | ignored   | optional | absent     |                                 |
-| hourmax       | HOUR      | 2 digits   | Maximum hour queried        | ignored   | optional | absent     |                                 |
-| hourmin       | HOUR      | 2 digits   | Minumum hour queried        | ignored   | optional | absent     |                                 |
-| minumax       | MINUTE    | 2 digits   | Maxminum minutes queried    | ignored   | optional | absent     |                                 |
-| minumin       | MINUTE    | 2 digits   | Minimum minutes queried     | ignored   | optional | absent     |                                 |
-| secmax        | SECOND    | 2 digits   | Maxminum seconds queried    | ignored   | optional | absent     |                                 |
-| secmin        | SECOND    | 2 digits   | Minimum seconds queried     | ignored   | optional | absent     |                                 |
-| leveltype1    | NUMBER    | 10 digits  | Type of first level         |           |          |            |                                 |
-| l1            | NUMBER    | 10 digits  | Level layer L1              | required  | optional | present    |                                 |
-| leveltype2    | NUMBER    | 10 digits  | Type of second level        |           |          |            |                                 |
-| l2            | NUMBER    | 10 digits  | Level layer L2              | required  | optional | present    |                                 |
-| pindicator    | NUMBER    | 10 digits  | P indicator for time range  | required  | optional | present    |                                 |
-| p1            | SECOND    | 10 digits  | Time range P1               | required  | optional | present    |                                 |
-| p2            | SECOND    | 10 digits  | Time range P2               | required  | optional | present    |                                 |
-| var           | CCITTIA5  | 7 digits   | Variable queried            | ignored   | optional | present, indicates the name of the last variable returned |                                 |
-| varlist       | CCITTIA5  | 255 digits | List of variables to query  | ignored   | optional | absent     | Comma-separated list of variable codes wanted on output |
-| context_id    | NUMERIC   | 10 digits  | Context ID of the variable  |           |          |            |                                 |
-| query         | CCITTIA5  | 255 digits | Query behaviour modifier    | ignored   | optional | absent     | Comma-separated list of query modifiers.  Can have one of: 'best', 'bigana', 'nosort', 'stream'.  Examples: 'best', 'nosort,stream' |
-| ana_filter    | CCITTIA5  | 255 digits | Filter on anagraphical data | ignored   | optional | absent     | Restricts the results to only those stations which have a pseudoana value that matches the filter. Examples: 'height>=1000', 'B02001=1', '1000<=height<=2000 |
-| data_filter   | CCITTIA5  | 255 digits | Filter on data              | ignored   | optional | absent     | Restricts the results to only the variables of the given type, which have a value that matches the filter. Examples: 't<260', 'B22021>2', '10<=B22021<=20' |
-| attr_filter   | CCITTIA5  | 255 digits | Filter on data attributes   | ignored   | optional | absent     | Restricts the results to only those data which have an attribute that matches the filter. Examples: 'conf>70', 'B33197=0', '25<=conf<=50' |
-| limit         | NUMBER    | 10 digits  | Maximum number of results to return | ignored   | optional | absent     | Maximum number of results to return |
-| var_related   | CCITTIA5  | 6 digits   | Variable related to attribute queried |           |          |            |                                 |
+## Parameters used when setting up a query
+
+| Name            | Type      | Description                    | Comment                                     |
+| --------------- | --------- | ------------------------------ | ------------------------------------------- |
+| `priority`      | Integer   | Priority of the type of report | Every type of report has an associated priority that controls which data are first returned when there is more than one in the same physical space.  It can be changed by editing /etc/dballe/repinfo.csv |
+| `priomax`       | Integer   | Maximum priority of reports queried |                                        |
+| `priomin`       | Integer   | Minimum priority of reports queried |                                        |
+| `report`        | String    | Type of report                 | Alias for `rep_memo`                        |
+| `rep_memo`      | String    | Type of report                 | Alias for `report`                          |
+| `ana_id`        | Integer   | Station database ID            | internal DB-ALLe ID referring to an existing station, usable as a shortcut reference instead of specifying the full data |
+| `mobile`        | Integer   | Station is mobile              | Set to 1 to query mobile station, such as a ship or a flight; to 0 to query only fixed stations, such as synop or metar |
+| `ident`         | String    | Station identifier             |                                             |
+| `lat`           | Float     | Latitude                       | Setting as integer requires the value * 10^5; equivalent to setting latmin and latmax     |
+| `lon`           | Float     | Longitude                      | Setting as integer requires the value * 10^5; equivalent to setting lonmin and lonmax     |
+| `latmax`        | Float     | Maximum latitude queried       | Setting as integer requires the value * 10^5 |
+| `latmin`        | Float     | Minimum latitude queried       | Setting as integer requires the value * 10^5 |
+| `lonmax`        | Float     | Maximum longitude queried      | Setting as integer requires the value * 10^5 |
+| `lonmin`        | Float     | Minimum longitude queried      | Setting as integer requires the value * 10^5 |
+| `year`          | Integer   | Year                           | Equivalent to setting yearmin and yearmax   |
+| `month`         | Integer   | Month                          | Equivalent to setting monthmin and monthmax |
+| `day`           | Integer   | Day                            | Equivalent to setting daymin and daymax     |
+| `hour`          | Integer   | Hour                           | Equivalent to setting hourmin and hourmax   |
+| `min`           | Integer   | Minutes                        | Equivalent to setting minumin and minumax   |
+| `sec`           | Integer   | Seconds                        | Equivalent to setting secmin and secmax     |
+| `yearmax`       | Integer   | Maximum year queried           |                                             |
+| `yearmin`       | Integer   | Year or minimum year queried   |                                             |
+| `monthmax`      | Integer   | Maximum month queried          |                                             |
+| `monthmin`      | Integer   | Minimum month queried          |                                             |
+| `daymax`        | Integer   | Maximum day queried            |                                             |
+| `daymin`        | Integer   | Minimum day queried            |                                             |
+| `hourmax`       | Integer   | Maximum hour queried           |                                             |
+| `hourmin`       | Integer   | Minumum hour queried           |                                             |
+| `minumax`       | Integer   | Maxminum minutes queried       |                                             |
+| `minumin`       | Integer   | Minimum minutes queried        |                                             |
+| `secmax`        | Integer   | Maxminum seconds queried       |                                             |
+| `secmin`        | Integer   | Minimum seconds queried        |                                             |
+| `leveltype1`    | Integer   | Type of first level            |                                             |
+| `l1`            | Integer   | Level layer L1                 |                                             |
+| `leveltype2`    | Integer   | Type of second level           |                                             |
+| `l2`            | Integer   | Level layer L2                 |                                             |
+| `pindicator`    | Integer   | P indicator for time range     |                                             |
+| `p1`            | Integer   | Time range P1                  |                                             |
+| `p2`            | Integer   | Time range P2                  |                                             |
+| `var`           | String    | Variable queried               | When setting var, varlist is cleared        |
+| `varlist`       | String    | List of variables to query     | Comma-separated list of variable codes to query; when setting varlist, var is cleared |
+| `query`         | String    | Query behaviour modifier       | Comma-separated list of query modifiers.  Can have one of: 'best', 'bigana', 'nosort', 'stream'.  Examples: 'best', 'nosort,stream' |
+| `ana_filter`    | String    | Filter on anagraphical data    | Restricts the results to only those stations which have a pseudoana value that matches the filter. Examples: 'height>=1000', 'B02001=1', '1000<=height<=2000 |
+| `data_filter`   | String    | Filter on data                 | Restricts the results to only the variables of the given type, which have a value that matches the filter. Examples: 't<260', 'B22021>2', '10<=B22021<=20' |
+| `attr_filter`   | String    | Filter on data attributes      | Restricts the results to only those data which have an attribute that matches the filter. Examples: 'conf>70', 'B33197=0', '25<=conf<=50' |
+| `limit`         | Integer   | Maximum number of results to return |                                        |
+| `block`         | Integer   | WMO block number of the station |                                            |
+| `station`       | Integer   | WMO station number of the station |                                          |
+
+
+## Parameters used when inserting values
+
+| Name         | Unit    | Description                | Comment                         |
+| ------------ | ------- | -------------------------- | ------------------------------- |
+| `rep_memo`   | String  | Type of report             |                                 |
+| `ana_id`     | Integer | Station database ID        | Can optionally be specified instead of `lat`, `lon`, `ident`, `rep_memo`: internal DB-ALLe ID referring to an existing station, usable as a shortcut |
+| `ident`      | String  | Station identifier         | Optional: if missing, the station is fixed; if present, it is mobile |
+| `lat`        | Float   | Latitude                   |                                 |
+| `lon`        | Float   | Longitude                  |                                 |
+| `year`       | Integer | Year                       |                                 |
+| `month`      | Integer | Month                      | Optional: when missing, the minimum valid value is used |
+| `day`        | Integer | Day                        | Optional: when missing, the minimum valid value is used |
+| `hour`       | Integer | Hour                       | Optional: when missing, the minimum valid value is used |
+| `min`        | Integer | Minutes                    | Optional: when missing, the minimum valid value is used |
+| `sec`        | Integer | Seconds                    | Optional: when missing, the minimum valid value is used |
+| `leveltype1` | Integer | Type of first level        |                                 |
+| `l1`         | Integer | Level layer L1             |                                 |
+| `leveltype2` | Integer | Type of second level       |                                 |
+| `l2`         | Integer | Level layer L2             |                                 |
+| `pindicator` | Integer | P indicator for time range |                                 |
+| `p1`         | Integer | Time range P1              |                                 |
+| `p2`         | Integer | Time range P2              |                                 |
+
+Any variable code (as `Bxxyyy` or as a DB-All.e alias) can also be set to insert a variable.
+
+In the Fortran API, after a data is inserted in the database, one can query
+`ana_id` to get the database ID of the station used for that data.
+
+
+## Parameters used when reading station query results
+
+| Name         | Unit    | Description                     | Comment                         |
+| ------------ | ------- | ------------------------------- | ------------------------------- |
+| `priority`   | Integer | Priority of this type of report | Every type of report has an associated priority that controls which data are first returned when there is more than one in the same physical space.  It can be changed by editing /etc/dballe/repinfo.csv |
+| `rep_memo`   | String  | Type of report                  | Alias for `report`              |
+| `report`     | String  | Type of report                  | Alias for `rep_memo`            |
+| `ana_id`     | Integer | Station database ID             | Internal DB-ALLe ID referring to an existing station, usable as a shortcut |
+| `mobile`     | Integer | Station is mobile               | Set to 1 if the station is mobile, such as a ship or a flight; else 0 |
+| `ident`      | String  | Station identifier              | present if mobile=1             |
+| `lat`        | Float   | Latitude                        |                                 |
+| `lon`        | Float   | Longitude                       |                                 |
+| `coords`     | Coords  | Station coordinates             | Only available in Python        |
+| `station`    | Station | Station                         | Only available in Python        |
+
+## Parameters used when reading query results for station values
+
+| Name         | Unit    | Description                     | Comment                         |
+| ------------ | ------- | ------------------------------- | ------------------------------- |
+| `priority`   | Integer | Priority of this type of report | Every type of report has an associated priority that controls which data are first returned when there is more than one in the same physical space.  It can be changed by editing /etc/dballe/repinfo.csv |
+| `rep_memo`   | String  | Type of report                  | Alias for `report`              |
+| `report`     | String  | Type of report                  | Alias for `rep_memo`            |
+| `ana_id`     | Integer | Station database ID             | Internal DB-ALLe ID referring to an existing station, usable as a shortcut |
+| `mobile`     | Integer | Station is mobile               | Set to 1 if the station is mobile, such as a ship or a flight; else 0 |
+| `ident`      | String  | Station identifier              | present if mobile=1             |
+| `lat`        | Float   | Latitude                        |                                 |
+| `lon`        | Float   | Longitude                       |                                 |
+| `coords`     | Coords  | Station coordinates             | Only available in Python        |
+| `station`    | Station | Station                         | Only available in Python        |
+| `var`        | String  | Variable code                   | Set to the current variable code when iterating results |
+| `variable`   | Var     | Variable                        | Only available in Python        |
+| `attrs`      | List    | Attributes                      | Set to the current variable code when iterating results |
+| `context_id` | Integer | ID of the variable              | ID identifying a variable in the database, can be used as a shortcut to access its attributes |
+
+The variable value can be queried using the code in `var`
+
+## Parameters used when reading query results for data values
+
+| Name         | Unit    | Description                     | Comment                         |
+| ------------ | ------- | ------------------------------- | ------------------------------- |
+| `priority`   | Integer | Priority of this type of report | Every type of report has an associated priority that controls which data are first returned when there is more than one in the same physical space.  It can be changed by editing /etc/dballe/repinfo.csv |
+| `rep_memo`   | String  | Type of report                  | Alias for `report`              |
+| `report`     | String  | Type of report                  | Alias for `rep_memo`            |
+| `ana_id`     | Integer | Station database ID             | Internal DB-ALLe ID referring to an existing station, usable as a shortcut |
+| `mobile`     | Integer | Station is mobile               | Set to 1 if the station is mobile, such as a ship or a flight; else 0 |
+| `ident`      | String  | Station identifier              | present if mobile=1             |
+| `lat`        | Float   | Latitude                        |                                 |
+| `lon`        | Float   | Longitude                       |                                 |
+| `coords`     | Coords  | Station coordinates             | Only available in Python        |
+| `station`    | Station | Station                         | Only available in Python        |
+| `datetime`   | datetime | Datetime                       | Only available in Python        |
+| `year`       | Integer | Year                            |                                 |
+| `month`      | Integer | Month                           |                                 |
+| `day`        | Integer | Day                             |                                 |
+| `hour`       | Integer | Hour                            |                                 |
+| `min`        | Integer | Minutes                         |                                 |
+| `sec`        | Integer | Seconds                         |                                 |
+| `level`      | Level   | Level                           | Only available in Python        |
+| `leveltype1` | Integer | Type of first level             |                                 |
+| `l1`         | Integer | Level layer L1                  |                                 |
+| `leveltype2` | Integer | Type of second level            |                                 |
+| `l2`         | Integer | Level layer L2                  |                                 |
+| `trange`     | Trange  | Time range                      | Only available in Python        |
+| `pindicator` | Integer | P indicator for time range      |                                 |
+| `p1`         | Integer | Time range P1                   |                                 |
+| `p2`         | Integer | Time range P2                   |                                 |
+| `var`        | String  | Variable code                   | Set to the current variable code when iterating results |
+| `variable`   | Var     | Variable                        | Only available in Python        |
+| `attrs`      | List    | Attributes                      | Set to the current variable code when iterating results |
+| `context_id` | Integer | ID of the variable              | ID identifying a variable in the database, can be used as a shortcut to access its attributes |
+
+The variable value can be queried using the code in `var`
+
+## Parameters used when reading query results for summary values
+
+| Name         | Unit    | Description                        | Comment                         |
+| ------------ | ------- | ---------------------------------- | ------------------------------- |
+| `priority`   | Integer | Priority of this type of report    | Every type of report has an associated priority that controls which data are first returned when there is more than one in the same physical space.  It can be changed by editing /etc/dballe/repinfo.csv |
+| `rep_memo`   | String  | Type of report                     | Alias for `report`              |
+| `report`     | String  | Type of report                     | Alias for `rep_memo`            |
+| `ana_id`     | Integer | Station database ID                | Internal DB-ALLe ID referring to an existing station, usable as a shortcut |
+| `mobile`     | Integer | Station is mobile                  | Set to 1 if the station is mobile, such as a ship or a flight; else 0 |
+| `ident`      | String  | Station identifier                 | present if mobile=1             |
+| `lat`        | Float   | Latitude                           |                                 |
+| `lon`        | Float   | Longitude                          |                                 |
+| `coords`     | Coords  | Station coordinates                | Only available in Python        |
+| `station`    | Station | Station                            | Only available in Python        |
+| `level`      | Level   | Level                              | Only available in Python        |
+| `leveltype1` | Integer | Type of first level                |                                 |
+| `l1`         | Integer | Level layer L1                     |                                 |
+| `leveltype2` | Integer | Type of second level               |                                 |
+| `l2`         | Integer | Level layer L2                     |                                 |
+| `trange`     | Trange  | Time range                         | Only available in Python        |
+| `pindicator` | Integer | P indicator for time range         |                                 |
+| `p1`         | Integer | Time range P1                      |                                 |
+| `p2`         | Integer | Time range P2                      |                                 |
+| `datetimemax` | datetime | Maximum datetime for this variable | Only available in Python      |
+| `datetimemin` | datetime | Minimum datetime for this variable | Only available in Python      |
+| `yearmax`    | Integer | Maximum year for this variable     |                                 |
+| `yearmin`    | Integer | Minimum year for this variable     |                                 |
+| `monthmax`   | Integer | Maximum month for this variable    |                                 |
+| `monthmin`   | Integer | Minimum month for this variable    |                                 |
+| `daymax`     | Integer | Maximum day for this variable      |                                 |
+| `daymin`     | Integer | Minimum day for this variable      |                                 |
+| `hourmax`    | Integer | Maximum hour for this variable     |                                 |
+| `hourmin`    | Integer | Minumum hour for this variable     |                                 |
+| `minumax`    | Integer | Maximum minutes for this variable  |                                 |
+| `minumin`    | Integer | Minimum minutes for this variable  |                                 |
+| `secmax`     | Integer | Maximum seconds for this variable  |                                 |
+| `secmin`     | Integer | Minimum seconds for this variable  |                                 |
+| `var`        | String  | Variable code                      |                                 |
+| `count`      | Integer | Number of values for this variable |                                 |
+| `context_id` | Integer | Number of values for this variable | Deprecated: use `count`         |
+
 
 ## Input parameters for attribute-related action routines
 
@@ -57,5 +205,5 @@
 | `*Bxxyyy`     | depends   | depends    | Value of the attribute      | required  | ignored  | present    |                                 |
 | `*var`        | Character | 7 chars    | Acoderibute queried         | ignored   | optional | present, indicates the name of the last attribute returned |                                 |
 | `*varlist`    | Character | 255 chars  | List of attributes to query | ignored   | optional | absent     | Comma-separated list of attribute B codes wanted on output |
-| `*var_related` | Character | 6 chars    | Variable related to the attribute to query | required  | required | absent     | It is automatically set by `idba_dammelo` and `idba_prendilo` (when `idba_prendilo` inserts a single variable) |
-| `*context_id` | Numeric   | 10 digits  | Context ID of the variable related to the attribute to query | required  | required | absent     | It is automatically set by `idba_dammelo` and `idba_prendilo` |
+| `*var_related` | Character | 6 chars    | Variable related to the attribute to query | required  | required | absent     | It is automatically set by `idba_next_data` and `idba_insert_data` (when `idba_insert_data` inserts a single variable) |
+| `*context_id` | Numeric   | 10 digits  | Context ID of the variable related to the attribute to query | required  | required | absent     | It is automatically set by `idba_next_data` and `idba_insert_data` |

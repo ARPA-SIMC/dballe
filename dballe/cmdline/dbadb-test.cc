@@ -3,7 +3,6 @@
 #include "dballe/db/v7/transaction.h"
 #include "dballe/cmdline/dbadb.h"
 #include "dballe/core/arrayfile.h"
-#include "dballe/msg/codec.h"
 #include "dballe/msg/msg.h"
 #include "config.h"
 
@@ -42,26 +41,26 @@ this->add_method("import", [](Fixture& f) {
     // Import a synop
     cmdline::ReaderOptions opts;
     cmdline::Reader reader(opts);
-    wassert(actual(dbadb.do_import(dballe::tests::datafile("bufr/obs0-1.22.bufr"), reader)) == 0);
+    wassert(actual(dbadb.do_import(dballe::tests::datafile("bufr/obs0-1.22.bufr"), reader, DBImportOptions::defaults)) == 0);
 
     // Export forcing report as temp
     core::Query query;
-    core::ArrayFile file(File::BUFR);
+    core::ArrayFile file(Encoding::BUFR);
     wassert(actual(dbadb.do_export(query, file, "generic", "ship")) == 0);
 
     wassert(actual(file.msgs.size()) == 1u);
 
     // Decode results
-    auto importer = msg::Importer::create(File::BUFR);
-    Messages msgs = importer->from_binary(file.msgs[0]);
+    auto importer = Importer::create(Encoding::BUFR);
+    impl::Messages msgs = importer->from_binary(file.msgs[0]);
     wassert(actual(msgs.size()) == 1u);
-    Msg& msg = Msg::downcast(msgs[0]);
+    auto msg = impl::Message::downcast(msgs[0]);
 
     // Ensure they're ships
-    wassert(actual(msg.type) == MSG_SHIP);
+    wassert(actual(msg->type) == MessageType::SHIP);
 
     // Check 001194 [SIM] Report mnemonic(CCITTIA5), too
-    const Var* var = msg.get_rep_memo_var();
+    const Var* var = msg->get_rep_memo_var();
     wassert(actual(var).istrue());
     wassert(actual(var->enqc()).istrue());
     wassert(actual(var->enq<std::string>()) == "ship");
@@ -74,21 +73,21 @@ this->add_method("issue62", [](Fixture& f) {
     // Import a synop
     cmdline::ReaderOptions opts;
     cmdline::Reader reader(opts);
-    wassert(actual(dbadb.do_import(dballe::tests::datafile("bufr/issue62.bufr"), reader)) == 0);
+    wassert(actual(dbadb.do_import(dballe::tests::datafile("bufr/issue62.bufr"), reader, DBImportOptions::defaults)) == 0);
 
     // Export
     core::Query query;
-    core::ArrayFile file(File::BUFR);
+    core::ArrayFile file(Encoding::BUFR);
     wassert(actual(dbadb.do_export(query, file, "", nullptr)) == 0);
     wassert(actual(file.msgs.size()) == 2u);
 
     // Decode results
-    auto importer = msg::Importer::create(File::BUFR);
-    Messages msgs = importer->from_binary(file.msgs[0]);
+    auto importer = Importer::create(Encoding::BUFR);
+    impl::Messages msgs = importer->from_binary(file.msgs[0]);
     wassert(actual(msgs.size()) == 1u);
-    Msg& msg = Msg::downcast(msgs[0]);
+    auto msg = impl::Message::downcast(msgs[0]);
 
-    wassert(actual(msg.get_datetime()) == Datetime(2016, 3, 14, 23, 0, 4));
+    wassert(actual(msg->get_datetime()) == Datetime(2016, 3, 14, 23, 0, 4));
 });
 
 }

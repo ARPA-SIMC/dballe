@@ -1,19 +1,15 @@
 #include "config.h"
-#include "dballe/simple/msgapi.h"
-#include "dballe/simple/dbapi.h"
-#include "dballe/core/string.h"
+#include "dballe/fortran/msgapi.h"
+#include "dballe/fortran/dbapi.h"
+#include "dballe/fortran/traced.h"
+#include "dballe/core/var.h"
 #include "dballe/db/db.h"
 
 #include <cstring>  // memset
 #include <limits.h>
 #include <float.h>
-#include "common.h"
 #include "handles.h"
 #include "error.h"
-#include "trace.h"
-
-//#define TRACEMISSING(type) fprintf(stderr, "SET TO MISSING (" type ")\n")
-#define TRACEMISSING(type) do {} while(0)
 
 /*
  * First attempt using constants
@@ -68,7 +64,13 @@ using namespace std;
 
 struct HSession : public fortran::HBase
 {
-    std::string url;
+    std::unique_ptr<DBConnectOptions> options;
+
+    void stop()
+    {
+        options.reset();
+        fortran::HBase::stop();
+    }
 };
 
 struct fortran::Handler<HSession, MAX_SESSION> hsess;
@@ -76,7 +78,6 @@ struct fortran::Handler<HSession, MAX_SESSION> hsess;
 struct HSimple : public fortran::HBase
 {
     fortran::API* api;
-    fortran::SessionTracer trace;
 
     void start()
     {
@@ -95,12 +96,14 @@ struct fortran::Handler<HSimple, MAX_SIMPLE> hsimp;
 
 static int usage_refcount = 0;
 
+static dballe::fortran::Tracer* tracer = nullptr;
+
 static void lib_init()
 {
     if (usage_refcount > 0)
         return;
 
-    fortran::trace_init();
+    tracer = dballe::fortran::Tracer::create().release();
     fortran::error_init();
     hsess.init("DB-All.e database sessions", "MAX_CALLBACKS");
     hsimp.init("DB-All.e work sessions", "MAX_SIMPLE");
@@ -134,12 +137,12 @@ extern "C" {
  * @param password
  *   Used in the past, now it is ignored.
  * @retval dbahandle
- *   The database handle that can be passed to idba_preparati to work with the
+ *   The database handle that can be passed to idba_begin to work with the
  *   database.
  * @return
  *   The error indication for the function.
  */
-int idba_presentati(int* dbahandle, const char* url)
+int idba_connect(int* dbahandle, const char* url)
 {
     try {
         /* Initialize the library if needed */
@@ -158,19 +161,12 @@ int idba_presentati(int* dbahandle, const char* url)
             if (url == NULL) url = "";
         }
 
-        IF_TRACING(fortran::log_presentati_url(*dbahandle, url));
+        tracer->log_connect_url(*dbahandle, url);
 
-        hs.url = url;
-
-        std::string wipe = url_pop_query_string(hs.url, "wipe");
-        if (!wipe.empty())
-        {
-            // Disappear then reset, to allow migrating a db from V6 to V7
-            auto db = DB::connect_from_url(hs.url.c_str());
-            db->disappear();
-            db = DB::connect_from_url(hs.url.c_str());
-            db->reset();
-        }
+        // Test connection and perform one-off actions if requested
+        hs.options = DBConnectOptions::create(url);
+        DB::connect(*hs.options);
+        hs.options->reset_actions();
 
         /* Open the database session */
         return fortran::success();
@@ -186,9 +182,9 @@ int idba_presentati(int* dbahandle, const char* url)
  * @param dbahandle
  *   The database handle to close.
  */
-int idba_arrivederci(int *dbahandle)
+int idba_disconnect(int *dbahandle)
 {
-    IF_TRACING(fortran::log_arrivederci(*dbahandle));
+    tracer->log_disconnect(*dbahandle);
 
     // try {
         hsess.release(*dbahandle);
@@ -213,10 +209,10 @@ int idba_arrivederci(int *dbahandle)
 /**
  * Open a new session.
  *
- * You can call idba_preparati() many times and get more handles.  This allows
+ * You can call idba_begin() many times and get more handles.  This allows
  * to perform many operations on the database at the same time.
  *
- * idba_preparati() has three extra parameters that can be used to limit
+ * idba_begin() has three extra parameters that can be used to limit
  * write operations on the database, as a limited protection against
  * programming errors:
  *
@@ -253,25 +249,16 @@ int idba_arrivederci(int *dbahandle)
  * @return
  *   The error indication for the function.
  */
-int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* dataflag, const char* attrflag)
+int idba_begin(int dbahandle, int* handle, const char* anaflag, const char* dataflag, const char* attrflag)
 {
     try {
-        /* Check here to warn users of the introduction of idba_presentati */
-        /*
-        if (session == NULL)
-            return dba_error_consistency("idba_presentati should be called before idba_preparati");
-        */
-
         /* Allocate and initialize a new handle */
         *handle = hsimp.request();
         HSession& hs = hsess.get(dbahandle);
         HSimple& h = hsimp.get(*handle);
-        IF_TRACING(h.trace.log_preparati(dbahandle, *handle, anaflag, dataflag, attrflag));
-        unsigned perms = fortran::DbAPI::compute_permissions(anaflag, dataflag, attrflag);
-        bool readonly = !(perms & (fortran::DbAPI::PERM_ANA_WRITE | fortran::DbAPI::PERM_DATA_ADD | fortran::DbAPI::PERM_DATA_WRITE | fortran::DbAPI::PERM_ATTR_WRITE));
-        auto db = DB::connect_from_url(hs.url.c_str());
-        auto tr = db->transaction(readonly);
-        h.api = new fortran::DbAPI(tr, perms);
+
+        std::unique_ptr<dballe::fortran::API> api = tracer->begin(dbahandle, *handle, *hs.options, anaflag, dataflag, attrflag);
+        h.api = api.release();
 
         return fortran::success();
     } catch (error& e) {
@@ -291,12 +278,11 @@ int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* 
  *   File open mode.  It can be `"r"` for read, `"w"` for write (the old file
  *   is deleted), `"a"` for append
  * @param type
- *   Format of the data in the file.  It can be: `"BUFR"`, `"CREX"`, `"AOF"`
- *   (read only), `"AUTO"` (autodetect, read only)
+ *   Format of the data in the file.  It can be: `"BUFR"`, `"CREX"`, `"AUTO"` (autodetect, read only)
  * @return
  *   The error indication for the function.
  */
-int idba_messaggi(int* handle, const char* filename, const char* mode, const char* type)
+int idba_begin_messages(int* handle, const char* filename, const char* mode, const char* type)
 {
     try {
         lib_init();
@@ -305,9 +291,8 @@ int idba_messaggi(int* handle, const char* filename, const char* mode, const cha
         //HSession& hs = hsess.get(*dbahandle);
         HSimple& h = hsimp.get(*handle);
 
-        IF_TRACING(h.trace.log_messaggi(*handle, filename, mode, type));
-
-        h.api = new fortran::MsgAPI(filename, mode, type);
+        std::unique_ptr<dballe::fortran::API> api = tracer->begin_messages(*handle, filename, mode, type);
+        h.api = api.release();
 
         return fortran::success();
     } catch (error& e) {
@@ -323,12 +308,11 @@ int idba_messaggi(int* handle, const char* filename, const char* mode, const cha
  * @param handle
  *   Handle to the session to be closed.
  */
-int idba_fatto(int* handle)
+int idba_commit(int* handle)
 {
     try {
         HSimple& h = hsimp.get(*handle);
-        IF_TRACING(h.trace.log_fatto());
-        h.api->fatto();
+        h.api->commit();
         hsimp.release(*handle);
         return fortran::success();
     } catch (error& e) {
@@ -363,16 +347,9 @@ int idba_seti(int handle, const char* parameter, const int* value)
     try {
         HSimple& h = hsimp.get(handle);
         if (*value == MISSING_INT)
-        {
-            TRACEMISSING("int");
-            IF_TRACING(h.trace.log_unset(parameter));
             h.api->unset(parameter);
-        }
         else
-        {
-            IF_TRACING(h.trace.log_set(parameter, *value));
             h.api->seti(parameter, *value);
-        }
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -398,16 +375,9 @@ int idba_setb(int handle, const char* parameter, const unsigned char* value)
     try {
         HSimple& h = hsimp.get(handle);
         if (*value == MISSING_BYTE)
-        {
-            TRACEMISSING("byte");
-            IF_TRACING(h.trace.log_unset(parameter));
             h.api->unset(parameter);
-        }
         else
-        {
-            IF_TRACING(h.trace.log_set(parameter, *value));
             h.api->setb(parameter, *value);
-        }
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -435,16 +405,9 @@ int idba_setr(int handle, const char* parameter, const float* value)
     try {
         HSimple& h = hsimp.get(handle);
         if (*value == MISSING_REAL)
-        {
-            TRACEMISSING("real");
-            IF_TRACING(h.trace.log_unset(parameter));
             h.api->unset(parameter);
-        }
         else
-        {
-            IF_TRACING(h.trace.log_set(parameter, *value));
             h.api->setr(parameter, *value);
-        }
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -470,16 +433,9 @@ int idba_setd(int handle, const char* parameter, const double* value)
     try {
         HSimple& h = hsimp.get(handle);
         if (*value == MISSING_DOUBLE)
-        {
-            TRACEMISSING("double");
-            IF_TRACING(h.trace.log_unset(parameter));
             h.api->unset(parameter);
-        }
         else
-        {
-            IF_TRACING(h.trace.log_set(parameter, *value));
             h.api->setd(parameter, *value);
-        }
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -505,17 +461,9 @@ int idba_setc(int handle, const char* parameter, const char* value)
     try {
         HSimple& h = hsimp.get(handle);
         if (value[0] == 0)
-        {
-            TRACEMISSING("char");
-            IF_TRACING(h.trace.log_unset(parameter));
             h.api->unset(parameter);
-        }
         else
-        {
-            IF_TRACING(h.trace.log_set(parameter, value));
             h.api->setc(parameter, value);
-        }
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -648,10 +596,12 @@ int idba_enqc(int handle, const char* parameter, char* value, unsigned value_len
 {
     try {
         HSimple& h = hsimp.get(handle);
-        const char* v = h.api->enqc(parameter);
+        std::string v;
+        bool found = h.api->enqc(parameter, value, value_len);
 
         // Copy the result values
-        fortran::cstring_to_fortran(v, value, value_len);
+        if (!found)
+            fortran::API::to_fortran(nullptr, value, value_len);
 
         return fortran::success();
     } catch (error& e) {
@@ -675,7 +625,6 @@ int idba_unset(int handle, const char* parameter)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_unset(parameter));
         h.api->unset(parameter);
 
         return fortran::success();
@@ -694,7 +643,6 @@ int idba_unsetb(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_func("unsetb"));
         h.api->unsetb();
         return fortran::success();
     } catch (error& e) {
@@ -712,7 +660,6 @@ int idba_unsetall(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_func("unsetall"));
         h.api->unsetall();
         return fortran::success();
     } catch (error& e) {
@@ -729,19 +676,17 @@ int idba_unsetall(int handle)
  * @return
  *   The error indicator for the function
  */
-int idba_setcontextana(int handle)
+int idba_set_station_context(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_func("setcontextana"));
-        h.api->setcontextana();
+        h.api->set_station_context();
 
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
     }
 }
-
 
 /// @}
 
@@ -772,13 +717,9 @@ int idba_setlevel(int handle, int ltype1, int l1, int ltype2, int l2)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_setlevel(
-                fromfortran(ltype1), fromfortran(l1),
-                fromfortran(ltype2), fromfortran(l2)));
         h.api->setlevel(
             fromfortran(ltype1), fromfortran(l1),
             fromfortran(ltype2), fromfortran(l2));
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -803,9 +744,7 @@ int idba_settimerange(int handle, int ptype, int p1, int p2)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_settimerange(fromfortran(ptype), fromfortran(p1), fromfortran(p2)));
         h.api->settimerange(fromfortran(ptype), fromfortran(p1), fromfortran(p2));
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -838,14 +777,9 @@ int idba_setdate(int handle,
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_setdate(
-                fromfortran(year), fromfortran(month), fromfortran(day),
-                fromfortran(hour), fromfortran(min), fromfortran(sec)));
-
         h.api->setdate(
             fromfortran(year), fromfortran(month), fromfortran(day),
             fromfortran(hour), fromfortran(min), fromfortran(sec));
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -878,13 +812,9 @@ int idba_setdatemin(int handle,
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_setdate(
-                fromfortran(year), fromfortran(month), fromfortran(day),
-                fromfortran(hour), fromfortran(min), fromfortran(sec), "min"));
         h.api->setdatemin(
             fromfortran(year), fromfortran(month), fromfortran(day),
             fromfortran(hour), fromfortran(min), fromfortran(sec));
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -917,13 +847,9 @@ int idba_setdatemax(int handle,
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_setdate(
-                fromfortran(year), fromfortran(month), fromfortran(day),
-                fromfortran(hour), fromfortran(min), fromfortran(sec), "max"));
         h.api->setdatemax(
             fromfortran(year), fromfortran(month), fromfortran(day),
             fromfortran(hour), fromfortran(min), fromfortran(sec));
-
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1043,19 +969,14 @@ int idba_enqdate(int handle,
  * @return
  *   The error indicator for the function
  */
-int idba_scopa(int handle, const char* repinfofile)
+int idba_reinit_db(int handle, const char* repinfofile)
 {
     try {
         HSimple& h = hsimp.get(handle);
         if (repinfofile[0] == 0)
-        {
-            IF_TRACING(h.trace.log_scopa());
-            h.api->scopa(nullptr);
-        } else {
-            IF_TRACING(h.trace.log_scopa(repinfofile));
-            h.api->scopa(repinfofile);
-        }
-
+            h.api->reinit_db(nullptr);
+        else
+            h.api->reinit_db(repinfofile);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1065,9 +986,9 @@ int idba_scopa(int handle, const char* repinfofile)
 /**
  * Query the stations in the database.
  *
- * Results are retrieved using idba_elencamele().
+ * Results are retrieved using idba_next_station().
  *
- * There is no guarantee on the ordering of results of quantesono/elencamele.
+ * There is no guarantee on the ordering of results of query_stations/next_station.
  *
  * @param handle
  *   Handle to a DB-All.e session
@@ -1076,13 +997,11 @@ int idba_scopa(int handle, const char* repinfofile)
  * @return
  *   The error indicator for the function
  */
-int idba_quantesono(int handle, int* count)
+int idba_query_stations(int handle, int* count)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_quantesono());
-        *count = h.api->quantesono();
-        IF_TRACING(fortran::log_result(*count));
+        *count = h.api->query_stations();
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1103,12 +1022,11 @@ int idba_quantesono(int handle, int* count)
  * @return
  *   The error indicator for the function
  */
-int idba_elencamele(int handle)
+int idba_next_station(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_func("elencamele"));
-        h.api->elencamele();
+        h.api->next_station();
 
         return fortran::success();
     } catch (error& e) {
@@ -1116,10 +1034,11 @@ int idba_elencamele(int handle)
     }
 }
 
+
 /**
  * Query the data in the database.
  *
- * Results are retrieved using idba_dammelo().
+ * Results are retrieved using idba_next_data().
  *
  * Results are sorted by (in order): ana_id, datetime, level, time range,
  * varcode. The ana_id changes slowest, and the varcode changes fastest.
@@ -1138,13 +1057,11 @@ int idba_elencamele(int handle)
  * @return
  *   The error indicator for the function
  */
-int idba_voglioquesto(int handle, int* count)
+int idba_query_data(int handle, int* count)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_voglioquesto());
-        *count = h.api->voglioquesto();
-        IF_TRACING(fortran::log_result(*count));
+        *count = h.api->query_data();
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1163,18 +1080,18 @@ int idba_voglioquesto(int handle, int* count)
  * @param handle
  *   Handle to a DB-All.e session
  * @retval parameter
- *   Contains the ID of the parameter retrieved by this fetch
+ *   Contains the variable code of the parameter retrieved by this fetch
  * @return
  *   The error indicator for the function
  */
-int idba_dammelo(int handle, char* parameter, int parameter_len)
+int idba_next_data(int handle, char* parameter, int parameter_len)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_dammelo());
-        const char* res = h.api->dammelo();
-        IF_TRACING(fortran::log_result(res));
-        fortran::cstring_to_fortran(res, parameter, parameter_len);
+        wreport::Varcode res = h.api->next_data();
+        char buf[8];
+        format_bcode(res, buf);
+        fortran::API::to_fortran(buf, parameter, parameter_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1199,12 +1116,11 @@ int idba_dammelo(int handle, char* parameter, int parameter_len)
  * @return
  *   The error indicator for the function
  */
-int idba_prendilo(int handle)
+int idba_insert_data(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_func("prendilo"));
-        h.api->prendilo();
+        h.api->insert_data();
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1221,13 +1137,11 @@ int idba_prendilo(int handle)
  * @return
  *   The error indicator for the function
  */
-int idba_dimenticami(int handle)
+int idba_remove_data(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_func("dimenticami"));
-        h.api->dimenticami();
-
+        h.api->remove_data();
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1237,7 +1151,7 @@ int idba_dimenticami(int handle)
 /**
  * Remove all values from the database.
  *
- * The difference with idba_scopa() is that it preserves the existing report
+ * The difference with idba_reinit_db() is that it preserves the existing report
  * information.
  *
  * @param handle
@@ -1249,7 +1163,6 @@ int idba_remove_all(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_func("remove_all"));
         h.api->remove_all();
         return fortran::success();
     } catch (error& e) {
@@ -1263,11 +1176,11 @@ int idba_remove_all(int handle)
  *
  * The variable queried is either:
  *
- * @li the last variable returned by `idba_dammelo()`
- * @li the last variable inserted by `idba_prendilo()`
+ * @li the last variable returned by `idba_next_data()`
+ * @li the last variable inserted by `idba_insert_data()`
  * @li the variable selected by settings `*context_id` and `*var_related`.
  *
- * Results are retrieved using idba_ancora().
+ * Results are retrieved using idba_next_attribute().
  *
  * @param handle
  *   Handle to a DB-All.e session
@@ -1276,13 +1189,11 @@ int idba_remove_all(int handle)
  * @return
  *   The error indicator for the function
  */
-int idba_voglioancora(int handle, int* count)
+int idba_query_attributes(int handle, int* count)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_voglioancora());
-        *count = h.api->voglioancora();
-        IF_TRACING(fortran::log_result(*count));
+        *count = h.api->query_attributes();
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1290,7 +1201,7 @@ int idba_voglioancora(int handle, int* count)
 }
 
 /**
- * Retrieve one attribute from the result of idba_voglioancora().
+ * Retrieve one attribute from the result of idba_query_attributes().
  *
  * @param handle
  *   Handle to a DB-All.e session
@@ -1299,34 +1210,33 @@ int idba_voglioancora(int handle, int* count)
  * @return
  *   The error indicator for the function
  */
-int idba_ancora(int handle, char* parameter, unsigned parameter_len)
+int idba_next_attribute(int handle, char* parameter, unsigned parameter_len)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_ancora());
-        const char* res = h.api->ancora();
-        IF_TRACING(fortran::log_result(res));
-        fortran::cstring_to_fortran(res, parameter, parameter_len);
+        const char* res = h.api->next_attribute();
+        fortran::API::to_fortran(res, parameter, parameter_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
     }
 }
 
+
 /**
  * Insert new attributes for a variable.
  *
  * The variable is either:
  *
- * @li the last variable returned by `idba_dammelo()`
- * @li the last variable inserted by `idba_prendilo()`
+ * @li the last variable returned by `idba_next_data()`
+ * @li the last variable inserted by `idba_insert_data()`
  * @li the variable selected by settings `*context_id` and `*var_related`.
  *
  * The attributes that will be inserted are all those set by the functions
  * idba_seti(), idba_setc(), idba_setr(), idba_setd(), using an asterisk in
  * front of the variable name.
  *
- * Contrarily to idba_prendilo(), this function resets all the attribute
+ * Contrarily to idba_insert_data(), this function resets all the attribute
  * information (and only attribute information) previously set in input, so the
  * values to be inserted need to be explicitly set every time.
  *
@@ -1339,12 +1249,11 @@ int idba_ancora(int handle, char* parameter, unsigned parameter_len)
  * @return
  *   The error indicator for the function
  */
-int idba_critica(int handle)
+int idba_insert_attributes(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_func("critica"));
-        h.api->critica();
+        h.api->insert_attributes();
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1356,8 +1265,8 @@ int idba_critica(int handle)
  *
  * The variable is either:
  *
- * @li the last variable returned by `idba_dammelo()`
- * @li the last variable inserted by `idba_prendilo()`
+ * @li the last variable returned by `idba_next_data()`
+ * @li the last variable inserted by `idba_insert_data()`
  * @li the variable selected by settings `*context_id` and `*var_related`.
  *
  * The attribute informations to be removed are selected with:
@@ -1370,12 +1279,11 @@ int idba_critica(int handle)
  * @return
  *   The error indicator for the function
  */
-int idba_scusa(int handle)
+int idba_remove_attributes(int handle)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_func("scusa"));
-        h.api->scusa();
+        h.api->remove_attributes();
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1390,7 +1298,7 @@ int idba_scusa(int handle)
  */
 
 /**
- * Open a BUFR, CREX, or AOF file for reading.
+ * Open a BUFR, or CREX file for reading.
  *
  * Each session can only have one open input file: if one was previously open,
  * it is closed before opening the new one.
@@ -1402,7 +1310,7 @@ int idba_scusa(int handle)
  * @param mode
  *   The opening mode. See the mode parameter of libc's fopen() call for details.
  * @param format
- *   The file format ("BUFR", "CREX", or "AOF")
+ *   The file format ("BUFR", or "CREX")
  * @param simplified
  *   true if the file is imported in simplified mode, false if it is imported
  *   in precise mode. This controls approximating levels and time ranges to
@@ -1419,7 +1327,6 @@ int idba_messages_open_input(
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_messages_open_input(filename, mode, format, simplified));
         h.api->messages_open_input(filename, mode, File::parse_encoding(format), simplified);
         return fortran::success();
     } catch (error& e) {
@@ -1428,7 +1335,7 @@ int idba_messages_open_input(
 }
 
 /**
- * Open a BUFR, CREX, or AOF file for writing.
+ * Open a BUFR, or CREX file for writing.
  *
  * Each session can only have one open input file: if one was previously open,
  * it is closed before opening the new one.
@@ -1440,7 +1347,7 @@ int idba_messages_open_input(
  * @param mode
  *   The opening mode. See the mode parameter of libc's fopen() call for details.
  * @param format
- *   The file format ("BUFR", "CREX", or "AOF")
+ *   The file format ("BUFR", or "CREX")
  * @return
  *   The error indication for the function.
  */
@@ -1452,7 +1359,6 @@ int idba_messages_open_output(
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_messages_open_output(filename, mode, format));
         h.api->messages_open_output(filename, mode, File::parse_encoding(format));
         return fortran::success();
     } catch (error& e) {
@@ -1481,9 +1387,7 @@ int idba_messages_read_next(int handle, int *found)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_messages_read_next());
         *found = h.api->messages_read_next();
-        IF_TRACING(fortran::log_result(*found));
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1506,7 +1410,6 @@ int idba_messages_write_next(int handle, const char* template_name)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        IF_TRACING(h.trace.log_messages_write_next(template_name));
         h.api->messages_write_next(template_name);
         return fortran::success();
     } catch (error& e) {
@@ -1540,15 +1443,15 @@ int idba_messages_write_next(int handle, const char* template_name)
  * @return
  *   The error indication for the function.
  */
-int idba_spiegal(
+int idba_describe_level(
         int handle,
         int ltype1, int l1, int ltype2, int l2,
         char* result, unsigned result_len)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        const char* res = h.api->spiegal(ltype1, l1, ltype2, l2);
-        fortran::cstring_to_fortran(res, result, result_len);
+        const char* res = h.api->describe_level(ltype1, l1, ltype2, l2);
+        fortran::API::to_fortran(res, result, result_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1571,15 +1474,15 @@ int idba_spiegal(
  * @return
  *   The error indication for the function.
  */
-int idba_spiegat(
+int idba_describe_timerange(
         int handle,
         int ptype, int p1, int p2,
         char* result, unsigned result_len)
 {
     try {
         HSimple& h = hsimp.get(handle);
-        const char* res = h.api->spiegat(ptype, p1, p2);
-        fortran::cstring_to_fortran(res, result, result_len);
+        const char* res = h.api->describe_timerange(ptype, p1, p2);
+        fortran::API::to_fortran(res, result, result_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1600,7 +1503,7 @@ int idba_spiegat(
  * @return
  *   The error indication for the function.
  */
-int idba_spiegab(
+int idba_describe_var(
         int handle,
         const char* varcode,
         const char* value,
@@ -1608,8 +1511,8 @@ int idba_spiegab(
 {
     try {
         HSimple& h = hsimp.get(handle);
-        const char* res = h.api->spiegab(varcode, value);
-        fortran::cstring_to_fortran(res, result, result_len);
+        const char* res = h.api->describe_var(varcode, value);
+        fortran::API::to_fortran(res, result, result_len);
         return fortran::success();
     } catch (error& e) {
         return fortran::error(e);
@@ -1618,16 +1521,142 @@ int idba_spiegab(
 
 /*@}*/
 
-int idba_test_input_to_output(int handle)
+
+/**@name Deprecated aliases
+ *
+ * The following routines are deprecated compatibility aliases for other API functions.
+ * @{
+ */
+
+/// Deprecated compatibility version of idba_connect()
+int idba_presentati(int* dbahandle, const char* url)
 {
-    try {
-        HSimple& h = hsimp.get(handle);
-        h.api->test_input_to_output();
-        return fortran::success();
-    } catch (error& e) {
-        return fortran::error(e);
-    }
+    return idba_connect(dbahandle, url);
 }
 
+/// Deprecated compatibility version of idba_disconnect()
+int idba_arrivederci(int *dbahandle)
+{
+    return idba_disconnect(dbahandle);
+}
+
+/// Deprecated compatibility version of idba_begin()
+int idba_preparati(int dbahandle, int* handle, const char* anaflag, const char* dataflag, const char* attrflag)
+{
+    return idba_begin(dbahandle, handle, anaflag, dataflag, attrflag);
+}
+
+/// Deprecated compatibility version of idba_begin_messages()
+int idba_messaggi(int* handle, const char* filename, const char* mode, const char* type)
+{
+    return idba_begin_messages(handle, filename, mode, type);
+}
+
+/// Deprecated compatibility version of idba_commit()
+int idba_fatto(int* handle)
+{
+    return idba_commit(handle);
+}
+
+/// Deprecated compatibility version of idba_set_station_context()
+int idba_setcontextana(int handle)
+{
+    return idba_set_station_context(handle);
+}
+
+/// Deprecated compatibility version of idba_reinit_db()
+int idba_scopa(int handle, const char* repinfofile)
+{
+    return idba_reinit_db(handle, repinfofile);
+}
+
+/// Deprecated compatibility version of idba_query_stations()
+int idba_quantesono(int handle, int* count)
+{
+    return idba_query_stations(handle, count);
+}
+
+/// Deprecated compatibility version of idba_next_station()
+int idba_elencamele(int handle)
+{
+    return idba_next_station(handle);
+}
+/// Deprecated compatibility version of idba_query_data()
+int idba_voglioquesto(int handle, int* count)
+{
+    return idba_query_data(handle, count);
+}
+
+/// Deprecated compatibility version of idba_next_data()
+int idba_dammelo(int handle, char* parameter, int parameter_len)
+{
+    return idba_next_data(handle, parameter, parameter_len);
+}
+
+/// Deprecated compatibility version of idba_insert_data()
+int idba_prendilo(int handle)
+{
+    return idba_insert_data(handle);
+}
+
+/// Deprecated compatibility version of idba_remove_data()
+int idba_dimenticami(int handle)
+{
+    return idba_remove_data(handle);
+}
+
+/// Deprecated compatibility version of idba_query_attributes()
+int idba_voglioancora(int handle, int* count)
+{
+    return idba_query_attributes(handle, count);
+}
+
+/// Deprecated compatibility version of idba_next_attribute()
+int idba_ancora(int handle, char* parameter, unsigned parameter_len)
+{
+    return idba_next_attribute(handle, parameter, parameter_len);
+}
+
+/// Deprecated compatibility version of idba_insert_attributes()
+int idba_critica(int handle)
+{
+    return idba_insert_attributes(handle);
+}
+
+/// Deprecated compatibility version of idba_remove_attributes()
+int idba_scusa(int handle)
+{
+    return idba_remove_attributes(handle);
+}
+
+/// Deprecated compatibility version of idba_describe_level()
+int idba_spiegal(
+        int handle,
+        int ltype1, int l1, int ltype2, int l2,
+        char* result, unsigned result_len)
+{
+    return idba_describe_level(handle, ltype1, l1, ltype2, l2, result, result_len);
+}
+
+/// Deprecated compatibility version of idba_describe_timerange()
+int idba_spiegat(
+        int handle,
+        int ptype, int p1, int p2,
+        char* result, unsigned result_len)
+{
+    return idba_describe_timerange(handle, ptype, p1, p2, result, result_len);
+}
+
+/// Deprecated compatibility version of idba_describe_var()
+int idba_spiegab(
+        int handle,
+        const char* varcode,
+        const char* value,
+        char* result, unsigned result_len)
+{
+    return idba_describe_var(handle, varcode, value, result, result_len);
+}
+
+/*@}*/
 
 }

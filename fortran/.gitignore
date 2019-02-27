@@ -2,6 +2,7 @@
 /check_fdballe
 /check_messages
 /check_messages_stdinstdout
+/check_set
 /check_missing
 /check_missing_msg
 /check_range
@@ -10,6 +11,8 @@
 /check_segfault1
 /check_spiegab
 /check_transactions1
+/check_connect_wipe
+/check_fdballe_oldapi
 /dballef.mod
 /genattr
 /dbtest.mod

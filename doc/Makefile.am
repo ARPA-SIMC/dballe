@@ -18,14 +18,10 @@ if DO_DOCS
 # C++ API documentation
 
 cppdeps = libdballe.dox \
-	  record_keyword.dox \
 	  aliases.dox \
 	  ltypes.dox \
 	  tranges.dox \
 	  libwreport.doxytags
-
-record_keyword.dox: $(top_builddir)/dballe/core/record_keyword.gperf mksnippet
-	$(top_srcdir)/doc/mksnippet key dox < $< > $@ || rm $@
 
 aliases.dox: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
 	$(top_srcdir)/doc/mksnippet alias dox < $< > $@ || rm $@
@@ -49,14 +45,14 @@ libwreport.doxytags:
 
 doc_DATA += libdballe.doxytags
 
-CLEANFILES += libdballe.doxytags libwreport.doxytags record_keyword.dox aliases.dox ltypes.dox tranges.dox
+CLEANFILES += libdballe.doxytags libwreport.doxytags aliases.dox ltypes.dox tranges.dox
 
 
 # Fortran API documentation
 
 fapisources = fapi.md fapi_concepts.md fapi_walkthrough.md fapi_reference.md \
-	      fapi_parms.md fapi_aliases.md fapi_connect.md fapi_ltypes.md \
-	      fapi_tranges.md fapi_btable.md
+              fapi_parms.md fapi_aliases.md fapi_connect.md fapi_ltypes.md \
+              fapi_tranges.md fapi_btable.md
 
 fortrandeps = libdballef.dox
 
@@ -65,9 +61,6 @@ libdballef.doxytags: $(fortrandeps)
 
 fapi_reference.md: $(top_srcdir)/doc/make_fortran_reference libdballef.doxytags
 	$< > $@ fortran_xml || rm $@
-
-fapi_parms.md: $(top_builddir)/dballe/core/record_keyword.gperf mksnippet
-	$(top_srcdir)/doc/mksnippet key md < $< > $@ || rm $@
 
 fapi_aliases.md: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
 	$(top_srcdir)/doc/mksnippet alias md < $< > $@ || rm $@
@@ -100,7 +93,7 @@ uninstall-local:
 	rm -rf $(DESTDIR)$(docdir)/c_api
 
 
-EXTRA_DIST += doxy2swig.py introduzione.odt
+EXTRA_DIST += introduzione.odt
 
 CLEANFILES += doxygen_sqlite3.db
 

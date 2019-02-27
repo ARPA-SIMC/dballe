@@ -17,55 +17,43 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const char* repmemo, int flags)
+void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const dballe::DBImportOptions& opts)
 {
-    const Msg& msg = Msg::downcast(message);
-    const msg::Context* l_ana = msg.find_context(Level(), Trange());
-    if (!l_ana)
-        throw error_consistency("cannot import into the database a message without station information");
+    const impl::Message& msg = impl::Message::downcast(message);
 
     batch::Station* station;
 
-    // Latitude
-    Coords coords;
-    if (const Var* var = l_ana->find_by_id(DBA_MSG_LATITUDE))
-        coords.lat = var->enqi();
-    else
-        throw error_notfound("latitude not found in data to import");
-
-    // Longitude
-    if (const Var* var = l_ana->find_by_id(DBA_MSG_LONGITUDE))
-        coords.lon = var->enqi();
-    else
-        throw error_notfound("longitude not found in data to import");
+    // Coordinates
+    Coords coords = msg.get_coords();
+    if (coords.is_missing())
+        throw error_notfound("coordinates not found in data to import");
 
     // Report code
     std::string report;
-    if (repmemo != NULL)
-        report = repmemo;
-    else {
-        if (const Var* var = msg.get_rep_memo_var())
-            report = var->enqc();
-        else
-            report = Msg::repmemo_from_type(msg.type);
-    }
+    if (!opts.report.empty())
+        report = opts.report;
+    else
+        report = msg.get_report();
 
     // Station identifier
-    if (const Var* var = l_ana->find_by_id(DBA_MSG_IDENT))
-        station = batch.get_station(trc, report, coords, var->enqc());
-    else
-        station = batch.get_station(trc, report, coords, Ident());
+    Ident ident = msg.get_ident();
+    station = batch.get_station(trc, report, coords, ident);
 
-    if (flags & DBA_IMPORT_FULL_PSEUDOANA || (station->is_new && station->id == MISSING_INT))
+    if (opts.update_station || (station->is_new && station->id == MISSING_INT))
     {
-        for (size_t i = 0; i < l_ana->data.size(); ++i)
+        for (const auto& var: msg.station_data)
         {
-            Varcode code = l_ana->data[i]->code();
-            // Do not import datetime in the station info context
-            if (code >= WR_VAR(0, 4, 1) && code <= WR_VAR(0, 4, 6))
-                continue;
+            Varcode code = var->code();
 
-            station->get_station_data(trc).add(l_ana->data[i], flags & DBA_IMPORT_OVERWRITE ? batch::UPDATE : batch::IGNORE);
+            // Do not import datetime in the station info context, unless it has attributes
+            if (code == WR_VAR(0, 4, 1) && !var->next_attr()) continue;
+            if (code == WR_VAR(0, 4, 2) && !var->next_attr()) continue;
+            if (code == WR_VAR(0, 4, 3) && !var->next_attr()) continue;
+            if (code == WR_VAR(0, 4, 4) && !var->next_attr()) continue;
+            if (code == WR_VAR(0, 4, 5) && !var->next_attr()) continue;
+            if (code == WR_VAR(0, 4, 6) && !var->next_attr()) continue;
+
+            station->get_station_data(trc).add(var.get(), opts.overwrite ? batch::UPDATE : batch::IGNORE);
         }
     }
 
@@ -74,11 +62,8 @@ void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const 
     // Defer creation of MeasuredData to prevent complaining about missing
     // datetime info if we have no data to import
     batch::MeasuredData* md = nullptr;
-    for (size_t i = 0; i < msg.data.size(); ++i)
+    for (const auto& ctx: msg.data)
     {
-        if (msg.data[i] == l_ana) continue;
-        const msg::Context& ctx = *msg.data[i];
-
         if (!md)
         {
             Datetime datetime = msg.get_datetime();
@@ -90,35 +75,34 @@ void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const 
         // Get the database ID of the lev_tr
         int id_levtr = lt.obtain_id(trc, LevTrEntry(ctx.level, ctx.trange));
 
-        for (size_t j = 0; j < ctx.data.size(); ++j)
+        for (const auto& val: ctx.values)
         {
-            const Var* var = ctx.data[j];
-            if (not var->isset()) continue;
-            md->add(id_levtr, var, flags & DBA_IMPORT_OVERWRITE ? batch::UPDATE : batch::IGNORE);
+            if (not val->isset()) continue;
+            md->add(id_levtr, val.get(), opts.overwrite ? batch::UPDATE : batch::IGNORE);
         }
     }
 }
 
-void Transaction::import_msg(const Message& message, const char* repmemo, int flags)
+void Transaction::import_message(const dballe::Message& message, const dballe::DBImportOptions& opts)
 {
     Tracer<> trc(this->trc ? this->trc->trace_import(1) : nullptr);
 
-    batch.set_write_attrs(flags & DBA_IMPORT_ATTRS);
+    batch.set_write_attrs(opts.import_attributes);
 
-    add_msg_to_batch(trc, message, repmemo, flags);
+    add_msg_to_batch(trc, message, opts);
 
     // Run the bulk insert
     batch.write_pending(trc);
 }
 
-void Transaction::import_msgs(const Messages& msgs, const char* repmemo, int flags)
+void Transaction::import_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages, const dballe::DBImportOptions& opts)
 {
-    Tracer<> trc(this->trc ? this->trc->trace_import(msgs.size()) : nullptr);
+    Tracer<> trc(this->trc ? this->trc->trace_import(messages.size()) : nullptr);
 
-    batch.set_write_attrs(flags & DBA_IMPORT_ATTRS);
+    batch.set_write_attrs(opts.import_attributes);
 
-    for (const auto& i: msgs)
-        add_msg_to_batch(trc, i, repmemo, flags);
+    for (const auto& i: messages)
+        add_msg_to_batch(trc, *i, opts);
 
     // Run the bulk insert
     batch.write_pending(trc);

@@ -1,4 +1,4 @@
-#include "core/tests.h"
+#include "dballe/core/tests.h"
 #include "processor.h"
 #include <limits>
 
@@ -67,7 +67,7 @@ add_method("parse_json", [] {
 
         virtual bool operator()(const Item& item) {
             for (auto& m: *(item.msgs)) {
-                messages.push_back(m.clone());
+                messages.push_back(m->clone());
             }
             return true;
         }
@@ -82,34 +82,34 @@ add_method("parse_json", [] {
     wassert(actual(action.messages.size()) == 5);
 
     {
-        const wreport::Var* var = action.messages.at(0)->get(WR_VAR(0, 12, 101), dballe::Level(103, 2000), dballe::Trange(254, 0, 0));
+        const wreport::Var* var = action.messages.at(0)->get(dballe::Level(103, 2000), dballe::Trange(254, 0, 0), WR_VAR(0, 12, 101));
         wassert(actual(var) != (const wreport::Var*)0);
         const wreport::Var* attr = var->enqa(WR_VAR(0, 33, 7));
         wassert(actual(attr) != (const wreport::Var*)0);
         wassert(actual(attr->enqi()) == 0);
     }
     {
-        const wreport::Var* var = action.messages.at(1)->get(WR_VAR(0, 12, 101), dballe::Level(103, 2000), dballe::Trange(254, 0, 0));
+        const wreport::Var* var = action.messages.at(1)->get(dballe::Level(103, 2000), dballe::Trange(254, 0, 0), WR_VAR(0, 12, 101));
         wassert(actual(var) != (const wreport::Var*)0);
         const wreport::Var* attr = var->enqa(WR_VAR(0, 33, 7));
         wassert(actual(attr) == (const wreport::Var*)0);
     }
     {
-        const wreport::Var* var = action.messages.at(2)->get(WR_VAR(0, 12, 101), dballe::Level(103, 2000), dballe::Trange(254, 0, 0));
+        const wreport::Var* var = action.messages.at(2)->get(dballe::Level(103, 2000), dballe::Trange(254, 0, 0), WR_VAR(0, 12, 101));
         wassert(actual(var) != (const wreport::Var*)0);
         const wreport::Var* attr = var->enqa(WR_VAR(0, 8, 44));
         wassert(actual(attr) != (const wreport::Var*)0);
         wassert(actual(attr->enqs()) == "ciao");
     }
     {
-        const wreport::Var* var = action.messages.at(3)->get(WR_VAR(0, 12, 101), dballe::Level(103, 2000), dballe::Trange(254, 0, 0));
+        const wreport::Var* var = action.messages.at(3)->get(dballe::Level(103, 2000), dballe::Trange(254, 0, 0), WR_VAR(0, 12, 101));
         wassert(actual(var) != (const wreport::Var*)0);
         const wreport::Var* attr = var->enqa(WR_VAR(0, 12, 102));
         wassert(actual(attr) != (const wreport::Var*)0);
         wassert(actual(attr->enqd()) == 0.1);
     }
     {
-        const wreport::Var* var = action.messages.at(4)->get(WR_VAR(0, 12, 101), dballe::Level(103, 2000), dballe::Trange(254, 0, 0));
+        const wreport::Var* var = action.messages.at(4)->get(dballe::Level(103, 2000), dballe::Trange(254, 0, 0), WR_VAR(0, 12, 101));
         wassert(actual(var) != (const wreport::Var*)0);
         const wreport::Var* attr1 = var->enqa(WR_VAR(0, 8, 44));
         wassert(actual(attr1) != (const wreport::Var*)0);
