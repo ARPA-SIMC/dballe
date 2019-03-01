@@ -252,6 +252,8 @@ volnd that allows to automatically export matrices of data out of the database.
     gen.document_class(dballe.CursorMessage)
     gen.document_class(dballe.Explorer)
     gen.document_class(dballe.DBExplorer)
+    gen.document_class(dballe.ExplorerUpdate)
+    gen.document_class(dballe.DBExplorerUpdate)
 
     gen.title("The volnd API", char="=")
 
