@@ -575,3 +575,33 @@ digits and description.
 | 048205 | [SIM] Conta Vitacee                                                | Numeric                  | 7 digits       |
 | 048206 | [SIM] Conta Corilacee_Carpino                                      | Numeric                  | 7 digits       |
 | 048207 | [SIM] Conta Corilacee_Ostria                                       | Numeric                  | 7 digits       |
+| 049192 | Number of particles with diameter < 0.3 um                         | Numeric                  | #####0         |
+| 049193 | Number of particles with diameter > 0.3 < 0.5 um                   | Numeric                  | #####0         |
+| 049194 | Number of particles with diameter > 0.5 < 1.0 um                   | Numeric                  | #####0         |
+| 049195 | Number of particles with diameter > 1.0 < 2.5 um                   | Numeric                  | #####0         |
+| 049196 | Number of particles with diameter > 2.5 < 5.0 um                   | Numeric                  | #####0         |
+| 049197 | Number of particles with diameter > 5.0 < 10.0 um                  | Numeric                  | #####0         |
+| 049198 | Number of particles with diameter > 0.35 < 0.46 um                 | Numeric                  | #####0         |
+| 049199 | Number of particles with diameter > 0.46 < 0.66 um                 | Numeric                  | #####0         |
+| 049200 | Number of particles with diameter > 0.66 < 1.0 um                  | Numeric                  | #####0         |
+| 049201 | Number of particles with diameter > 1.0 < 1.3 um                   | Numeric                  | #####0         |
+| 049202 | Number of particles with diameter > 1.3 < 1.7 um                   | Numeric                  | #####0         |
+| 049203 | Number of particles with diameter > 1.7 < 2.3 um                   | Numeric                  | #####0         |
+| 049204 | Number of particles with diameter > 2.3 < 3.0 um                   | Numeric                  | #####0         |
+| 049205 | Number of particles with diameter > 3.0 < 4.0 um                   | Numeric                  | #####0         |
+| 049206 | Number of particles with diameter > 4.0 < 5.2 um                   | Numeric                  | #####0         |
+| 049207 | Number of particles with diameter > 5.2 < 6.5 um                   | Numeric                  | #####0         |
+| 049208 | Number of particles with diameter > 6.5 < 8.0 um                   | Numeric                  | #####0         |
+| 049209 | Number of particles with diameter > 8.0 < 10.0 um                  | Numeric                  | #####0         |
+| 049210 | Number of particles with diameter > 10 < 12 um                     | Numeric                  | #####0         |
+| 049211 | Number of particles with diameter > 12 < 14 um                     | Numeric                  | #####0         |
+| 049212 | Number of particles with diameter > 14 < 16 um                     | Numeric                  | #####0         |
+| 049213 | Number of particles with diameter > 16 < 18 um                     | Numeric                  | #####0         |
+| 049214 | Number of particles with diameter > 18 < 20 um                     | Numeric                  | #####0         |
+| 049215 | Number of particles with diameter > 20 < 22 um                     | Numeric                  | #####0         |
+| 049216 | Number of particles with diameter > 22 < 25 um                     | Numeric                  | #####0         |
+| 049217 | Number of particles with diameter > 25 < 28 um                     | Numeric                  | #####0         |
+| 049218 | Number of particles with diameter > 28 < 31 um                     | Numeric                  | #####0         |
+| 049219 | Number of particles with diameter > 31 < 34 um                     | Numeric                  | #####0         |
+| 049220 | Number of particles with diameter > 34 < 37 um                     | Numeric                  | #####0         |
+| 049221 | Number of particles with diameter > 37 < 40 um                     | Numeric                  | #####0         |
