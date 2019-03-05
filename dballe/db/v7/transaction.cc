@@ -201,28 +201,28 @@ std::unique_ptr<dballe::CursorStation> Transaction::query_stations(const Query& 
 {
     Tracer<> trc(this->trc ? this->trc->trace_query_stations(query) : nullptr);
     auto res = cursor::run_station_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
-    return move(res);
+    return res;
 }
 
 std::unique_ptr<dballe::CursorStationData> Transaction::query_station_data(const Query& query)
 {
     Tracer<> trc(this->trc ? this->trc->trace_query_station_data(query) : nullptr);
     auto res = cursor::run_station_data_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
-    return move(res);
+    return res;
 }
 
 std::unique_ptr<dballe::CursorData> Transaction::query_data(const Query& query)
 {
     Tracer<> trc(this->trc ? this->trc->trace_query_data(query) : nullptr);
     auto res = cursor::run_data_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
-    return move(res);
+    return res;
 }
 
 std::unique_ptr<dballe::CursorSummary> Transaction::query_summary(const Query& query)
 {
     Tracer<> trc(this->trc ? this->trc->trace_query_summary(query) : nullptr);
     auto res = cursor::run_summary_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
-    return move(res);
+    return res;
 }
 
 void Transaction::attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest)
