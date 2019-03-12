@@ -1,4 +1,4 @@
-%global releaseno 1
+%global releaseno 2
 # Note: define _srcarchivename in Travis build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
@@ -301,12 +301,17 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Thu Mar 12 2019 Daniele Branchini <dbranchini@arpae.it> - 8.0-2
+- Documented ExplorerUpdate and DBExplorerUpdate
+- Updated fapi_btable.md
+- Fixed rawhide builds
+
 * Wed Feb 17 2019 Daniele Branchini <dbranchini@arpae.it> - 8.0-1
- - added more functionality to the stable C++ API
- - added more functionality to the Python API
- - new english descriptive names for Fortran API (the old names still work for compatibility)
- - dropped support for Python 2
- - miscellaneous improvements (see NEWS.md)
+- Added more functionality to the stable C++ API
+- Added more functionality to the Python API
+- New english descriptive names for Fortran API (the old names still work for compatibility)
+- Dropped support for Python 2
+- Miscellaneous improvements (see NEWS.md)
 
 * Thu Feb 14 2019 Daniele Branchini <dbranchini@arpae.it> - 7.37-1
 - Added variables
