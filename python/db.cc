@@ -786,7 +786,7 @@ template<typename Impl>
 struct import_messages : MethKwargs<Impl>
 {
     constexpr static const char* name = "import_messages";
-    constexpr static const char* signature = "messages: Union[dballe.Message, Sequence[dballe.Message], Iterable[dballe.Message], dballe.ImporterFile], report: str=None, attrs: bool=False, update_station: bool=False, overwrite: bool=False";
+    constexpr static const char* signature = "messages: Union[dballe.Message, Sequence[dballe.Message], Iterable[dballe.Message], dballe.ImporterFile], report: str=None, import_attributres: bool=False, update_station: bool=False, overwrite: bool=False";
     constexpr static const char* summary = "Import one or more Messages into the database.";
     constexpr static const char* doc = R"(
 `messages` can be:
