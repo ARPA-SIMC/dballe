@@ -1,4 +1,4 @@
-%global releaseno 2
+%global releaseno 3
 # Note: define _srcarchivename in Travis build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
@@ -12,7 +12,9 @@ URL: https://github.com/ARPA-SIMC/dballe
 Source0: https://github.com/arpa-simc/%{name}/archive/v%{version}-%{releaseno}.tar.gz#/%{srcarchivename}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 %if 0%{?rhel} == 7
-%define python3_vers python34
+%define python3_vers python36
+# to have python 3.6 interpreter
+BuildRequires: python3-rpm-macros >= 3-23
 %else
 %define python3_vers python3
 %endif
@@ -301,6 +303,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Tue Apr 16 2019 Daniele Branchini <dbranchini@arpae.it> - 8.0-3
+- moving to python 3.6 on Centos7
+
 * Thu Mar 12 2019 Daniele Branchini <dbranchini@arpae.it> - 8.0-2
 - Documented ExplorerUpdate and DBExplorerUpdate
 - Updated fapi_btable.md
