@@ -17,6 +17,7 @@ pyexec_LTLIBRARIES = _dballe.la
 _dballe_la_SOURCES = \
     common.cc \
     types.cc \
+    data.cc \
     data-access.cc \
     query-access.cc \
     binarymessage.cc \
@@ -65,6 +66,7 @@ EXTRA_DIST += \
     enq.h \
     common.h \
     types.h \
+    data.h \
     binarymessage.h \
     file.h \
     message.h \

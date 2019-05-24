@@ -97,7 +97,8 @@ class Generator:
             self.spacer()
         elif inspect.isroutine(obj) and inspect.isfunction(obj):
             # A Python function
-            self.print_indented(2, '``'+obj.__name__ + inspect.formatargspec(*inspect.getargspec(obj))+"``")
+            signature = inspect.signature(obj)
+            self.print_indented(2, '``' + obj.__name__ + str(signature) + "``")
             self.print_indented(4, inspect.getdoc(obj))
         else:
             self.print_indented(2, obj.__name__)
@@ -235,6 +236,7 @@ volnd that allows to automatically export matrices of data out of the database.
     gen.document_class(dballe.Trange)
     gen.document_class(dballe.Station)
     gen.document_class(dballe.DBStation)
+    gen.document_class(dballe.Data)
     gen.document_class(dballe.BinaryMessage)
     gen.document_class(dballe.File)
     gen.document_class(dballe.Message)
