@@ -224,7 +224,7 @@ volnd that allows to automatically export matrices of data out of the database.
 
     gen.title("The DB-All.e API", char="=")
 
-    gen.para("The 'dballe' module has a few global methods:") 
+    gen.para("The 'dballe' module has a few global methods:")
     gen.document_members(dballe)
 
     gen.para("and several classes, documented in their own sections.")
