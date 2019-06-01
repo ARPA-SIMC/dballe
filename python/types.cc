@@ -835,6 +835,17 @@ DataPtr::DataPtr(PyObject* from_python)
     if (dpy_Data_Check(from_python))
     {
         reuse(((dpy_Data*)from_python)->data);
+        // This is a bit of a hack: since we use DataPtr only to support db
+        // inserts, when we are passed a Data object it's likely to be from a
+        // cursor, which could be from a different database. IDs left over
+        // would speed things up (in case of ana_id, for example), but would
+        // cause unexpected behaviour in a cross-database setting.
+        // Given that the Data comes from a cursor that would have set all its
+        // values, we can clear IDs here and the insert will still be able to
+        // find the station information it needs.
+        // FIXME: this seems hacky enough that it can backfire: wait for
+        // feedback on the ticket
+        // data->clear_ids();
         return;
     }
 
