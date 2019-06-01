@@ -219,6 +219,22 @@ struct data : Getter<Impl>
     }
 };
 
+template<typename Impl>
+struct data_dict : Getter<Impl>
+{
+    constexpr static const char* name = "data_dict";
+    constexpr static const char* doc = "return a dict which can be used to insert into a database the current cursor value";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            ensure_valid_cursor(self);
+            pyo_unique_ptr result(throw_ifnull(PyDict_New()));
+            _set_data(result, *self->cur);
+            return result.release();
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
 namespace {
 inline void run_attr_query(const db::CursorStationData& cur, std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
@@ -519,7 +535,7 @@ struct DefinitionStationDataDB : public DefinitionBase<DefinitionStationDataDB, 
     constexpr static const char* qual_name = "dballe.CursorStationDataDB";
     constexpr static const char* summary = "cursor iterating dballe.DB query_station_data results";
 
-    GetSetters<remaining<Impl>, query<Impl>, data<Impl>> getsetters;
+    GetSetters<remaining<Impl>, query<Impl>, data<Impl>, data_dict<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, remove<Impl>, query_attrs<Impl>, insert_attrs<Impl>, remove_attrs<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
@@ -530,7 +546,7 @@ struct DefinitionDataDB : public DefinitionBase<DefinitionDataDB, dpy_CursorData
     constexpr static const char* qual_name = "dballe.CursorDataDB";
     constexpr static const char* summary = "cursor iterating dballe.DB query_data results";
 
-    GetSetters<remaining<Impl>, query<Impl>, data<Impl>> getsetters;
+    GetSetters<remaining<Impl>, query<Impl>, data<Impl>, data_dict<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, remove<Impl>, query_attrs<Impl>, insert_attrs<Impl>, remove_attrs<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
