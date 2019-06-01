@@ -133,8 +133,37 @@ template<> inline wreport::Varcode from_python<wreport::Varcode>(PyObject* o) { 
 /// Convert a Python dict to a Query
 std::unique_ptr<Query> query_from_python(PyObject* o);
 
-/// Convert a Python dict to a Data
-std::unique_ptr<Data> data_from_python(PyObject* o);
+/**
+ * Store a pointer to a core::Data which can be either referencing an external
+ * existing structure, or an internally created and memory managed version.
+ *
+ * This is supposed to be used as a short-lifetime wrapper to make it easy for
+ * a function to accept as input either an existing Data object, or something
+ * that can be used to fill a Data object to be used for the duration of the
+ * function.
+ */
+struct DataPtr
+{
+    core::Data* data = nullptr;
+    bool owned = false;
+
+    DataPtr() = default;
+    DataPtr(PyObject* o);
+    ~DataPtr();
+
+    DataPtr(const DataPtr&) = delete;
+    DataPtr(DataPtr&&);
+    DataPtr& operator=(const DataPtr&) = delete;
+    DataPtr& operator=(DataPtr&&) = delete;
+
+    void create();
+    void reuse(core::Data* data);
+
+    core::Data& operator*() { return *data; }
+    const core::Data& operator*() const { return *data; }
+    core::Data* operator->() { return data; }
+    const core::Data* operator->() const { return data; }
+};
 
 /// Convert a Python dict to a Values
 Values values_from_python(PyObject* o);

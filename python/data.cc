@@ -2,7 +2,7 @@
 #include <Python.h>
 #include "data.h"
 #include "common.h"
-// #include "types.h"
+#include "types.h"
 #include "impl-utils.h"
 #include "dballe/core/data.h"
 // #include <algorithm>
@@ -354,6 +354,70 @@ key-value representation of a value with its associated metadata
         return 0;
     }
 
+#if 0
+    static PyObject* _iter(Impl* self)
+    {
+        try {
+            ensure_valid_cursor(self);
+            Py_INCREF(self);
+            return (PyObject*)self;
+        } DBALLE_CATCH_RETURN_PYO
+    }
+
+    static PyObject* _iternext(Impl* self)
+    {
+        try {
+            ensure_valid_cursor(self);
+            if (self->cur->next())
+            {
+                Py_INCREF(self);
+                return (PyObject*)self;
+            } else {
+                PyErr_SetNone(PyExc_StopIteration);
+                return nullptr;
+            }
+        } DBALLE_CATCH_RETURN_PYO
+    }
+#endif
+
+    static PyObject* mp_subscript(Impl* self, PyObject* pykey)
+    {
+        try {
+            Py_ssize_t len;
+            const char* key = throw_ifnull(PyUnicode_AsUTF8AndSize(pykey, &len));
+#if 0
+            Enqpy enq(key, len);
+            self->cur->enq_generic(enq);
+            if (enq.missing)
+            {
+                PyErr_Format(PyExc_KeyError, "key %s not found", key);
+                throw PythonException();
+            }
+            return enq.res;
+#endif
+
+            PyErr_Format(PyExc_NotImplementedError, "mp_subscript %s", key);
+            throw PythonException();
+        } DBALLE_CATCH_RETURN_PYO
+    }
+
+    static int mp_ass_subscript(Impl* self, PyObject *pykey, PyObject *val)
+    {
+        try {
+            Py_ssize_t len;
+            const char* key = throw_ifnull(PyUnicode_AsUTF8AndSize(pykey, &len));
+            if (val)
+                data_setpy(*self->data, key, len, val);
+            else
+            {
+                // TODO: if v is nullptr, delete/unset
+                PyErr_Format(PyExc_NotImplementedError, "mp_ass_subscript unset %s", key);
+                throw PythonException();
+            }
+            return 0;
+        } DBALLE_CATCH_RETURN_INT
+    }
+
 };
 
 Definition* definition = nullptr;
@@ -366,11 +430,11 @@ namespace python {
 
 dpy_Data* data_create()
 {
-    unique_ptr<Data> data(new core::Data);
+    unique_ptr<core::Data> data(new core::Data);
     return data_create(move(data));
 }
 
-dpy_Data* data_create(std::unique_ptr<Data> data)
+dpy_Data* data_create(std::unique_ptr<core::Data> data)
 {
     dpy_Data* result = PyObject_New(dpy_Data, dpy_Data_Type);
     if (!result) return nullptr;

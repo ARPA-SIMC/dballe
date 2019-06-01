@@ -2,14 +2,14 @@
 #define DBALLE_PYTHON_DATA_H
 
 #include <Python.h>
-#include <dballe/data.h>
+#include <dballe/core/data.h>
 #include <memory>
 
 extern "C" {
 
 typedef struct {
     PyObject_HEAD
-    dballe::Data* data;
+    dballe::core::Data* data;
 } dpy_Data;
 
 extern PyTypeObject* dpy_Data_Type;
@@ -32,7 +32,7 @@ dpy_Data* data_create();
 /**
  * Create a new dpy_Explorer, taking over memory management
  */
-dpy_Data* data_create(std::unique_ptr<dballe::Data> data);
+dpy_Data* data_create(std::unique_ptr<dballe::core::Data> data);
 
 void register_data(PyObject* m);
 
