@@ -615,7 +615,7 @@ class CommonDBTestMixin(DballeDBMixin):
                 "B12101": 0
             }, can_add_stations=True)
 
-            for row in tr.query_data():
+            for row in tr.query_data({"report": "test1"}):
                 data = row.data
                 self.assertEqual(data["report"], "test1")
                 self.assertEqual(data["rep_memo"], "test1")

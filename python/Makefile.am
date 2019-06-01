@@ -36,12 +36,16 @@ _dballe_la_LIBADD = ../dballe/libdballe.la
 data-access.cc: data-access.in.cc $(top_srcdir)/dballe/mklookup
 	$(top_srcdir)/dballe/mklookup $< -o $@
 
+data-access.tcc: data-access.in.tcc $(top_srcdir)/dballe/mklookup
+	$(top_srcdir)/dballe/mklookup $< -o $@
+
 query-access.cc: query-access.in.cc $(top_srcdir)/dballe/mklookup
 	$(top_srcdir)/dballe/mklookup $< -o $@
 
-BUILT_SOURCES = data-access.cc query-access.cc
+BUILT_SOURCES = data-access.cc data-access.tcc query-access.cc
 EXTRA_DIST += \
 	data-access.in.cc data-access.cc \
+	data-access.in.tcc data-access.tcc \
 	query-access.in.cc query-access.cc
 
 doc_DATA = python-dballe.rst

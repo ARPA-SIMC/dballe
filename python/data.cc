@@ -1,5 +1,6 @@
 #define _DBALLE_LIBRARY_CODE
 #include <Python.h>
+#include "enq.h"
 #include "data.h"
 #include "common.h"
 #include "types.h"
@@ -385,19 +386,14 @@ key-value representation of a value with its associated metadata
         try {
             Py_ssize_t len;
             const char* key = throw_ifnull(PyUnicode_AsUTF8AndSize(pykey, &len));
-#if 0
             Enqpy enq(key, len);
-            self->cur->enq_generic(enq);
+            data_enq_generic(*self->data, enq);
             if (enq.missing)
             {
                 PyErr_Format(PyExc_KeyError, "key %s not found", key);
                 throw PythonException();
             }
             return enq.res;
-#endif
-
-            PyErr_Format(PyExc_NotImplementedError, "mp_subscript %s", key);
-            throw PythonException();
         } DBALLE_CATCH_RETURN_PYO
     }
 
@@ -455,3 +451,4 @@ void register_data(PyObject* m)
 }
 }
 
+#include "data-access.tcc"

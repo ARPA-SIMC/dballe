@@ -24,6 +24,9 @@ extern PyTypeObject* dpy_Data_Type;
 namespace dballe {
 namespace python {
 
+template<typename Enq>
+void data_enq_generic(const core::Data& data, Enq& enq);
+
 /**
  * Create a new dpy_Explorer
  */
