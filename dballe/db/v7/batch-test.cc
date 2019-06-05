@@ -110,6 +110,8 @@ add_method("from_db", [](Fixture& f) {
     ds.stations["synop"].values.set("B07030", 78); // Height
     ds.data["synop"].station = ds.stations["synop"].station;
     ds.data["synop"].datetime = Datetime(2013, 10, 16, 10);
+    ds.data["synop"].level = Level(1, 0, 0);
+    ds.data["synop"].trange = Trange::instant();
     ds.data["synop"].values.set(WR_VAR(0, 12, 101), 16.5);
     wassert(f.populate(ds));
 

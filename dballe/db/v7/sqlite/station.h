@@ -31,6 +31,8 @@ protected:
     dballe::sql::SQLiteStatement* smstm = nullptr;
     /** Precompiled insert query */
     dballe::sql::SQLiteStatement* istm = nullptr;
+    /** Precompiled select station data query */
+    dballe::sql::SQLiteStatement* ssdstm = nullptr;
 
     void _dump(std::function<void(int, int, const Coords& coords, const char* ident)> out) override;
 
@@ -41,6 +43,7 @@ public:
     SQLiteStation(const SQLiteStation&&) = delete;
     SQLiteStation& operator=(const SQLiteStation&) = delete;
 
+    DBStation lookup(Tracer<>& trc, int id_station) override;
     int maybe_get_id(Tracer<>& trc, const dballe::DBStation& st) override;
     int insert_new(Tracer<>& trc, const dballe::DBStation& desc) override;
     void get_station_vars(Tracer<>& trc, int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;

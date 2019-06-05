@@ -142,7 +142,7 @@ database ID of its value.
             return nullptr;
 
         try {
-            auto data = data_from_python(pydata);
+            DataPtr data(pydata);
             ReleaseGIL gil;
             impl::DBInsertOptions opts;
             opts.can_replace = can_replace;
@@ -178,7 +178,7 @@ database ID of its value.
             return nullptr;
 
         try {
-            auto data = data_from_python(pydata);
+            DataPtr data(pydata);
             ReleaseGIL gil;
             impl::DBInsertOptions opts;
             opts.can_replace = can_replace;

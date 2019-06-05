@@ -152,6 +152,11 @@ void Transaction::insert_data(dballe::Data& vals, const dballe::DBInsertOptions&
 
     batch::MeasuredData& md = st->get_measured_data(trc, data.datetime);
 
+    if (data.level.is_missing())
+        throw std::runtime_error("cannot access measured data with undefined level");
+    if (data.trange.is_missing())
+        throw std::runtime_error("cannot access measured data with undefined trange");
+
     // Insert the lev_tr data, and get the ID
     int id_levtr = levtr().obtain_id(trc, LevTrEntry(data.level, data.trange));
 
@@ -177,24 +182,28 @@ void Transaction::remove_station_data(const Query& query)
 {
     Tracer<> trc(this->trc ? this->trc->trace_remove_station_data(query) : nullptr);
     cursor::run_delete_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), true, db->explain_queries);
+    batch.clear();
 }
 
 void Transaction::remove_data(const Query& query)
 {
     Tracer<> trc(this->trc ? this->trc->trace_remove_data(query) : nullptr);
     cursor::run_delete_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), false, db->explain_queries);
+    batch.clear();
 }
 
 void Transaction::remove_station_data_by_id(int id)
 {
     Tracer<> trc(this->trc ? this->trc->trace_remove_station_data_by_id(id) : nullptr);
     station_data().remove_by_id(trc, id);
+    batch.clear();
 }
 
 void Transaction::remove_data_by_id(int id)
 {
     Tracer<> trc(this->trc ? this->trc->trace_remove_data_by_id(id) : nullptr);
     data().remove_by_id(trc, id);
+    batch.clear();
 }
 
 std::unique_ptr<dballe::CursorStation> Transaction::query_stations(const Query& query)

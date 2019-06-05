@@ -31,6 +31,39 @@ MySQLStation::~MySQLStation()
 {
 }
 
+DBStation MySQLStation::lookup(Tracer<>& trc, int id_station)
+{
+    Querybuf qb;
+    qb.appendf("SELECT rep, lat, lon, ident FROM station WHERE id=%d", id_station);
+    Tracer<> trc_sel(trc ? trc->trace_select(qb) : nullptr);
+
+    auto res = conn.exec_store(qb);
+    if (trc_sel) trc_sel->add_row(res.rowcount());
+    switch (res.rowcount())
+    {
+        case 0: {
+            stringstream msg;
+            msg << "Station with id " << id_station << " not found";
+            throw std::runtime_error(msg.str());
+        }
+        case 1: {
+            auto row = res.fetch();
+            DBStation station;
+            station.id = id_station;
+            station.report = tr.repinfo().get_rep_memo(row.as_int(0));
+            station.coords.lat = row.as_int(1);
+            station.coords.lon = row.as_int(2);
+            if (row.isnull(3))
+                station.ident.clear();
+            else
+                station.ident = row.as_string(3);
+            return station;
+        }
+        default:
+            error_consistency::throwf("select station data query returned %u results", res.rowcount());
+    }
+}
+
 int MySQLStation::maybe_get_id(Tracer<>& trc, const dballe::DBStation& st)
 {
     int rep = tr.repinfo().obtain_id(st.report.c_str());

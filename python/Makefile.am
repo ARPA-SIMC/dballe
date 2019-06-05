@@ -17,6 +17,7 @@ pyexec_LTLIBRARIES = _dballe.la
 _dballe_la_SOURCES = \
     common.cc \
     types.cc \
+    data.cc \
     data-access.cc \
     query-access.cc \
     binarymessage.cc \
@@ -35,12 +36,16 @@ _dballe_la_LIBADD = ../dballe/libdballe.la
 data-access.cc: data-access.in.cc $(top_srcdir)/dballe/mklookup
 	$(top_srcdir)/dballe/mklookup $< -o $@
 
+data-access.tcc: data-access.in.tcc $(top_srcdir)/dballe/mklookup
+	$(top_srcdir)/dballe/mklookup $< -o $@
+
 query-access.cc: query-access.in.cc $(top_srcdir)/dballe/mklookup
 	$(top_srcdir)/dballe/mklookup $< -o $@
 
-BUILT_SOURCES = data-access.cc query-access.cc
+BUILT_SOURCES = data-access.cc data-access.tcc query-access.cc
 EXTRA_DIST += \
 	data-access.in.cc data-access.cc \
+	data-access.in.tcc data-access.tcc \
 	query-access.in.cc query-access.cc
 
 doc_DATA = python-dballe.rst
@@ -65,6 +70,7 @@ EXTRA_DIST += \
     enq.h \
     common.h \
     types.h \
+    data.h \
     binarymessage.h \
     file.h \
     message.h \

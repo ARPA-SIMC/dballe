@@ -31,6 +31,9 @@ public:
     Station(v7::Transaction& tr);
     virtual ~Station();
 
+    /// Lookup station data by ID
+    virtual DBStation lookup(Tracer<>& trc, int id_station) = 0;
+
     /**
      * Get the station ID given latitude, longitude and mobile identifier.
      *

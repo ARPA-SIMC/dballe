@@ -508,7 +508,7 @@ class CommonDBTestMixin(DballeDBMixin):
             with self.db.query_station_data() as cur:
                 self.assertEqual(cur.remaining, 1)
                 for row in cur:
-                    self.assertEqual(row.data, {
+                    self.assertEqual(row.data_dict, {
                         "report": "synop",
                         "lat": Decimal("12.34560"),
                         "lon": Decimal("76.54320"),
@@ -519,7 +519,7 @@ class CommonDBTestMixin(DballeDBMixin):
             with self.db.query_data({"var": "B01012"}) as cur:
                 self.assertEqual(cur.remaining, 1)
                 for row in cur:
-                    self.assertEqual(row.data, {
+                    self.assertEqual(row.data_dict, {
                         "report": "synop",
                         "lat": Decimal("12.34560"),
                         "lon": Decimal("76.54320"),
@@ -546,7 +546,7 @@ class CommonDBTestMixin(DballeDBMixin):
                 with tr.query_station_data() as cur:
                     self.assertEqual(cur.remaining, 1)
                     for row in cur:
-                        self.assertEqual(row.data, {
+                        self.assertEqual(row.data_dict, {
                             "report": "synop",
                             "lat": Decimal("12.34560"),
                             "lon": Decimal("76.54320"),
@@ -556,7 +556,7 @@ class CommonDBTestMixin(DballeDBMixin):
                 with tr.query_data({"var": "B01012"}) as cur:
                     self.assertEqual(cur.remaining, 1)
                     for row in cur:
-                        self.assertEqual(row.data, {
+                        self.assertEqual(row.data_dict, {
                             "report": "synop",
                             "lat": Decimal("12.34560"),
                             "lon": Decimal("76.54320"),
@@ -583,7 +583,7 @@ class CommonDBTestMixin(DballeDBMixin):
                 with tr.query_station_data() as cur:
                     self.assertEqual(cur.remaining, 1)
                     for row in cur:
-                        self.assertEqual(row.data, {
+                        self.assertEqual(row.data_dict, {
                             "report": "synop",
                             "lat": Decimal("12.34560"),
                             "lon": Decimal("76.54320"),
@@ -593,7 +593,7 @@ class CommonDBTestMixin(DballeDBMixin):
                 with tr.query_data({"var": "B01012"}) as cur:
                     self.assertEqual(cur.remaining, 1)
                     for row in cur:
-                        self.assertEqual(row.data, {
+                        self.assertEqual(row.data_dict, {
                             "report": "synop",
                             "lat": Decimal("12.34560"),
                             "lon": Decimal("76.54320"),
@@ -602,6 +602,35 @@ class CommonDBTestMixin(DballeDBMixin):
                             "datetime": datetime.datetime(1945, 4, 25, 8, 0),
                             "B01012": 500,
                         })
+
+    def test_issue158(self):
+        with self.transaction() as tr:
+            tr.remove_all()
+            tr.insert_data({
+                "lon": 1212345,
+                "lat": 4312345,
+                "rep_memo": "test1",
+                "datetime": datetime.datetime.now(),
+                "level": (103, 2000),
+                "trange": (254, 0, 0),
+                "B12101": 0
+            }, can_add_stations=True)
+
+            for row in tr.query_data({"report": "test1"}):
+                data = row.data
+                self.assertEqual(data["report"], "test1")
+                self.assertEqual(data["rep_memo"], "test1")
+                data["rep_memo"] = "test2"
+                self.assertEqual(data["report"], "test2")
+                self.assertEqual(data["rep_memo"], "test2")
+                tr.insert_data(data, can_add_stations=True)
+
+        with self.transaction() as tr:
+            reports = []
+            for row in tr.query_data():
+                reports.append(row["report"])
+
+        self.assertEqual(reports, ["test1", "test2"])
 
 
 class FullDBTestMixin(CommonDBTestMixin):

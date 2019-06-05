@@ -9,6 +9,7 @@
 #include "common.h"
 #include "types.h"
 #include "cursor.h"
+#include "data.h"
 #include "config.h"
 #include "impl-utils.h"
 
@@ -795,48 +796,97 @@ std::unique_ptr<Query> query_from_python(PyObject* o)
     throw PythonException();
 }
 
-std::unique_ptr<Data> data_from_python(PyObject* from_python)
+
+DataPtr::DataPtr(DataPtr&& o)
+    : data(o.data), owned(o.owned)
 {
-    core::Data* d;
-    std::unique_ptr<Data> res(d = new core::Data);
+    o.owned = false;
+}
+
+DataPtr::~DataPtr()
+{
+    if (owned)
+        delete data;
+}
+
+void DataPtr::create()
+{
+    if (data)
+        throw std::runtime_error("DataPtr::create/reuse called twice");
+
+    data = new core::Data;
+    owned = true;
+}
+
+void DataPtr::reuse(core::Data* data)
+{
+    if (this->data)
+        throw std::runtime_error("DataPtr::create/reuse called twice");
+
+    this->data = data;
+    owned = false;
+}
+
+DataPtr::DataPtr(PyObject* from_python)
+{
     if (!from_python || from_python == Py_None)
-        return res;
+        return;
+
+    if (dpy_Data_Check(from_python))
+    {
+        reuse(((dpy_Data*)from_python)->data);
+        // This is a bit of a hack: since we use DataPtr only to support db
+        // inserts, when we are passed a Data object it's likely to be from a
+        // cursor, which could be from a different database. IDs left over
+        // would speed things up (in case of ana_id, for example), but would
+        // cause unexpected behaviour in a cross-database setting.
+        // Given that the Data comes from a cursor that would have set all its
+        // values, we can clear IDs here and the insert will still be able to
+        // find the station information it needs.
+        // FIXME: this seems hacky enough that it can backfire: wait for
+        // feedback on the ticket
+        // data->clear_ids();
+        return;
+    }
 
     if (PyDict_Check(from_python))
     {
+        create();
         PyObject* key;
         PyObject* value;
         Py_ssize_t pos = 0;
         while (PyDict_Next(from_python, &pos, &key, &value))
         {
             std::string k = string_from_python(key);
-            data_setpy(*d, k.data(), k.size(), value);
+            data_setpy(*data, k.data(), k.size(), value);
         }
-        return res;
+        return;
     }
 
     if (dpy_CursorStationDataDB_Check(from_python))
     {
+        create();
         dpy_CursorStationDataDB* cur = (dpy_CursorStationDataDB*)from_python;
-        d->station = cur->cur->get_station();
-        d->station.id = MISSING_INT;
-        d->values.set(*cur->cur->rows->value.get());
-        return res;
+        data->station = cur->cur->get_station();
+        data->station.id = MISSING_INT;
+        data->values.set(*cur->cur->rows->value.get());
+        return;
     }
 
     if (dpy_CursorDataDB_Check(from_python))
     {
+        create();
         dpy_CursorDataDB* cur = (dpy_CursorDataDB*)from_python;
-        d->station = cur->cur->get_station();
-        d->station.id = MISSING_INT;
-        d->datetime = cur->cur->get_datetime();
-        d->level = cur->cur->get_level();
-        d->trange = cur->cur->get_trange();
-        d->values.set(*cur->cur->rows->value.get());
-        return res;
+        data->station = cur->cur->get_station();
+        data->station.id = MISSING_INT;
+        data->datetime = cur->cur->get_datetime();
+        data->level = cur->cur->get_level();
+        data->trange = cur->cur->get_trange();
+        data->values.set(*cur->cur->rows->value.get());
+        return;
     }
 
-    PyErr_SetString(PyExc_TypeError, "Expected dict or None");
+    PyErr_SetString(PyExc_TypeError, "Expected Data, dict, station data cursor, data cursor, or None");
     throw PythonException();
 }
 

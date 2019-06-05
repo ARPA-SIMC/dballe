@@ -2,6 +2,7 @@
 #include <wreport/python.h>
 #include "common.h"
 #include "types.h"
+#include "data.h"
 #include "db.h"
 #include "cursor.h"
 #include "binarymessage.h"
@@ -162,6 +163,7 @@ PyMODINIT_FUNC PyInit__dballe(void)
     try {
         pyo_unique_ptr m(PyModule_Create(&dballe_module));
         register_types(m);
+        register_data(m);
         register_binarymessage(m);
         register_file(m);
         register_message(m);
