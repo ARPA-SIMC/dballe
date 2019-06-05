@@ -26,6 +26,7 @@ PostgreSQLStation::PostgreSQLStation(v7::Transaction& tr, PostgreSQLConnection& 
     conn.prepare("v7_station_select_fixed", "SELECT id FROM station WHERE rep=$1::int4 AND lat=$2::int4 AND lon=$3::int4 AND ident IS NULL");
     conn.prepare("v7_station_select_mobile", "SELECT id FROM station WHERE rep=$1::int4 AND lat=$2::int4 AND lon=$3::int4 AND ident=$4::text");
     conn.prepare("v7_station_insert", "INSERT INTO station (id, rep, lat, lon, ident) VALUES (DEFAULT, $1::int4, $2::int4, $3::int4, $4::text) RETURNING id");
+    conn.prepare("v7_station_select_station_data", "SELECT rep, lat, lon, ident FROM station WHERE id=$1::int4");
     conn.prepare("v7_station_get_station_vars", R"(
         SELECT d.code, d.value, d.attrs
           FROM station_data d
@@ -41,6 +42,40 @@ PostgreSQLStation::PostgreSQLStation(v7::Transaction& tr, PostgreSQLConnection& 
 
 PostgreSQLStation::~PostgreSQLStation()
 {
+}
+
+DBStation PostgreSQLStation::lookup(Tracer<>& trc, int id_station)
+{
+    using namespace dballe::sql::postgresql;
+
+    Tracer<> trc_sel;
+
+    Result res(conn.exec_prepared("v7_station_select_station_data", id_station));
+    if (trc) trc_sel.reset(trc->trace_select("v7_station_select_station_data", res.rowcount()));
+
+    unsigned rows = res.rowcount();
+    if (trc_sel) trc_sel->add_row(rows);
+    switch (rows)
+    {
+        case 0: {
+            stringstream msg;
+            msg << "Station with id " << id_station << " not found";
+            throw std::runtime_error(msg.str());
+        }
+        case 1: {
+            DBStation station;
+            station.id = id_station;
+            station.report = tr.repinfo().get_rep_memo(res.get_int4(0, 0));
+            station.coords.lat = res.get_int4(0, 1);
+            station.coords.lon = res.get_int4(0, 2);
+            if (res.is_null(0, 3))
+                station.ident.clear();
+            else
+                station.ident = res.get_string(0, 3);
+            return station;
+        }
+        default: error_consistency::throwf("select station data query returned %u results", rows);
+    }
 }
 
 int PostgreSQLStation::maybe_get_id(Tracer<>& trc, const dballe::DBStation& st)

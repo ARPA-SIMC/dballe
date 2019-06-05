@@ -27,6 +27,8 @@ static const char* select_mobile_query =
 static const char* insert_query =
         "INSERT INTO station (rep, lat, lon, ident)"
         " VALUES (?, ?, ?, ?);";
+static const char* select_station_data_query =
+        "SELECT rep, lat, lon, ident FROM station WHERE id=?";
 
 SQLiteStation::SQLiteStation(v7::Transaction& tr, SQLiteConnection& conn)
     : v7::Station(tr), conn(conn)
@@ -39,6 +41,9 @@ SQLiteStation::SQLiteStation(v7::Transaction& tr, SQLiteConnection& conn)
 
     // Create the statement for insert
     istm = conn.sqlitestatement(insert_query).release();
+
+    // Create the statement for insert
+    ssdstm = conn.sqlitestatement(select_station_data_query).release();
 }
 
 SQLiteStation::~SQLiteStation()
@@ -46,6 +51,39 @@ SQLiteStation::~SQLiteStation()
     delete sfstm;
     delete smstm;
     delete istm;
+    delete ssdstm;
+}
+
+DBStation SQLiteStation::lookup(Tracer<>& trc, int id_station)
+{
+    Tracer<> trc_sel;
+    ssdstm->bind_val(1, id_station);
+    if (trc) trc_sel.reset(trc->trace_select(select_station_data_query));
+
+    DBStation station;
+    station.id = id_station;
+
+    bool found = false;
+    ssdstm->execute_one([&]() {
+        if (trc_sel) trc_sel->add_row();
+        found = true;
+
+        station.report = tr.repinfo().get_rep_memo(ssdstm->column_int(0));
+        station.coords.lat = ssdstm->column_int(1);
+        station.coords.lon = ssdstm->column_int(2);
+
+        if (ssdstm->column_isnull(3))
+            station.ident.clear();
+        else
+            station.ident = ssdstm->column_string(3);
+    });
+
+    if (found)
+        return station;
+
+    stringstream msg;
+    msg << "Station with id " << id_station << " not found";
+    throw std::runtime_error(msg.str());
 }
 
 int SQLiteStation::maybe_get_id(Tracer<>& trc, const dballe::DBStation& st)

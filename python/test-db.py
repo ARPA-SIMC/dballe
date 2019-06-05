@@ -583,7 +583,7 @@ class CommonDBTestMixin(DballeDBMixin):
                 with tr.query_station_data() as cur:
                     self.assertEqual(cur.remaining, 1)
                     for row in cur:
-                        self.assertEqual(row.data, {
+                        self.assertEqual(row.data_dict, {
                             "report": "synop",
                             "lat": Decimal("12.34560"),
                             "lon": Decimal("76.54320"),
@@ -593,7 +593,7 @@ class CommonDBTestMixin(DballeDBMixin):
                 with tr.query_data({"var": "B01012"}) as cur:
                     self.assertEqual(cur.remaining, 1)
                     for row in cur:
-                        self.assertEqual(row.data, {
+                        self.assertEqual(row.data_dict, {
                             "report": "synop",
                             "lat": Decimal("12.34560"),
                             "lon": Decimal("76.54320"),
@@ -605,6 +605,7 @@ class CommonDBTestMixin(DballeDBMixin):
 
     def test_issue158(self):
         with self.transaction() as tr:
+            tr.remove_all()
             tr.insert_data({
                 "lon": 1212345,
                 "lat": 4312345,

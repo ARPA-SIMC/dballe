@@ -287,13 +287,13 @@ this->add_method("discriminate_ana_id", [](Fixture& f) {
     vals1.station.report = "synop";
     vals1.station.coords = Coords(44.10, 11.50);
     vals1.values.set("B01001", 10);
-    f.tr->insert_data(vals1);
+    f.tr->insert_station_data(vals1);
 
     core::Data vals2;
     vals2.station.report = "metar";
     vals2.station.coords = Coords(44.10, 11.50);
     vals2.values.set("B01001", 11);
-    f.tr->insert_data(vals2);
+    f.tr->insert_station_data(vals2);
 
     wassert(actual(vals1.station.id) != vals2.station.id);
 
@@ -304,7 +304,7 @@ this->add_method("discriminate_ana_id", [](Fixture& f) {
         vals.values.set("B01002", 101);
         impl::DBInsertOptions opts;
         opts.can_replace = false; opts.can_add_stations = false;
-        wassert(f.tr->insert_data(vals, opts));
+        wassert(f.tr->insert_station_data(vals, opts));
     }
 
     {
@@ -313,7 +313,7 @@ this->add_method("discriminate_ana_id", [](Fixture& f) {
         vals.values.set("B01002", 102);
         impl::DBInsertOptions opts;
         opts.can_replace = false; opts.can_add_stations = false;
-        wassert(f.tr->insert_data(vals, opts));
+        wassert(f.tr->insert_station_data(vals, opts));
     }
 
     core::Query query;
@@ -347,7 +347,7 @@ this->add_method("foreign_ana_id", [](Fixture& f) {
     vals1.station.report = "synop";
     vals1.station.coords = Coords(44.10, 11.50);
     vals1.values.set("B01001", 10);
-    f.tr->insert_data(vals1);
+    wassert(f.tr->insert_station_data(vals1));
 
     // Insert a station data with an ana_id from another datatabase
     core::Data vals2;
@@ -355,7 +355,7 @@ this->add_method("foreign_ana_id", [](Fixture& f) {
     vals2.station.report = "synop";
     vals2.station.coords = Coords(44.10, 11.50);
     vals2.values.set("B01002", 100);
-    f.tr->insert_data(vals2);
+    wassert(f.tr->insert_station_data(vals2));
 
     // The right ana_id has been picked
     wassert(actual(vals1.station.id) == vals2.station.id);

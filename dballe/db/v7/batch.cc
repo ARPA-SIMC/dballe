@@ -48,25 +48,26 @@ void Batch::new_station(Tracer<>& trc, const std::string& report, const Coords& 
 
 batch::Station* Batch::get_station(Tracer<>& trc, const dballe::DBStation& station, bool station_can_add)
 {
-    if (have_station(station.report, station.coords, station.ident))
-    {
-        if (station.id != MISSING_INT && last_station->id != station.id)
-            throw std::runtime_error("batch station has different id than the station we are using to look it up");
-        return last_station;
-    }
     v7::Station& st = transaction.station();
 
-    new_station(trc, station.report, station.coords, station.ident);
-
-    if (station.id != MISSING_INT)
+    if (station.coords.is_missing())
     {
+        if (station.id == MISSING_INT)
+            throw std::runtime_error("cannot use station information without both coordinates and ana_id");
+        if (last_station && last_station->id == station.id)
+            return last_station;
+        DBStation from_db = st.lookup(trc, station.id);
+        new_station(trc, from_db.report, from_db.coords, from_db.ident);
+        ++count_select_stations;
         last_station->id = station.id;
-    }
-    else
-    {
+    } else {
+        if (have_station(station.report, station.coords, station.ident))
+            return last_station;
+        new_station(trc, station.report, station.coords, station.ident);
         ++count_select_stations;
         last_station->id = st.maybe_get_id(trc, *last_station);
     }
+
     if (last_station->id == MISSING_INT)
     {
         if (!station_can_add)
@@ -260,6 +261,8 @@ StationData& Station::get_station_data(Tracer<>& trc)
 
 MeasuredData& Station::get_measured_data(Tracer<>& trc, const Datetime& datetime)
 {
+    if (datetime.is_missing())
+        throw std::runtime_error("cannot access measured data with undefined datetime");
     auto mdi = measured_data.find(datetime);
     if (mdi != measured_data.end())
         return **mdi;

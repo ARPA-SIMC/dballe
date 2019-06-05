@@ -152,6 +152,11 @@ void Transaction::insert_data(dballe::Data& vals, const dballe::DBInsertOptions&
 
     batch::MeasuredData& md = st->get_measured_data(trc, data.datetime);
 
+    if (data.level.is_missing())
+        throw std::runtime_error("cannot access measured data with undefined level");
+    if (data.trange.is_missing())
+        throw std::runtime_error("cannot access measured data with undefined trange");
+
     // Insert the lev_tr data, and get the ID
     int id_levtr = levtr().obtain_id(trc, LevTrEntry(data.level, data.trange));
 
