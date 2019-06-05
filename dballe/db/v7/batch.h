@@ -40,6 +40,7 @@ public:
 
     void write_pending(Tracer<>& trc);
     void clear();
+    void dump(FILE* out) const;
 };
 
 
@@ -158,6 +159,7 @@ struct Station : public dballe::DBStation
     MeasuredData& get_measured_data(Tracer<>& trc, const Datetime& datetime);
 
     void write_pending(Tracer<>& trc, bool with_attrs);
+    void dump(FILE* out) const;
 };
 
 }

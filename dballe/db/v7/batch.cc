@@ -48,25 +48,34 @@ void Batch::new_station(Tracer<>& trc, const std::string& report, const Coords& 
 
 batch::Station* Batch::get_station(Tracer<>& trc, const dballe::DBStation& station, bool station_can_add)
 {
+    fprintf(stderr, "GS 1\n");
+    dump(stderr);
     if (have_station(station.report, station.coords, station.ident))
     {
+    fprintf(stderr, "GS 2\n");
         if (station.id != MISSING_INT && last_station->id != station.id)
             throw std::runtime_error("batch station has different id than the station we are using to look it up");
         return last_station;
     }
     v7::Station& st = transaction.station();
+    fprintf(stderr, "GS 3\n");
 
     new_station(trc, station.report, station.coords, station.ident);
 
     if (station.id != MISSING_INT)
+    {
+    fprintf(stderr, "GS 4\n");
         last_station->id = station.id;
+    }
     else
     {
+    fprintf(stderr, "GS 5\n");
         ++count_select_stations;
         last_station->id = st.maybe_get_id(trc, *last_station);
     }
     if (last_station->id == MISSING_INT)
     {
+    fprintf(stderr, "GS 6\n");
         if (!station_can_add)
             throw wreport::error_notfound("station not found in the database");
         last_station->is_new = true;
@@ -74,9 +83,12 @@ batch::Station* Batch::get_station(Tracer<>& trc, const dballe::DBStation& stati
     }
     else
     {
+    fprintf(stderr, "GS 7\n");
         last_station->is_new = false;
         last_station->station_data.loaded = false;
     }
+    fprintf(stderr, "GS 8\n");
+    dump(stderr);
     return last_station;
 }
 
@@ -115,6 +127,19 @@ void Batch::clear()
 {
     delete last_station;
     last_station = nullptr;
+}
+
+void Batch::dump(FILE* out) const
+{
+    fprintf(out, " * Batch wa:%d csst:%u cssd: %u, csd: %u\n",
+            (int)write_attrs, count_select_stations, count_select_station_data, count_select_data);
+    if (last_station)
+    {
+        fprintf(out, "Cached station:\n");
+        last_station->dump(out);
+    } else {
+        fprintf(out, "No cached station.\n");
+    }
 }
 
 namespace batch {
@@ -271,6 +296,12 @@ void Station::write_pending(Tracer<>& trc, bool with_attrs)
     station_data.write_pending(trc, batch.transaction, id, with_attrs);
     for (auto md: measured_data)
         md->write_pending(trc, batch.transaction, id, with_attrs);
+}
+
+void Station::dump(FILE* out) const
+{
+    fprintf(out, "Station%s: ", is_new ? " (new)" : "");
+    print(out);
 }
 
 #if 0

@@ -279,8 +279,68 @@ this->add_method("update_with_ana_id", [](Fixture& f) {
     var = dcur->get_var();
     wassert(actual(var.code()) == WR_VAR(0, 12, 101));
     wassert(actual(var.enqd()) == 296.2);
-
 });
+
+this->add_method("discriminate_ana_id", [](Fixture& f) {
+    // Generate two station IDs
+    core::Data vals1;
+    vals1.station.report = "synop";
+    vals1.station.coords = Coords(44.10, 11.50);
+    vals1.values.set("B01001", 10);
+    f.tr->insert_data(vals1);
+
+    core::Data vals2;
+    vals2.station.report = "metar";
+    vals2.station.coords = Coords(44.10, 11.50);
+    vals2.values.set("B01001", 11);
+    f.tr->insert_data(vals2);
+
+    wassert(actual(vals1.station.id) != vals2.station.id);
+
+    // Insert by ana_id on both stations
+    {
+        core::Data vals;
+        vals.station.id = vals1.station.id;
+        vals.values.set("B01002", 101);
+        impl::DBInsertOptions opts;
+        opts.can_replace = false; opts.can_add_stations = false;
+        wassert(f.tr->insert_data(vals, opts));
+    }
+
+    {
+        core::Data vals;
+        vals.station.id = vals2.station.id;
+        vals.values.set("B01002", 102);
+        impl::DBInsertOptions opts;
+        opts.can_replace = false; opts.can_add_stations = false;
+        wassert(f.tr->insert_data(vals, opts));
+    }
+
+    core::Query query;
+    auto cur = f.tr->query_station_data(query);
+    wassert(actual(cur->remaining()) == 4u);
+
+    wassert(cur->next());
+    wassert(actual(cur->get_station().id), vals1.station.id);
+    wassert(actual(cur->get_var().code()) == WR_VAR(0, 1, 1));
+    wassert(actual(cur->get_var().enqd()) == 10);
+
+    wassert(cur->next());
+    wassert(actual(cur->get_station().id), vals1.station.id);
+    wassert(actual(cur->get_var().code()) == WR_VAR(0, 1, 2));
+    wassert(actual(cur->get_var().enqd()) == 101);
+
+    wassert(cur->next());
+    wassert(actual(cur->get_station().id), vals2.station.id);
+    wassert(actual(cur->get_var().code()) == WR_VAR(0, 1, 1));
+    wassert(actual(cur->get_var().enqd()) == 11);
+
+    wassert(cur->next());
+    wassert(actual(cur->get_station().id), vals2.station.id);
+    wassert(actual(cur->get_var().code()) == WR_VAR(0, 1, 2));
+    wassert(actual(cur->get_var().enqd()) == 102);
+});
+
 
 this->add_method("delete_by_var", [](Fixture& f) {
     // See issue #141
