@@ -321,26 +321,45 @@ this->add_method("discriminate_ana_id", [](Fixture& f) {
     wassert(actual(cur->remaining()) == 4u);
 
     wassert(cur->next());
-    wassert(actual(cur->get_station().id), vals1.station.id);
+    wassert(actual(cur->get_station().id) == vals1.station.id);
     wassert(actual(cur->get_var().code()) == WR_VAR(0, 1, 1));
     wassert(actual(cur->get_var().enqd()) == 10);
 
     wassert(cur->next());
-    wassert(actual(cur->get_station().id), vals1.station.id);
+    wassert(actual(cur->get_station().id) == vals1.station.id);
     wassert(actual(cur->get_var().code()) == WR_VAR(0, 1, 2));
     wassert(actual(cur->get_var().enqd()) == 101);
 
     wassert(cur->next());
-    wassert(actual(cur->get_station().id), vals2.station.id);
+    wassert(actual(cur->get_station().id) == vals2.station.id);
     wassert(actual(cur->get_var().code()) == WR_VAR(0, 1, 1));
     wassert(actual(cur->get_var().enqd()) == 11);
 
     wassert(cur->next());
-    wassert(actual(cur->get_station().id), vals2.station.id);
+    wassert(actual(cur->get_station().id) == vals2.station.id);
     wassert(actual(cur->get_var().code()) == WR_VAR(0, 1, 2));
     wassert(actual(cur->get_var().enqd()) == 102);
 });
 
+this->add_method("foreign_ana_id", [](Fixture& f) {
+    // Insert a station data
+    core::Data vals1;
+    vals1.station.report = "synop";
+    vals1.station.coords = Coords(44.10, 11.50);
+    vals1.values.set("B01001", 10);
+    f.tr->insert_data(vals1);
+
+    // Insert a station data with an ana_id from another datatabase
+    core::Data vals2;
+    vals2.station.id = vals1.station.id + 42;
+    vals2.station.report = "synop";
+    vals2.station.coords = Coords(44.10, 11.50);
+    vals2.values.set("B01002", 100);
+    f.tr->insert_data(vals2);
+
+    // The right ana_id has been picked
+    wassert(actual(vals1.station.id) == vals2.station.id);
+});
 
 this->add_method("delete_by_var", [](Fixture& f) {
     // See issue #141
