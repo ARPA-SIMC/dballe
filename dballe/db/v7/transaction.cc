@@ -177,24 +177,28 @@ void Transaction::remove_station_data(const Query& query)
 {
     Tracer<> trc(this->trc ? this->trc->trace_remove_station_data(query) : nullptr);
     cursor::run_delete_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), true, db->explain_queries);
+    batch.clear();
 }
 
 void Transaction::remove_data(const Query& query)
 {
     Tracer<> trc(this->trc ? this->trc->trace_remove_data(query) : nullptr);
     cursor::run_delete_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), false, db->explain_queries);
+    batch.clear();
 }
 
 void Transaction::remove_station_data_by_id(int id)
 {
     Tracer<> trc(this->trc ? this->trc->trace_remove_station_data_by_id(id) : nullptr);
     station_data().remove_by_id(trc, id);
+    batch.clear();
 }
 
 void Transaction::remove_data_by_id(int id)
 {
     Tracer<> trc(this->trc ? this->trc->trace_remove_data_by_id(id) : nullptr);
     data().remove_by_id(trc, id);
+    batch.clear();
 }
 
 std::unique_ptr<dballe::CursorStation> Transaction::query_stations(const Query& query)
