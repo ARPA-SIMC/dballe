@@ -467,6 +467,17 @@ struct DefinitionBase : public Binding<Definition, Impl>
 A Cursor is the result of database queries. It is generally iterated through
 the contents of the result. Each iteration returns the cursor itself, that can
 be used to access the result values.
+
+A Cursor works like a read-only dict to access data from the current result.
+The list of available keys is documented in doc/fapi_parms.md.
+
+For example::
+
+    with self.db.query_data({...}) as cur:
+        for row in cur:
+            print("Station:", cur["station"])
+            print("Var:", cur["var"], cur.enqf(cur["var"]))
+
 )";
 
     static void _dealloc(Impl* self)
