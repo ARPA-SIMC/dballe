@@ -12,6 +12,10 @@ from testlib import DballeDBMixin, test_pathname
 class CommonDBTestMixin(DballeDBMixin):
     @contextmanager
     def deprecated_on_db(self):
+        """
+        Make sure that the test within, when run ouside a transaction, raises a
+        DeprecationWarning
+        """
         with warnings.catch_warnings(record=True) as warning_list:
             yield
         if self.raise_db_method_deprecation_warnings:
