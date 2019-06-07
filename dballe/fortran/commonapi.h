@@ -95,7 +95,7 @@ struct CursorOperation : public Operation
             throw wreport::error_consistency("enqi called before running a query");
 
         impl::Enqi enq(param, strlen(param));
-        cursor->enq_generic(enq);
+        cursor->enq(enq);
         if (enq.missing)
             return API::missing_int;
         return enq.res;
@@ -105,7 +105,7 @@ struct CursorOperation : public Operation
         if (!cursor)
             throw wreport::error_consistency("enqd called before running a query");
         impl::Enqd enq(param, strlen(param));
-        cursor->enq_generic(enq);
+        cursor->enq(enq);
         if (enq.missing)
             return API::missing_double;
         return enq.res;
@@ -115,7 +115,7 @@ struct CursorOperation : public Operation
         if (!cursor)
             throw wreport::error_consistency("enqc called before running a query");
         Enqc enq(param, strlen(param), res, res_len);
-        cursor->enq_generic(enq);
+        cursor->enq(enq);
         return !enq.missing;
     }
     void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const override

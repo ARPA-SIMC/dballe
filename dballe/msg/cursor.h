@@ -23,6 +23,7 @@ struct CursorStation : public impl::CursorStation
         station.coords = msg.get_coords();
         station.ident = msg.get_ident();
     }
+    ~CursorStation();
 
     int remaining() const override
     {
@@ -47,7 +48,7 @@ struct CursorStation : public impl::CursorStation
         at_start = false;
     }
 
-    template<typename Enq> void enq_generic(Enq& enq) const;
+    void enq(Enq& enq) const override;
 
     DBStation get_station() const override { return station; }
 
@@ -81,6 +82,7 @@ struct CursorStationData : public impl::CursorStationData
         station.coords = msg.get_coords();
         station.ident = msg.get_ident();
     }
+    ~CursorStationData();
 
     int remaining() const override
     {
@@ -112,7 +114,7 @@ struct CursorStationData : public impl::CursorStationData
         cur = station_values.end();
     }
 
-    template<typename Enq> void enq_generic(Enq& enq) const;
+    void enq(Enq& enq) const override;
 
     DBStation get_station() const override { return station; }
 
@@ -171,6 +173,7 @@ struct CursorData : public impl::CursorData
                 if (WR_VAR_X((*cur)->code()) < 4 || WR_VAR_X((*cur)->code()) > 6)
                     rows.emplace_back(cur);
     }
+    ~CursorData();
 
     int remaining() const override
     {
@@ -204,7 +207,7 @@ struct CursorData : public impl::CursorData
         cur = rows.end();
     }
 
-    template<typename Enq> void enq_generic(Enq& enq) const;
+    void enq(Enq& enq) const override;
 
     DBStation get_station() const override { return station; }
 

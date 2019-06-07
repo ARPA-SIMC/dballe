@@ -18,8 +18,11 @@ using namespace dballe::python;
 using namespace wreport;
 
 extern "C" {
+PyTypeObject* dpy_CursorStation_Type = nullptr;
 PyTypeObject* dpy_CursorStationDB_Type = nullptr;
+PyTypeObject* dpy_CursorStationData_Type = nullptr;
 PyTypeObject* dpy_CursorStationDataDB_Type = nullptr;
+PyTypeObject* dpy_CursorData_Type = nullptr;
 PyTypeObject* dpy_CursorDataDB_Type = nullptr;
 PyTypeObject* dpy_CursorSummaryDB_Type = nullptr;
 PyTypeObject* dpy_CursorSummarySummary_Type = nullptr;
@@ -67,12 +70,12 @@ void _set_query(PyObject* dict, const DBStation& station)
     }
 }
 
-void _set_query(PyObject* dict, dballe::db::CursorStation& cur)
+void _set_query(PyObject* dict, dballe::impl::CursorStation& cur)
 {
     _set_query(dict, cur.get_station());
 }
 
-void _set_query(PyObject* dict, dballe::db::CursorStationData& cur)
+void _set_query(PyObject* dict, dballe::impl::CursorStationData& cur)
 {
     _set_query(dict, cur.get_station());
     set_dict(dict, "level", level_to_python(Level()));
@@ -80,7 +83,7 @@ void _set_query(PyObject* dict, dballe::db::CursorStationData& cur)
     set_dict(dict, "var", varcode_to_python(cur.get_varcode()));
 }
 
-void _set_query(PyObject* dict, dballe::db::CursorData& cur)
+void _set_query(PyObject* dict, dballe::impl::CursorData& cur)
 {
     _set_query(dict, cur.get_station());
     set_dict(dict, "level", to_python(cur.get_level()));
@@ -89,7 +92,7 @@ void _set_query(PyObject* dict, dballe::db::CursorData& cur)
     set_dict(dict, "datetime", to_python(cur.get_datetime()));
 }
 
-void _set_query(PyObject* dict, dballe::db::CursorSummary& cur)
+void _set_query(PyObject* dict, dballe::impl::CursorSummary& cur)
 {
     _set_query(dict, cur.get_station());
     set_dict(dict, "level", to_python(cur.get_level()));
@@ -155,19 +158,19 @@ void _set_data(PyObject* dict, const Var& var)
         throw PythonException();
 }
 
-void _set_data(core::Data& data, dballe::db::CursorStationData& cur)
+void _set_data(core::Data& data, dballe::impl::CursorStationData& cur)
 {
     _set_data(data, cur.get_station());
     _set_data(data, cur.get_var());
 }
 
-void _set_data(PyObject* dict, dballe::db::CursorStationData& cur)
+void _set_data(PyObject* dict, dballe::impl::CursorStationData& cur)
 {
     _set_data(dict, cur.get_station());
     _set_data(dict, cur.get_var());
 }
 
-void _set_data(core::Data& data, dballe::db::CursorData& cur)
+void _set_data(core::Data& data, dballe::impl::CursorData& cur)
 {
     _set_data(data, cur.get_station());
     data.datetime = cur.get_datetime();
@@ -176,7 +179,7 @@ void _set_data(core::Data& data, dballe::db::CursorData& cur)
     _set_data(data, cur.get_var());
 }
 
-void _set_data(PyObject* dict, dballe::db::CursorData& cur)
+void _set_data(PyObject* dict, dballe::impl::CursorData& cur)
 {
     _set_data(dict, cur.get_station());
     set_dict(dict, "level", to_python(cur.get_level()));
@@ -348,7 +351,7 @@ struct enqi : MethKwargs<Impl>
                 return nullptr;
 
             impl::Enqi enq(key, len);
-            self->cur->enq_generic(enq);
+            self->cur->enq(enq);
             if (enq.missing)
                 Py_RETURN_NONE;
             return PyLong_FromLong(enq.res);
@@ -375,7 +378,7 @@ struct enqd : MethKwargs<Impl>
                 return nullptr;
 
             impl::Enqd enq(key, len);
-            self->cur->enq_generic(enq);
+            self->cur->enq(enq);
             if (enq.missing)
                 Py_RETURN_NONE;
             return PyFloat_FromDouble(enq.res);
@@ -402,7 +405,7 @@ struct enqs : MethKwargs<Impl>
                 return nullptr;
 
             Enqs enq(key, len);
-            self->cur->enq_generic(enq);
+            self->cur->enq(enq);
             if (enq.missing)
                 Py_RETURN_NONE;
             return PyUnicode_FromStringAndSize(enq.res.data(), enq.res.size());
@@ -429,7 +432,7 @@ struct enqf : MethKwargs<Impl>
                 return nullptr;
 
             Enqf enq(key, len);
-            self->cur->enq_generic(enq);
+            self->cur->enq(enq);
             if (enq.missing)
                 Py_RETURN_NONE;
             return PyUnicode_FromStringAndSize(enq.res.data(), enq.res.size());
@@ -518,7 +521,7 @@ For example::
             const char* key = throw_ifnull(PyUnicode_AsUTF8AndSize(pykey, &len));
             // return enqpy(*self->cur, key, len);
             Enqpy enq(key, len);
-            self->cur->enq_generic(enq);
+            self->cur->enq(enq);
             if (enq.missing)
             {
                 PyErr_Format(PyExc_KeyError, "key %s not found", key);
@@ -528,6 +531,18 @@ For example::
         } DBALLE_CATCH_RETURN_PYO
     }
 };
+
+
+struct DefinitionStation : public DefinitionBase<DefinitionStation, dpy_CursorStation>
+{
+    constexpr static const char* name = "CursorStation";
+    constexpr static const char* qual_name = "dballe.CursorStation";
+    constexpr static const char* summary = "cursor iterating generic query_station results";
+
+    GetSetters<remaining<Impl>, query<Impl>> getsetters;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
+};
+
 
 struct DefinitionStationDB : public DefinitionBase<DefinitionStationDB, dpy_CursorStationDB>
 {
@@ -540,6 +555,17 @@ struct DefinitionStationDB : public DefinitionBase<DefinitionStationDB, dpy_Curs
 };
 
 
+struct DefinitionStationData : public DefinitionBase<DefinitionStationData, dpy_CursorStationData>
+{
+    constexpr static const char* name = "CursorStationData";
+    constexpr static const char* qual_name = "dballe.CursorStationData";
+    constexpr static const char* summary = "cursor iterating generic query_station_data results";
+
+    GetSetters<remaining<Impl>, query<Impl>, data<Impl>, data_dict<Impl>> getsetters;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
+};
+
+
 struct DefinitionStationDataDB : public DefinitionBase<DefinitionStationDataDB, dpy_CursorStationDataDB>
 {
     constexpr static const char* name = "CursorStationDataDB";
@@ -548,6 +574,17 @@ struct DefinitionStationDataDB : public DefinitionBase<DefinitionStationDataDB, 
 
     GetSetters<remaining<Impl>, query<Impl>, data<Impl>, data_dict<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, remove<Impl>, query_attrs<Impl>, insert_attrs<Impl>, remove_attrs<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
+};
+
+
+struct DefinitionData : public DefinitionBase<DefinitionData, dpy_CursorData>
+{
+    constexpr static const char* name = "CursorData";
+    constexpr static const char* qual_name = "dballe.CursorData";
+    constexpr static const char* summary = "cursor iterating generic query_data results";
+
+    GetSetters<remaining<Impl>, query<Impl>, data<Impl>, data_dict<Impl>> getsetters;
+    Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
 };
 
 
@@ -651,8 +688,11 @@ struct DefinitionMessage : public DefinitionBase<DefinitionMessage, dpy_CursorMe
 };
 
 
+DefinitionStation*           definition_station = nullptr;
 DefinitionStationDB*         definition_stationdb = nullptr;
+DefinitionStationData*       definition_stationdata = nullptr;
 DefinitionStationDataDB*     definition_stationdatadb = nullptr;
+DefinitionData*              definition_data = nullptr;
 DefinitionDataDB*            definition_datadb = nullptr;
 DefinitionSummaryDB*         definition_summarydb = nullptr;
 DefinitionSummarySummary*    definition_summarysummary = nullptr;
@@ -664,6 +704,13 @@ DefinitionMessage*           definition_message = nullptr;
 namespace dballe {
 namespace python {
 
+dpy_CursorStation* cursor_create(std::unique_ptr<impl::CursorStation> cur)
+{
+    py_unique_ptr<dpy_CursorStation> result(throw_ifnull(PyObject_New(dpy_CursorStation, dpy_CursorStation_Type)));
+    result->cur = cur.release();
+    return result.release();
+}
+
 dpy_CursorStationDB* cursor_create(std::unique_ptr<db::v7::cursor::Stations> cur)
 {
     py_unique_ptr<dpy_CursorStationDB> result(throw_ifnull(PyObject_New(dpy_CursorStationDB, dpy_CursorStationDB_Type)));
@@ -671,9 +718,23 @@ dpy_CursorStationDB* cursor_create(std::unique_ptr<db::v7::cursor::Stations> cur
     return result.release();
 }
 
+dpy_CursorStationData* cursor_create(std::unique_ptr<impl::CursorStationData> cur)
+{
+    py_unique_ptr<dpy_CursorStationData> result(throw_ifnull(PyObject_New(dpy_CursorStationData, dpy_CursorStationData_Type)));
+    result->cur = cur.release();
+    return result.release();
+}
+
 dpy_CursorStationDataDB* cursor_create(std::unique_ptr<db::v7::cursor::StationData> cur)
 {
     py_unique_ptr<dpy_CursorStationDataDB> result(throw_ifnull(PyObject_New(dpy_CursorStationDataDB, dpy_CursorStationDataDB_Type)));
+    result->cur = cur.release();
+    return result.release();
+}
+
+dpy_CursorData* cursor_create(std::unique_ptr<impl::CursorData> cur)
+{
+    py_unique_ptr<dpy_CursorData> result(throw_ifnull(PyObject_New(dpy_CursorData, dpy_CursorData_Type)));
     result->cur = cur.release();
     return result.release();
 }
@@ -719,11 +780,20 @@ void register_cursor(PyObject* m)
 {
     common_init();
 
+    definition_station = new DefinitionStation;
+    dpy_CursorStation_Type = definition_station->activate(m);
+
     definition_stationdb = new DefinitionStationDB;
     dpy_CursorStationDB_Type = definition_stationdb->activate(m);
 
+    definition_stationdata = new DefinitionStationData;
+    dpy_CursorStationData_Type = definition_stationdata->activate(m);
+
     definition_stationdatadb = new DefinitionStationDataDB;
     dpy_CursorStationDataDB_Type = definition_stationdatadb->activate(m);
+
+    definition_data = new DefinitionData;
+    dpy_CursorData_Type = definition_data->activate(m);
 
     definition_datadb = new DefinitionDataDB;
     dpy_CursorDataDB_Type = definition_datadb->activate(m);
@@ -743,6 +813,3 @@ void register_cursor(PyObject* m)
 
 }
 }
-
-#include "dballe/db/v7/cursor-access.tcc"
-#include "dballe/db/summary-access.tcc"

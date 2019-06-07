@@ -16,8 +16,8 @@ inline int get_station_id(const DBStation& station) { return station.id; }
  * Summary
  */
 
-template<typename Station> template<typename Enq>
-void Cursor<Station>::enq_generic(Enq& enq) const
+template<typename Station>
+void Cursor<Station>::enq(impl::Enq& enq) const
 {
     const auto key = enq.key;
     const auto len = enq.len;
@@ -30,7 +30,7 @@ void Cursor<Station>::enq_generic(Enq& enq) const
         case "ident":       enq.set_ident(cur->station_entry.station.ident);
         case "lat":         enq.set_lat(cur->station_entry.station.coords.lat);
         case "lon":         enq.set_lon(cur->station_entry.station.coords.lon);
-        case "coords":      enq.set_coords(cur->station_entry.station);
+        case "coords":      enq.set_coords(cur->station_entry.station.coords);
         case "station":     enq.set_station(cur->station_entry.station);
         case "datetimemax": if (cur->var_entry.dtrange.is_missing()) return; else enq.set_datetime(cur->var_entry.dtrange.max.year);
         case "datetimemin": if (cur->var_entry.dtrange.is_missing()) return; else enq.set_datetime(cur->var_entry.dtrange.min.year);
@@ -61,6 +61,9 @@ void Cursor<Station>::enq_generic(Enq& enq) const
         default:            wreport::error_notfound::throwf("key %s not found on this query result", key);
     }
 }
+
+template void Cursor<dballe::Station>::enq(impl::Enq& enq) const;
+template void Cursor<dballe::DBStation>::enq(impl::Enq& enq) const;
 
 }
 }

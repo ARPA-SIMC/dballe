@@ -461,5 +461,3 @@ void MsgAPI::remove_all()
 
 }
 }
-
-#include "dballe/msg/cursor-access.tcc"

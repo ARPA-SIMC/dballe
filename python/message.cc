@@ -1,10 +1,12 @@
 #define _DBALLE_LIBRARY_CODE
 #include <Python.h>
 #include <dballe/message.h>
+#include <dballe/msg/msg.h>
 #include <wreport/python.h>
 #include "common.h"
 #include "message.h"
 #include "types.h"
+#include "cursor.h"
 #include "impl-utils.h"
 
 using namespace std;
@@ -177,6 +179,83 @@ struct set_named : MethKwargs<dpy_Message>
     }
 };
 
+template<typename Base>
+struct MethQuery : public MethKwargs<dpy_Message>
+{
+    constexpr static const char* signature = "query: Dict[str, Any]";
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "query", NULL };
+        PyObject* pyquery = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "|O", const_cast<char**>(kwlist), &pyquery))
+            return nullptr;
+
+        try {
+            auto query = query_from_python(pyquery);
+            return Base::run_query(self, *query);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+struct query_stations : MethQuery<query_stations>
+{
+    constexpr static const char* name = "query_stations";
+    constexpr static const char* returns = "dballe.CursorStation";
+    constexpr static const char* summary = "Query the station data in the message";
+    static PyObject* run_query(Impl* self, dballe::Query& query)
+    {
+        ReleaseGIL gil;
+        auto res = self->message->query_stations(query);
+        gil.lock();
+        return (PyObject*)cursor_create(impl::CursorStation::downcast(std::move(res)));
+    }
+};
+
+struct query_station_data : MethQuery<query_station_data>
+{
+    constexpr static const char* name = "query_station_data";
+    constexpr static const char* returns = "dballe.CursorStationData";
+    constexpr static const char* summary = "Query the station variables in the message";
+    static PyObject* run_query(Impl* self, dballe::Query& query)
+    {
+        ReleaseGIL gil;
+        auto res = self->message->query_station_data(query);
+        gil.lock();
+        return (PyObject*)cursor_create(impl::CursorStationData::downcast(std::move(res)));
+    }
+};
+
+struct query_data : MethQuery<query_data>
+{
+    constexpr static const char* name = "query_data";
+    constexpr static const char* returns = "dballe.CursorData";
+    constexpr static const char* summary = "Query the variables in the message";
+    static PyObject* run_query(Impl* self, dballe::Query& query)
+    {
+        ReleaseGIL gil;
+        auto res = self->message->query_data(query);
+        gil.lock();
+        return (PyObject*)cursor_create(impl::CursorData::downcast(std::move(res)));
+    }
+};
+
+#if 0
+struct query_station_and_data : MethQuery<query_station_and_data>
+{
+    constexpr static const char* name = "query_station_and_data";
+    constexpr static const char* returns = "dballe.CursorData";
+    constexpr static const char* summary = "Query the station and data variables in the message";
+    static PyObject* run_query(Impl* self, dballe::Query& query)
+    {
+        ReleaseGIL gil;
+        auto res = impl::Message::downcast(self->message)->query_station_and_data(query);
+        gil.lock();
+        return (PyObject*)cursor_create(impl::CursorData::downcast(std::move(res)));
+    }
+};
+#endif
+
+
 struct Definition : public Binding<Definition, dpy_Message>
 {
     constexpr static const char* name = "Message";
@@ -222,7 +301,7 @@ Example usage::
             print("{m.report},{m.coords},{m.ident},{m.datetime},{m.type}".format(m=msg))
 )";
     GetSetters<GetType, GetDatetime, GetCoords, GetIdent, GetReport> getsetters;
-    Methods<get, get_named, set, set_named> methods;
+    Methods<get, get_named, set, set_named, query_stations, query_station_data, query_data/*, query_station_and_data*/> methods;
 
     static void _dealloc(Impl* self)
     {

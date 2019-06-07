@@ -12,6 +12,18 @@ extern "C" {
 
 typedef struct {
     PyObject_HEAD
+    dballe::impl::CursorStation* cur;
+} dpy_CursorStation;
+
+extern PyTypeObject* dpy_CursorStation_Type;
+
+#define dpy_CursorStation_Check(ob) \
+    (Py_TYPE(ob) == dpy_CursorStation_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_CursorStation_Type))
+
+
+typedef struct {
+    PyObject_HEAD
     dballe::db::v7::cursor::Stations* cur;
 } dpy_CursorStationDB;
 
@@ -24,6 +36,18 @@ extern PyTypeObject* dpy_CursorStationDB_Type;
 
 typedef struct {
     PyObject_HEAD
+    dballe::impl::CursorStationData* cur;
+} dpy_CursorStationData;
+
+extern PyTypeObject* dpy_CursorStationData_Type;
+
+#define dpy_CursorStationData_Check(ob) \
+    (Py_TYPE(ob) == dpy_CursorStationData_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_CursorStationData_Type))
+
+
+typedef struct {
+    PyObject_HEAD
     dballe::db::v7::cursor::StationData* cur;
 } dpy_CursorStationDataDB;
 
@@ -32,6 +56,18 @@ extern PyTypeObject* dpy_CursorStationDataDB_Type;
 #define dpy_CursorStationDataDB_Check(ob) \
     (Py_TYPE(ob) == dpy_CursorStationDataDB_Type || \
      PyType_IsSubtype(Py_TYPE(ob), dpy_CursorStationDataDB_Type))
+
+
+typedef struct {
+    PyObject_HEAD
+    dballe::impl::CursorData* cur;
+} dpy_CursorData;
+
+extern PyTypeObject* dpy_CursorData_Type;
+
+#define dpy_CursorData_Check(ob) \
+    (Py_TYPE(ob) == dpy_CursorData_Type || \
+     PyType_IsSubtype(Py_TYPE(ob), dpy_CursorData_Type))
 
 
 typedef struct {
@@ -114,8 +150,11 @@ PyObject* enqpy(CursorMessage& cur, const char* key, unsigned len);
 /**
  * Create a new dpy_Cursor, taking ownership of memory management
  */
+dpy_CursorStation* cursor_create(std::unique_ptr<impl::CursorStation> cur);
 dpy_CursorStationDB* cursor_create(std::unique_ptr<db::v7::cursor::Stations> cur);
+dpy_CursorStationData* cursor_create(std::unique_ptr<impl::CursorStationData> cur);
 dpy_CursorStationDataDB* cursor_create(std::unique_ptr<db::v7::cursor::StationData> cur);
+dpy_CursorData* cursor_create(std::unique_ptr<impl::CursorData> cur);
 dpy_CursorDataDB* cursor_create(std::unique_ptr<db::v7::cursor::Data> cur);
 dpy_CursorSummaryDB* cursor_create(std::unique_ptr<db::v7::cursor::Summary> cur);
 dpy_CursorSummarySummary* cursor_create(std::unique_ptr<db::summary::Cursor<Station>> cur);

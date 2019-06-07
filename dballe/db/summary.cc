@@ -572,5 +572,3 @@ template void BaseSummary<dballe::DBStation>::add_summary(const BaseSummary<dbal
 
 }
 }
-
-#include "summary-access.tcc"

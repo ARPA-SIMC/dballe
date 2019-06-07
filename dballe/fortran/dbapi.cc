@@ -579,5 +579,3 @@ std::unique_ptr<API> DbAPI::fortran_connect(const DBConnectOptions& options, con
 
 }
 }
-
-#include "dballe/db/v7/cursor-access.tcc"

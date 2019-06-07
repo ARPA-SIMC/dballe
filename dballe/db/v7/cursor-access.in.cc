@@ -15,8 +15,7 @@ namespace cursor {
  * Stations
  */
 
-template<typename Enq>
-void StationRows::enq_generic(Enq& enq) const
+void StationRows::enq(impl::Enq& enq) const
 {
     if (enq.search_b_values(values())) return;
 
@@ -32,7 +31,7 @@ void StationRows::enq_generic(Enq& enq) const
         case "ident":       enq.set_ident(cur->station.ident);
         case "lat":         enq.set_lat(cur->station.coords.lat);
         case "lon":         enq.set_lon(cur->station.coords.lon);
-        case "coords":      enq.set_coords(cur->station);
+        case "coords":      enq.set_coords(cur->station.coords);
         case "station":     enq.set_station(cur->station);
         default:            enq.search_alias_values(values());
     }
@@ -43,8 +42,7 @@ void StationRows::enq_generic(Enq& enq) const
  * StationData
  */
 
-template<typename Enq>
-void StationDataRows::enq_generic(Enq& enq) const
+void StationDataRows::enq(impl::Enq& enq) const
 {
     if (enq.search_b_value(cur->value)) return;
 
@@ -60,7 +58,7 @@ void StationDataRows::enq_generic(Enq& enq) const
         case "ident":       enq.set_ident(cur->station.ident);
         case "lat":         enq.set_lat(cur->station.coords.lat);
         case "lon":         enq.set_lon(cur->station.coords.lon);
-        case "coords":      enq.set_coords(cur->station);
+        case "coords":      enq.set_coords(cur->station.coords);
         case "station":     enq.set_station(cur->station);
         case "var":         enq.set_varcode(cur->value.code());
         case "variable":    enq.set_var(cur->value.get());
@@ -74,8 +72,7 @@ void StationDataRows::enq_generic(Enq& enq) const
  * Data
  */
 
-template<typename Enq>
-void BaseDataRows::enq_generic(Enq& enq) const
+void BaseDataRows::enq(impl::Enq& enq) const
 {
     if (enq.search_b_value(cur->value)) return;
 
@@ -91,7 +88,7 @@ void BaseDataRows::enq_generic(Enq& enq) const
         case "ident":       enq.set_ident(cur->station.ident);
         case "lat":         enq.set_lat(cur->station.coords.lat);
         case "lon":         enq.set_lon(cur->station.coords.lon);
-        case "coords":      enq.set_coords(cur->station);
+        case "coords":      enq.set_coords(cur->station.coords);
         case "station":     enq.set_station(cur->station);
         case "datetime":    enq.set_datetime(cur->datetime);
         case "year":        enq.set_int(cur->datetime.year);
@@ -121,8 +118,7 @@ void BaseDataRows::enq_generic(Enq& enq) const
  * Summary
  */
 
-template<typename Enq>
-void SummaryRows::enq_generic(Enq& enq) const
+void SummaryRows::enq(impl::Enq& enq) const
 {
     const auto key = enq.key;
     const auto len = enq.len;
@@ -136,7 +132,7 @@ void SummaryRows::enq_generic(Enq& enq) const
         case "ident":       enq.set_ident(cur->station.ident);
         case "lat":         enq.set_lat(cur->station.coords.lat);
         case "lon":         enq.set_lon(cur->station.coords.lon);
-        case "coords":      enq.set_coords(cur->station);
+        case "coords":      enq.set_coords(cur->station.coords);
         case "station":     enq.set_station(cur->station);
         case "datetimemax": if (cur->dtrange.is_missing()) return; else enq.set_datetime(cur->dtrange.max);
         case "datetimemin": if (cur->dtrange.is_missing()) return; else enq.set_datetime(cur->dtrange.max);

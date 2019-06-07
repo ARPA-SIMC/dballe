@@ -7,8 +7,7 @@ namespace dballe {
 namespace impl {
 namespace msg {
 
-template<typename Enq>
-void CursorStation::enq_generic(Enq& enq) const
+void CursorStation::enq(impl::Enq& enq) const
 {
     if (enq.search_b_values(station_values)) return;
     const auto key = enq.key;
@@ -22,14 +21,13 @@ void CursorStation::enq_generic(Enq& enq) const
         case "ident":       enq.set_ident(station.ident);
         case "lat":         enq.set_lat(station.coords.lat);
         case "lon":         enq.set_lon(station.coords.lon);
-        case "coords":      enq.set_coords(station);
+        case "coords":      enq.set_coords(station.coords);
         case "station":     enq.set_station(station);
         default:            enq.search_alias_values(station_values);
     }
 }
 
-template<typename Enq>
-void CursorStationData::enq_generic(Enq& enq) const
+void CursorStationData::enq(impl::Enq& enq) const
 {
     if (enq.search_b_value(*cur)) return;
     const auto key = enq.key;
@@ -43,7 +41,7 @@ void CursorStationData::enq_generic(Enq& enq) const
         case "ident":       enq.set_ident(station.ident);
         case "lat":         enq.set_lat(station.coords.lat);
         case "lon":         enq.set_lon(station.coords.lon);
-        case "coords":      enq.set_coords(station);
+        case "coords":      enq.set_coords(station.coords);
         case "station":     enq.set_station(station);
         case "var":         enq.set_varcode(cur->code());
         case "variable":    enq.set_var(cur->get());
@@ -53,8 +51,7 @@ void CursorStationData::enq_generic(Enq& enq) const
     }
 }
 
-template<typename Enq>
-void CursorData::enq_generic(Enq& enq) const
+void CursorData::enq(impl::Enq& enq) const
 {
     if (enq.search_b_value(*(cur->var))) return;
     const auto key = enq.key;
@@ -68,7 +65,7 @@ void CursorData::enq_generic(Enq& enq) const
         case "ident":       enq.set_ident(station.ident);
         case "lat":         enq.set_lat(station.coords.lat);
         case "lon":         enq.set_lon(station.coords.lon);
-        case "coords":      enq.set_coords(station);
+        case "coords":      enq.set_coords(station.coords);
         case "station":     enq.set_station(station);
         case "datetime":    enq.set_datetime(datetime);
         case "year":        enq.set_int(datetime.year);

@@ -266,7 +266,7 @@ struct Cursor : public impl::CursorSummary
     DatetimeRange get_datetimerange() const override { return cur->var_entry.dtrange; }
     size_t get_count() const override { return cur->var_entry.count; }
 
-    template<typename Enq> void enq_generic(Enq& enq) const;
+    void enq(impl::Enq& enq) const;
 };
 
 

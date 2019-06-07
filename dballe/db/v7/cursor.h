@@ -117,14 +117,14 @@ struct StationRows : public Rows<StationRow>
     using Rows::Rows;
     const DBValues& values() const;
     void load(Tracer<>& trc, const StationQueryBuilder& qb);
-    template<typename Enq> void enq_generic(Enq& enq) const;
+    void enq(impl::Enq& enq) const;
 };
 
 struct StationDataRows : public Rows<StationDataRow>
 {
     using Rows::Rows;
     void load(Tracer<>& trc, const DataQueryBuilder& qb);
-    template<typename Enq> void enq_generic(Enq& enq) const;
+    void enq(impl::Enq& enq) const;
 };
 
 template<typename Row>
@@ -159,7 +159,7 @@ struct LevTrRows : public Rows<Row>
 struct BaseDataRows : public LevTrRows<DataRow>
 {
     using LevTrRows::LevTrRows;
-    template<typename Enq> void enq_generic(Enq& enq) const;
+    void enq(impl::Enq& enq) const;
 };
 
 struct DataRows : public BaseDataRows
@@ -179,7 +179,7 @@ struct SummaryRows : public LevTrRows<SummaryRow>
 {
     using LevTrRows::LevTrRows;
     void load(Tracer<>& trc, const SummaryQueryBuilder& qb);
-    template<typename Enq> void enq_generic(Enq& enq) const;
+    void enq(impl::Enq& enq) const;
 };
 
 
@@ -251,7 +251,7 @@ struct Base : public ImplTraits<Impl>::Parent
 
     dballe::DBStation get_station() const override { return rows->station; }
 
-    template<typename Enq> void enq_generic(Enq& enq) const { return rows.enq_generic(enq); }
+    void enq(impl::Enq& enq) const override { return rows.enq(enq); }
 
     /**
      * Iterate the cursor until the end, returning the number of items.

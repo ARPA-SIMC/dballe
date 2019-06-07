@@ -10,6 +10,7 @@ namespace {
 template<class Interface>
 struct EmptyCursor : public Interface
 {
+    void enq(Enq& enq) const {}
     int remaining() const override { return 0; }
     bool next() override { return false; }
     void discard() override {}

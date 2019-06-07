@@ -23,7 +23,7 @@ void data_enq_generic(const core::Data& data, Enq& enq)
         case "ident":       enq.set_ident(data.station.ident);
         case "lat":         enq.set_lat(data.station.coords.lat);
         case "lon":         enq.set_lon(data.station.coords.lon);
-        case "coords":      enq.set_coords(data.station);
+        case "coords":      enq.set_coords(data.station.coords);
         case "station":     enq.set_station(data.station);
         case "datetime":    enq.set_datetime(data.datetime);
         case "year":        enq.set_int(data.datetime.year);

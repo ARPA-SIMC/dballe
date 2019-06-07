@@ -18,19 +18,21 @@ struct Enqc : public impl::Enq
     {
     }
 
-    void set_bool(bool val)
+    const char* name() const override { return "enqc"; }
+
+    void set_bool(bool val) override
     {
         API::to_fortran(val ? "1" : "0", res, res_len);
         missing = false;
     }
 
-    void set_int(int val)
+    void set_int(int val) override
     {
         API::to_fortran(val, res, res_len);
         missing = false;
     }
 
-    void set_dballe_int(int val)
+    void set_dballe_int(int val) override
     {
         if (val == MISSING_INT)
             return;
@@ -38,13 +40,13 @@ struct Enqc : public impl::Enq
         missing = false;
     }
 
-    void set_string(const std::string& val)
+    void set_string(const std::string& val) override
     {
         API::to_fortran(val, res, res_len);
         missing = false;
     }
 
-    void set_ident(const Ident& ident)
+    void set_ident(const Ident& ident) override
     {
         if (ident.is_missing())
             return;
@@ -52,7 +54,7 @@ struct Enqc : public impl::Enq
         missing = false;
     }
 
-    void set_varcode(wreport::Varcode val)
+    void set_varcode(wreport::Varcode val) override
     {
         char buf[7];
         dballe::format_bcode(val, buf);
@@ -60,17 +62,7 @@ struct Enqc : public impl::Enq
         missing = false;
     }
 
-    void set_var(const wreport::Var* val)
-    {
-        wreport::error_consistency::throwf("cannot enqc `%s`", key);
-    }
-
-    void set_attrs(const wreport::Var* val)
-    {
-        wreport::error_consistency::throwf("cannot enqc `%s`", key);
-    }
-
-    void set_lat(int lat)
+    void set_lat(int lat) override
     {
         if (lat == MISSING_INT)
             return;
@@ -78,7 +70,7 @@ struct Enqc : public impl::Enq
         missing = false;
     }
 
-    void set_lon(int lon)
+    void set_lon(int lon) override
     {
         if (lon == MISSING_INT)
             return;
@@ -86,71 +78,10 @@ struct Enqc : public impl::Enq
         missing = false;
     }
 
-    template<typename Station>
-    void set_coords(const Station& s) { wreport::error_consistency::throwf("cannot enqc `%s`", key); }
-    template<typename Station>
-    void set_station(const Station& s) { wreport::error_consistency::throwf("cannot enqc `%s`", key); }
-    void set_datetime(const Datetime& dt) { wreport::error_consistency::throwf("cannot enqc `%s`", key); }
-    void set_level(const Level& dt) { wreport::error_consistency::throwf("cannot enqc `%s`", key); }
-    void set_trange(const Trange& dt) { wreport::error_consistency::throwf("cannot enqc `%s`", key); }
-
-    template<typename Values>
-    bool search_b_values(const Values& values)
+    void set_var_value(const wreport::Var& var) override
     {
-        if (key[0] != 'B' || len != 6)
-            return false;
-
-        wreport::Varcode code = WR_STRING_TO_VAR(key + 1);
-        const wreport::Var* var = values.maybe_var(code);
-        if (var && var->isset())
-        {
-            missing = false;
-            API::to_fortran(var->enqc(), res, res_len);
-        }
-        return true;
-    }
-
-    bool search_b_value(const dballe::Value& value)
-    {
-        if (key[0] != 'B' || len != 6)
-            return false;
-
-        wreport::Varcode code = WR_STRING_TO_VAR(key + 1);
-        if (code != value.code())
-            throw_notfound();
-
-        const wreport::Var* var = value.get();
-        if (var && var->isset())
-        {
-            missing = false;
-            API::to_fortran(var->enqc(), res, res_len);
-        }
-        return true;
-    }
-
-    template<typename Values>
-    void search_alias_values(const Values& values)
-    {
-        wreport::Varcode code = dballe::resolve_varcode(key);
-        const wreport::Var* var = values.maybe_var(code);
-        if (var && var->isset())
-        {
-            missing = false;
-            API::to_fortran(var->enqc(), res, res_len);
-        }
-    }
-
-    void search_alias_value(const dballe::Value& value)
-    {
-        wreport::Varcode code = dballe::resolve_varcode(key);
-        if (code != value.code())
-            throw_notfound();
-        const wreport::Var* var = value.get();
-        if (var && var->isset())
-        {
-            missing = false;
-            API::to_fortran(var->enqc(), res, res_len);
-        }
+        missing = false;
+        API::to_fortran(var.enqc(), res, res_len);
     }
 };
 
