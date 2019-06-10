@@ -212,7 +212,13 @@ Obsoletes: python-dballe < 8.0
 %build
 
 autoreconf -ifv
-%configure FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs --disable-static
+%if 0%{?rhel} == 7
+# CentOS7 doesn't support [[deprecated]] attribute
+CPPFLAGS="-Wno-error=attributes"
+%else
+CPPFLAGS=""
+%endif
+%configure FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs --disable-static CPPFLAGS="$CPPFLAGS"
 make
 make check
 
