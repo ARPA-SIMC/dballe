@@ -64,20 +64,28 @@ void Transaction::add_msg_to_batch(Tracer<>& trc, const Message& message, const 
     batch::MeasuredData* md = nullptr;
     for (const auto& ctx: msg.data)
     {
-        if (!md)
-        {
-            Datetime datetime = msg.get_datetime();
-            if (datetime.is_missing())
-                throw error_notfound("date/time informations not found (or incomplete) in message to insert");
-            md = &station->get_measured_data(trc, datetime);
-        }
-
-        // Get the database ID of the lev_tr
-        int id_levtr = lt.obtain_id(trc, LevTrEntry(ctx.level, ctx.trange));
+        int id_levtr = -1;
 
         for (const auto& val: ctx.values)
         {
             if (not val->isset()) continue;
+            if (!opts.varlist.empty() && std::find(opts.varlist.begin(), opts.varlist.end(), val->code()) == opts.varlist.end())
+                continue;
+
+            if (!md)
+            {
+                Datetime datetime = msg.get_datetime();
+                if (datetime.is_missing())
+                    throw error_notfound("date/time informations not found (or incomplete) in message to insert");
+                md = &station->get_measured_data(trc, datetime);
+            }
+
+            if (id_levtr == -1)
+            {
+                // Get the database ID of the lev_tr
+                id_levtr = lt.obtain_id(trc, LevTrEntry(ctx.level, ctx.trange));
+            }
+
             md->add(id_levtr, val.get(), opts.overwrite ? batch::UPDATE : batch::IGNORE);
         }
     }

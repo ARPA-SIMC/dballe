@@ -91,6 +91,11 @@ struct DBImportOptions
      */
     bool overwrite = false;
 
+    /**
+     * If not empty, import only the given data values
+     */
+    std::vector<wreport::Varcode> varlist;
+
     static std::unique_ptr<DBImportOptions> create();
 
     static const DBImportOptions defaults;

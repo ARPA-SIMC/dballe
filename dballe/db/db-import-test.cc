@@ -296,6 +296,25 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             wassert(actual(export_third.size()) == 1);
             wassert(actual(diff_msg(third, export_third[0], "third")) == 0);
         });
+        this->add_method("varlist", [](Fixture& f) {
+            // Import filtering by varlist. See: #149
+            auto opts = DBImportOptions::create();
+            opts->varlist.push_back(WR_VAR(0, 12, 101));
+            opts->varlist.push_back(WR_VAR(0, 12, 103));
+            opts->varlist.push_back(WR_VAR(0, 13,  23));
+            impl::Messages inmsgs = read_msgs("bufr/gts-synop-linate.bufr", Encoding::BUFR);
+            wassert(f.tr->import_messages(inmsgs, *opts));
+
+            core::Query query;
+            auto cur = f.tr->query_data(query);
+            unsigned count = 0;
+            while (cur->next())
+            {
+                wassert_true(std::find(opts->varlist.begin(), opts->varlist.end(), cur->get_varcode()) != opts->varlist.end());
+                ++count;
+            }
+            wassert(actual(count) == 3);
+        });
     }
 };
 
