@@ -636,6 +636,27 @@ class CommonDBTestMixin(DballeDBMixin):
 
         self.assertEqual(reports, ["test1", "test2"])
 
+    def test_cursor_delete(self):
+        # See: #140
+        with self.transaction() as tr:
+            for v in tr.query_station_data({"var": "B02005"}):
+                self.assertEqual(v["B02005"].enqd(), 0.5)
+                v.remove()
+
+            count = 0
+            for v in tr.query_station_data():
+                count += 1
+            self.assertEqual(count, 0)
+
+        with self.transaction() as tr:
+            for v in tr.query_data({"var": "B01011"}):
+                self.assertEqual(v["B01011"].enqc(), "Hey Hey!!")
+                v.remove()
+
+            for v in tr.query_data():
+                self.assertEqual(v["var"], "B01012")
+                self.assertEqual(v["B01012"].enqi(), 500)
+
 
 class FullDBTestMixin(CommonDBTestMixin):
     def test_transaction_enter_exit(self):
