@@ -24,6 +24,7 @@ const char* op_report = "";
 const char* op_url = "";
 const char* op_user = "";
 const char* op_pass = "";
+const char* op_varlist = "";
 int op_wipe_first = 0;
 int op_dump = 0;
 int op_overwrite = 0;
@@ -284,6 +285,8 @@ struct ImportCmd : public DatabaseCmd
             "merge pseudoana extra values with the ones already existing in the database", 0 });
         opts.push_back({ "precise", 0, 0, &op_precise_import, 0,
             "import messages using precise contexts instead of standard ones", 0 });
+        opts.push_back({ "varlist", 0, POPT_ARG_STRING, &op_varlist, 0,
+            "only import variables with the given varcode(s)", "varlist" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
             "Options used to filter messages", 0 });
     }
@@ -311,6 +314,8 @@ struct ImportCmd : public DatabaseCmd
             opts->import_attributes = true;
         if (op_full_pseudoana)
             opts->update_station = true;
+        if (op_varlist[0])
+            resolve_varlist(op_varlist, [&](wreport::Varcode code) { opts->varlist.push_back(code); });
 
         auto db = connect();
 
