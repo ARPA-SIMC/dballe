@@ -806,6 +806,9 @@ when the station did not exist in the database.
 `overwrite`, if set to True, causes existing information already in the
 database to be overwritten. If false (default), trying to import a message
 which contains data already present in the database causes the import to fail.
+
+`varlist`, if set to a string in the same format as the `varlist` query
+parameter, only imports data whose varcode is in the list.
 )";
 
     [[noreturn]] static void throw_typeerror()
@@ -816,13 +819,14 @@ which contains data already present in the database causes the import to fail.
 
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = {"messages", "report", "import_attributes", "update_station", "overwrite", nullptr};
+        static const char* kwlist[] = {"messages", "report", "import_attributes", "update_station", "overwrite", "varlist", nullptr};
         PyObject* obj = nullptr;
         const char* report = nullptr;
         int import_attributes = 0;
         int update_station = 0;
         int overwrite = 0;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "O|sppp", const_cast<char**>(kwlist), &obj, &report, &import_attributes, &update_station, &overwrite))
+        const char* varlist = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O|sppps", const_cast<char**>(kwlist), &obj, &report, &import_attributes, &update_station, &overwrite, &varlist))
             return nullptr;
 
         try {
@@ -831,6 +835,8 @@ which contains data already present in the database causes the import to fail.
             opts->import_attributes = import_attributes;
             opts->update_station = update_station;
             opts->overwrite = overwrite;
+            if (varlist)
+                resolve_varlist(varlist, [&](wreport::Varcode code) { opts->varlist.push_back(code); });
 
             if (dpy_Message_Check(obj))
             {

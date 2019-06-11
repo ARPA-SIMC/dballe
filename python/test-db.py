@@ -441,6 +441,15 @@ class CommonDBTestMixin(DballeDBMixin):
         with self.deprecated_on_db():
             self.assertEqual(self.db.query_data({}).remaining, 371)
 
+    def test_import_varlist(self):
+        with self.transaction() as tr:
+            tr.remove_all()
+            importer = dballe.Importer("BUFR")
+            with dballe.File(test_pathname("bufr/vad.bufr")) as fp:
+                tr.import_messages(importer.from_file(fp), varlist="B11001,B11002")
+            for cur in tr.query_data():
+                self.assertIn(cur["var"], ("B11001", "B11002"))
+
     def test_query_attrs(self):
         # See #114
         with self.deprecated_on_db():
