@@ -36,7 +36,7 @@ dbaexport.1: src/dbaexport
 
 BUILT_SOURCES = dbaexport.1
 
-EXTRA_DIST = README.md LICENSE BENCHMARKS autogen.sh \
+EXTRA_DIST = README.md NEWS.md LICENSE BENCHMARKS autogen.sh \
 	     libdballe.m4 libdballef.m4 \
 	     libdballe.pc.in libdballef.pc.in \
 	     $(conf_DATA) get_line_no run-check.conf.example \

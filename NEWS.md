@@ -1,3 +1,10 @@
+# New in version 8.1
+
+* Python API: bindings for core::Data (#158)
+* Python API: add doc for keywords in cursor classes (#155)
+* Python API: enabled cursor-based iteration (#154)
+* Implemented `dbadb --varlist` (#149)
+
 # New in version 8.0
 
 * Added `NEWS.md` file
@@ -38,3 +45,80 @@
    in C++, Python, Fortran, and command line. The value of `wipe` is now parsed
    to prevent unexpectedly clearing a database when using something like
    `?wipe=no`.
+
+# New in version 7.33
+
+* dballe V7 is now the default (#97) and V6 databases are now unsupported
+* fixed various bugs (#82, #85, #86, #87, #91, #93, #98, #103, #105, #107)
+* added new variables to dballe.txt
+* various performance optimizations (#112, #116)
+* DBA_FORTRAN_TRANSACTION is now the default (#67)
+* improved handling of rejected messages and consistency errors
+* fixed PostgreSQL support when pkg-config is missing
+* dependency on newer sqlite is now conditional
+
+# New in version 7.26
+
+* dballe V7 is now the default (#97)
+* closed #82, #85, #87, #91, #93, #98
+* minor fixes for copr and travis automation
+* added new variables to dballe.txt
+
+# New in version 4.0.4
+
+* Store rep_cod information in generic messages
+* Allow to create messages without having to set leveltype2 and l2 if not needed
+* Implemented working with messages with the Fortran API
+* Refactored the code for the Fortran API
+* Fixed TOT_PREC12 time range values
+* Implemented bufrex_msg_reset_sections
+* Implemented Bufrex::resetSections and same in Python
+* Test against NaN on setr and setd
+* Use clean program name in manpages
+* Store height and pressure as data and not as ana, for flights
+
+# New in version 4.0.2
+
+* Fix a compiler error with newer GCC
+
+# New in version 4.0.1
+
+* Fix repinfo update
+* Ported rconvert to new rpy module
+* Show the currently selected station details in provami, even if it has no data
+* Decode BUFR edition 2
+* Added tables to decode BUFR edition 2 radar reports
+* Fixed encoding of BUFR flags
+* Fixed the problem in provami that fails when the only restriction used is the ana filter
+* Drafted support for pollution data
+* Use standard floating point huge values to exchange missing values with Fortran
+* Fortran API: idba_elencamele now properly cleans old values from the output record
+* Fixed handling of varlist when querying attributes from fortran
+* Documentation improvements for fapi.tex
+* Hack a way to sync the values of missing values between Fortran and C
+* Fixed bufr decoder to work on ARM
+* Clean records before reading in new data in fortran idba_dammelo
+
+# New in version 3.5
+
+* Fixed transactions in cursor.c: now queries don't all happen in a single, huge transaction
+
+# Changes from version 2.5 to version 2.6
+
+* dbadb: dbadb export failed to export various kinds of station data
+* dbadb: implemented dbadb cleanup
+* dbadb: implemented dbadb stations
+* dbadb manpage: refer to report code and report memo instead of just
+  'type'
+* dbadb manpage: mention what are the query parameters that can be used
+* dba_var_set* and idba_set* operations now check for overflows and report
+  DBA_ERR_TOOLONG if it happens
+* fortran API: idba_spiegab now formats the values with the right amount of
+  decimal digits
+* fortran API: added another predefined callback
+  (idba_error_handle_tolerating_overflows) that only prints a warning in case
+  of overflow
+* fapi.tex: documented that setting a variable to a missing value is
+  equivalent to an idba_unset
+* fapi.tex: documented the use of the dballef.h Fortran 90 interface file
+* README: rewritten to only provide quick start information
