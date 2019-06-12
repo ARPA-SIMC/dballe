@@ -1,10 +1,10 @@
-%global releaseno 3
+%global releaseno 1
 # Note: define _srcarchivename in Travis build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
-Version: 8.0
+Version: 8.1
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -309,15 +309,21 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Wed Jun 12 2019 Daniele Branchini <dbranchini@arpae.it> - 8.1-1
+- Python API: bindings for core::Data (#158)
+- Python API: add doc for keywords in cursor classes (#155)
+- Python API: enabled cursor-based iteration (#154)
+- Implemented dbadb --varlist (#149)
+
 * Tue Apr 16 2019 Daniele Branchini <dbranchini@arpae.it> - 8.0-3
 - moving to python 3.6 on Centos7
 
-* Thu Mar 12 2019 Daniele Branchini <dbranchini@arpae.it> - 8.0-2
+* Tue Mar 12 2019 Daniele Branchini <dbranchini@arpae.it> - 8.0-2
 - Documented ExplorerUpdate and DBExplorerUpdate
 - Updated fapi_btable.md
 - Fixed rawhide builds
 
-* Wed Feb 17 2019 Daniele Branchini <dbranchini@arpae.it> - 8.0-1
+* Wed Feb 27 2019 Daniele Branchini <dbranchini@arpae.it> - 8.0-1
 - Added more functionality to the stable C++ API
 - Added more functionality to the Python API
 - New english descriptive names for Fortran API (the old names still work for compatibility)
