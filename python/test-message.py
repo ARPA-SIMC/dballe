@@ -59,6 +59,14 @@ class TestMessage(MessageTestMixin, unittest.TestCase):
             res.append((cur["var"], cur[cur["var"]].enq()))
         self.assertEqual(res, [("B11001", 33), ("B12101", 240.0)])
 
+    def test_issue160(self):
+        importer = dballe.Importer("BUFR")
+        with importer.from_file("test.bufr") as f:
+            for msgs in f:
+                for msg in msgs:
+                    for d in msg.query_station_data():
+                        print(d["variable"].code, d["variable"].get())
+
 
 if __name__ == "__main__":
     from testlib import main
