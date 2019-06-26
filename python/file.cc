@@ -26,20 +26,18 @@ struct NamedFileWrapper : public FileWrapper
         m_file->close();
     }
 
-    int init(const std::string& filename, const char* mode)
+    void init(const std::string& filename, const char* mode)
     {
         try {
             m_file = File::create(filename, mode);
-        } DBALLE_CATCH_RETURN_INT
-        return 0;
+        } DBALLE_CATCH_RETHROW_PYTHON
     }
 
-    int init(const std::string& filename, const char* mode, Encoding encoding)
+    void init(const std::string& filename, const char* mode, Encoding encoding)
     {
         try {
             m_file = File::create(encoding, filename, mode);
-        } DBALLE_CATCH_RETURN_INT
-        return 0;
+        } DBALLE_CATCH_RETHROW_PYTHON
     }
 };
 
@@ -55,7 +53,7 @@ struct BaseFileObjFileWrapper : public FileWrapper
      *
      * Defaults to repr() if the object has no name attribute.
      */
-    int read_filename(PyObject* o)
+    void read_filename(PyObject* o)
     {
         try {
             pyo_unique_ptr attr_name(PyObject_GetAttrString(o, "name"));
@@ -65,20 +63,18 @@ struct BaseFileObjFileWrapper : public FileWrapper
                 {
                     const char* v = PyUnicode_AsUTF8(attr_name);
                     if (v == nullptr)
-                        return -1;
+                        throw PythonException();
                     filename = v;
-                    return 0;
+                    return;
                 }
             }
             else
                 PyErr_Clear();
 
-            pyo_unique_ptr repr(PyObject_Repr(o));
-            if (!repr) return -1;
+            pyo_unique_ptr repr(throw_ifnull(PyObject_Repr(o)));
 
             filename = string_from_python(repr);
-            return 0;
-        } DBALLE_CATCH_RETURN_INT
+        } DBALLE_CATCH_RETHROW_PYTHON
     }
 };
 
@@ -98,57 +94,43 @@ struct MemoryInFileWrapper : public BaseFileObjFileWrapper
 
     FILE* _fmemopen(PyObject* o)
     {
-        if (read_filename(o) != 0)
-            return nullptr;
+        read_filename(o);
 
         // Read the contents of the file objects into memory
         pyo_unique_ptr read_meth(PyObject_GetAttrString(o, "read"));
         pyo_unique_ptr read_args(PyTuple_New(0));
         data = PyObject_Call(read_meth, read_args, NULL);
-        if (!data) return nullptr;
+        if (!data) throw PythonException();
         if (!PyObject_TypeCheck(data, &PyBytes_Type))
         {
             PyErr_SetString(PyExc_ValueError, "read() function must return a bytes object");
-            return nullptr;
+            throw PythonException();
         }
 
         // Access the buffer
         char* buf = nullptr;
         Py_ssize_t len = 0;
         if (PyBytes_AsStringAndSize(data, &buf, &len))
-            return nullptr;
+            throw PythonException();
 
         // fmemopen the buffer
-        FILE* in = fmemopen(buf, len, "r");
-        if (!in)
-        {
-            PyErr_SetFromErrno(PyExc_OSError);
-            return nullptr;
-        }
-
-        return in;
+        return check_file_result(fmemopen(buf, len, "r"));
     }
 
-    int init(PyObject* o)
+    void init(PyObject* o)
     {
         FILE* in = _fmemopen(o);
-        if (!in)
-            return -1;
         try {
             m_file = File::create(in, true, filename);
-        } DBALLE_CATCH_RETURN_INT
-        return 0;
+        } DBALLE_CATCH_RETHROW_PYTHON
     }
 
-    int init(PyObject* o, Encoding encoding)
+    void init(PyObject* o, Encoding encoding)
     {
         FILE* in = _fmemopen(o);
-        if (!in)
-            return -1;
         try {
             m_file = File::create(encoding, in, true, filename);
-        } DBALLE_CATCH_RETURN_INT
-        return 0;
+        } DBALLE_CATCH_RETHROW_PYTHON
     }
 };
 
@@ -161,8 +143,7 @@ struct DupInFileWrapper : public BaseFileObjFileWrapper
 
     FILE* _fdopen(PyObject* o, int fileno)
     {
-        if (read_filename(o) != 0)
-            return nullptr;
+        read_filename(o);
 
         // Duplicate the file descriptor because both python and libc will want to
         // close it
@@ -173,44 +154,32 @@ struct DupInFileWrapper : public BaseFileObjFileWrapper
                 PyErr_SetFromErrno(PyExc_OSError);
             else
                 PyErr_SetFromErrnoWithFilename(PyExc_OSError, filename.c_str());
-            return nullptr;
+            throw PythonException();
         }
 
-        FILE* in = fdopen(newfd, "rb");
-        if (in == nullptr)
-        {
-            if (filename.empty())
-                PyErr_SetFromErrno(PyExc_OSError);
-            else
-                PyErr_SetFromErrnoWithFilename(PyExc_OSError, filename.c_str());
+        try {
+            return check_file_result(fdopen(newfd, "rb"));
+        } catch(...) {
             ::close(newfd);
-            return nullptr;
+            throw;
         }
-
-        return in;
     }
 
 
-    int init(PyObject* o, int fileno)
+    void init(PyObject* o, int fileno)
     {
-        FILE* in = _fdopen(o, fileno);
-        if (!in)
-            return -1;
+        FILE* in = check_file_result(_fdopen(o, fileno));
         try {
             m_file = File::create(in, true, filename);
-        } DBALLE_CATCH_RETURN_INT
-        return 0;
+        } DBALLE_CATCH_RETHROW_PYTHON
     }
 
-    int init(PyObject* o, int fileno, Encoding encoding)
+    void init(PyObject* o, int fileno, Encoding encoding)
     {
-        FILE* in = _fdopen(o, fileno);
-        if (!in)
-            return -1;
+        FILE* in = check_file_result(_fdopen(o, fileno));
         try {
             m_file = File::create(encoding, in, true, filename);
-        } DBALLE_CATCH_RETURN_INT
-        return 0;
+        } DBALLE_CATCH_RETHROW_PYTHON
     }
 };
 
@@ -452,6 +421,7 @@ std::unique_ptr<FileWrapper> wrapper_r_from_object(PyObject* o, Encoding encodin
         wrapper->init(v, "rb", encoding);
         return std::unique_ptr<FileWrapper>(wrapper.release());
     }
+
     if (PyUnicode_Check(o)) {
         const char* v = PyUnicode_AsUTF8(o);
         if (!v) return nullptr;
