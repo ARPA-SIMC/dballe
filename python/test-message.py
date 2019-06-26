@@ -2,6 +2,7 @@ import dballe
 import unittest
 from decimal import Decimal
 from testlibmsg import MessageTestMixin
+from testlib import test_pathname
 
 
 class TestMessage(MessageTestMixin, unittest.TestCase):
@@ -61,11 +62,14 @@ class TestMessage(MessageTestMixin, unittest.TestCase):
 
     def test_issue160(self):
         importer = dballe.Importer("BUFR")
-        with importer.from_file("test.bufr") as f:
+        codes = []
+        with importer.from_file(test_pathname("bufr/issue160.bufr")) as f:
             for msgs in f:
                 for msg in msgs:
                     for d in msg.query_station_data():
-                        print(d["variable"].code, d["variable"].get())
+                        codes.append(d["var"])
+
+        self.assertCountEqual(codes, ("B01019", "B07030", "B07031"))
 
 
 if __name__ == "__main__":
