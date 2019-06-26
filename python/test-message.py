@@ -49,11 +49,22 @@ class TestMessage(MessageTestMixin, unittest.TestCase):
         self.assertEqual(count, 1)
 
         count = 0
+        expected = {
+            "B04001": 2009,
+            "B04002": 2,
+            "B04003": 24,
+            "B04004": 11,
+            "B04005": 31,
+            "B05001": 48.90500,
+            "B06001": 10.63667,
+            "B01019": "Test",
+        }
         for cur in msg.query_station_data():
-            self.assertEqual(cur["var"], "B01019")
-            self.assertEqual(cur.enqs("B01019"), "Test")
+            val = expected.pop(cur["var"])
+            self.assertEqual(cur["variable"].enq(), val)
             count += 1
-        self.assertEqual(count, 1)
+        self.assertEqual(expected, {})
+        self.assertEqual(count, 8)
 
         res = []
         for cur in msg.query_data():
@@ -69,7 +80,10 @@ class TestMessage(MessageTestMixin, unittest.TestCase):
                     for d in msg.query_station_data():
                         codes.append(d["var"])
 
-        self.assertCountEqual(codes, ("B01019", "B07030", "B07031"))
+        self.assertCountEqual(codes, (
+            "B01019", "B07030", "B07031", "B01194",
+            "B04001", "B04002", "B04003", "B04004", "B04005", "B04006",
+            "B05001", "B06001"))
 
 
 if __name__ == "__main__":
