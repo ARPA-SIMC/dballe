@@ -3,6 +3,7 @@
 #include "dballe/types.h"
 #include "dballe/core/var.h"
 #include <string>
+#include <cerrno>
 
 using namespace wreport;
 
@@ -66,6 +67,16 @@ void set_wreport_exception(const wreport::error& e)
 void set_std_exception(const std::exception& e)
 {
     PyErr_SetString(PyExc_RuntimeError, e.what());
+}
+
+FILE* check_file_result(FILE* f, const char* filename)
+{
+    if (!f)
+    {
+        PyErr_SetFromErrnoWithFilename(PyExc_OSError, filename);
+        throw PythonException();
+    }
+    return f;
 }
 
 PyObject* string_to_python(const char* str)

@@ -2,6 +2,7 @@ import dballe
 import unittest
 from decimal import Decimal
 from testlibmsg import MessageTestMixin
+from testlib import test_pathname
 
 
 class TestMessage(MessageTestMixin, unittest.TestCase):
@@ -48,16 +49,41 @@ class TestMessage(MessageTestMixin, unittest.TestCase):
         self.assertEqual(count, 1)
 
         count = 0
+        expected = {
+            "B04001": 2009,
+            "B04002": 2,
+            "B04003": 24,
+            "B04004": 11,
+            "B04005": 31,
+            "B05001": 48.90500,
+            "B06001": 10.63667,
+            "B01019": "Test",
+        }
         for cur in msg.query_station_data():
-            self.assertEqual(cur["var"], "B01019")
-            self.assertEqual(cur.enqs("B01019"), "Test")
+            val = expected.pop(cur["var"])
+            self.assertEqual(cur["variable"].enq(), val)
             count += 1
-        self.assertEqual(count, 1)
+        self.assertEqual(expected, {})
+        self.assertEqual(count, 8)
 
         res = []
         for cur in msg.query_data():
             res.append((cur["var"], cur[cur["var"]].enq()))
         self.assertEqual(res, [("B11001", 33), ("B12101", 240.0)])
+
+    def test_issue160(self):
+        importer = dballe.Importer("BUFR")
+        codes = []
+        with importer.from_file(test_pathname("bufr/issue160.bufr")) as f:
+            for msgs in f:
+                for msg in msgs:
+                    for d in msg.query_station_data():
+                        codes.append(d["var"])
+
+        self.assertCountEqual(codes, (
+            "B01019", "B07030", "B07031", "B01194",
+            "B04001", "B04002", "B04003", "B04004", "B04005", "B04006",
+            "B05001", "B06001"))
 
 
 if __name__ == "__main__":

@@ -116,6 +116,14 @@ void set_wreport_exception(const wreport::error& e);
 /// Given a generic exception, set the Python error indicator appropriately.
 void set_std_exception(const std::exception& e);
 
+/**
+ * Check result of a function that returns a FILE*, raising a python exception
+ * if it is null.
+ *
+ * Returns f unchanged.
+ */
+FILE* check_file_result(FILE* f, const char* filename=nullptr);
+
 #define DBALLE_CATCH_RETURN_PYO \
       catch (PythonException&) { \
         return nullptr; \
@@ -132,6 +140,15 @@ void set_std_exception(const std::exception& e);
         set_wreport_exception(e); return -1; \
     } catch (std::exception& se) { \
         set_std_exception(se); return -1; \
+    }
+
+#define DBALLE_CATCH_RETHROW_PYTHON \
+      catch (PythonException&) { \
+        throw; \
+    } catch (wreport::error& e) { \
+        set_wreport_exception(e); throw PythonException(); \
+    } catch (std::exception& se) { \
+        set_std_exception(se); throw PythonException(); \
     }
 
 template<typename T>

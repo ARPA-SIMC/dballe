@@ -104,7 +104,7 @@ struct CursorStationData : public impl::CursorStationData
         else
         {
             ++cur;
-            return cur == station_values.end();
+            return cur != station_values.end();
         }
     }
 
