@@ -43,8 +43,9 @@ where possible.
 | 112         | 116 Reserved                           |                             |
 | 117         | Mixed Layer Depth                      | mm                          |
 | 118-159 Reserved |                                        |                             |
-| 160         | Depth Below Sea Level                  | mm                          |
-| 161-191 Reserved |                                        |                             |
+| 160         | Depth Below Mean Sea Level             | mm                          |
+| 161         | Depth Below water surface              | mm                          |
+| 162-191 Reserved |                                        |                             |
 | 200         | Entire atmosphere (considered as a single layer) |                             |
 | 201         | Entire ocean (considered as a single layer) |                             |
 | 204         | Highest tropospheric freezing level    |                             |
