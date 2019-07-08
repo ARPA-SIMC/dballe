@@ -1,3 +1,8 @@
+# New in version 8.2
+
+* Python API: fixed `Message.query_station_data` method (#160)
+* Add level 161 Depth below water surface (#161)
+
 # New in version 8.1
 
 * Python API: bindings for core::Data (#158)
