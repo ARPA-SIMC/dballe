@@ -355,32 +355,6 @@ key-value representation of a value with its associated metadata
         return 0;
     }
 
-#if 0
-    static PyObject* _iter(Impl* self)
-    {
-        try {
-            ensure_valid_cursor(self);
-            Py_INCREF(self);
-            return (PyObject*)self;
-        } DBALLE_CATCH_RETURN_PYO
-    }
-
-    static PyObject* _iternext(Impl* self)
-    {
-        try {
-            ensure_valid_cursor(self);
-            if (self->cur->next())
-            {
-                Py_INCREF(self);
-                return (PyObject*)self;
-            } else {
-                PyErr_SetNone(PyExc_StopIteration);
-                return nullptr;
-            }
-        } DBALLE_CATCH_RETURN_PYO
-    }
-#endif
-
     static PyObject* mp_subscript(Impl* self, PyObject* pykey)
     {
         try {

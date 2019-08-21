@@ -1,5 +1,5 @@
 #include "common.h"
-#include <Python.h>
+#include "utils/values.h"
 #include "dballe/types.h"
 #include "dballe/core/var.h"
 #include <string>
@@ -79,46 +79,6 @@ FILE* check_file_result(FILE* f, const char* filename)
     return f;
 }
 
-PyObject* string_to_python(const char* str)
-{
-    return throw_ifnull(PyUnicode_FromString(str));
-}
-
-PyObject* string_to_python(const std::string& str)
-{
-    return throw_ifnull(PyUnicode_FromStringAndSize(str.data(), str.size()));
-}
-
-bool pyobject_is_string(PyObject* o)
-{
-    if (PyUnicode_Check(o) || PyBytes_Check(o))
-        return true;
-    return false;
-}
-
-std::string string_from_python(PyObject* o)
-{
-    if (PyUnicode_Check(o))
-        return throw_ifnull(PyUnicode_AsUTF8(o));
-    if (PyBytes_Check(o))
-        return throw_ifnull(PyBytes_AsString(o));
-    PyErr_SetString(PyExc_TypeError, "value must be an instance of str, bytes or unicode");
-    throw PythonException();
-}
-
-double double_from_python(PyObject* o)
-{
-    double res = PyFloat_AsDouble(o);
-    if (res == -1.0 && PyErr_Occurred())
-        throw PythonException();
-    return res;
-}
-
-PyObject* double_to_python(double val)
-{
-    return throw_ifnull(PyFloat_FromDouble(val));
-}
-
 PyObject* dballe_int_to_python(int val)
 {
     if (val == MISSING_INT)
@@ -141,62 +101,7 @@ int dballe_int_from_python(PyObject* o)
 std::string object_repr(PyObject* o)
 {
     pyo_unique_ptr repr(throw_ifnull(PyObject_Repr(o)));
-    return string_from_python(repr);
-}
-
-std::string build_method_doc(const char* name, const char* signature, const char* returns, const char* summary, const char* doc)
-{
-    std::string res;
-    unsigned doc_indent = 0;
-    if (doc)
-    {
-        // Look up doc indentation
-        // Count the leading spaces of the first non-empty line
-        unsigned indent = 0;
-        for (const char* c = doc; *c; ++c)
-        {
-            if (isblank(*c))
-                ++indent;
-            else if (*c == '\n' || *c == '\r')
-            {
-                // strip empty lines
-                doc = c;
-                indent = 0;
-            }
-            else
-            {
-                doc_indent = indent;
-                break;
-            }
-        }
-    }
-
-    // Function name and signature
-    res += name;
-    res += '(';
-    res += signature;
-    res += ')';
-    if (returns)
-    {
-        res += " -> ";
-        res += returns;
-    }
-    res += "\n\n";
-
-    // Indented summary
-    if (summary)
-    {
-        for (unsigned i = 0; i < doc_indent; ++i) res += ' ';
-        res += summary;
-        res += "\n\n";
-    }
-
-    // Docstring
-    if (doc)
-        res += doc;
-
-    // Return a C string with a copy of res
-    return res;
+    return from_python<std::string>(repr);
 }
 
 void common_init()
