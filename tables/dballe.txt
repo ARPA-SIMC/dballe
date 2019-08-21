@@ -596,4 +596,3 @@
  049219 Density of particles with diameter > 31 <= 34 um                 NUMERIC/M**3              11            0  16 NUMERIC/M**3             11          5
  049220 Density of particles with diameter > 34 <= 37 um                 NUMERIC/M**3              11            0  16 NUMERIC/M**3             11          5
  049221 Density of particles with diameter > 37 <= 40 um                 NUMERIC/M**3              11            0  16 NUMERIC/M**3             11          5
- 
