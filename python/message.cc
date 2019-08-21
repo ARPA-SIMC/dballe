@@ -1,6 +1,7 @@
 #define _DBALLE_LIBRARY_CODE
 #include <dballe/message.h>
 #include <dballe/msg/msg.h>
+#include <dballe/python.h>
 #include <wreport/python.h>
 #include "common.h"
 #include "message.h"
@@ -18,6 +19,21 @@ using namespace wreport;
 
 extern "C" {
 PyTypeObject* dpy_Message_Type = nullptr;
+
+static PyObject* dbapy_message_create_new(dballe::MessageType type)
+{
+    try {
+        return (PyObject*)dballe::python::message_create(type);
+    } DBALLE_CATCH_RETURN_PYO
+}
+
+static PyObject* dbapy_message_create(std::shared_ptr<dballe::Message> msg)
+{
+    try {
+        return (PyObject*)dballe::python::message_create(msg);
+    } DBALLE_CATCH_RETURN_PYO
+}
+
 }
 
 namespace {
@@ -405,12 +421,16 @@ dpy_Message* message_create(std::shared_ptr<Message> message)
     return res;
 }
 
-void register_message(PyObject* m)
+void register_message(PyObject* m, dbapy_c_api& c_api)
 {
     common_init();
 
     definition = new Definition;
     definition->define(dpy_Message_Type, m);
+
+    c_api.message_type = dpy_Message_Type;
+    c_api.message_create_new = dbapy_message_create_new;
+    c_api.message_create = dbapy_message_create;
 }
 
 }

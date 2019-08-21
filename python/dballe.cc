@@ -11,6 +11,7 @@
 #include "exporter.h"
 #include "explorer.h"
 #include "utils/wreport.h"
+#include "dballe/python.h"
 #include "dballe/types.h"
 #include "dballe/var.h"
 
@@ -158,18 +159,30 @@ PyMODINIT_FUNC PyInit__dballe(void)
 {
     using namespace dballe::python;
 
+    static dbapy_c_api c_api;
+
     try {
+        memset(&c_api, 0, sizeof(dbapy_c_api));
+        c_api.version_major = 1;
+        c_api.version_minor = 0;
+
         pyo_unique_ptr m(PyModule_Create(&dballe_module));
         register_types(m);
         register_data(m);
         register_binarymessage(m);
         register_file(m);
-        register_message(m);
+        register_message(m, c_api);
         register_importer(m);
         register_exporter(m);
         register_db(m);
         register_cursor(m);
         register_explorer(m);
+
+        // Create a Capsule containing the API struct's address
+        pyo_unique_ptr c_api_object(throw_ifnull(PyCapsule_New((void *)&c_api, "_dballe._C_API", nullptr)));
+        int res = PyModule_AddObject(m, "_C_API", c_api_object.release());
+        if (res)
+            return nullptr;
 
         return m.release();
     } DBALLE_CATCH_RETURN_PYO

@@ -7,6 +7,8 @@
 
 extern "C" {
 
+struct dbapy_c_api;
+
 typedef struct {
     PyObject_HEAD
     std::shared_ptr<dballe::Message> message;
@@ -44,7 +46,7 @@ dpy_Message* message_create(MessageType type);
  */
 dpy_Message* message_create(std::shared_ptr<dballe::Message> message);
 
-void register_message(PyObject* m);
+void register_message(PyObject* m, dbapy_c_api& c_api);
 
 }
 }
