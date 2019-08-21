@@ -1,4 +1,3 @@
-#include <Python.h>
 #include "cursor.h"
 #include "enq.h"
 #include "types.h"
@@ -10,7 +9,7 @@
 #include "dballe/core/data.h"
 #include "dballe/db/v7/cursor.h"
 #include <algorithm>
-#include "impl-utils.h"
+#include "utils/type.h"
 
 using namespace std;
 using namespace dballe;
@@ -43,7 +42,7 @@ void ensure_valid_cursor(Impl* self)
 }
 
 template<typename Impl>
-struct remaining : Getter<Impl>
+struct remaining : Getter<remaining<Impl>, Impl>
 {
     constexpr static const char* name = "remaining";
     constexpr static const char* doc = "number of results still to be returned";
@@ -149,7 +148,7 @@ void _set_data(PyObject* dict, const Var& var)
         throw PythonException();
     }
 
-    pyo_unique_ptr pyvalue(throw_ifnull(wrpy->var_value_to_python(var)));
+    pyo_unique_ptr pyvalue(wreport_api.var_value_to_python(var));
 
     char bcode[7];
     format_bcode(var.code(), bcode);
@@ -190,7 +189,7 @@ void _set_data(PyObject* dict, dballe::impl::CursorData& cur)
 
 
 template<typename Impl>
-struct query : Getter<Impl>
+struct query : Getter<query<Impl>, Impl>
 {
     constexpr static const char* name = "query";
     constexpr static const char* doc = "return a dict with a query to select exactly the current value at this cursor";
@@ -206,7 +205,7 @@ struct query : Getter<Impl>
 };
 
 template<typename Impl>
-struct data : Getter<Impl>
+struct data : Getter<data<Impl>, Impl>
 {
     constexpr static const char* name = "data";
     constexpr static const char* doc = "return a dballe.Data which can be used to insert into a database the current cursor value";
@@ -223,7 +222,7 @@ struct data : Getter<Impl>
 };
 
 template<typename Impl>
-struct data_dict : Getter<Impl>
+struct data_dict : Getter<data_dict<Impl>, Impl>
 {
     constexpr static const char* name = "data_dict";
     constexpr static const char* doc = "return a dict which can be used to insert into a database the current cursor value";
@@ -250,7 +249,7 @@ inline void run_attr_query(const db::CursorData& cur, std::function<void(std::un
 }
 
 template<typename Impl>
-struct remove : MethNoargs<Impl>
+struct remove : MethNoargs<remove<Impl>, Impl>
 {
     constexpr static const char* name = "remove";
     constexpr static const char* summary = "Remove the data currently addressed by the cursor";
@@ -266,7 +265,7 @@ struct remove : MethNoargs<Impl>
 };
 
 template<typename Impl>
-struct query_attrs : MethNoargs<Impl>
+struct query_attrs : MethNoargs<query_attrs<Impl>, Impl>
 {
     constexpr static const char* name = "query_attrs";
     constexpr static const char* returns = "Dict[str, Any]";
@@ -285,7 +284,7 @@ struct query_attrs : MethNoargs<Impl>
 };
 
 template<typename Impl>
-struct insert_attrs : MethKwargs<Impl>
+struct insert_attrs : MethKwargs<insert_attrs<Impl>, Impl>
 {
     constexpr static const char* name = "insert_attrs";
     constexpr static const char* signature = "attrs: Dict[str, Any]";
@@ -309,7 +308,7 @@ struct insert_attrs : MethKwargs<Impl>
 };
 
 template<typename Impl>
-struct remove_attrs : MethKwargs<Impl>
+struct remove_attrs : MethKwargs<remove_attrs<Impl>, Impl>
 {
     constexpr static const char* name = "remove_attrs";
     constexpr static const char* signature = "attrs: Iterable[str]";
@@ -333,7 +332,7 @@ struct remove_attrs : MethKwargs<Impl>
 };
 
 template<typename Impl>
-struct enqi : MethKwargs<Impl>
+struct enqi : MethKwargs<enqi<Impl>, Impl>
 {
     constexpr static const char* name = "enqi";
     constexpr static const char* signature = "key: str";
@@ -360,7 +359,7 @@ struct enqi : MethKwargs<Impl>
 };
 
 template<typename Impl>
-struct enqd : MethKwargs<Impl>
+struct enqd : MethKwargs<enqd<Impl>, Impl>
 {
     constexpr static const char* name = "enqd";
     constexpr static const char* signature = "key: str";
@@ -387,7 +386,7 @@ struct enqd : MethKwargs<Impl>
 };
 
 template<typename Impl>
-struct enqs : MethKwargs<Impl>
+struct enqs : MethKwargs<enqs<Impl>, Impl>
 {
     constexpr static const char* name = "enqs";
     constexpr static const char* signature = "key: str";
@@ -414,7 +413,7 @@ struct enqs : MethKwargs<Impl>
 };
 
 template<typename Impl>
-struct enqf : MethKwargs<Impl>
+struct enqf : MethKwargs<enqf<Impl>, Impl>
 {
     constexpr static const char* name = "enqf";
     constexpr static const char* signature = "key: str";
@@ -441,7 +440,7 @@ struct enqf : MethKwargs<Impl>
 };
 
 template<typename Impl>
-struct __exit__ : MethVarargs<Impl>
+struct __exit__ : MethVarargs<__exit__<Impl>, Impl>
 {
     constexpr static const char* name = "__exit__";
     constexpr static const char* doc = "Context manager __exit__";
@@ -464,7 +463,7 @@ struct __exit__ : MethVarargs<Impl>
 
 
 template<typename Definition, typename Impl>
-struct DefinitionBase : public Binding<Definition, Impl>
+struct DefinitionBase : public Type<Definition, Impl>
 {
     constexpr static const char* doc = R"(
 A Cursor is the result of database queries. It is generally iterated through
@@ -633,7 +632,7 @@ struct DefinitionSummaryDBSummary : public DefinitionBase<DefinitionSummaryDBSum
 
 
 template<typename Impl>
-struct message : Getter<Impl>
+struct message : Getter<message<Impl>, Impl>
 {
     constexpr static const char* name = "message";
     constexpr static const char* doc = "dballe.Message object with the current message";
@@ -781,34 +780,34 @@ void register_cursor(PyObject* m)
     common_init();
 
     definition_station = new DefinitionStation;
-    dpy_CursorStation_Type = definition_station->activate(m);
+    definition_station->define(dpy_CursorStation_Type, m);
 
     definition_stationdb = new DefinitionStationDB;
-    dpy_CursorStationDB_Type = definition_stationdb->activate(m);
+    definition_stationdb->define(dpy_CursorStationDB_Type, m);
 
     definition_stationdata = new DefinitionStationData;
-    dpy_CursorStationData_Type = definition_stationdata->activate(m);
+    definition_stationdata->define(dpy_CursorStationData_Type, m);
 
     definition_stationdatadb = new DefinitionStationDataDB;
-    dpy_CursorStationDataDB_Type = definition_stationdatadb->activate(m);
+    definition_stationdatadb->define(dpy_CursorStationDataDB_Type, m);
 
     definition_data = new DefinitionData;
-    dpy_CursorData_Type = definition_data->activate(m);
+    definition_data->define(dpy_CursorData_Type, m);
 
     definition_datadb = new DefinitionDataDB;
-    dpy_CursorDataDB_Type = definition_datadb->activate(m);
+    definition_datadb->define(dpy_CursorDataDB_Type, m);
 
     definition_summarydb = new DefinitionSummaryDB;
-    dpy_CursorSummaryDB_Type = definition_summarydb->activate(m);
+    definition_summarydb->define(dpy_CursorSummaryDB_Type, m);
 
     definition_summarysummary = new DefinitionSummarySummary;
-    dpy_CursorSummarySummary_Type = definition_summarysummary->activate(m);
+    definition_summarysummary->define(dpy_CursorSummarySummary_Type, m);
 
     definition_summarydbsummary = new DefinitionSummaryDBSummary;
-    dpy_CursorSummaryDBSummary_Type = definition_summarydbsummary->activate(m);
+    definition_summarydbsummary->define(dpy_CursorSummaryDBSummary_Type, m);
 
     definition_message = new DefinitionMessage;
-    dpy_CursorMessage_Type = definition_message->activate(m);
+    definition_message->define(dpy_CursorMessage_Type, m);
 }
 
 }

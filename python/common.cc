@@ -1,5 +1,6 @@
 #include "common.h"
 #include "utils/values.h"
+#include "utils/wreport.h"
 #include "dballe/types.h"
 #include "dballe/core/var.h"
 #include <string>
@@ -10,7 +11,7 @@ using namespace wreport;
 namespace dballe {
 namespace python {
 
-wrpy_c_api* wrpy = 0;
+Wreport wreport_api;
 
 void set_wreport_exception(const wreport::error& e)
 {
@@ -106,21 +107,7 @@ std::string object_repr(PyObject* o)
 
 void common_init()
 {
-    if (!wrpy)
-    {
-        wrpy = (wrpy_c_api*)PyCapsule_Import("_wreport._C_API", 0);
-        if (!wrpy)
-            throw PythonException();
-
-#if 0
-        // TODO: reenable when the new wreport has been deployed
-        if (wrpy->version_major != 1)
-        {
-            PyErr_Format(PyExc_RuntimeError, "wreport C API version is %d.%d but only 1.x is supported", wrpy->version_major, wrpy->version_minor);
-            throw PythonException();
-        }
-#endif
-    }
+    wreport_api.import();
 }
 
 }

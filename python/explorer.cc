@@ -1,5 +1,4 @@
 #define _DBALLE_LIBRARY_CODE
-#include <Python.h>
 #include "dballe/db/explorer.h"
 #include "dballe/core/json.h"
 #include "common.h"
@@ -9,7 +8,7 @@
 #include "importer.h"
 #include "types.h"
 #include "db.h"
-#include "impl-utils.h"
+#include "utils/type.h"
 #include <algorithm>
 #include <sstream>
 #include "config.h"
@@ -130,8 +129,8 @@ struct get_varcodes {
 
 namespace explorer {
 
-template<typename Station, typename Scope, typename GET>
-struct BaseGetter : public Getter<typename ImplTraits<Station>::Impl>
+template<typename Base, typename Station, typename Scope, typename GET>
+struct BaseGetter : public Getter<Base, typename ImplTraits<Station>::Impl>
 {
     typedef typename ImplTraits<Station>::Impl Impl;
     static PyObject* get(Impl* self, void* closure)
@@ -156,78 +155,78 @@ struct BaseGetter : public Getter<typename ImplTraits<Station>::Impl>
 };
 
 template<typename Station>
-struct GetAllStations : public BaseGetter<Station, All, get_stations<Station>>
+struct GetAllStations : public BaseGetter<GetAllStations<Station>, Station, All, get_stations<Station>>
 {
     constexpr static const char* name = "all_stations";
     constexpr static const char* doc = "get all stations";
 };
 
 template<typename Station>
-struct GetStations : public BaseGetter<Station, Selected, get_stations<Station>>
+struct GetStations : public BaseGetter<GetStations<Station>, Station, Selected, get_stations<Station>>
 {
     constexpr static const char* name = "stations";
     constexpr static const char* doc = "get all the stations currently selected";
 };
 
 template<typename Station>
-struct GetAllReports : public BaseGetter<Station, All, get_reports<Station>>
+struct GetAllReports : public BaseGetter<GetAllReports<Station>, Station, All, get_reports<Station>>
 {
     constexpr static const char* name = "all_reports";
     constexpr static const char* doc = "get all report values";
 };
 
 template<typename Station>
-struct GetReports : public BaseGetter<Station, Selected, get_reports<Station>>
+struct GetReports : public BaseGetter<GetReports<Station>, Station, Selected, get_reports<Station>>
 {
     constexpr static const char* name = "reports";
     constexpr static const char* doc = "get all the report values currently selected";
 };
 
 template<typename Station>
-struct GetAllLevels : public BaseGetter<Station, All, get_levels<Station>>
+struct GetAllLevels : public BaseGetter<GetAllLevels<Station>, Station, All, get_levels<Station>>
 {
     constexpr static const char* name = "all_levels";
     constexpr static const char* doc = "get all level values";
 };
 
 template<typename Station>
-struct GetLevels : public BaseGetter<Station, Selected, get_levels<Station>>
+struct GetLevels : public BaseGetter<GetLevels<Station>, Station, Selected, get_levels<Station>>
 {
     constexpr static const char* name = "levels";
     constexpr static const char* doc = "get all the level values currently selected";
 };
 
 template<typename Station>
-struct GetAllTranges : public BaseGetter<Station, All, get_tranges<Station>>
+struct GetAllTranges : public BaseGetter<GetAllTranges<Station>, Station, All, get_tranges<Station>>
 {
     constexpr static const char* name = "all_tranges";
     constexpr static const char* doc = "get all time range values";
 };
 
 template<typename Station>
-struct GetTranges : public BaseGetter<Station, Selected, get_tranges<Station>>
+struct GetTranges : public BaseGetter<GetTranges<Station>, Station, Selected, get_tranges<Station>>
 {
     constexpr static const char* name = "tranges";
     constexpr static const char* doc = "get all the time range values currently selected";
 };
 
 template<typename Station>
-struct GetAllVarcodes : public BaseGetter<Station, All, get_varcodes<Station>>
+struct GetAllVarcodes : public BaseGetter<GetAllVarcodes<Station>, Station, All, get_varcodes<Station>>
 {
     constexpr static const char* name = "all_varcodes";
     constexpr static const char* doc = "get all varcode values";
 };
 
 template<typename Station>
-struct GetVarcodes : public BaseGetter<Station, Selected, get_varcodes<Station>>
+struct GetVarcodes : public BaseGetter<GetVarcodes<Station>, Station, Selected, get_varcodes<Station>>
 {
     constexpr static const char* name = "varcodes";
     constexpr static const char* doc = "get all the varcode values currently selected";
 };
 
 
-template<typename Station, typename Scope>
-struct BaseGetStats : public Getter<typename ImplTraits<Station>::Impl>
+template<typename Base, typename Station, typename Scope>
+struct BaseGetStats : public Getter<Base, typename ImplTraits<Station>::Impl>
 {
     typedef typename ImplTraits<Station>::Impl Impl;
     static PyObject* get(Impl* self, void* closure)
@@ -258,14 +257,14 @@ struct BaseGetStats : public Getter<typename ImplTraits<Station>::Impl>
 };
 
 template<typename Station>
-struct GetAllStats : public BaseGetStats<Station, All>
+struct GetAllStats : public BaseGetStats<GetAllStats<Station>, Station, All>
 {
     constexpr static const char* name = "all_stats";
     constexpr static const char* doc = "get the stats for all values";
 };
 
 template<typename Station>
-struct GetStats : public BaseGetStats<Station, Selected>
+struct GetStats : public BaseGetStats<GetStats<Station>, Station, Selected>
 {
     constexpr static const char* name = "stats";
     constexpr static const char* doc = "get stats for the currently selected values";
@@ -273,7 +272,7 @@ struct GetStats : public BaseGetStats<Station, Selected>
 
 
 template<typename Station>
-struct set_filter : public MethKwargs<typename ImplTraits<Station>::Impl>
+struct set_filter : public MethKwargs<set_filter<Station>, typename ImplTraits<Station>::Impl>
 {
     typedef typename ImplTraits<Station>::Impl Impl;
     constexpr static const char* name = "set_filter";
@@ -307,7 +306,7 @@ dpy_DBExplorerUpdate* update_create(const dpy_DBExplorer*)
 
 
 template<typename Station>
-struct rebuild : public MethNoargs<typename ImplTraits<Station>::Impl>
+struct rebuild : public MethNoargs<rebuild<Station>, typename ImplTraits<Station>::Impl>
 {
     typedef typename ImplTraits<Station>::Impl Impl;
     constexpr static const char* name = "rebuild";
@@ -328,7 +327,7 @@ add data to the explorer in a single transaction.)";
 };
 
 template<typename Station>
-struct update : public MethNoargs<typename ImplTraits<Station>::Impl>
+struct update : public MethNoargs<update<Station>, typename ImplTraits<Station>::Impl>
 {
     typedef typename ImplTraits<Station>::Impl Impl;
     constexpr static const char* name = "update";
@@ -349,7 +348,7 @@ add data to the explorer in a single transaction.)";
 };
 
 template<typename Station>
-struct to_json : public MethNoargs<typename ImplTraits<Station>::Impl>
+struct to_json : public MethNoargs<to_json<Station>, typename ImplTraits<Station>::Impl>
 {
     typedef typename ImplTraits<Station>::Impl Impl;
     constexpr static const char* name = "to_json";
@@ -372,8 +371,8 @@ preserved.)";
     }
 };
 
-template<typename Station, typename Scope>
-struct BaseQuerySummary : public MethKwargs<typename ImplTraits<Station>::Impl>
+template<typename Base, typename Station, typename Scope>
+struct BaseQuerySummary : public MethKwargs<Base, typename ImplTraits<Station>::Impl>
 {
     typedef typename ImplTraits<Station>::Impl Impl;
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
@@ -395,14 +394,14 @@ struct BaseQuerySummary : public MethKwargs<typename ImplTraits<Station>::Impl>
 };
 
 template<typename Station>
-struct query_summary_all : public BaseQuerySummary<Station, All>
+struct query_summary_all : public BaseQuerySummary<query_summary_all<Station>, Station, All>
 {
     constexpr static const char* name = "query_summary_all";
     constexpr static const char* doc = "Get all the Explorer summary information; returns a Cursor";
 };
 
 template<typename Station>
-struct query_summary : public BaseQuerySummary<Station, Selected>
+struct query_summary : public BaseQuerySummary<query_summary<Station>, Station, Selected>
 {
     constexpr static const char* name = "query_summary";
     constexpr static const char* doc = "Get the currently selected Explorer summary information; returns a Cursor";
@@ -410,7 +409,7 @@ struct query_summary : public BaseQuerySummary<Station, Selected>
 
 
 template<class Station>
-struct Definition : public Binding<Definition<Station>, typename ImplTraits<Station>::Impl>
+struct Definition : Type<Definition<Station>, typename ImplTraits<Station>::Impl>
 {
     typedef typename ImplTraits<Station>::Impl Impl;
     static const char* name;
@@ -471,20 +470,7 @@ Definition<DBStation>* definition_db = nullptr;
 namespace explorerupdate {
 
 template<typename Station>
-struct __enter__ : public MethNoargs<typename ImplTraits<Station>::UpdateImpl>
-{
-    typedef typename ImplTraits<Station>::UpdateImpl Impl;
-    constexpr static const char* name = "__enter__";
-    constexpr static const char* doc = "Context manager __enter__";
-    static PyObject* run(Impl* self)
-    {
-        Py_INCREF(self);
-        return (PyObject*)self;
-    }
-};
-
-template<typename Station>
-struct __exit__ : public MethVarargs<typename ImplTraits<Station>::UpdateImpl>
+struct __exit__ : public MethVarargs<__exit__<Station>, typename ImplTraits<Station>::UpdateImpl>
 {
     typedef typename ImplTraits<Station>::UpdateImpl Impl;
     constexpr static const char* name = "__exit__";
@@ -507,7 +493,7 @@ struct __exit__ : public MethVarargs<typename ImplTraits<Station>::UpdateImpl>
 };
 
 template<typename Station>
-struct add_db : public MethKwargs<typename ImplTraits<Station>::UpdateImpl>
+struct add_db : public MethKwargs<add_db<Station>, typename ImplTraits<Station>::UpdateImpl>
 {
     typedef typename ImplTraits<Station>::UpdateImpl Impl;
     constexpr static const char* name = "add_db";
@@ -531,7 +517,7 @@ Add the summary of the contents of the given database to the Explorer.
 };
 
 template<typename Station>
-struct add_json : public MethKwargs<typename ImplTraits<Station>::UpdateImpl>
+struct add_json : public MethKwargs<add_json<Station>, typename ImplTraits<Station>::UpdateImpl>
 {
     typedef typename ImplTraits<Station>::UpdateImpl Impl;
     constexpr static const char* name = "add_json";
@@ -558,7 +544,7 @@ Add the contents of the given JSON string to the Explorer.
 };
 
 template<typename Station>
-struct add_explorer : public MethKwargs<typename ImplTraits<Station>::UpdateImpl>
+struct add_explorer : public MethKwargs<add_explorer<Station>, typename ImplTraits<Station>::UpdateImpl>
 {
     typedef typename ImplTraits<Station>::UpdateImpl Impl;
     constexpr static const char* name = "add_explorer";
@@ -593,7 +579,7 @@ Add the contents of the given Explorer or DBExplorer to the Explorer.
 };
 
 template<typename Station>
-struct add_messages : public MethKwargs<typename ImplTraits<Station>::UpdateImpl>
+struct add_messages : public MethKwargs<add_messages<Station>, typename ImplTraits<Station>::UpdateImpl>
 {
     typedef typename ImplTraits<Station>::UpdateImpl Impl;
     constexpr static const char* name = "add_messages";
@@ -669,13 +655,13 @@ It takes the same messages argument of dballe.DB.import_messages
 
 
 template<class Station>
-struct Definition : public Binding<Definition<Station>, typename ImplTraits<Station>::UpdateImpl>
+struct Definition : public Type<Definition<Station>, typename ImplTraits<Station>::UpdateImpl>
 {
     typedef typename ImplTraits<Station>::UpdateImpl Impl;
     static const char* name;
     static const char* qual_name;
     constexpr static const char* doc = "Manage updates to an Explorer";
-    Methods<__enter__<Station>, __exit__<Station>, add_db<Station>, add_json<Station>, add_explorer<Station>, add_messages<Station>> methods;
+    Methods<MethGenericEnter<typename ImplTraits<Station>::UpdateImpl>, __exit__<Station>, add_db<Station>, add_json<Station>, add_explorer<Station>, add_messages<Station>> methods;
     GetSetters<> getsetters;
 
     static void _dealloc(Impl* self)
@@ -753,16 +739,16 @@ void register_explorer(PyObject* m)
         throw PythonException();
 
     explorer::definition = new explorer::Definition<Station>;
-    dpy_Explorer_Type = explorer::definition->activate(m);
+    explorer::definition->define(dpy_Explorer_Type, m);
 
     explorer::definition_db = new explorer::Definition<DBStation>;
-    dpy_DBExplorer_Type = explorer::definition_db->activate(m);
+    explorer::definition_db->define(dpy_DBExplorer_Type, m);
 
     explorerupdate::definition = new explorerupdate::Definition<Station>;
-    dpy_ExplorerUpdate_Type = explorerupdate::definition->activate(m);
+    explorerupdate::definition->define(dpy_ExplorerUpdate_Type, m);
 
     explorerupdate::definition_db = new explorerupdate::Definition<DBStation>;
-    dpy_DBExplorerUpdate_Type = explorerupdate::definition_db->activate(m);
+    explorerupdate::definition_db->define(dpy_DBExplorerUpdate_Type, m);
 }
 
 }

@@ -1,9 +1,9 @@
 #ifndef DBALLE_PYTHON_MESSAGE_H
 #define DBALLE_PYTHON_MESSAGE_H
 
-#include <Python.h>
 #include <dballe/message.h>
 #include <memory>
+#include "utils/core.h"
 
 extern "C" {
 

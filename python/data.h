@@ -1,9 +1,9 @@
 #ifndef DBALLE_PYTHON_DATA_H
 #define DBALLE_PYTHON_DATA_H
 
-#include <Python.h>
 #include <dballe/core/data.h>
 #include <memory>
+#include "common.h"
 
 extern "C" {
 

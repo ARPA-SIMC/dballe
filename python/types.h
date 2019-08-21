@@ -1,12 +1,12 @@
 #ifndef DBALLE_PYTHON_TYPES_H
 #define DBALLE_PYTHON_TYPES_H
 
-#include <Python.h>
 #include <wreport/varinfo.h>
 #include <dballe/fwd.h>
 #include <dballe/core/fwd.h>
 #include <dballe/types.h>
 #include "common.h"
+#include "utils/values.h"
 #include <set>
 
 extern "C" {
@@ -187,8 +187,6 @@ extern template void set_values_from_python(Values& values, wreport::Varcode cod
 extern template void set_values_from_python(DBValues& values, wreport::Varcode code, PyObject* val);
 
 std::set<wreport::Varcode> varcodes_from_python(PyObject* o);
-
-bool bool_from_python(PyObject* o);
 
 /// Return a list with all the attributes in var [Var]
 PyObject* attrs_to_python(const wreport::Var& var);

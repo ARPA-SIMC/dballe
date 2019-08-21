@@ -1,9 +1,9 @@
 #ifndef DBALLE_PYTHON_FILE_H
 #define DBALLE_PYTHON_FILE_H
 
-#include <Python.h>
 #include <dballe/file.h>
 #include <memory>
+#include "common.h"
 
 namespace dballe {
 namespace python {

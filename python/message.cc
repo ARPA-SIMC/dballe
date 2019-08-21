@@ -1,5 +1,4 @@
 #define _DBALLE_LIBRARY_CODE
-#include <Python.h>
 #include <dballe/message.h>
 #include <dballe/msg/msg.h>
 #include <wreport/python.h>
@@ -7,7 +6,10 @@
 #include "message.h"
 #include "types.h"
 #include "cursor.h"
-#include "impl-utils.h"
+#include "utils/type.h"
+#include "utils/methods.h"
+#include "utils/values.h"
+#include "utils/wreport.h"
 
 using namespace std;
 using namespace dballe;
@@ -20,7 +22,7 @@ PyTypeObject* dpy_Message_Type = nullptr;
 
 namespace {
 
-struct GetType : Getter<dpy_Message>
+struct GetType : Getter<GetType, dpy_Message>
 {
     constexpr static const char* name = "type";
     constexpr static const char* doc = "message type";
@@ -32,7 +34,7 @@ struct GetType : Getter<dpy_Message>
     }
 };
 
-struct GetDatetime : Getter<dpy_Message>
+struct GetDatetime : Getter<GetDatetime, dpy_Message>
 {
     constexpr static const char* name = "datetime";
     constexpr static const char* doc = "message datetime";
@@ -44,7 +46,7 @@ struct GetDatetime : Getter<dpy_Message>
     }
 };
 
-struct GetCoords : Getter<dpy_Message>
+struct GetCoords : Getter<GetCoords, dpy_Message>
 {
     constexpr static const char* name = "coords";
     constexpr static const char* doc = "message coordinates";
@@ -56,7 +58,7 @@ struct GetCoords : Getter<dpy_Message>
     }
 };
 
-struct GetIdent : Getter<dpy_Message>
+struct GetIdent : Getter<GetIdent, dpy_Message>
 {
     constexpr static const char* name = "ident";
     constexpr static const char* doc = "message mobile station identifier";
@@ -68,7 +70,7 @@ struct GetIdent : Getter<dpy_Message>
     }
 };
 
-struct GetReport : Getter<dpy_Message>
+struct GetReport : Getter<GetReport, dpy_Message>
 {
     constexpr static const char* name = "report";
     constexpr static const char* doc = "message report";
@@ -82,7 +84,7 @@ struct GetReport : Getter<dpy_Message>
 };
 
 
-struct get : MethKwargs<dpy_Message>
+struct get : MethKwargs<get, dpy_Message>
 {
     constexpr static const char* name = "get";
     constexpr static const char* signature = "level: dballe.Level, trange: dballe.Trange, code: str";
@@ -106,12 +108,12 @@ struct get : MethKwargs<dpy_Message>
             if (!res)
                 Py_RETURN_NONE;
             else
-                return (PyObject*)wrpy->var_create_copy(*res);
+                return wreport_api.var_create(*res);
         } DBALLE_CATCH_RETURN_PYO
     }
 };
 
-struct get_named : MethKwargs<dpy_Message>
+struct get_named : MethKwargs<get_named, dpy_Message>
 {
     constexpr static const char* name = "get_named";
     constexpr static const char* signature = "name: str";
@@ -129,12 +131,12 @@ struct get_named : MethKwargs<dpy_Message>
             if (!res)
                 Py_RETURN_NONE;
             else
-                return (PyObject*)wrpy->var_create_copy(*res);
+                return wreport_api.var_create(*res);
         } DBALLE_CATCH_RETURN_PYO
     }
 };
 
-struct set : MethKwargs<dpy_Message>
+struct set : MethKwargs<set, dpy_Message>
 {
     constexpr static const char* name = "set";
     constexpr static const char* signature = "level: dballe.Level, trange: dballe.Trange, var: dballe.Var";
@@ -144,21 +146,21 @@ struct set : MethKwargs<dpy_Message>
         static const char* kwlist[] = { "level", "trange", "var", nullptr };
         PyObject* pylevel = nullptr;
         PyObject* pytrange = nullptr;
-        wrpy_Var* var = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "OOO!", const_cast<char**>(kwlist), &pylevel, &pytrange, wrpy->var_type, &var))
+        PyObject* var = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "OOO!", const_cast<char**>(kwlist), &pylevel, &pytrange, wreport_api.api().var_type, &var))
             return nullptr;
 
         try {
             Level level = level_from_python(pylevel);
             Trange trange = trange_from_python(pytrange);
-            self->message->set(level, trange, var->var);
+            self->message->set(level, trange, wreport_api.var(var));
         } DBALLE_CATCH_RETURN_PYO
 
         Py_RETURN_NONE;
     }
 };
 
-struct set_named : MethKwargs<dpy_Message>
+struct set_named : MethKwargs<set_named, dpy_Message>
 {
     constexpr static const char* name = "set_named";
     constexpr static const char* signature = "name: str, var: dballe.Var";
@@ -167,12 +169,12 @@ struct set_named : MethKwargs<dpy_Message>
     {
         static const char* kwlist[] = { "name", "var", nullptr };
         const char* name = nullptr;
-        wrpy_Var* var = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "sO!", const_cast<char**>(kwlist), &name, wrpy->var_type, &var))
+        PyObject* var = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "sO!", const_cast<char**>(kwlist), &name, wreport_api.api().var_type, &var))
             return nullptr;
 
         try {
-            self->message->set(name, var->var);
+            self->message->set(name, wreport_api.var(var));
         } DBALLE_CATCH_RETURN_PYO
 
         Py_RETURN_NONE;
@@ -180,8 +182,9 @@ struct set_named : MethKwargs<dpy_Message>
 };
 
 template<typename Base>
-struct MethQuery : public MethKwargs<dpy_Message>
+struct MethQuery : public MethKwargs<Base, dpy_Message>
 {
+    typedef typename MethKwargs<Base, dpy_Message>::Impl Impl;
     constexpr static const char* signature = "query: Dict[str, Any]";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
@@ -256,7 +259,7 @@ struct query_station_and_data : MethQuery<query_station_and_data>
 #endif
 
 
-struct Definition : public Binding<Definition, dpy_Message>
+struct Definition : public Type<Definition, dpy_Message>
 {
     constexpr static const char* name = "Message";
     constexpr static const char* qual_name = "dballe.Message";
@@ -407,7 +410,7 @@ void register_message(PyObject* m)
     common_init();
 
     definition = new Definition;
-    dpy_Message_Type = definition->activate(m);
+    definition->define(dpy_Message_Type, m);
 }
 
 }

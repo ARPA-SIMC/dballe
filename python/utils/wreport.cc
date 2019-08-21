@@ -15,24 +15,28 @@ Wreport::~Wreport()
 
 void Wreport::import()
 {
+    // Make sure we are idempotent on double import
+    if (m_api)
+        return;
+
     pyo_unique_ptr module(throw_ifnull(PyImport_ImportModule("wreport")));
 
-    api = (wrpy_c_api*)PyCapsule_Import("_wreport._C_API", 0);
-    if (!api)
+    m_api = (wrpy_c_api*)PyCapsule_Import("_wreport._C_API", 0);
+    if (!m_api)
         throw PythonException();
 
 #ifdef WREPORT_API1_MIN_VERSION
-    if (api->version_major != 1)
+    if (m_api->version_major != 1)
     {
         PyErr_Format(PyExc_RuntimeError, "wreport C API version is %d.%d but only 1.x is supported",
-                     api->version_major, api->version_minor);
+                     m_api->version_major, m_api->version_minor);
         throw PythonException();
     }
 
-    if (api->version_minor < WREPORT_API1_MIN_VERSION)
+    if (m_api->version_minor < WREPORT_API1_MIN_VERSION)
     {
         PyErr_Format(PyExc_RuntimeError, "wreport C API version is %d.%d but only 1.x is supported, with x > 1",
-                     api->version_major, api->version_minor);
+                     m_api->version_major, m_api->version_minor);
         throw PythonException();
     }
 #endif
@@ -40,7 +44,7 @@ void Wreport::import()
 
 void Wreport::require_imported() const
 {
-    if (!api)
+    if (!m_api)
     {
         PyErr_SetString(PyExc_RuntimeError, "attempted to use the wreport C API without importing it");
         throw PythonException();

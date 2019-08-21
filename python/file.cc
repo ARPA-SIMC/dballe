@@ -1,9 +1,10 @@
 #define _DBALLE_LIBRARY_CODE
-#include <Python.h>
 #include "common.h"
 #include "file.h"
 #include "binarymessage.h"
-#include "impl-utils.h"
+#include "utils/type.h"
+#include "utils/methods.h"
+#include "utils/values.h"
 
 using namespace std;
 using namespace dballe;
@@ -188,7 +189,7 @@ struct DupInFileWrapper : public BaseFileObjFileWrapper
 
 namespace {
 
-struct getter_name : Getter<dpy_File>
+struct getter_name : Getter<getter_name, dpy_File>
 {
     constexpr static const char* name = "name";
     constexpr static const char* doc = "get the file name";
@@ -200,7 +201,7 @@ struct getter_name : Getter<dpy_File>
     }
 };
 
-struct encoding : Getter<dpy_File>
+struct encoding : Getter<encoding, dpy_File>
 {
     constexpr static const char* name = "encoding";
     constexpr static const char* doc = "get the file encoding";
@@ -215,7 +216,7 @@ struct encoding : Getter<dpy_File>
 
 typedef MethGenericEnter<dpy_File> __enter__;
 
-struct __exit__ : MethVarargs<dpy_File>
+struct __exit__ : MethVarargs<__exit__, dpy_File>
 {
     constexpr static const char* name = "__exit__";
     constexpr static const char* doc = "Context manager __exit__";
@@ -236,7 +237,7 @@ struct __exit__ : MethVarargs<dpy_File>
 };
 
 
-struct FileDefinition : public Binding<FileDefinition, dpy_File>
+struct FileDefinition : public Type<FileDefinition, dpy_File>
 {
     constexpr static const char* name = "File";
     constexpr static const char* qual_name = "dballe.File";
@@ -465,7 +466,7 @@ void register_file(PyObject* m)
     common_init();
 
     file_definition = new FileDefinition;
-    dpy_File_Type = file_definition->activate(m);
+    file_definition->define(dpy_File_Type, m);
 }
 
 }

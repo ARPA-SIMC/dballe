@@ -11,6 +11,11 @@
 namespace dballe {
 namespace python {
 
+struct Wreport;
+
+/// Wreport python API
+extern Wreport wreport_api;
+
 /// Given a wreport exception, set the Python error indicator appropriately.
 void set_wreport_exception(const wreport::error& e);
 

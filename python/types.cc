@@ -1,17 +1,17 @@
-#include <Python.h>
-#include <datetime.h>
 #include "dballe/types.h"
 #include "dballe/values.h"
 #include "dballe/core/var.h"
 #include "dballe/core/query.h"
 #include "dballe/core/data.h"
 #include "dballe/db/v7/cursor.h"
+#include "utils/methods.h"
+#include "utils/type.h"
+#include "utils/wreport.h"
 #include "common.h"
 #include "types.h"
 #include "cursor.h"
 #include "data.h"
-#include "config.h"
-#include "impl-utils.h"
+#include <datetime.h>
 
 using namespace std;
 using namespace dballe;
@@ -44,7 +44,7 @@ PyObject* impl_richcompare(const T& a, const T& b, int op)
 
 namespace level {
 
-struct ltype1 : Getter<dpy_Level>
+struct ltype1 : Getter<ltype1, dpy_Level>
 {
     constexpr static const char* name = "ltype1";
     constexpr static const char* doc = "type of the level or of the first layer";
@@ -56,7 +56,7 @@ struct ltype1 : Getter<dpy_Level>
     }
 };
 
-struct l1 : Getter<dpy_Level>
+struct l1 : Getter<l1, dpy_Level>
 {
     constexpr static const char* name = "l1";
     constexpr static const char* doc = "value of the level or of the first layer";
@@ -68,7 +68,7 @@ struct l1 : Getter<dpy_Level>
     }
 };
 
-struct ltype2 : Getter<dpy_Level>
+struct ltype2 : Getter<ltype2, dpy_Level>
 {
     constexpr static const char* name = "ltype2";
     constexpr static const char* doc = "type of the second layer";
@@ -80,7 +80,7 @@ struct ltype2 : Getter<dpy_Level>
     }
 };
 
-struct l2 : Getter<dpy_Level>
+struct l2 : Getter<l2, dpy_Level>
 {
     constexpr static const char* name = "l2";
     constexpr static const char* doc = "value of the second layer";
@@ -92,7 +92,7 @@ struct l2 : Getter<dpy_Level>
     }
 };
 
-struct Definition : public Binding<Definition, dpy_Level>
+struct Definition : public Type<Definition, dpy_Level>
 {
     constexpr static const char* name = "Level";
     constexpr static const char* qual_name = "dballe.Level";
@@ -107,26 +107,31 @@ Constructor: Level(ltype1: int=None, l1: int=None, ltype2: int=None, l2: int=Non
 
     static PyObject* _str(Impl* self)
     {
-        std::string res = self->val.to_string("None");
-        return PyUnicode_FromStringAndSize(res.data(), res.size());
+        try {
+            return to_python(self->val.to_string("None"));
+        } DBALLE_CATCH_RETURN_PYO
     }
 
     static PyObject* _repr(Impl* self)
     {
-        std::string res = "dballe.Level(";
-        res += self->val.to_string("None");
-        res += ")";
-        return PyUnicode_FromStringAndSize(res.data(), res.size());
+        try {
+            std::string res = "dballe.Level(";
+            res += self->val.to_string("None");
+            res += ")";
+            return to_python(res);
+        } DBALLE_CATCH_RETURN_PYO
     }
 
     static PyObject* _iter(Impl* self)
     {
-        py_unique_ptr<PyTupleObject> res((PyTupleObject*)PyTuple_New(4));
-        PyTuple_SET_ITEM(res, 0, dballe_int_to_python(self->val.ltype1));
-        PyTuple_SET_ITEM(res, 1, dballe_int_to_python(self->val.l1));
-        PyTuple_SET_ITEM(res, 2, dballe_int_to_python(self->val.ltype2));
-        PyTuple_SET_ITEM(res, 3, dballe_int_to_python(self->val.l2));
-        return PyObject_GetIter((PyObject*)res.get());
+        try {
+            py_unique_ptr<PyTupleObject> res((PyTupleObject*)throw_ifnull(PyTuple_New(4)));
+            PyTuple_SET_ITEM(res, 0, dballe_int_to_python(self->val.ltype1));
+            PyTuple_SET_ITEM(res, 1, dballe_int_to_python(self->val.l1));
+            PyTuple_SET_ITEM(res, 2, dballe_int_to_python(self->val.ltype2));
+            PyTuple_SET_ITEM(res, 3, dballe_int_to_python(self->val.l2));
+            return PyObject_GetIter((PyObject*)res.get());
+        } DBALLE_CATCH_RETURN_PYO
     }
 
     static void _dealloc(Impl* self)
@@ -176,7 +181,7 @@ Definition* definition = nullptr;
 
 namespace trange {
 
-struct pind : Getter<dpy_Trange>
+struct pind : Getter<pind, dpy_Trange>
 {
     constexpr static const char* name = "pind";
     constexpr static const char* doc = "Time range type indicator";
@@ -188,7 +193,7 @@ struct pind : Getter<dpy_Trange>
     }
 };
 
-struct p1 : Getter<dpy_Trange>
+struct p1 : Getter<p1, dpy_Trange>
 {
     constexpr static const char* name = "p1";
     constexpr static const char* doc = "Time range P1 indicator";
@@ -200,7 +205,7 @@ struct p1 : Getter<dpy_Trange>
     }
 };
 
-struct p2 : Getter<dpy_Trange>
+struct p2 : Getter<p2, dpy_Trange>
 {
     constexpr static const char* name = "p2";
     constexpr static const char* doc = "Time range P2 indicator";
@@ -213,7 +218,7 @@ struct p2 : Getter<dpy_Trange>
     }
 };
 
-struct Definition : public Binding<Definition, dpy_Trange>
+struct Definition : public Type<Definition, dpy_Trange>
 {
     constexpr static const char* name = "Trange";
     constexpr static const char* qual_name = "dballe.Trange";
@@ -228,25 +233,30 @@ Constructor: Trange(pind: int=None, p1: int=None, p2: int=None)
 
     static PyObject* _str(Impl* self)
     {
-        std::string res = self->val.to_string("None");
-        return PyUnicode_FromStringAndSize(res.data(), res.size());
+        try {
+            return to_python(self->val.to_string("None"));
+        } DBALLE_CATCH_RETURN_PYO
     }
 
     static PyObject* _repr(Impl* self)
     {
-        std::string res = "dballe.Trange(";
-        res += self->val.to_string("None");
-        res += ")";
-        return PyUnicode_FromStringAndSize(res.data(), res.size());
+        try {
+            std::string res = "dballe.Trange(";
+            res += self->val.to_string("None");
+            res += ")";
+            return to_python(res);
+        } DBALLE_CATCH_RETURN_PYO
     }
 
     static PyObject* _iter(Impl* self)
     {
-        py_unique_ptr<PyTupleObject> res((PyTupleObject*)PyTuple_New(3));
-        PyTuple_SET_ITEM(res, 0, dballe_int_to_python(self->val.pind));
-        PyTuple_SET_ITEM(res, 1, dballe_int_to_python(self->val.p1));
-        PyTuple_SET_ITEM(res, 2, dballe_int_to_python(self->val.p2));
-        return PyObject_GetIter((PyObject*)res.get());
+        try {
+            py_unique_ptr<PyTupleObject> res((PyTupleObject*)throw_ifnull(PyTuple_New(3)));
+            PyTuple_SET_ITEM(res, 0, dballe_int_to_python(self->val.pind));
+            PyTuple_SET_ITEM(res, 1, dballe_int_to_python(self->val.p1));
+            PyTuple_SET_ITEM(res, 2, dballe_int_to_python(self->val.p2));
+            return PyObject_GetIter((PyObject*)res.get());
+        } DBALLE_CATCH_RETURN_PYO
     }
 
     static void _dealloc(Impl* self)
@@ -310,7 +320,7 @@ struct StationImplTraits<DBStation>
 };
 
 template<typename Station>
-struct report : Getter<typename StationImplTraits<Station>::Impl>
+struct report : Getter<report<Station>, typename StationImplTraits<Station>::Impl>
 {
     typedef typename StationImplTraits<Station>::Impl Impl;
     constexpr static const char* name = "report";
@@ -326,7 +336,7 @@ struct report : Getter<typename StationImplTraits<Station>::Impl>
     }
 };
 
-struct id : Getter<dpy_DBStation>
+struct id : Getter<id, dpy_DBStation>
 {
     constexpr static const char* name = "id";
     constexpr static const char* doc = "database ID for this station";
@@ -339,7 +349,7 @@ struct id : Getter<dpy_DBStation>
 };
 
 template<typename Station>
-struct lat : Getter<typename StationImplTraits<Station>::Impl>
+struct lat : Getter<lat<Station>, typename StationImplTraits<Station>::Impl>
 {
     typedef typename StationImplTraits<Station>::Impl Impl;
     constexpr static const char* name = "lat";
@@ -356,7 +366,7 @@ struct lat : Getter<typename StationImplTraits<Station>::Impl>
 };
 
 template<typename Station>
-struct lon : Getter<typename StationImplTraits<Station>::Impl>
+struct lon : Getter<lon<Station>, typename StationImplTraits<Station>::Impl>
 {
     typedef typename StationImplTraits<Station>::Impl Impl;
     constexpr static const char* name = "lon";
@@ -373,7 +383,7 @@ struct lon : Getter<typename StationImplTraits<Station>::Impl>
 };
 
 template<typename Station>
-struct ident : Getter<typename StationImplTraits<Station>::Impl>
+struct ident : Getter<ident<Station>, typename StationImplTraits<Station>::Impl>
 {
     typedef typename StationImplTraits<Station>::Impl Impl;
     constexpr static const char* name = "ident";
@@ -387,7 +397,7 @@ struct ident : Getter<typename StationImplTraits<Station>::Impl>
 };
 
 template<typename Base, typename Station>
-struct BaseDefinition : public Binding<Base, typename StationImplTraits<Station>::Impl>
+struct BaseDefinition : public Type<Base, typename StationImplTraits<Station>::Impl>
 {
     typedef typename StationImplTraits<Station>::Impl Impl;
 
@@ -395,17 +405,20 @@ struct BaseDefinition : public Binding<Base, typename StationImplTraits<Station>
 
     static PyObject* _str(Impl* self)
     {
-        std::string res = self->val.to_string("None");
-        return PyUnicode_FromStringAndSize(res.data(), res.size());
+        try {
+            return to_python(self->val.to_string("None"));
+        } DBALLE_CATCH_RETURN_PYO
     }
 
     static PyObject* _repr(Impl* self)
     {
-        std::string res = Base::qual_name;
-        res += "(";
-        res += self->val.to_string("None");
-        res += ")";
-        return PyUnicode_FromStringAndSize(res.data(), res.size());
+        try {
+            std::string res = Base::qual_name;
+            res += "(";
+            res += self->val.to_string("None");
+            res += ")";
+            return to_python(res);
+        } DBALLE_CATCH_RETURN_PYO
     }
 
     static void _dealloc(Impl* self)
@@ -1228,7 +1241,7 @@ PyObject* attrs_to_python(const wreport::Var& var)
 {
     pyo_unique_ptr list(PyList_New(0));
     for (const wreport::Var* a = var.next_attr(); a; a = a->next_attr())
-        if (PyList_Append(list, (PyObject*)wrpy->var_create_copy(*a)) == -1)
+        if (PyList_Append(list, wreport_api.var_create(*a)) == -1)
             throw PythonException();
     return list.release();
 }
@@ -1237,7 +1250,7 @@ void add_var_to_dict(PyObject* dict, const wreport::Var& var)
 {
     char bcode[7];
     format_bcode(var.code(), bcode);
-    pyo_unique_ptr pyvar((PyObject*)throw_ifnull(wrpy->var_create_copy(var)));
+    pyo_unique_ptr pyvar(wreport_api.var_create(var));
     if (PyDict_SetItemString(dict, bcode, pyvar))
         throw PythonException();
 }
@@ -1253,14 +1266,6 @@ std::set<wreport::Varcode> varcodes_from_python(PyObject* o)
     for (unsigned i = 0; i < size; ++i)
         res.insert(varcode_from_python(vals[i]));
     return res;
-}
-
-bool bool_from_python(PyObject* o)
-{
-    int is_true = PyObject_IsTrue(o);
-    if (is_true == -1)
-        throw PythonException();
-    return is_true == 1;
 }
 
 void set_dict(PyObject* dict, const char* key, const char* val)
@@ -1319,16 +1324,16 @@ void register_types(PyObject* m)
         PyDateTime_IMPORT;
 
     level::definition = new level::Definition;
-    dpy_Level_Type = level::definition->activate(m);
+    level::definition->define(dpy_Level_Type , m);
 
     trange::definition = new trange::Definition;
-    dpy_Trange_Type = trange::definition->activate(m);
+    trange::definition->define(dpy_Trange_Type, m);
 
     station::definition = new station::Definition;
-    dpy_Station_Type = station::definition->activate(m);
+    station::definition->define(dpy_Station_Type, m);
 
     station::dbdefinition = new station::DBDefinition;
-    dpy_DBStation_Type = station::dbdefinition->activate(m);
+    station::dbdefinition->define(dpy_DBStation_Type, m);
 }
 
 }

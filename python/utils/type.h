@@ -2,6 +2,7 @@
 #define DBALLE_PYTHON_TYPE_H
 
 #include "core.h"
+#include "methods.h"
 #include <array>
 
 namespace dballe {
@@ -38,6 +39,21 @@ struct GetSetters
     }
 
     PyGetSetDef* as_py() { return const_cast<PyGetSetDef*>(m_data.data()); }
+};
+
+
+template<typename Impl>
+struct MethGenericEnter : MethNoargs<MethGenericEnter<Impl>, Impl>
+{
+    constexpr static const char* name = "__enter__";
+    constexpr static const char* returns = "self";
+    constexpr static const char* summary = "Context manager __enter__";
+    constexpr static const char* doc = "Returns the object itself";
+    static PyObject* run(Impl* self)
+    {
+        Py_INCREF(self);
+        return (PyObject*)self;
+    }
 };
 
 

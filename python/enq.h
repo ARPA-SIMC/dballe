@@ -2,9 +2,9 @@
 #define DBALLE_PYTHON_ENQ_H
 
 #include <dballe/core/enq.h>
-#include <Python.h>
 #include "common.h"
 #include "types.h"
+#include "utils/wreport.h"
 
 namespace dballe {
 namespace python {
@@ -218,7 +218,7 @@ struct Enqpy : public impl::Enq
     void set_var(const wreport::Var* val) override
     {
         if (!val) return;
-        res = (PyObject*)throw_ifnull(wrpy->var_create_copy(*val));
+        res = (PyObject*)throw_ifnull(wreport_api.var_create(*val));
         missing = false;
     }
 
@@ -284,7 +284,7 @@ struct Enqpy : public impl::Enq
     void set_var_value(const wreport::Var& var) override
     {
         missing = false;
-        res = (PyObject*)throw_ifnull(wrpy->var_create_copy(var));
+        res = (PyObject*)throw_ifnull(wreport_api.var_create(var));
     }
 };
 
