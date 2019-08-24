@@ -23,7 +23,7 @@ extern "C" {
  *
  * To use them, retrieve a pointer to the struct via the Capsule system:
  * \code
- * wrpy_c_api* wrpy = (wrpy_c_api*)PyCapsule_Import("_wreport._C_API", 0);
+ * dbapy_c_api* wrpy = (dbapy_c_api*)PyCapsule_Import("_dballe._C_API", 0);
  * \endcode
  * 
  */
