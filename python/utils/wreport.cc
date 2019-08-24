@@ -35,8 +35,8 @@ void Wreport::import()
 
     if (m_api->version_minor < WREPORT_API1_MIN_VERSION)
     {
-        PyErr_Format(PyExc_RuntimeError, "wreport C API version is %d.%d but only 1.x is supported, with x > 1",
-                     m_api->version_major, m_api->version_minor);
+        PyErr_Format(PyExc_RuntimeError, "wreport C API version is %d.%d but only 1.x is supported, with x > %d",
+                     m_api->version_major, m_api->version_minor, WREPORT_API1_MIN_VERSION);
         throw PythonException();
     }
 #endif
