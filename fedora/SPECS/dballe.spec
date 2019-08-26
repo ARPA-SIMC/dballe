@@ -4,7 +4,7 @@
 
 Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
 Name: dballe
-Version: 8.2
+Version: 8.3
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -309,6 +309,10 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Mon Aug  6 2019 Emanuele Di Giacomo <edigiacomo@arpae.it> - 8.3-1
+- ported python bindings to wobblepy
+- cleaned use of wreport python bindings
+
 * Mon Jul  8 2019 Emanuele Di Giacomo <edigiacomo@arpae.it> - 8.2-1
 - Python API: fixed `Message.query_station_data` method (#160)
 - Add level 161 Depth below water surface (#161)
