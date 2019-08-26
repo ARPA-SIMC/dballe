@@ -1,7 +1,7 @@
 #ifndef DBALLE_PYTHON_COMMON_H
 #define DBALLE_PYTHON_COMMON_H
 
-#include <Python.h>
+#include "utils/core.h"
 #include <dballe/fwd.h>
 #include <dballe/types.h>
 #include <wreport/python.h>
@@ -11,104 +11,10 @@
 namespace dballe {
 namespace python {
 
-extern wrpy_c_api* wrpy;
+struct Wreport;
 
-/**
- * unique_ptr-like object that contains PyObject pointers, and that calls
- * Py_DECREF on destruction.
- */
-template<typename Obj>
-class py_unique_ptr
-{
-protected:
-    Obj* ptr;
-
-public:
-    py_unique_ptr() : ptr(nullptr) {}
-    py_unique_ptr(Obj* o) : ptr(o) {}
-    py_unique_ptr(const py_unique_ptr&) = delete;
-    py_unique_ptr(py_unique_ptr&& o) : ptr(o.ptr) { o.ptr = nullptr; }
-    ~py_unique_ptr() { Py_XDECREF(ptr); }
-    py_unique_ptr& operator=(const py_unique_ptr&) = delete;
-    py_unique_ptr& operator=(py_unique_ptr&& o)
-    {
-        if (this == &o) return *this;
-        Py_XDECREF(ptr);
-        ptr = o.ptr;
-        o.ptr = nullptr;
-        return *this;
-    }
-
-    void incref() { Py_XINCREF(ptr); }
-    void decref() { Py_XDECREF(ptr); }
-
-    void clear()
-    {
-        Py_XDECREF(ptr);
-        ptr = nullptr;
-    }
-
-    /// Release the reference without calling Py_DECREF
-    Obj* release()
-    {
-        Obj* res = ptr;
-        ptr = nullptr;
-        return res;
-    }
-
-    /// Use it as a Obj
-    operator Obj*() { return ptr; }
-
-    /// Use it as a Obj
-    Obj* operator->() { return ptr; }
-
-    /// Get the pointer (useful for passing to Py_BuildValue)
-    Obj* get() { return ptr; }
-
-    /// Check if ptr is not nullptr
-    operator bool() const { return ptr; }
-};
-
-typedef py_unique_ptr<PyObject> pyo_unique_ptr;
-
-
-/**
- * Release the GIL during the lifetime of this object;
- */
-struct ReleaseGIL
-{
-    PyThreadState *_save = nullptr;
-
-    ReleaseGIL()
-    {
-        _save = PyEval_SaveThread();
-    }
-
-    ~ReleaseGIL()
-    {
-        lock();
-    }
-
-    void lock()
-    {
-        if (!_save) return;
-        PyEval_RestoreThread(_save);
-        _save = nullptr;
-    }
-};
-
-/**
- * Exception raised when a python function returns an error with an exception
- * set.
- *
- * When catching this exception, python exception information is already set,
- * so the only thing to do is to return the appropriate error to the python
- * caller.
- *
- * This exception carries to information, because it is all set in the python
- * exception information.
- */
-struct PythonException : public std::exception {};
+/// Wreport python API
+extern Wreport wreport_api;
 
 /// Given a wreport exception, set the Python error indicator appropriately.
 void set_wreport_exception(const wreport::error& e);
@@ -151,39 +57,6 @@ FILE* check_file_result(FILE* f, const char* filename=nullptr);
         set_std_exception(se); throw PythonException(); \
     }
 
-template<typename T>
-inline T* throw_ifnull(T* o)
-{
-    if (!o) throw PythonException();
-    return o;
-}
-
-/// Base template for all from_python shortcuts
-template<typename T> inline T from_python(PyObject*) { throw std::runtime_error("method not implemented"); }
-
-/// Convert an utf8 string to a python str object
-PyObject* string_to_python(const char* str);
-inline PyObject* to_python(const char* s) { return string_to_python(s); }
-
-/// Convert an utf8 string to a python str object
-PyObject* string_to_python(const std::string& str);
-inline PyObject* to_python(const std::string& s) { return string_to_python(s); }
-
-/// Convert a python string, bytes or unicode to an utf8 string
-std::string string_from_python(PyObject* o);
-template<> inline std::string from_python<std::string>(PyObject* o) { return string_from_python(o); }
-
-/// Convert a Python object to a double
-double double_from_python(PyObject* o);
-template<> inline double from_python<double>(PyObject* o) { return double_from_python(o); }
-
-/// Convert a double to a Python object
-PyObject* double_to_python(double val);
-inline PyObject* to_python(double val) { return double_to_python(val); }
-
-/// Check if a python object is a string
-bool pyobject_is_string(PyObject* o);
-
 /// If val is MISSING_INT, returns None, else return it as a PyLong
 PyObject* dballe_int_to_python(int val);
 
@@ -192,13 +65,6 @@ int dballe_int_from_python(PyObject* o);
 
 /// Call repr() on \a o, and return the result as a string
 std::string object_repr(PyObject* o);
-
-/**
- * Build a function docstring from its components.
- *
- * Returns a newly allocated string.
- */
-std::string build_method_doc(const char* name, const char* signature, const char* returns, const char* summary, const char* doc);
 
 /**
  * Initialize the python bits to use used by the common functions.

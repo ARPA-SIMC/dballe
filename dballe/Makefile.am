@@ -90,6 +90,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	var.h \
 	cursor.h \
 	db.h \
+	python.h \
 	core/fwd.h \
 	core/error.h \
 	core/shortcuts.h \

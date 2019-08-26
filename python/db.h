@@ -1,8 +1,8 @@
 #ifndef DBALLE_PYTHON_DB_H
 #define DBALLE_PYTHON_DB_H
 
-#include <Python.h>
 #include <dballe/db/db.h>
+#include "utils/core.h"
 
 extern "C" {
 

@@ -1,12 +1,12 @@
 #ifndef DBALLE_PYTHON_CURSOR_H
 #define DBALLE_PYTHON_CURSOR_H
 
-#include <Python.h>
 #include <dballe/types.h>
 #include <dballe/db/db.h>
 #include <dballe/db/v7/fwd.h>
 #include <dballe/db/summary.h>
 #include <dballe/core/var.h>
+#include "utils/core.h"
 
 extern "C" {
 

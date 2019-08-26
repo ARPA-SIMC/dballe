@@ -15,6 +15,10 @@ pkgpython_PYTHON = dballe/dbacsv.py dballe/__init__.py dballe/volnd.py
 pyexec_LTLIBRARIES = _dballe.la
 
 _dballe_la_SOURCES = \
+    utils/core.cc \
+    utils/methods.cc \
+    utils/values.cc \
+    utils/wreport.cc \
     common.cc \
     types.cc \
     data.cc \
@@ -66,7 +70,12 @@ clean-local:
 
 EXTRA_DIST += \
     doc-dballe \
-    impl-utils.h \
+    utils/core.h \
+    utils/methods.h \
+    utils/type.h \
+    utils/values.h \
+    utils/dict.h \
+    utils/wreport.h \
     enq.h \
     common.h \
     types.h \

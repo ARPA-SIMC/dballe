@@ -1,11 +1,10 @@
 #define _DBALLE_LIBRARY_CODE
-#include <Python.h>
 #include "common.h"
 #include "exporter.h"
 #include "message.h"
 #include "dballe/file.h"
 #include "dballe/msg/msg.h"
-#include "impl-utils.h"
+#include "utils/type.h"
 
 using namespace std;
 using namespace dballe;
@@ -18,7 +17,7 @@ PyTypeObject* dpy_Exporter_Type = nullptr;
 
 namespace {
 
-struct to_binary : MethKwargs<dpy_Exporter>
+struct to_binary : MethKwargs<to_binary, dpy_Exporter>
 {
     constexpr static const char* name = "to_binary";
     constexpr static const char* signature = "contents: Union[dballe.Message, Sequence[dballe.Message], Iterable[dballe.Message]]";
@@ -75,7 +74,7 @@ Encode a dballe.Message or a sequence of dballe.Message into a bytes object.
 };
 
 
-struct Definition : public Binding<Definition, dpy_Exporter>
+struct Definition : public Type<Definition, dpy_Exporter>
 {
     constexpr static const char* name = "Exporter";
     constexpr static const char* qual_name = "dballe.Exporter";
@@ -138,7 +137,7 @@ void register_exporter(PyObject* m)
     common_init();
 
     definition = new Definition;
-    dpy_Exporter_Type = definition->activate(m);
+    definition->define(dpy_Exporter_Type, m);
 }
 
 }

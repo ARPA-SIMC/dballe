@@ -1,9 +1,9 @@
 #ifndef DBALLE_PYTHON_EXPLORER_H
 #define DBALLE_PYTHON_EXPLORER_H
 
-#include <Python.h>
 #include <dballe/db/explorer.h>
 #include <memory>
+#include "utils/core.h"
 
 extern "C" {
 

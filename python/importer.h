@@ -1,7 +1,6 @@
 #ifndef DBALLE_PYTHON_IMPORTER_H
 #define DBALLE_PYTHON_IMPORTER_H
 
-#include <Python.h>
 #include "dballe/importer.h"
 #include "file.h"
 #include <memory>

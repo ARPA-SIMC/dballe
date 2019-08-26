@@ -1,4 +1,3 @@
-#include <Python.h>
 #include <wreport/python.h>
 #include "common.h"
 #include "types.h"
@@ -11,9 +10,10 @@
 #include "importer.h"
 #include "exporter.h"
 #include "explorer.h"
+#include "utils/wreport.h"
+#include "dballe/python.h"
 #include "dballe/types.h"
 #include "dballe/var.h"
-#include "config.h"
 
 using namespace std;
 using namespace dballe;
@@ -27,7 +27,7 @@ static PyObject* dballe_varinfo(PyTypeObject *type, PyObject *args, PyObject *kw
     const char* var_name;
     if (!PyArg_ParseTuple(args, "s", &var_name))
         return NULL;
-    return (PyObject*)wrpy->varinfo_create(dballe::varinfo(varcode_parse(var_name)));
+    return wreport_api.varinfo_create(dballe::varinfo(varcode_parse(var_name)));
 }
 
 static PyObject* dballe_var_uncaught(PyTypeObject *type, PyObject *args)
@@ -43,27 +43,26 @@ static PyObject* dballe_var_uncaught(PyTypeObject *type, PyObject *args)
             double v = PyFloat_AsDouble(val);
             if (v == -1.0 && PyErr_Occurred())
                 return nullptr;
-            return (PyObject*)wrpy->var_create_d(dballe::varinfo(resolve_varcode(var_name)), v);
+            return wreport_api.var_create(dballe::varinfo(resolve_varcode(var_name)), v);
         } else if (PyLong_Check(val)) {
             long v = PyLong_AsLong(val);
             if (v == -1 && PyErr_Occurred())
                 return nullptr;
-            return (PyObject*)wrpy->var_create_i(dballe::varinfo(resolve_varcode(var_name)), (int)v);
+            return wreport_api.var_create(dballe::varinfo(resolve_varcode(var_name)), (int)v);
         } else if (PyUnicode_Check(val) || PyBytes_Check(val)) {
             string v = string_from_python(val);
-            return (PyObject*)wrpy->var_create_s(dballe::varinfo(resolve_varcode(var_name)), v);
-        } else if ((Py_TYPE(val) == wrpy->var_type || PyType_IsSubtype(Py_TYPE(val), wrpy->var_type))) {
-            wrpy_Var* res = wrpy->var_create(dballe::varinfo(resolve_varcode(var_name)));
-            res->var.setval(((wrpy_Var*)val)->var);
-            return (PyObject*)res;
+            return wreport_api.var_create(dballe::varinfo(resolve_varcode(var_name)), v);
+        } else if (wreport_api.var_check(val)) {
+            wreport::Var& src = wreport_api.var(val);
+            return wreport_api.var_create(dballe::varinfo(resolve_varcode(var_name)), src);
         } else if (val == Py_None) {
-            return (PyObject*)wrpy->var_create(dballe::varinfo(resolve_varcode(var_name)));
+            return wreport_api.var_create(dballe::varinfo(resolve_varcode(var_name)));
         } else {
             PyErr_SetString(PyExc_TypeError, "Expected int, float, str, unicode, or None");
             return NULL;
         }
     } else
-        return (PyObject*)wrpy->var_create(dballe::varinfo(resolve_varcode(var_name)));
+        return wreport_api.var_create(dballe::varinfo(resolve_varcode(var_name)));
 }
 
 static PyObject* dballe_var(PyTypeObject *type, PyObject *args)
@@ -160,18 +159,30 @@ PyMODINIT_FUNC PyInit__dballe(void)
 {
     using namespace dballe::python;
 
+    static dbapy_c_api c_api;
+
     try {
+        memset(&c_api, 0, sizeof(dbapy_c_api));
+        c_api.version_major = 1;
+        c_api.version_minor = 0;
+
         pyo_unique_ptr m(PyModule_Create(&dballe_module));
         register_types(m);
         register_data(m);
         register_binarymessage(m);
         register_file(m);
-        register_message(m);
+        register_message(m, c_api);
         register_importer(m);
         register_exporter(m);
         register_db(m);
         register_cursor(m);
         register_explorer(m);
+
+        // Create a Capsule containing the API struct's address
+        pyo_unique_ptr c_api_object(throw_ifnull(PyCapsule_New((void *)&c_api, "_dballe._C_API", nullptr)));
+        int res = PyModule_AddObject(m, "_C_API", c_api_object.release());
+        if (res)
+            return nullptr;
 
         return m.release();
     } DBALLE_CATCH_RETURN_PYO

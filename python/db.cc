@@ -1,4 +1,3 @@
-#include <Python.h>
 #include "db.h"
 #include "cursor.h"
 #include "common.h"
@@ -16,7 +15,7 @@
 #include "dballe/db/v7/cursor.h"
 #include <algorithm>
 #include <wreport/bulletin.h>
-#include "impl-utils.h"
+#include "utils/type.h"
 #include "message.h"
 #include "importer.h"
 
@@ -119,7 +118,7 @@ static PyObject* get_insert_ids(const Data& data)
 }
 
 template<typename Impl>
-struct insert_station_data : MethKwargs<Impl>
+struct insert_station_data : MethKwargs<insert_station_data<Impl>, Impl>
 {
     constexpr static const char* name = "insert_station_data";
     constexpr static const char* signature = "record: Union[Dict[str, Any], dballe.Cursor], can_replace: bool=False, can_add_stations: bool=False";
@@ -155,7 +154,7 @@ database ID of its value.
 };
 
 template<typename Impl>
-struct insert_data : MethKwargs<Impl>
+struct insert_data : MethKwargs<insert_data<Impl>, Impl>
 {
     constexpr static const char* name = "insert_data";
     constexpr static const char* signature = "record: Union[Dict[str, Any], dballe.Cursor], can_replace: bool=False, can_add_stations: bool=False";
@@ -191,7 +190,7 @@ database ID of its value.
 };
 
 template<typename Base, typename Impl>
-struct MethQuery : public MethKwargs<Impl>
+struct MethQuery : public MethKwargs<Base, Impl>
 {
     constexpr static const char* signature = "query: Dict[str, Any]";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
@@ -258,7 +257,7 @@ struct remove : MethQuery<remove<Impl>, Impl>
 };
 
 template<typename Impl>
-struct remove_all : MethNoargs<Impl>
+struct remove_all : MethNoargs<remove_all<Impl>, Impl>
 {
     constexpr static const char* name = "remove_all";
     constexpr static const char* summary = "Remove all data from the database";
@@ -348,7 +347,7 @@ struct query_messages : MethQuery<query_messages<Impl>, Impl>
 };
 
 template<typename Impl>
-struct query_attrs : MethKwargs<Impl>
+struct query_attrs : MethKwargs<query_attrs<Impl>, Impl>
 {
     constexpr static const char* name = "query_attrs";
     constexpr static const char* signature = "varcode: str, reference_id: int, attrs: Iterable[str]";
@@ -381,7 +380,7 @@ struct query_attrs : MethKwargs<Impl>
 
 
 template<typename Impl>
-struct attr_query_station : MethKwargs<Impl>
+struct attr_query_station : MethKwargs<attr_query_station<Impl>, Impl>
 {
     constexpr static const char* name = "attr_query_station";
     constexpr static const char* signature = "varid: int";
@@ -407,7 +406,7 @@ struct attr_query_station : MethKwargs<Impl>
 };
 
 template<typename Impl>
-struct attr_query_data : MethKwargs<Impl>
+struct attr_query_data : MethKwargs<attr_query_data<Impl>, Impl>
 {
     constexpr static const char* name = "attr_query_data";
     constexpr static const char* signature = "varid: int";
@@ -433,7 +432,7 @@ struct attr_query_data : MethKwargs<Impl>
 };
 
 template<typename Impl>
-struct attr_insert : MethKwargs<Impl>
+struct attr_insert : MethKwargs<attr_insert<Impl>, Impl>
 {
     constexpr static const char* name = "attr_insert";
     constexpr static const char* signature = "varcode: str, attrs: Dict[str, Any], varid: int=None";
@@ -469,7 +468,7 @@ struct attr_insert : MethKwargs<Impl>
 };
 
 template<typename Impl>
-struct attr_insert_station : MethKwargs<Impl>
+struct attr_insert_station : MethKwargs<attr_insert_station<Impl>, Impl>
 {
     constexpr static const char* name = "attr_insert_station";
     constexpr static const char* signature = "varid: int, attrs: Dict[str, Any]";
@@ -494,7 +493,7 @@ struct attr_insert_station : MethKwargs<Impl>
 };
 
 template<typename Impl>
-struct attr_insert_data : MethKwargs<Impl>
+struct attr_insert_data : MethKwargs<attr_insert_data<Impl>, Impl>
 {
     constexpr static const char* name = "attr_insert_data";
     constexpr static const char* signature = "varid: int, attrs: Dict[str, Any]";
@@ -519,7 +518,7 @@ struct attr_insert_data : MethKwargs<Impl>
 };
 
 template<typename Impl>
-struct attr_remove : MethKwargs<Impl>
+struct attr_remove : MethKwargs<attr_remove<Impl>, Impl>
 {
     constexpr static const char* name = "attr_remove";
     constexpr static const char* signature = "varcode: str, varid: int=None, attrs: Iterable[str]";
@@ -547,7 +546,7 @@ struct attr_remove : MethKwargs<Impl>
 };
 
 template<typename Impl>
-struct attr_remove_station : MethKwargs<Impl>
+struct attr_remove_station : MethKwargs<attr_remove_station<Impl>, Impl>
 {
     constexpr static const char* name = "attr_remove_station";
     constexpr static const char* signature = "varid: int, attrs: Iterable[str]";
@@ -572,7 +571,7 @@ struct attr_remove_station : MethKwargs<Impl>
 };
 
 template<typename Impl>
-struct attr_remove_data : MethKwargs<Impl>
+struct attr_remove_data : MethKwargs<attr_remove_data<Impl>, Impl>
 {
     constexpr static const char* name = "attr_remove_data";
     constexpr static const char* signature = "varid: int, attrs: Iterable[str]";
@@ -627,7 +626,7 @@ static unsigned db_load_file(DB& db, FILE* file, bool close_on_exit, const std::
 }
 
 template<typename Impl>
-struct load : MethKwargs<Impl>
+struct load : MethKwargs<load<Impl>, Impl>
 {
     constexpr static const char* name = "load";
     constexpr static const char* signature = "fp: file, encoding: str=None, attrs: bool=False, full_pseudoana: bool=False, overwrite: bool=False";
@@ -706,7 +705,7 @@ based on the first byte of the file.
 };
 
 template<typename Impl>
-struct export_to_file : MethKwargs<Impl>
+struct export_to_file : MethKwargs<export_to_file<Impl>, Impl>
 {
     constexpr static const char* name = "export_to_file";
     constexpr static const char* signature = "query: Dict[str, Any], format: str, filename: Union[str, file], generic: bool=False";
@@ -735,7 +734,7 @@ struct export_to_file : MethKwargs<Impl>
 
             auto query = query_from_python(pyquery);
 
-            if (pyobject_is_string(file))
+            if (PyUnicode_Check(file))
             {
                 std::string filename = string_from_python(file);
                 std::unique_ptr<File> out = File::create(encoding, filename, "wb");
@@ -783,7 +782,7 @@ struct export_to_file : MethKwargs<Impl>
 
 
 template<typename Impl>
-struct import_messages : MethKwargs<Impl>
+struct import_messages : MethKwargs<import_messages<Impl>, Impl>
 {
     constexpr static const char* name = "import_messages";
     constexpr static const char* signature = "messages: Union[dballe.Message, Sequence[dballe.Message], Iterable[dballe.Message], dballe.ImporterFile], report: str=None, import_attributres: bool=False, update_station: bool=False, overwrite: bool=False";
@@ -894,7 +893,7 @@ parameter, only imports data whose varcode is in the list.
 
 namespace pydb {
 
-struct get_default_format : ClassMethNoargs
+struct get_default_format : ClassMethNoargs<get_default_format>
 {
     constexpr static const char* name = "get_default_format";
     constexpr static const char* returns = "str";
@@ -908,7 +907,7 @@ struct get_default_format : ClassMethNoargs
     }
 };
 
-struct set_default_format : ClassMethKwargs
+struct set_default_format : ClassMethKwargs<set_default_format>
 {
     constexpr static const char* name = "set_default_format";
     constexpr static const char* signature = "format: str";
@@ -927,7 +926,7 @@ struct set_default_format : ClassMethKwargs
     }
 };
 
-struct connect_from_file : ClassMethKwargs
+struct connect_from_file : ClassMethKwargs<connect_from_file>
 {
     constexpr static const char* name = "connect_from_file";
     constexpr static const char* signature = "name: str";
@@ -949,7 +948,7 @@ struct connect_from_file : ClassMethKwargs
     }
 };
 
-struct connect_from_url : ClassMethKwargs
+struct connect_from_url : ClassMethKwargs<connect_from_url>
 {
     constexpr static const char* name = "connect_from_url";
     constexpr static const char* signature = "url: str";
@@ -975,7 +974,7 @@ struct connect_from_url : ClassMethKwargs
     }
 };
 
-struct connect : ClassMethKwargs
+struct connect : ClassMethKwargs<connect>
 {
     constexpr static const char* name = "connect";
     constexpr static const char* signature = "url: str";
@@ -998,7 +997,7 @@ struct connect : ClassMethKwargs
     }
 };
 
-struct connect_test : ClassMethNoargs
+struct connect_test : ClassMethNoargs<connect_test>
 {
     constexpr static const char* name = "connect_test";
     constexpr static const char* returns = "dballe.DB";
@@ -1015,7 +1014,7 @@ struct connect_test : ClassMethNoargs
     }
 };
 
-struct is_url : ClassMethKwargs
+struct is_url : ClassMethKwargs<is_url>
 {
     constexpr static const char* name = "is_url";
     constexpr static const char* signature = "url: str";
@@ -1037,7 +1036,7 @@ struct is_url : ClassMethKwargs
     }
 };
 
-struct transaction : MethKwargs<dpy_DB>
+struct transaction : MethKwargs<transaction, dpy_DB>
 {
     constexpr static const char* name = "transaction";
     constexpr static const char* signature = "readonly: bool=False";
@@ -1057,7 +1056,7 @@ struct transaction : MethKwargs<dpy_DB>
     }
 };
 
-struct disappear : MethNoargs<dpy_DB>
+struct disappear : MethNoargs<disappear, dpy_DB>
 {
     constexpr static const char* name = "disappear";
     constexpr static const char* doc = "Remove all DB-All.e tables and data from the database, if possible";
@@ -1071,7 +1070,7 @@ struct disappear : MethNoargs<dpy_DB>
     }
 };
 
-struct reset : MethKwargs<dpy_DB>
+struct reset : MethKwargs<reset, dpy_DB>
 {
     constexpr static const char* name = "reset";
     constexpr static const char* signature = "repinfo_file: str=None";
@@ -1091,7 +1090,7 @@ struct reset : MethKwargs<dpy_DB>
     }
 };
 
-struct vacuum : MethNoargs<dpy_DB>
+struct vacuum : MethNoargs<vacuum, dpy_DB>
 {
     constexpr static const char* name = "vacuum";
     constexpr static const char* doc = "Perform database cleanup operations";
@@ -1106,7 +1105,7 @@ struct vacuum : MethNoargs<dpy_DB>
 };
 
 
-struct Definition : public Binding<Definition, dpy_DB>
+struct Definition : public Type<Definition, dpy_DB>
 {
     constexpr static const char* name = "DB";
     constexpr static const char* qual_name = "dballe.DB";
@@ -1175,7 +1174,7 @@ namespace pytr {
 
 typedef MethGenericEnter<dpy_Transaction> __enter__;
 
-struct __exit__ : MethVarargs<dpy_Transaction>
+struct __exit__ : MethVarargs<__exit__, dpy_Transaction>
 {
     constexpr static const char* name = "__exit__";
     constexpr static const char* doc = "Context manager __exit__";
@@ -1198,7 +1197,7 @@ struct __exit__ : MethVarargs<dpy_Transaction>
     }
 };
 
-struct commit : MethNoargs<dpy_Transaction>
+struct commit : MethNoargs<commit, dpy_Transaction>
 {
     constexpr static const char* name = "commit";
     constexpr static const char* summary = "commit the transaction";
@@ -1212,7 +1211,7 @@ struct commit : MethNoargs<dpy_Transaction>
     }
 };
 
-struct rollback : MethNoargs<dpy_Transaction>
+struct rollback : MethNoargs<rollback, dpy_Transaction>
 {
     constexpr static const char* name = "rollback";
     constexpr static const char* summary = "roll back the transaction";
@@ -1227,7 +1226,7 @@ struct rollback : MethNoargs<dpy_Transaction>
 };
 
 
-struct Definition : public Binding<Definition, dpy_Transaction>
+struct Definition : public Type<Definition, dpy_Transaction>
 {
     constexpr static const char* name = "Transaction";
     constexpr static const char* qual_name = "dballe.Transaction";
@@ -1329,10 +1328,10 @@ void register_db(PyObject* m)
     common_init();
 
     pydb::definition = new pydb::Definition;
-    dpy_DB_Type = pydb::definition->activate(m);
+    pydb::definition->define(dpy_DB_Type, m);
 
     pytr::definition = new pytr::Definition;
-    dpy_Transaction_Type = pytr::definition->activate(m);
+    pytr::definition->define(dpy_Transaction_Type, m);
 }
 
 }

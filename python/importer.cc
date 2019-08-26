@@ -1,5 +1,4 @@
 #define _DBALLE_LIBRARY_CODE
-#include <Python.h>
 #include "common.h"
 #include "importer.h"
 #include "binarymessage.h"
@@ -7,7 +6,7 @@
 #include "message.h"
 #include "dballe/file.h"
 #include "dballe/msg/msg.h"
-#include "impl-utils.h"
+#include "utils/type.h"
 
 using namespace std;
 using namespace dballe;
@@ -25,7 +24,7 @@ namespace importerfile {
 
 typedef MethGenericEnter<dpy_ImporterFile> __enter__;
 
-struct __exit__ : MethVarargs<dpy_ImporterFile>
+struct __exit__ : MethVarargs<__exit__, dpy_ImporterFile>
 {
     constexpr static const char* name = "__exit__";
     constexpr static const char* doc = "Context manager __exit__";
@@ -48,7 +47,7 @@ struct __exit__ : MethVarargs<dpy_ImporterFile>
 };
 
 
-struct Definition : public Binding<Definition, dpy_ImporterFile>
+struct Definition : public Type<Definition, dpy_ImporterFile>
 {
     constexpr static const char* name = "ImporterFile";
     constexpr static const char* qual_name = "dballe.ImporterFile";
@@ -113,7 +112,7 @@ Definition* definition = nullptr;
 }
 
 namespace importer {
-struct from_binary : MethKwargs<dpy_Importer>
+struct from_binary : MethKwargs<from_binary, dpy_Importer>
 {
     constexpr static const char* name = "from_binary";
     constexpr static const char* signature = "binmsg: dballe.BinaryMessage";
@@ -135,7 +134,7 @@ struct from_binary : MethKwargs<dpy_Importer>
     }
 };
 
-struct from_file : MethKwargs<dpy_Importer>
+struct from_file : MethKwargs<from_file, dpy_Importer>
 {
     constexpr static const char* name = "from_file";
     constexpr static const char* signature = "file: Union[dballe.File, str, File]";
@@ -173,7 +172,7 @@ is automatically constructed if needed, using the importer encoding.
     }
 };
 
-struct Definition : public Binding<Definition, dpy_Importer>
+struct Definition : public Type<Definition, dpy_Importer>
 {
     constexpr static const char* name = "Importer";
     constexpr static const char* qual_name = "dballe.Importer";
@@ -263,10 +262,10 @@ void register_importer(PyObject* m)
     common_init();
 
     importerfile::definition = new importerfile::Definition;
-    dpy_ImporterFile_Type = importerfile::definition->activate(m);
+    importerfile::definition->define(dpy_ImporterFile_Type, m);
 
     importer::definition = new importer::Definition;
-    dpy_Importer_Type = importer::definition->activate(m);
+    importer::definition->define(dpy_Importer_Type, m);
 }
 
 }

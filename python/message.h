@@ -1,11 +1,13 @@
 #ifndef DBALLE_PYTHON_MESSAGE_H
 #define DBALLE_PYTHON_MESSAGE_H
 
-#include <Python.h>
 #include <dballe/message.h>
 #include <memory>
+#include "utils/core.h"
 
 extern "C" {
+
+struct dbapy_c_api;
 
 typedef struct {
     PyObject_HEAD
@@ -44,7 +46,7 @@ dpy_Message* message_create(MessageType type);
  */
 dpy_Message* message_create(std::shared_ptr<dballe::Message> message);
 
-void register_message(PyObject* m);
+void register_message(PyObject* m, dbapy_c_api& c_api);
 
 }
 }

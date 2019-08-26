@@ -1,8 +1,9 @@
 #define _DBALLE_LIBRARY_CODE
-#include <Python.h>
 #include "common.h"
 #include "binarymessage.h"
-#include "impl-utils.h"
+#include "utils/type.h"
+#include "utils/methods.h"
+#include "utils/values.h"
 
 using namespace std;
 using namespace dballe;
@@ -15,7 +16,7 @@ PyTypeObject* dpy_BinaryMessage_Type = nullptr;
 
 namespace {
 
-struct encoding : Getter<dpy_BinaryMessage>
+struct encoding : Getter<encoding, dpy_BinaryMessage>
 {
     constexpr static const char* name = "encoding";
     constexpr static const char* doc = "message encoding";
@@ -23,12 +24,12 @@ struct encoding : Getter<dpy_BinaryMessage>
     {
         try {
             Encoding encoding = self->message.encoding;
-            return string_to_python(File::encoding_name(encoding));
+            return to_python(File::encoding_name(encoding));
         } DBALLE_CATCH_RETURN_PYO
     }
 };
 
-struct pathname : Getter<dpy_BinaryMessage>
+struct pathname : Getter<pathname, dpy_BinaryMessage>
 {
     constexpr static const char* name = "pathname";
     constexpr static const char* doc = "pathname of the file the message came from, or None if unknown";
@@ -38,12 +39,12 @@ struct pathname : Getter<dpy_BinaryMessage>
             if (self->message.pathname.empty())
                 Py_RETURN_NONE;
             else
-                return string_to_python(self->message.pathname);
+                return to_python(self->message.pathname);
         } DBALLE_CATCH_RETURN_PYO
     }
 };
 
-struct offset : Getter<dpy_BinaryMessage>
+struct offset : Getter<offset, dpy_BinaryMessage>
 {
     constexpr static const char* name = "offset";
     constexpr static const char* doc = "offset of the message in the input file, or None if unknown";
@@ -58,7 +59,7 @@ struct offset : Getter<dpy_BinaryMessage>
     }
 };
 
-struct index : Getter<dpy_BinaryMessage>
+struct index : Getter<index, dpy_BinaryMessage>
 {
     constexpr static const char* name = "index";
     constexpr static const char* doc = "index of the message in the input file, or None if unknown";
@@ -73,7 +74,7 @@ struct index : Getter<dpy_BinaryMessage>
     }
 };
 
-struct __bytes__ : MethNoargs<dpy_BinaryMessage>
+struct __bytes__ : MethNoargs<__bytes__, dpy_BinaryMessage>
 {
     constexpr static const char* name = "__bytes__";
     constexpr static const char* summary = "Returns the contents of this message as a bytes object";
@@ -84,7 +85,7 @@ struct __bytes__ : MethNoargs<dpy_BinaryMessage>
 };
 
 
-struct Definition : public Binding<Definition, dpy_BinaryMessage>
+struct Definition : public Type<Definition, dpy_BinaryMessage>
 {
     constexpr static const char* name = "BinaryMessage";
     constexpr static const char* qual_name = "dballe.BinaryMessage";
@@ -166,7 +167,7 @@ void register_binarymessage(PyObject* m)
     common_init();
 
     definition = new Definition;
-    dpy_BinaryMessage_Type = definition->activate(m);
+    definition->define(dpy_BinaryMessage_Type, m);
 }
 
 }
