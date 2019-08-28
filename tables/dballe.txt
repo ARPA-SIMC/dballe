@@ -223,10 +223,10 @@
  014031 TOTAL SUNSHINE                                                   MINUTE                     0            0  11 MINUTE                    0          4
  014192 Sensible heat flux                                               W/m**2                     0        -1024  11 W/M**2                    0          4
  014193 Latent heat flux                                                 W/m**2                     0        -1024  11 W/M**2                    0          4
- 014194 Direct solar radiation                                           W/M**2                     0        -2048  12 W/M**2                   -3          4
- 014195 Diffuse solar radiation                                          W/M**2                     0        -2048  12 W/M**2                   -3          4
- 014196 NET LONG-WAVE RADIATION                                          W/M**2                     0        -2048  12 W/M**2                    0          4
- 014197 NET SHORT-WAVE RADIATION                                         W/M**2                     0        -2048  12 W/M**2                   -3          4
+ 014194 Direct solar radiation flux                                      W/M**2                     0        -2048  12 W/M**2                   -3          4
+ 014195 Diffuse solar radiation flux                                     W/M**2                     0        -2048  12 W/M**2                   -3          4
+ 014196 NET LONG-WAVE RADIATION FLUX                                     W/M**2                     0        -2048  12 W/M**2                    0          4
+ 014197 NET SHORT-WAVE RADIATION FLUX                                    W/M**2                     0        -2048  12 W/M**2                   -3          4
  014198 Global radiation flux (downward)                                 W/M**2                     0       -50000  11 W/M**2                    0          4
  014199 Visible radiation flux (upward)                                  W/M**2                     0       -50000  11 W/M**2                    0          4
  014200 Infrared radiation flux (downward)                               W/M**2                     0            0  11 W/M**2                    0          4
@@ -572,27 +572,27 @@
  049195 Number of particles with diameter > 1.0 <= 2.5 um                NUMERIC                   -1            0  16 NUMERIC                  -1          5
  049196 Number of particles with diameter > 2.5 <= 5.0 um                NUMERIC                   -1            0  16 NUMERIC                  -1          5
  049197 Number of particles with diameter > 5.0 <= 10.0 um               NUMERIC                   -1            0  16 NUMERIC                  -1          5
- 049198 Density of particles with diameter > 0.35 <= 0.46 um             NUMERIC/M**3               7            0  16 NUMERIC/M**3              7          5
- 049199 Density of particles with diameter > 0.46 <= 0.66 um             NUMERIC/M**3               7            0  16 NUMERIC/M**3              7          5
- 049200 Density of particles with diameter > 0.66 <= 1.0 um              NUMERIC/M**3               8            0  16 NUMERIC/M**3              8          5
- 049201 Density of particles with diameter > 1.0 <= 1.3 um               NUMERIC/M**3               8            0  16 NUMERIC/M**3              8          5
- 049202 Density of particles with diameter > 1.3 <= 1.7 um               NUMERIC/M**3               8            0  16 NUMERIC/M**3              8          5
- 049203 Density of particles with diameter > 1.7 <= 2.3 um               NUMERIC/M**3               9            0  16 NUMERIC/M**3              9          5
- 049204 Density of particles with diameter > 2.3 <= 3.0 um               NUMERIC/M**3               9            0  16 NUMERIC/M**3              9          5
- 049205 Density of particles with diameter > 3.0 <= 4.0 um               NUMERIC/M**3              10            0  16 NUMERIC/M**3             10          5
- 049206 Density of particles with diameter > 4.0 <= 5.2 um               NUMERIC/M**3              10            0  16 NUMERIC/M**3             10          5
- 049207 Density of particles with diameter > 5.2 <= 6.5 um               NUMERIC/M**3              10            0  16 NUMERIC/M**3             10          5
- 049208 Density of particles with diameter > 6.5 <= 8.0 um               NUMERIC/M**3              10            0  16 NUMERIC/M**3             10          5
- 049209 Density of particles with diameter > 8.0 <= 10.0 um              NUMERIC/M**3              10            0  16 NUMERIC/M**3             10          5
- 049210 Density of particles with diameter > 10 <= 12 um                 NUMERIC/M**3              11            0  16 NUMERIC/M**3             11          5
- 049211 Density of particles with diameter > 12 <= 14 um                 NUMERIC/M**3              11            0  16 NUMERIC/M**3             11          5
- 049212 Density of particles with diameter > 14 <= 16 um                 NUMERIC/M**3              11            0  16 NUMERIC/M**3             11          5
- 049213 Density of particles with diameter > 16 <= 18 um                 NUMERIC/M**3              11            0  16 NUMERIC/M**3             11          5
- 049214 Density of particles with diameter > 18 <= 20 um                 NUMERIC/M**3              11            0  16 NUMERIC/M**3             11          5
- 049215 Density of particles with diameter > 20 <= 22 um                 NUMERIC/M**3              11            0  16 NUMERIC/M**3             11          5
- 049216 Density of particles with diameter > 22 <= 25 um                 NUMERIC/M**3              11            0  16 NUMERIC/M**3             11          5
- 049217 Density of particles with diameter > 25 <= 28 um                 NUMERIC/M**3              11            0  16 NUMERIC/M**3             11          5
- 049218 Density of particles with diameter > 28 <= 31 um                 NUMERIC/M**3              11            0  16 NUMERIC/M**3             11          5
- 049219 Density of particles with diameter > 31 <= 34 um                 NUMERIC/M**3              11            0  16 NUMERIC/M**3             11          5
- 049220 Density of particles with diameter > 34 <= 37 um                 NUMERIC/M**3              11            0  16 NUMERIC/M**3             11          5
- 049221 Density of particles with diameter > 37 <= 40 um                 NUMERIC/M**3              11            0  16 NUMERIC/M**3             11          5
+ 049198 Density of particles with diameter > 0.35 <= 0.46 um             NUMERIC/M**3              -5            0  16 NUMERIC/M**3             -5          5
+ 049199 Density of particles with diameter > 0.46 <= 0.66 um             NUMERIC/M**3              -5            0  16 NUMERIC/M**3             -5          5
+ 049200 Density of particles with diameter > 0.66 <= 1.0 um              NUMERIC/M**3              -4            0  16 NUMERIC/M**3             -4          5
+ 049201 Density of particles with diameter > 1.0 <= 1.3 um               NUMERIC/M**3              -4            0  16 NUMERIC/M**3             -4          5
+ 049202 Density of particles with diameter > 1.3 <= 1.7 um               NUMERIC/M**3              -3            0  16 NUMERIC/M**3             -3          5
+ 049203 Density of particles with diameter > 1.7 <= 2.3 um               NUMERIC/M**3              -3            0  16 NUMERIC/M**3             -3          5
+ 049204 Density of particles with diameter > 2.3 <= 3.0 um               NUMERIC/M**3              -3            0  16 NUMERIC/M**3             -3          5
+ 049205 Density of particles with diameter > 3.0 <= 4.0 um               NUMERIC/M**3              -2            0  16 NUMERIC/M**3             -2          5
+ 049206 Density of particles with diameter > 4.0 <= 5.2 um               NUMERIC/M**3              -2            0  16 NUMERIC/M**3             -2          5
+ 049207 Density of particles with diameter > 5.2 <= 6.5 um               NUMERIC/M**3              -2            0  16 NUMERIC/M**3             -2          5
+ 049208 Density of particles with diameter > 6.5 <= 8.0 um               NUMERIC/M**3              -2            0  16 NUMERIC/M**3             -2          5
+ 049209 Density of particles with diameter > 8.0 <= 10.0 um              NUMERIC/M**3              -2            0  16 NUMERIC/M**3             -2          5
+ 049210 Density of particles with diameter > 10 <= 12 um                 NUMERIC/M**3              -1            0  16 NUMERIC/M**3             -1          5
+ 049211 Density of particles with diameter > 12 <= 14 um                 NUMERIC/M**3              -1            0  16 NUMERIC/M**3             -1          5
+ 049212 Density of particles with diameter > 14 <= 16 um                 NUMERIC/M**3              -1            0  16 NUMERIC/M**3             -1          5
+ 049213 Density of particles with diameter > 16 <= 18 um                 NUMERIC/M**3              -1            0  16 NUMERIC/M**3             -1          5
+ 049214 Density of particles with diameter > 18 <= 20 um                 NUMERIC/M**3              -1            0  16 NUMERIC/M**3             -1          5
+ 049215 Density of particles with diameter > 20 <= 22 um                 NUMERIC/M**3              -1            0  16 NUMERIC/M**3             -1          5
+ 049216 Density of particles with diameter > 22 <= 25 um                 NUMERIC/M**3              -1            0  16 NUMERIC/M**3             -1          5
+ 049217 Density of particles with diameter > 25 <= 28 um                 NUMERIC/M**3              -1            0  16 NUMERIC/M**3             -1          5
+ 049218 Density of particles with diameter > 28 <= 31 um                 NUMERIC/M**3              -1            0  16 NUMERIC/M**3             -1          5
+ 049219 Density of particles with diameter > 31 <= 34 um                 NUMERIC/M**3              -1            0  16 NUMERIC/M**3             -1          5
+ 049220 Density of particles with diameter > 34 <= 37 um                 NUMERIC/M**3              -1            0  16 NUMERIC/M**3             -1          5
+ 049221 Density of particles with diameter > 37 <= 40 um                 NUMERIC/M**3              -1            0  16 NUMERIC/M**3             -1          5
