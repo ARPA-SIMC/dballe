@@ -88,10 +88,6 @@ check_messages_SOURCES = $(dbtestlib) check_messages.f90
 check_messages_LDADD = libdballef.la
 check_messages_FCFLAGS = -g
 
-# check_messages_stdinstdout_SOURCES = $(dbtestlib) check_messages_stdinstdout.f90
-# check_messages_stdinstdout_LDADD = libdballef.la
-# check_messages_stdinstdout_FCFLAGS = -g
-
 check_multiplehandler_SOURCES = $(dbtestlib) check_multiplehandler.f90
 check_multiplehandler_LDADD = libdballef.la
 check_multiplehandler_FCFLAGS = -g
@@ -104,35 +100,6 @@ check_connect_wipe_SOURCES = $(dbtestlib) check_connect_wipe.f90
 check_connect_wipe_LDADD = libdballef.la
 check_connect_wipe_FCFLAGS = -g
 
-
-## Automake/make is not currently able to build these, they miss the
-## dballef.mod dependency and try to build them before the library is built. I
-## found no way to work around that, so I am disabling building these, since they
-## are not needed in the target package.
-#
-# noinst_PROGRAMS = dumpmsg_dballe mkmsg mkmsg-sca genattr
-#
-# dumpmsg_dballe_SOURCES = dumpmsg_dballe.f90 dballef.mod
-# dumpmsg_dballe_LDADD = libdballef.la -lpopt
-# dumpmsg_dballe_FCFLAGS = -g
-#
-# mkmsg_SOURCES = mkmsg.f90 dballef.mod
-# mkmsg_LDADD = libdballef.la -lpopt
-# mkmsg_FCFLAGS = -g
-#
-# mkmsg_sca_SOURCES = mkmsg-sca.f90 dballef.mod
-# mkmsg_sca_LDADD = libdballef.la -lpopt
-# mkmsg_sca_FCFLAGS = -g
-#
-# genattr_SOURCES = genattr.f90 dballef.mod
-# genattr_LDADD = libdballef.la -lpopt
-# genattr_FCFLAGS = -g
-#
-# noinst_PROGRAMS += dump_dballe check_messages_stdinstdout
-#
-# dump_dballe_SOURCES = dump_dballe.f90 dballef.mod
-# dump_dballe_LDADD = libdballef.la -lpopt
-# dump_dballe_FCFLAGS = -g
 
 EXTRA_DIST = fortran.dox check-utils.h
 
