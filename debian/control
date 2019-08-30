@@ -5,7 +5,7 @@ Maintainer: Enrico Zini <enrico@debian.org>
 Build-Depends: debhelper (>= 10), dh-python, dh-autoreconf,
   autotools-dev, pkg-config, doxygen, help2man,
   libsqlite3-dev (>= 3.14), libpq-dev, default-libmysqlclient-dev,
-  libwreport-dev (>= 3.6), python3-wreport,
+  libwreport-dev (>= 3.22), python3-wreport (>= 3.22),
   libpopt-dev, gperf,
   gfortran | g77,
   python3-all-dev, python3-numpy, python-docutils
@@ -16,7 +16,7 @@ Vcs-Git: https://github.com/ARPA-SIMC/dballe
 Package: libdballe-dev
 Section: libdevel
 Architecture: any
-Depends: libdballe8 (= ${binary:Version}), libwreport-dev, ${misc:Depends}
+Depends: libdballe8 (= ${binary:Version}), libwreport-dev (>= 3.22), ${misc:Depends}
 Recommends: pkg-config
 Description: DB-All.e C development library for weather research
  DB-All.e is a fast on-disk database where meteorological observed and
@@ -88,7 +88,7 @@ Description: DB-ALL.e Fortran shared library for weather research
 Package: python3-dballe
 Section: python
 Architecture: any
-Depends: dballe-common, python3-wreport, ${shlibs:Depends}, ${misc:Depends}, ${python3:Depends}
+Depends: dballe-common, python3-wreport (>= 3.22), ${shlibs:Depends}, ${misc:Depends}, ${python3:Depends}
 Recommends: python3-numpy
 Description: DB-ALL.e Python library for weather research
  DB-All.e is a fast on-disk database where meteorological observed and
