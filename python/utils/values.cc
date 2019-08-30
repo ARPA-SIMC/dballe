@@ -70,9 +70,19 @@ PyObject* long_to_python(long int val)
     return throw_ifnull(PyLong_FromLong(val));
 }
 
-PyObject* size_t_to_python(size_t val)
+PyObject* unsigned_long_to_python(unsigned long val)
 {
-    return throw_ifnull(PyLong_FromLong(val));
+    return throw_ifnull(PyLong_FromUnsignedLong(val));
+}
+
+PyObject* long_long_to_python(long long val)
+{
+    return throw_ifnull(PyLong_FromLongLong(val));
+}
+
+PyObject* unsigned_long_long_to_python(unsigned long long val)
+{
+    return throw_ifnull(PyLong_FromUnsignedLongLong(val));
 }
 
 double double_from_python(PyObject* o)

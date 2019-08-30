@@ -58,9 +58,17 @@ inline PyObject* to_python(unsigned int val) { return unsigned_int_to_python(val
 PyObject* long_to_python(long val);
 inline PyObject* to_python(long val) { return long_to_python(val); }
 
-/// Convert an int to a Python object
-PyObject* size_t_to_python(size_t val);
-inline PyObject* to_python(size_t val) { return size_t_to_python(val); }
+/// Convert an unsigned long to a Python object
+PyObject* unsigned_long_to_python(unsigned long val);
+inline PyObject* to_python(unsigned long val) { return unsigned_long_to_python(val); }
+
+/// Convert a long to a Python object
+PyObject* long_long_to_python(long long val);
+inline PyObject* to_python(long long val) { return long_long_to_python(val); }
+
+/// Convert an unsigned long to a Python object
+PyObject* unsigned_long_long_to_python(unsigned long long val);
+inline PyObject* to_python(unsigned long long val) { return unsigned_long_long_to_python(val); }
 
 /// Convert a Python object to a double
 double double_from_python(PyObject* o);
