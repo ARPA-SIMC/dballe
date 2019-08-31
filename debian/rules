@@ -30,7 +30,7 @@ vercheck:
 debsrc: vercheck
 	if [ ! -f ../$(RELEASE_PACKAGE)_$(VERSION).orig.tar.gz ]; then \
 		test -f Makefile || ./configure; \
-		make -j4 \
+		make -j4; \
 		make dist; \
 		mv $(RELEASE_PACKAGE)-$(VERSION).tar.gz ../$(RELEASE_PACKAGE)_$(VERSION).orig.tar.gz; \
 	fi
