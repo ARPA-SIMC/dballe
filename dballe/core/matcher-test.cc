@@ -11,10 +11,12 @@ using namespace dballe::tests;
 
 namespace {
 
+#if 0
 std::unique_ptr<Matcher> get_matcher(const char* q)
 {
     return Matcher::create(*dballe::tests::query_from_string(q));
 }
+#endif
 
 class Tests : public TestCase
 {
