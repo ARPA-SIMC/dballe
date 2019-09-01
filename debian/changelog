@@ -4,6 +4,8 @@ dballe (8.3-1) unstable; urgency=medium
      - reviewed and extended stable API
      - significantly more comprehensive python bindings
      - added dbadb --varlist
+  * Added missing build-depend on libtool, which is called explicitly by test
+    scripts
 
  -- Enrico Zini <enrico@debian.org>  Fri, 30 Aug 2019 10:33:57 +0200
 

@@ -3,7 +3,7 @@ Section: misc
 Priority: optional
 Maintainer: Enrico Zini <enrico@debian.org>
 Build-Depends: debhelper (>= 10), dh-python, dh-autoreconf,
-  autotools-dev, pkg-config, doxygen, help2man,
+  autotools-dev, pkg-config, doxygen, help2man, libtool,
   libsqlite3-dev (>= 3.14), libpq-dev, default-libmysqlclient-dev,
   libwreport-dev (>= 3.23-2), python3-wreport (>= 3.22),
   libpopt-dev, gperf,
