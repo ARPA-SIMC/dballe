@@ -59,7 +59,7 @@ doc_DATA += python-dballe.html
 endif
 
 python-dballe.rst: doc-dballe $(pkgpython_PYTHON) $(pyexec_LTLIBRARIES)
-	PYTHONPATH=.libs libtool --mode=execute $(PYTHON) $(srcdir)/doc-dballe -o $@
+	PYTHONPATH=.libs @LIBTOOL@ --mode=execute $(PYTHON) $(srcdir)/doc-dballe -o $@
 
 python-dballe.html: python-dballe.rst
 	rst2html $< > $@ || (rm -f $@; false)

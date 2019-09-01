@@ -75,7 +75,7 @@ class TestCase:
         debugger = os.environ.get("DEBUGGER", None)
         if debugger is not None:
             # Try to debug the libtool executable, if present
-            new_cmd = ["libtool", "--mode=execute"]
+            new_cmd = [os.path.join(self.env.top_srcdir, "libtool"), "--mode=execute"]
             new_cmd.extend(shlex.split(debugger))
             new_cmd.extend(cmd)
             cmd = new_cmd
