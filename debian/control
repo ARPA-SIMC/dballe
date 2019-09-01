@@ -5,7 +5,7 @@ Maintainer: Enrico Zini <enrico@debian.org>
 Build-Depends: debhelper (>= 10), dh-python, dh-autoreconf,
   autotools-dev, pkg-config, doxygen, help2man,
   libsqlite3-dev (>= 3.14), libpq-dev, default-libmysqlclient-dev,
-  libwreport-dev (>= 3.22), python3-wreport (>= 3.22),
+  libwreport-dev (>= 3.23-2), python3-wreport (>= 3.22),
   libpopt-dev, gperf,
   gfortran | g77,
   python3-all-dev, python3-numpy, python3-docutils
