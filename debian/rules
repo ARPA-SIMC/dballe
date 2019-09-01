@@ -13,6 +13,10 @@ RELEASE_PACKAGE=dballe
 # 	rm -f $(CURDIR)/debian/python-dballe/usr/share/pyshared/_dballe.la
 # 	rm -f $(CURDIR)/debian/python-dballe/usr/lib/python?.?/dist-packages/_dballe.la
 
+override_dh_makeshlibs:
+	# For new symbols when compiled with GCC 7. See: #871272
+	dh_makeshlibs -V'libdballe (>= 8.3-1~)'
+
 override_dh_auto_install:
 	dh_auto_install
 	# Build and install the python bindings for each different python version

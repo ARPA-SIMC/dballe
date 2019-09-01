@@ -6,6 +6,7 @@ dballe (8.3-1) unstable; urgency=medium
      - added dbadb --varlist
   * Added missing build-depend on libtool, which is called explicitly by test
     scripts
+  * Deal with gcc7 symbols changes. Closes: #871272
 
  -- Enrico Zini <enrico@debian.org>  Fri, 30 Aug 2019 10:33:57 +0200
 
