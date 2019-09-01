@@ -7,11 +7,6 @@ RELEASE_PACKAGE=dballe
 	dh $@ --with autoreconf,python3
 
 # #DEB_MAKE_CHECK_TARGET := check
-# 
-# # From http://wiki.debian.org/DebianPython/NewPolicy
-# binary-install/python-dballe::
-# 	rm -f $(CURDIR)/debian/python-dballe/usr/share/pyshared/_dballe.la
-# 	rm -f $(CURDIR)/debian/python-dballe/usr/lib/python?.?/dist-packages/_dballe.la
 
 override_dh_makeshlibs:
 	# For new symbols when compiled with GCC 7. See: #871272
