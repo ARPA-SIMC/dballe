@@ -1,6 +1,6 @@
 dballe (8.3-1) unstable; urgency=medium
 
-  * New upstream version. Closes: #853367
+  * New upstream version. Closes: #853367, #934814, #793229, #936368
      - reviewed and extended stable API
      - significantly more comprehensive python bindings
      - added dbadb --varlist
