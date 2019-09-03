@@ -37,8 +37,8 @@ extern const char* crex_files[];
 const wreport::Var& want_var(const Message& msg, const impl::Shortcut& shortcut);
 const wreport::Var& want_var(const Message& msg, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr);
 
-inline ActualVar actual(const Message& message, const impl::Shortcut& shortcut) { return ActualVar(want_var(message, shortcut)); }
-inline ActualVar actual(const Message& message, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr) { return ActualVar(want_var(message, code, lev, tr)); }
+inline ActualVar actual_var(const Message& message, const impl::Shortcut& shortcut) { return ActualVar(want_var(message, shortcut)); }
+inline ActualVar actual_var(const Message& message, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr) { return ActualVar(want_var(message, code, lev, tr)); }
 
 void dump(const std::string& tag, const Message& msg, const std::string& desc="message");
 void dump(const std::string& tag, const impl::Messages& msgs, const std::string& desc="message");
