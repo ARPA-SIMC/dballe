@@ -1,6 +1,7 @@
 #define _DBALLE_LIBRARY_CODE
 #include <dballe/message.h>
 #include <dballe/msg/msg.h>
+#include <dballe/core/shortcuts.h>
 #include <dballe/python.h>
 #include <wreport/python.h>
 #include "common.h"
@@ -179,18 +180,27 @@ struct set : MethKwargs<set, dpy_Message>
 struct set_named : MethKwargs<set_named, dpy_Message>
 {
     constexpr static const char* name = "set_named";
-    constexpr static const char* signature = "name: str, var: dballe.Var";
+    constexpr static const char* signature = "name: str, value: Union[dballe.Var, int, str, double]";
     constexpr static const char* summary = "Set a Var given its shortcut name";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { "name", "var", nullptr };
+        static const char* kwlist[] = { "name", "value", nullptr };
         const char* name = nullptr;
-        PyObject* var = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "sO!", const_cast<char**>(kwlist), &name, wreport_api.api().var_type, &var))
+        Py_ssize_t name_len = 0;
+        PyObject* value = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "s#O", const_cast<char**>(kwlist), &name, &name_len, &value))
             return nullptr;
 
         try {
-            self->message->set(name, wreport_api.var(var));
+            if (wreport_api.var_check(value))
+            {
+                self->message->set(name, wreport_api.var(value));
+            } else {
+                const impl::Shortcut& shortcut = impl::Shortcut::by_name(name, name_len);
+                auto var = newvar(shortcut.code);
+                wreport_api.var_value_from_python(value, *var);
+                self->message->set(name, std::move(var));
+            }
         } DBALLE_CATCH_RETURN_PYO
 
         Py_RETURN_NONE;

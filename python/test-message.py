@@ -23,6 +23,29 @@ class TestMessage(MessageTestMixin, unittest.TestCase):
         # auto msgs = read_msgs("bufr/gts-acars-uk1.bufr", Encoding::BUFR);
         # wassert(actual(msg->diff(*msgs[0])) == 0);
 
+    def test_set_named(self):
+        msg = dballe.Message("synop")
+
+        msg.set_named("year", dballe.var("B04001", 2009))
+        var = msg.get_named("year")
+        self.assertEqual(var.code, "B04001")
+        self.assertEqual(var.enqi(), 2009)
+
+        msg.set_named("year", 2009)
+        var = msg.get_named("year")
+        self.assertEqual(var.code, "B04001")
+        self.assertEqual(var.enqi(), 2009)
+
+        msg.set_named("year", 2009.0)
+        var = msg.get_named("year")
+        self.assertEqual(var.code, "B04001")
+        self.assertEqual(var.enqi(), 2009)
+
+        msg.set_named("year", "2009")
+        var = msg.get_named("year")
+        self.assertEqual(var.code, "B04001")
+        self.assertEqual(var.enqi(), 2009)
+
     def test_iterate(self):
         """
         Try iterating the message with cursors
