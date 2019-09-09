@@ -22,10 +22,12 @@ BuildRequires: libtool
 BuildRequires: gcc-c++
 BuildRequires: gperf
 BuildRequires: doxygen
-BuildRequires: /usr/bin/rst2html
 BuildRequires: pkgconfig(lua) > 5.1.1
 BuildRequires: pkgconfig(libwreport) >= 3.22
 BuildRequires: %{python3_vers}-devel
+%if ! 0%{?el7}
+BuildRequires: %{python3_vers}-sphinx
+%endif
 %if 0%{?rhel} == 7
 BuildRequires: popt-devel
 BuildRequires: postgresql-devel

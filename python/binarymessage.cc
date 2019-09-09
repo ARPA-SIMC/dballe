@@ -94,7 +94,7 @@ Binary message.
 
 This is basically a simple wrapper around a bytes() object, providing extra
 information about the filename, offset and index where the message data was
-read. Is it used by dballe.File_ to return the binary messages it reads.
+read. Is it used by :class:`dballe.File` to return the binary messages it reads.
 )";
 
     GetSetters<encoding, pathname, offset, index> getsetters;

@@ -52,13 +52,13 @@ struct Definition : public Type<Definition, dpy_ImporterFile>
     constexpr static const char* name = "ImporterFile";
     constexpr static const char* qual_name = "dballe.ImporterFile";
     constexpr static const char* doc = R"(
-Message importer iterating over the contents of a a dballe.File_.
+Message importer iterating over the contents of a a :class:`dballe.File`.
 
 This is never instantiated explicitly, but is returned by
-`Importer.from_file()`_.
+:func:`Importer.from_file()`.
 
 It can be used in a context manager, and it is an iterable that yields tuples
-of `dballe.Message`_ objects.
+of :class:`dballe.Message` objects.
 )";
 
     GetSetters<> getsetters;
@@ -140,9 +140,9 @@ struct from_file : MethKwargs<from_file, dpy_Importer>
     constexpr static const char* signature = "file: Union[dballe.File, str, File]";
     constexpr static const char* returns = "dballe.ImporterFile";
     constexpr static const char* doc = R"(
-Wrap a dballe.File into a sequence of tuples of dballe.Message objects.
+Wrap a :class:`dballe.File` into a sequence of tuples of :class:`dballe.Message` objects.
 
-`file` can be a `dballe.File`_, a file name, or a file-like object. A `dballe.File`_
+`file` can be a :class:`dballe.File`, a file name, or a file-like object. A :class:`dballe.File`
 is automatically constructed if needed, using the importer encoding.
 )";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
@@ -187,14 +187,14 @@ case, for example, of compressed BUFR files.
 
 Constructor: Importer(encoding: str, simplified: bool=True)
 
-`encoding` can be :code:`"BUFR"` or :code:`"CREX"`.
-
-`simplified` control whether messages are constructed using standard levels and
-time ranges, or using the exact levels and time ranges contained in the input.
-For example, a simplified intepretation of a synop message will place the
-temperature at 2M above ground, regardless of the reported sensor height. A
-non-simplified import will place the temperature reading at the reported sensor
-height.
+:arg encoding: can be :code:`"BUFR"` or :code:`"CREX"`.
+:arg simplified: controls whether messages are constructed using standard levels and
+                 time ranges, or using the exact levels and time ranges
+                 contained in the input. For example, a simplified
+                 intepretation of a synop message will place the temperature at
+                 2M above ground, regardless of the reported sensor height. A
+                 non-simplified import will place the temperature reading at
+                 the reported sensor height.
 
 When a message is imported in simplified mode, the actual context information
 will be stored as data attributes.

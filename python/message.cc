@@ -293,7 +293,7 @@ struct Definition : public Type<Definition, dpy_Message>
 The contents of a decoded BUFR or CREX message.
 
 DB-All.e can interpret the contents of most weather messages commonly in use,
-and represent them as variables identified by dballe.Level_, dballe.Trange_,
+and represent them as variables identified by :class:`dballe.Level`, :class:`dballe.Trange`,
 datetime, coordinates, network, and mobile station identifier.
 
 A message contains only one reference station (coordinates, network, mobile
@@ -305,22 +305,22 @@ trange.
 
 Constructor: Message(type: str)
 
-`type` is a string identifying the message type, and it will affect how the
-message will be encoded by the exporter.
+:arg type: a string identifying the message type, and it will affect how the
+           message will be encoded by the exporter.
 
-Available values are:
- * generic
- * synop
- * pilot
- * temp
- * temp_ship;
- * airep
- * amdar
- * acars
- * ship
- * buoy
- * metar
- * sat
+           Available values are:
+            * generic
+            * synop
+            * pilot
+            * temp
+            * temp_ship;
+            * airep
+            * amdar
+            * acars
+            * ship
+            * buoy
+            * metar
+            * sat
 
 Example usage::
 

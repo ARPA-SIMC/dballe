@@ -785,29 +785,27 @@ template<typename Impl>
 struct import_messages : MethKwargs<import_messages<Impl>, Impl>
 {
     constexpr static const char* name = "import_messages";
-    constexpr static const char* signature = "messages: Union[dballe.Message, Sequence[dballe.Message], Iterable[dballe.Message], dballe.ImporterFile], report: str=None, import_attributres: bool=False, update_station: bool=False, overwrite: bool=False";
+    constexpr static const char* signature = "messages: Union[dballe.Message, Sequence[dballe.Message], Iterable[dballe.Message], dballe.ImporterFile], report: str=None, import_attributes: bool=False, update_station: bool=False, overwrite: bool=False";
     constexpr static const char* summary = "Import one or more Messages into the database.";
     constexpr static const char* doc = R"(
-`messages` can be:
- * a `dballe.Message`_ object
- * a sequence or iterable of `dballe.Message`_ objects
- * a `dballe.ImporterFile`_ that generates a sequence of `dballe.Message`_ objects
-
-`report` is the network name to use for importing the data. If left to None,
-the network is selected automatically from the message type
-
-`import_attributes` if set to True, requests the variable attributes to also be imported.
-
-`update_station`, if set to True, station information is merged with existing
-one in the database. If false (default), station information is imported only
-when the station did not exist in the database.
-
-`overwrite`, if set to True, causes existing information already in the
-database to be overwritten. If false (default), trying to import a message
-which contains data already present in the database causes the import to fail.
-
-`varlist`, if set to a string in the same format as the `varlist` query
-parameter, only imports data whose varcode is in the list.
+:arg messages:
+ * a :class:`dballe.Message` object
+ * a sequence or iterable of :class:`dballe.Message` objects
+ * a :class:`dballe.ImporterFile` that generates a sequence of :class:`dballe.Message` objects
+:arg report: the network name to use for importing the data. If left to None,
+             the network is selected automatically from the message type
+:arg import_attributes: if set to True, requests the variable attributes to
+                        also be imported.
+:arg update_station: if set to True, station information is merged with existing
+                     one in the database. If false (default), station
+                     information is imported only when the station did not
+                     exist in the database.
+:arg overwrite: if set to True, causes existing information already in the
+                database to be overwritten. If false (default), trying to
+                import a message which contains data already present in the
+                database causes the import to fail.
+:arg varlist: if set to a string in the same format as the `varlist` query
+              parameter, only imports data whose varcode is in the list.
 )";
 
     [[noreturn]] static void throw_typeerror()
@@ -1112,12 +1110,13 @@ struct Definition : public Type<Definition, dpy_DB>
     constexpr static const char* doc = R"(
 DB-All.e database access.
 
-Many methods are the same in `dballe.DB`_ and `dballe.Transaction`_. The
-versions in `dballe.DB`_ are implemented by automatically creating a temporary
-transaction and running the equivalent `dballe.Transaction`_ method inside it.
+Many methods are the same in :class:`dballe.DB` and
+:class:`dballe.Transaction`. The versions in :class:`dballe.DB` are implemented
+by automatically creating a temporary transaction and running the equivalent
+:class:`dballe.Transaction` method inside it.
 
-dballe.DB objects are not constructed explicitly, but via one of the
-DB.connect or DB.connect_test class methods.
+:class:`dballe.DB` objects are not constructed explicitly, but via one of the
+:func:`DB.connect` or :func:`DB.connect_test` class methods.
 
 Examples:
 

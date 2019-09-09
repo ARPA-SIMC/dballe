@@ -23,7 +23,7 @@ struct to_binary : MethKwargs<to_binary, dpy_Exporter>
     constexpr static const char* signature = "contents: Union[dballe.Message, Sequence[dballe.Message], Iterable[dballe.Message]]";
     constexpr static const char* returns = "bytes";
     constexpr static const char* doc = R"(
-Encode a dballe.Message or a sequence of dballe.Message into a bytes object.
+Encode a :class:`dballe.Message` or a sequence of :class:`dballe.Message` into a bytes object.
 )";
 
     [[noreturn]] static void throw_typeerror()
@@ -82,7 +82,7 @@ struct Definition : public Type<Definition, dpy_Exporter>
 Message exporter.
 
 This is the engine that can reconstruct a standard BUFR or CREX message from
-the contents of a `dballe.Message`_.
+the contents of a :class:`dballe.Message`.
 )";
 
     GetSetters<> getsetters;
