@@ -245,17 +245,16 @@ struct FileDefinition : public Type<FileDefinition, dpy_File>
 Read-only access to files with weather bulletins in BUFR or CREX format.
 
 No write functions are supported: to write files, you can simply write
-dballe.BinaryMessage_ objects or encoded messages to normal Python files.
+:class:`dballe.BinaryMessage` objects or encoded messages to normal Python files.
 
 Constructor: File(file: Union[str, File], encoding: str=None)
 
-`file` can be a file name, or a file-like object. If a file-like object
-supports `fileno()`, that file descriptor is `dup()`-ed and used for efficient
-reading. Otherwise, `file.read()` is called to load the data to read in memory.
-
-If `encoding` is omitted, it is auto detected by looking at the first byte of
-the file only. Files with leading padding data will not be detected properly,
-and you need to explicitly specify the encoding to read them.
+:arg file: can be a file name, or a file-like object. If a file-like object
+           supports `fileno()`, that file descriptor is `dup()`-ed and used for efficient
+           reading. Otherwise, `file.read()` is called to load the data to read in memory.
+:arg encoding: if omitted, it is auto detected by looking at the first byte of
+               the file only. Files with leading padding data will not be detected properly,
+               and you need to explicitly specify the encoding to read them.
 
 Example usage::
 
