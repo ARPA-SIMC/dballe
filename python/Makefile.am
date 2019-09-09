@@ -52,21 +52,37 @@ EXTRA_DIST += \
 	data-access.in.tcc data-access.tcc \
 	query-access.in.cc query-access.cc
 
-doc_DATA = python-dballe.rst
+if HAVE_SPHINX
+sphinx_sources =  \
+    doc/conf.py \
+    doc/index.rst \
+    doc/dballe.rst \
+    doc/dballe_types.rst \
+    doc/dballe_messages.rst \
+    doc/dballe_cursors.rst \
+    doc/dballe_db.rst \
+    doc/dballe.volnd.rst
 
-if HAVE_RST2HTML
-doc_DATA += python-dballe.html
+EXTRA_DIST += $(sphinx_sources)
+noinst_DATA = apidocs
+
+install-data-hook:
+	rm -rf "$(DESTDIR)$(docdir)/python"
+	install -d "$(DESTDIR)$(docdir)/python"
+	tar -C "$(builddir)/apidocs" --exclude='*/.*' -cf - . | tar -C "$(DESTDIR)$(docdir)/python" -xf -
+	-chown -R root:root "$(DESTDIR)$(docdir)/python"
+	chmod u=rwX,g=rX,o=rX "$(DESTDIR)$(docdir)/python"
+
+apidocs: _dballe.la $(sphinx_sources)
+	rm -rf $@
+	$(top_srcdir)/run-local $(SPHINX_BUILD) -b html doc $@
+
 endif
-
-python-dballe.rst: doc-dballe $(pkgpython_PYTHON) $(pyexec_LTLIBRARIES)
-	PYTHONPATH=.libs @LIBTOOL@ --mode=execute $(PYTHON) $(srcdir)/doc-dballe -o $@
-
-python-dballe.html: python-dballe.rst
-	rst2html $< > $@ || (rm -f $@; false)
 
 clean-local:
 	rm -f *.pyc dballe/*.pyc
 	rm -rf __pycache__ dballe/__pycache__
+	rm -rf apidocs
 
 EXTRA_DIST += \
     doc-dballe \

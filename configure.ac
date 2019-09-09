@@ -74,9 +74,17 @@ then
         AC_MSG_WARN([WREPORT_DOXYGEN_TAGFILE not found, documentation will not be built.])
         enable_docs=no
     fi
-fi
 
-AC_CHECK_PROG(have_rst2html, rst2html, yes, no)
+    AC_CHECK_PROGS(SPHINX_BUILD, [sphinx-build sphinx-build-3 sphinx-build-3.6], [no])
+    if test $SPHINX_BUILD = no
+    then
+        have_sphinx=no
+    else
+        have_sphinx=yes
+        AC_SUBST(SPHINX_BUILD)
+    fi
+fi
+AM_CONDITIONAL([HAVE_SPHINX], [test x$have_sphinx = xyes])
 
 dnl To use subdirs
 AC_PROG_MAKE_SET
@@ -323,8 +331,6 @@ AM_CONDITIONAL([DO_DBALLEF], [test x"$enable_dballef" = x"yes"])
 AM_CONDITIONAL([DO_DBALLE_PYTHON], [test x"$enable_dballe_python" = x"yes"])
 AM_CONDITIONAL([DO_DOCS], [test x"$enable_docs" = x"yes"])
 
-AM_CONDITIONAL([HAVE_RST2HTML], [test x$have_rst2html = xyes])
-
 AC_CONFIG_FILES([
 Makefile
 dballe/Makefile
@@ -350,5 +356,5 @@ AS_HELP_STRING([MySQL:], [$have_mysql])
 AS_HELP_STRING([Fortran:], [$enable_dballef])
 AS_HELP_STRING([Python:], [$enable_dballe_python])
 AS_HELP_STRING([documentation:], [$enable_docs])
-AS_HELP_STRING([rst2html:], [$have_rst2html])
+AS_HELP_STRING([sphinx:], [$have_sphinx])
 ===================================================])
