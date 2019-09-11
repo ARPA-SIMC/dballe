@@ -38,12 +38,12 @@ EXTRA_DIST += $(fapisources)
 sphinx_sources =  \
     src/conf.py \
     src/index.rst \
-    src/dballe.rst \
-    src/dballe_types.rst \
-    src/dballe_messages.rst \
-    src/dballe_cursors.rst \
-    src/dballe_db.rst \
-    src/dballe.volnd.rst
+    src/python/dballe.rst \
+    src/python/dballe_types.rst \
+    src/python/dballe_messages.rst \
+    src/python/dballe_cursors.rst \
+    src/python/dballe_db.rst \
+    src/python/dballe.volnd.rst
 
 EXTRA_DIST += $(sphinx_sources)
 

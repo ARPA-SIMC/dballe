@@ -1,5 +1,5 @@
-dballe.volnd package
-====================
+Python dballe.volnd package
+===========================
 
 .. toctree::
     :maxdepth: 2

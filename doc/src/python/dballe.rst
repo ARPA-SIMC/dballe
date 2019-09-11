@@ -1,5 +1,5 @@
-dballe package
-==============
+Python dballe package
+=====================
 
 .. toctree::
     :maxdepth: 2
