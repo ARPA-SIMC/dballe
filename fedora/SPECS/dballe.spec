@@ -2,7 +2,7 @@
 # Note: define _srcarchivename in Travis build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
-Summary: DB-ALLe is a database for punctual metereological data  (Command line tools)
+Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
 Version: 8.3
 Release: %{releaseno}%{dist}
@@ -50,7 +50,7 @@ Requires: %{python3_vers}-dballe = %{?epoch:%epoch:}%{version}-%{release}
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
 
 %description
- Database for punctual meteorological data (Command line tools)
+ Database for point-based meteorological data (Command line tools)
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
  .
