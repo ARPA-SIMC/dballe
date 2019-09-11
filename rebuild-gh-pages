@@ -1,0 +1,101 @@
+#!/usr/bin/python3
+
+import argparse
+import tempfile
+import subprocess
+import multiprocessing
+import shlex
+import shutil
+import sys
+import os
+import logging
+import git
+
+log = logging.getLogger()
+
+
+def run(cwd, cmd):
+    log.info("%s$ %s", cwd, " ".join(shlex.quote(x) for x in cmd))
+    subprocess.run(cmd, cwd=cwd, check=True)
+
+
+class Builder:
+    def __init__(self, srcdir, workdir):
+        self.srcdir = srcdir
+        self.workdir = workdir
+        self.builddir = os.path.join(workdir, "build")
+        self.pagesdir = os.path.join(workdir, "pages")
+        self.src_repo = git.Repo(srcdir)
+
+    def build_docs(self):
+        log.info("Creating documentation from master branch")
+        run(self.workdir, ["git", "clone", "-o", "local", "-b", "master", self.srcdir, "build"])
+        run(self.builddir, ["autoreconf", "-ifv"])
+        run(self.builddir, ["./configure"])
+        run(self.builddir, ["make", "-j{}".format(multiprocessing.cpu_count())])
+
+    def publish(self, built_pages):
+        log.info("Updating gh-pages branch")
+        ref = self.src_repo.refs["origin/gh-pages"].commit.hexsha
+        run(self.workdir, ["git", "clone", "-o", "local", self.srcdir, "pages"])
+        pages_repo = git.Repo(self.pagesdir)
+        push_url = self.src_repo.remotes["origin"].config_reader.get("url")
+        pages_repo.create_remote("origin", push_url)
+        run(self.pagesdir, ["git", "checkout", "-b", "gh-pages", ref])
+        # Remove all checked out content
+        for fn in os.listdir(self.pagesdir):
+            if fn == ".git":
+                continue
+            pathname = os.path.join(self.pagesdir, fn)
+            if os.path.isdir(pathname):
+                shutil.rmtree(pathname)
+            else:
+                os.unlink(pathname)
+        # Add the actual documentation
+        for fn in os.listdir(built_pages):
+            src = os.path.join(built_pages, fn)
+            dst = os.path.join(self.pagesdir, fn)
+            if os.path.isdir(src):
+                shutil.copytree(src, dst)
+            else:
+                shutil.copy2(src, dst)
+        # Add .nojekyll file to tell github not to process our html with jekyll
+        with open(os.path.join(self.pagesdir, ".nojekyll"), "wb"):
+            pass
+        # Add files and push
+        run(self.pagesdir, ["git", "add", "."])
+        run(self.pagesdir, ["git", "commit", "-am", "Updated documentation on gh-pages"])
+        run(self.pagesdir, ["git", "push", "origin", "gh-pages"])
+
+
+def main():
+    srcdir = os.path.abspath(os.path.dirname(sys.argv[0]))
+    parser = argparse.ArgumentParser(description="Rebuild documentation exported to gh-pages")
+    parser.add_argument("--verbose", "-v", action="store_true", help="verbose output")
+    parser.add_argument("--debug", action="store_true", help="debug output")
+    parser.add_argument("--reuse-built", action="store_true",
+                        help="reuse documentation built in the current directory")
+    args = parser.parse_args()
+
+    # Setup logging
+    FORMAT = "%(asctime)-15s %(levelname)s %(message)s"
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG, stream=sys.stderr, format=FORMAT)
+    elif args.verbose:
+        logging.basicConfig(level=logging.INFO, stream=sys.stderr, format=FORMAT)
+    else:
+        logging.basicConfig(level=logging.WARN, stream=sys.stderr, format=FORMAT)
+
+    with tempfile.TemporaryDirectory() as workdir:
+        log.info("Building %s on %s", srcdir, workdir)
+        builder = Builder(srcdir, workdir)
+
+        if args.reuse_built:
+            builder.publish(os.path.join(srcdir, "doc", "html"))
+        else:
+            builder.build_docs()
+            builder.publish(os.path.join(builder.builddir, "doc", "html"))
+
+
+if __name__ == "__main__":
+    main()
