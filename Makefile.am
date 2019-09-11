@@ -6,11 +6,11 @@ SUBDIRS = tables dballe extra src
 if DO_DBALLEF
 SUBDIRS += fortran
 endif
-if DO_DOCS
-SUBDIRS += doc
-endif
 if DO_DBALLE_PYTHON
 SUBDIRS += python
+endif
+if DO_DOCS
+SUBDIRS += doc
 endif
 SUBDIRS += bench .
 

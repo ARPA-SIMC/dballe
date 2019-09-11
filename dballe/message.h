@@ -25,8 +25,9 @@ namespace dballe {
  * The representation in Message is as connected as possible to physics rather
  * than to observations.
  */
-struct Message
+class Message
 {
+public:
     virtual ~Message();
 
     /// Return the type of the data in the message

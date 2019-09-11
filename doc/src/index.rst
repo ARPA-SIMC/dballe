@@ -10,12 +10,22 @@ volnd that allows to automatically export matrices of data out of the database.
    :maxdepth: 2
    :caption: Contents:
 
-   dballe
-   dballe.volnd
+   python/dballe
+   python/dballe.volnd
+
+   cpp/dballe
+   fortran/dballe
 
 
+The C++ API documentation is also available as `doxgen documentation`__.
 
-Indices and tables
+__ c_api/index.html
+
+The Fortran API documentation is also available as `doxgen documentation`__.
+
+__ fortran_api/index.html
+
+
 ==================
 
 * :ref:`genindex`

@@ -27,6 +27,7 @@ BuildRequires: pkgconfig(libwreport) >= 3.22
 BuildRequires: %{python3_vers}-devel
 %if ! 0%{?el7}
 BuildRequires: %{python3_vers}-sphinx
+BuildRequires: %{python3_vers}-breathe
 %endif
 %if 0%{?rhel} == 7
 BuildRequires: popt-devel

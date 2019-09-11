@@ -14,8 +14,9 @@ namespace dballe {
  * To allow to add members this structure without breaking the ABI, creation of
  * new instances is restricted to DBConnectOptions::create().
  */
-struct DBConnectOptions
+class DBConnectOptions
 {
+public:
     /**
      * URL to use to connect to the database.
      *
@@ -60,8 +61,9 @@ protected:
  * To allow to add members this structure without breaking the ABI, creation of
  * new instances is restricted to DBImportOptions::create().
  */
-struct DBImportOptions
+class DBImportOptions
 {
+public:
     /**
      * Report name to use to import data.
      *
@@ -117,8 +119,9 @@ protected:
  * To allow to add members this structure without breaking the ABI, creation of
  * new instances is restricted to DBInsertOptions::create().
  */
-struct DBInsertOptions
+class DBInsertOptions
 {
+public:
     /// If true, then existing data can be rewritten, else data can only be added.
     bool can_replace = false;
 
@@ -293,8 +296,9 @@ public:
 };
 
 
-struct DB: public std::enable_shared_from_this<DB>
+class DB: public std::enable_shared_from_this<DB>
 {
+public:
     virtual ~DB();
 
     /**

@@ -12,16 +12,60 @@ CLEANFILES =
 
 if DO_DOCS
 
-# Generic documentation
-
-
-# C++ API documentation
+# C++ API documentation sources
 
 cppdeps = libdballe.dox \
 	  aliases.dox \
 	  ltypes.dox \
 	  tranges.dox \
 	  libwreport.doxytags
+
+
+# Fortran API documentation sources
+
+fortrandeps = libdballef.dox
+
+fapisources = fapi.md fapi_concepts.md fapi_walkthrough.md fapi_reference.md \
+              fapi_parms.md fapi_aliases.md fapi_connect.md fapi_ltypes.md \
+              fapi_tranges.md fapi_btable.md fapi_transactions.md
+
+doc_DATA += $(fapisources)
+EXTRA_DIST += $(fapisources)
+
+
+# Sphinx sources
+
+sphinx_sources =  \
+    src/conf.py \
+    src/index.rst \
+    src/cpp/dballe.rst \
+    src/cpp/messages.rst \
+    src/cpp/cursors.rst \
+    src/cpp/db.rst \
+    src/fortran/dballe.rst \
+    src/python/dballe.rst \
+    src/python/dballe_types.rst \
+    src/python/dballe_messages.rst \
+    src/python/dballe_cursors.rst \
+    src/python/dballe_db.rst \
+    src/python/dballe.volnd.rst
+
+EXTRA_DIST += $(sphinx_sources)
+
+# See https://stackoverflow.com/questions/19822435/multiple-targets-from-one-recipe-and-parallel-execution#19822767
+.INTERMEDIATE: build-docs
+
+# Build doxygen + sphinx documentation
+build-docs: $(cppdeps) $(fortrandeps) $(sphinx_sources) $(mainpages) ../dballe/libdballe.la ../fortran/libdballef.la ../python/_dballe.la
+	rm -rf html
+	mkdir html
+	$(DOXYGEN) libdballe.dox
+	$(DOXYGEN) libdballef.dox
+	$(top_srcdir)/run-local $(SPHINX_BUILD) -b html src html/
+
+libdballe.doxytags: build-docs
+libdballef.doxytags: build-docs
+html/index.html: build-docs
 
 aliases.dox: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
 	$(top_srcdir)/doc/mksnippet alias dox < $< > $@ || rm $@
@@ -31,9 +75,6 @@ ltypes.dox: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
 
 tranges.dox: mksnippet
 	$(top_srcdir)/doc/mksnippet tranges dox > $@ || rm $@
-
-libdballe.doxytags: $(cppdeps)
-	doxygen $<
 
 libwreport.doxytags:
 	if test x$(suffix @WREPORT_DOXYGEN_TAGFILE@) = x.gz ; then \
@@ -45,19 +86,7 @@ libwreport.doxytags:
 
 doc_DATA += libdballe.doxytags
 
-CLEANFILES += libdballe.doxytags libwreport.doxytags aliases.dox ltypes.dox tranges.dox
-
-
-# Fortran API documentation
-
-fapisources = fapi.md fapi_concepts.md fapi_walkthrough.md fapi_reference.md \
-              fapi_parms.md fapi_aliases.md fapi_connect.md fapi_ltypes.md \
-              fapi_tranges.md fapi_btable.md fapi_transactions.md
-
-fortrandeps = libdballef.dox
-
-libdballef.doxytags: $(fortrandeps)
-	doxygen $<
+CLEANFILES += libdballe.doxytags libdballef.doxytags libwreport.doxytags aliases.dox ltypes.dox tranges.dox
 
 fapi_reference.md: $(top_srcdir)/doc/make_fortran_reference libdballef.doxytags
 	$< > $@ fortran_xml || rm $@
@@ -75,22 +104,17 @@ fapi_btable.md: ../tables/dballe.txt mksnippet
 	$(top_srcdir)/doc/mksnippet btable md < $< > $@ || rm $@
 
 
-doc_DATA += $(fapisources)
-
-CLEANFILES += libdballef.doxytags
-
-EXTRA_DIST += $(fapisources) make_fortran_reference
+EXTRA_DIST += make_fortran_reference
 
 
 # make install machinery
 
 install-data-local:
-	test -d c_api && \
-		$(mkinstalldirs) $(DESTDIR)$(docdir)/c_api && \
-		find c_api -type f -exec $(INSTALL_DATA) '{}' $(DESTDIR)$(docdir)/c_api/ \;
+	find html -type d -exec $(mkinstalldirs) '$(DESTDIR)$(docdir)/{}'  \; ;
+	find html -type f --not -path '*/.*' -exec $(INSTALL_DATA) '{}' '$(DESTDIR)$(docdir)/{}' \; ;
 
 uninstall-local:
-	rm -rf $(DESTDIR)$(docdir)/c_api
+	rm -rf $(DESTDIR)$(docdir)/html
 
 
 EXTRA_DIST += introduzione.odt
@@ -98,6 +122,7 @@ EXTRA_DIST += introduzione.odt
 CLEANFILES += doxygen_sqlite3.db
 
 clean-local:
-	rm -rf {c,fortran}_api
 	rm -rf {c,fortran}_xml
+	rm -rf html
+
 endif

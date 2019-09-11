@@ -21,8 +21,9 @@ namespace dballe {
  * the stable ABI cannot create objects, but need to use the create() static
  * methods.
  */
-struct ImporterOptions
+class ImporterOptions
 {
+public:
     bool simplified = true;
 
     bool operator==(const ImporterOptions&) const;

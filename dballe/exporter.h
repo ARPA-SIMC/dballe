@@ -21,8 +21,9 @@ namespace dballe {
  * the stable ABI cannot create objects, but need to use the create() static
  * methods.
  */
-struct ExporterOptions
+class ExporterOptions
 {
+public:
     /// Name of template to use for output (leave empty to autodetect)
     std::string template_name;
     /// Originating centre

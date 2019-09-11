@@ -42,6 +42,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
+    'breathe',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -70,6 +71,14 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
+
+
+breathe_projects = {
+    "dballe": "../c_xml/",
+    "dballef": "../fortran_xml/",
+}
+
+breathe_default_project = "dballe"
 
 
 # -- Options for HTML output -------------------------------------------------
