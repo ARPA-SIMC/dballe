@@ -75,16 +75,23 @@ then
         enable_docs=no
     fi
 
+    dnl Check for doxygen
+    AC_CHECK_PROGS(DOXYGEN, [doxygen], [no])
+    if test $DOXYGEN = no
+    then
+        AC_MSG_WARN([doxygen was not found: documentation will not be built])
+        enable_docs=no
+    fi
+
     AC_CHECK_PROGS(SPHINX_BUILD, [sphinx-build sphinx-build-3 sphinx-build-3.6], [no])
     if test $SPHINX_BUILD = no
     then
-        have_sphinx=no
-    else
-        have_sphinx=yes
-        AC_SUBST(SPHINX_BUILD)
+        enable_docs=no
     fi
 fi
-AM_CONDITIONAL([HAVE_SPHINX], [test x$have_sphinx = xyes])
+
+AC_SUBST(DOXYGEN)
+AC_SUBST(SPHINX_BUILD)
 
 dnl To use subdirs
 AC_PROG_MAKE_SET
