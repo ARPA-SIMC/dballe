@@ -111,7 +111,7 @@ EXTRA_DIST += make_fortran_reference
 
 install-data-local:
 	find html -type d -exec $(mkinstalldirs) '$(DESTDIR)$(docdir)/{}'  \; ;
-	find html -type f --not -path '*/.*' -exec $(INSTALL_DATA) '{}' '$(DESTDIR)$(docdir)/{}' \; ;
+	find html -type f -not -path '*/.*' -exec $(INSTALL_DATA) '{}' '$(DESTDIR)$(docdir)/{}' \; ;
 
 uninstall-local:
 	rm -rf $(DESTDIR)$(docdir)/html
