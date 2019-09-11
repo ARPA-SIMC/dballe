@@ -12,8 +12,9 @@ namespace dballe {
 /**
  * Base class for cursors that iterate over DB query results
  */
-struct Cursor
+class Cursor
 {
+public:
     virtual ~Cursor();
 
     /**
@@ -43,8 +44,9 @@ struct Cursor
 };
 
 /// Cursor iterating over stations
-struct CursorStation : public Cursor
+class CursorStation : public Cursor
 {
+public:
     /**
      * Get the station data values
      */
@@ -52,8 +54,9 @@ struct CursorStation : public Cursor
 };
 
 /// Cursor iterating over station data values
-struct CursorStationData : public Cursor
+class CursorStationData : public Cursor
 {
+public:
     /// Get the variable code
     virtual wreport::Varcode get_varcode() const = 0;
 
@@ -62,8 +65,9 @@ struct CursorStationData : public Cursor
 };
 
 /// Cursor iterating over data values
-struct CursorData : public Cursor
+class CursorData : public Cursor
 {
+public:
     /// Get the variable code
     virtual wreport::Varcode get_varcode() const = 0;
 
@@ -81,8 +85,9 @@ struct CursorData : public Cursor
 };
 
 /// Cursor iterating over summary entries
-struct CursorSummary : public Cursor
+class CursorSummary : public Cursor
 {
+public:
     /// Get the level
     virtual Level get_level() const = 0;
 
@@ -100,8 +105,9 @@ struct CursorSummary : public Cursor
 };
 
 /// Cursor iterating over messages
-struct CursorMessage : public Cursor
+class CursorMessage : public Cursor
 {
+public:
     virtual const Message& get_message() const = 0;
     virtual std::unique_ptr<Message> detach_message() = 0;
 };
