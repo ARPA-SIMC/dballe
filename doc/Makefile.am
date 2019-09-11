@@ -54,7 +54,7 @@ EXTRA_DIST += $(sphinx_sources)
 .INTERMEDIATE: build-docs
 
 # Build doxygen + sphinx documentation
-build-docs: $(cppdeps) $(fortrandeps) $(sphinx_sources) $(mainpages)
+build-docs: $(cppdeps) $(fortrandeps) $(sphinx_sources) $(mainpages) ../dballe/libdballe.la ../fortran/libdballef.la ../python/_dballe.la
 	rm -rf html
 	mkdir html
 	$(DOXYGEN) libdballe.dox
