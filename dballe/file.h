@@ -14,8 +14,9 @@ namespace dballe {
  *
  * It provides a unified interface to read and write messages to files.
  */
-struct File
+class File
 {
+public:
     virtual ~File();
 
     /// Get the file pathname
@@ -126,8 +127,9 @@ struct File
 };
 
 /// Binary message
-struct BinaryMessage
+class BinaryMessage
 {
+public:
     /// Format of the binary data
     Encoding encoding;
 
