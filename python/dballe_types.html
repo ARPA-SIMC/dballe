@@ -1,0 +1,445 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>dballe types &#8212; dballe 3.23 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="dballe messages I/O" href="dballe_messages.html" />
+    <link rel="prev" title="Python dballe package" href="dballe.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="dballe-types">
+<h1>dballe types<a class="headerlink" href="#dballe-types" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<dl class="class">
+<dt id="dballe.Var">
+<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">Var</code><a class="headerlink" href="#dballe.Var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Var holds a measured value, which can be integer, float or string, and
+a <a href="#id1"><span class="problematic" id="id2">`wreport.Varinfo`_</span></a> with all available information (description, unit,
+precision, …) related to it.</p>
+<p>Var objects can be created from a <a href="#id3"><span class="problematic" id="id4">`wreport.Varinfo`_</span></a> object, and an
+optional value. Omitting the value creates an unset variable.</p>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">v</span> <span class="o">=</span> <span class="n">wreport</span><span class="o">.</span><span class="n">Var</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">&quot;B12101&quot;</span><span class="p">],</span> <span class="mf">32.5</span><span class="p">)</span>
+<span class="c1"># v.info returns detailed informations about the variable in a Varinfo object.</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">v</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">desc</span><span class="p">))</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="dballe.Var.code">
+<code class="descname">code</code><a class="headerlink" href="#dballe.Var.code" title="Permalink to this definition">¶</a></dt>
+<dd><p>variable code</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Var.enq">
+<code class="descname">enq</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Union[str, float, int]<a class="headerlink" href="#dballe.Var.enq" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the value of the variable, as int, float or str according the variable definition</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Var.enqa">
+<code class="descname">enqa</code><span class="sig-paren">(</span><em>code: str</em><span class="sig-paren">)</span> &#x2192; Optional[wreport.Var]<a class="headerlink" href="#dballe.Var.enqa" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the variable for the attribute with the given code, or None if not found</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Var.enqc">
+<code class="descname">enqc</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#dballe.Var.enqc" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the value of the variable, as a str</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Var.enqd">
+<code class="descname">enqd</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#dballe.Var.enqd" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the value of the variable, as a float</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Var.enqi">
+<code class="descname">enqi</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#dballe.Var.enqi" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the value of the variable, as an int</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Var.format">
+<code class="descname">format</code><span class="sig-paren">(</span><em>default: str=</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#dballe.Var.format" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a string with the formatted value of the variable</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Var.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>default: Any=None</em><span class="sig-paren">)</span> &#x2192; Union[str, float, long, Any]<a class="headerlink" href="#dballe.Var.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the value of the variable, with a default if it is unset</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Var.get_attrs">
+<code class="descname">get_attrs</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; List[wreport.Var]<a class="headerlink" href="#dballe.Var.get_attrs" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the attributes of this variable</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Var.info">
+<code class="descname">info</code><a class="headerlink" href="#dballe.Var.info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Varinfo for this variable</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Var.isset">
+<code class="descname">isset</code><a class="headerlink" href="#dballe.Var.isset" title="Permalink to this definition">¶</a></dt>
+<dd><p>true if the value is set</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Var.seta">
+<code class="descname">seta</code><span class="sig-paren">(</span><em>var: wreport.Var</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.Var.seta" title="Permalink to this definition">¶</a></dt>
+<dd><p>set an attribute in the variable</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Var.unseta">
+<code class="descname">unseta</code><span class="sig-paren">(</span><em>code: str</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.Var.unseta" title="Permalink to this definition">¶</a></dt>
+<dd><p>unset the given attribute from the variable</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dballe.Varinfo">
+<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">Varinfo</code><a class="headerlink" href="#dballe.Varinfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Varinfo object holds all possible information about a variable, such as its
+measurement unit, description and number of significant digits.</p>
+<p>Varinfo objects cannot be instantiated directly, and are created by
+querying <a href="#id5"><span class="problematic" id="id6">`wreport.Vartable`_</span></a> objects.</p>
+<dl class="attribute">
+<dt id="dballe.Varinfo.bit_len">
+<code class="descname">bit_len</code><a class="headerlink" href="#dballe.Varinfo.bit_len" title="Permalink to this definition">¶</a></dt>
+<dd><p>number of bits used to encode the value in BUFR</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Varinfo.bit_ref">
+<code class="descname">bit_ref</code><a class="headerlink" href="#dballe.Varinfo.bit_ref" title="Permalink to this definition">¶</a></dt>
+<dd><p>reference value added after scaling, for BUFR decoding</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Varinfo.code">
+<code class="descname">code</code><a class="headerlink" href="#dballe.Varinfo.code" title="Permalink to this definition">¶</a></dt>
+<dd><p>variable code</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Varinfo.desc">
+<code class="descname">desc</code><a class="headerlink" href="#dballe.Varinfo.desc" title="Permalink to this definition">¶</a></dt>
+<dd><p>description</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Varinfo.len">
+<code class="descname">len</code><a class="headerlink" href="#dballe.Varinfo.len" title="Permalink to this definition">¶</a></dt>
+<dd><p>number of significant digits</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Varinfo.scale">
+<code class="descname">scale</code><a class="headerlink" href="#dballe.Varinfo.scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>scale of the value as a power of 10</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Varinfo.type">
+<code class="descname">type</code><a class="headerlink" href="#dballe.Varinfo.type" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a string describing the type of the variable (string, binary, integer, decimal)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Varinfo.unit">
+<code class="descname">unit</code><a class="headerlink" href="#dballe.Varinfo.unit" title="Permalink to this definition">¶</a></dt>
+<dd><p>measurement unit</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dballe.Vartable">
+<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">Vartable</code><a class="headerlink" href="#dballe.Vartable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collection of Varinfo objects indexed by WMO BUFR/CREX table B code.</p>
+<p>A Vartable is instantiated by the name (without extension) of the table
+file installed in wreport’s data directory (normally,
+<code class="docutils literal notranslate"><span class="pre">/usr/share/wreport/</span></code>):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">table</span> <span class="o">=</span> <span class="n">wreport</span><span class="o">.</span><span class="n">Vartable</span><span class="p">(</span><span class="s2">&quot;B0000000000000023000&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">&quot;B12101&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">desc</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">table</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">desc</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="dballe.Vartable.get_bufr">
+<code class="descname">get_bufr</code><span class="sig-paren">(</span><em>basename: str=None</em>, <em>originating_centre: int=0</em>, <em>originating_subcentre: int=0</em>, <em>master_table_number: int=0</em>, <em>master_table_version_number: int=None</em>, <em>master_table_version_number_local: int=0</em><span class="sig-paren">)</span> &#x2192; wreport.Vartable<a class="headerlink" href="#dballe.Vartable.get_bufr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Look up a table B file using the information given, then load BUFR
+information from it.</p>
+<p>You need to provide either basename or master_table_version_number.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Vartable.get_crex">
+<code class="descname">get_crex</code><span class="sig-paren">(</span><em>basename: str=None</em>, <em>edition_number=2</em>, <em>originating_centre: int=0</em>, <em>originating_subcentre: int=0</em>, <em>master_table_number: int=0</em>, <em>master_table_version_number: int=None</em>, <em>master_table_version_number_bufr: int=None</em>, <em>master_table_version_number_local: int=0</em><span class="sig-paren">)</span> &#x2192; wreport.Vartable<a class="headerlink" href="#dballe.Vartable.get_crex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Look up a table B file using the information given, then load CREX
+information from it.</p>
+<p>You need to provide either basename or master_table_version_number
+or master_table_version_number_bufr.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Vartable.load_bufr">
+<code class="descname">load_bufr</code><span class="sig-paren">(</span><em>pathname: str</em><span class="sig-paren">)</span> &#x2192; wreport.Vartable<a class="headerlink" href="#dballe.Vartable.load_bufr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load BUFR information from a Table B file and return it as a
+wreport.Vartable.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Vartable.load_crex">
+<code class="descname">load_crex</code><span class="sig-paren">(</span><em>pathname: str</em><span class="sig-paren">)</span> &#x2192; wreport.Vartable<a class="headerlink" href="#dballe.Vartable.load_crex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load CREX information from a Table B file and return it as a
+wreport.Vartable.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Vartable.pathname">
+<code class="descname">pathname</code><a class="headerlink" href="#dballe.Vartable.pathname" title="Permalink to this definition">¶</a></dt>
+<dd><p>name of the table</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dballe.Level">
+<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">Level</code><a class="headerlink" href="#dballe.Level" title="Permalink to this definition">¶</a></dt>
+<dd><p>Level or layer.</p>
+<p>Constructor: Level(ltype1: int=None, l1: int=None, ltype2: int=None, l2: int=None)</p>
+<dl class="attribute">
+<dt id="dballe.Level.l1">
+<code class="descname">l1</code><a class="headerlink" href="#dballe.Level.l1" title="Permalink to this definition">¶</a></dt>
+<dd><p>value of the level or of the first layer</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Level.l2">
+<code class="descname">l2</code><a class="headerlink" href="#dballe.Level.l2" title="Permalink to this definition">¶</a></dt>
+<dd><p>value of the second layer</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Level.ltype1">
+<code class="descname">ltype1</code><a class="headerlink" href="#dballe.Level.ltype1" title="Permalink to this definition">¶</a></dt>
+<dd><p>type of the level or of the first layer</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Level.ltype2">
+<code class="descname">ltype2</code><a class="headerlink" href="#dballe.Level.ltype2" title="Permalink to this definition">¶</a></dt>
+<dd><p>type of the second layer</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dballe.Trange">
+<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">Trange</code><a class="headerlink" href="#dballe.Trange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time range.</p>
+<p>Constructor: Trange(pind: int=None, p1: int=None, p2: int=None)</p>
+<dl class="attribute">
+<dt id="dballe.Trange.p1">
+<code class="descname">p1</code><a class="headerlink" href="#dballe.Trange.p1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time range P1 indicator</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Trange.p2">
+<code class="descname">p2</code><a class="headerlink" href="#dballe.Trange.p2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time range P2 indicator</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Trange.pind">
+<code class="descname">pind</code><a class="headerlink" href="#dballe.Trange.pind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time range type indicator</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dballe.Station">
+<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">Station</code><a class="headerlink" href="#dballe.Station" title="Permalink to this definition">¶</a></dt>
+<dd><p>Station information.</p>
+<p>Constructor: Station(report: str, lat: float, lon: float, ident: str=None)</p>
+<dl class="attribute">
+<dt id="dballe.Station.ident">
+<code class="descname">ident</code><a class="headerlink" href="#dballe.Station.ident" title="Permalink to this definition">¶</a></dt>
+<dd><p>mobile station identifier</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Station.lat">
+<code class="descname">lat</code><a class="headerlink" href="#dballe.Station.lat" title="Permalink to this definition">¶</a></dt>
+<dd><p>station latitude</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Station.lon">
+<code class="descname">lon</code><a class="headerlink" href="#dballe.Station.lon" title="Permalink to this definition">¶</a></dt>
+<dd><p>station longitude</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Station.report">
+<code class="descname">report</code><a class="headerlink" href="#dballe.Station.report" title="Permalink to this definition">¶</a></dt>
+<dd><p>report for this station</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dballe.DBStation">
+<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">DBStation</code><a class="headerlink" href="#dballe.DBStation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Station information with database ID.</p>
+<p>Constructor: Station(report: str, id: int, lat: float, lon: float, ident: str=None)</p>
+<dl class="attribute">
+<dt id="dballe.DBStation.id">
+<code class="descname">id</code><a class="headerlink" href="#dballe.DBStation.id" title="Permalink to this definition">¶</a></dt>
+<dd><p>database ID for this station</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.DBStation.ident">
+<code class="descname">ident</code><a class="headerlink" href="#dballe.DBStation.ident" title="Permalink to this definition">¶</a></dt>
+<dd><p>mobile station identifier</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.DBStation.lat">
+<code class="descname">lat</code><a class="headerlink" href="#dballe.DBStation.lat" title="Permalink to this definition">¶</a></dt>
+<dd><p>station latitude</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.DBStation.lon">
+<code class="descname">lon</code><a class="headerlink" href="#dballe.DBStation.lon" title="Permalink to this definition">¶</a></dt>
+<dd><p>station longitude</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.DBStation.report">
+<code class="descname">report</code><a class="headerlink" href="#dballe.DBStation.report" title="Permalink to this definition">¶</a></dt>
+<dd><p>report for this station</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dballe.Data">
+<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">Data</code><a class="headerlink" href="#dballe.Data" title="Permalink to this definition">¶</a></dt>
+<dd><p>key-value representation of a value with its associated metadata</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">dballe</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="dballe.html">Python dballe package</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">dballe types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dballe_messages.html">dballe messages I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dballe_cursors.html">dballe cursors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dballe_db.html">dballe database functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dballe.volnd.html">Python dballe.volnd package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="dballe.html">Python dballe package</a><ul>
+      <li>Previous: <a href="dballe.html" title="previous chapter">Python dballe package</a></li>
+      <li>Next: <a href="dballe_messages.html" title="next chapter">dballe messages I/O</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Enrico Zini.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="../_sources/python/dballe_types.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

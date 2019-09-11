@@ -1,0 +1,392 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>dballe messages I/O &#8212; dballe 3.23 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="dballe cursors" href="dballe_cursors.html" />
+    <link rel="prev" title="dballe types" href="dballe_types.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="dballe-messages-i-o">
+<h1>dballe messages I/O<a class="headerlink" href="#dballe-messages-i-o" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<dl class="class">
+<dt id="dballe.BinaryMessage">
+<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">BinaryMessage</code><a class="headerlink" href="#dballe.BinaryMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Binary message.</p>
+<p>This is basically a simple wrapper around a bytes() object, providing extra
+information about the filename, offset and index where the message data was
+read. Is it used by <a class="reference internal" href="#dballe.File" title="dballe.File"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.File</span></code></a> to return the binary messages it reads.</p>
+<dl class="attribute">
+<dt id="dballe.BinaryMessage.encoding">
+<code class="descname">encoding</code><a class="headerlink" href="#dballe.BinaryMessage.encoding" title="Permalink to this definition">¶</a></dt>
+<dd><p>message encoding</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.BinaryMessage.index">
+<code class="descname">index</code><a class="headerlink" href="#dballe.BinaryMessage.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>index of the message in the input file, or None if unknown</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.BinaryMessage.offset">
+<code class="descname">offset</code><a class="headerlink" href="#dballe.BinaryMessage.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>offset of the message in the input file, or None if unknown</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.BinaryMessage.pathname">
+<code class="descname">pathname</code><a class="headerlink" href="#dballe.BinaryMessage.pathname" title="Permalink to this definition">¶</a></dt>
+<dd><p>pathname of the file the message came from, or None if unknown</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dballe.File">
+<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">File</code><a class="headerlink" href="#dballe.File" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read-only access to files with weather bulletins in BUFR or CREX format.</p>
+<p>No write functions are supported: to write files, you can simply write
+<a class="reference internal" href="#dballe.BinaryMessage" title="dballe.BinaryMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.BinaryMessage</span></code></a> objects or encoded messages to normal Python files.</p>
+<p>Constructor: File(file: Union[str, File], encoding: str=None)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>file</strong> – can be a file name, or a file-like object. If a file-like object
+supports <cite>fileno()</cite>, that file descriptor is <cite>dup()</cite>-ed and used for efficient
+reading. Otherwise, <cite>file.read()</cite> is called to load the data to read in memory.</li>
+<li><strong>encoding</strong> – if omitted, it is auto detected by looking at the first byte of
+the file only. Files with leading padding data will not be detected properly,
+and you need to explicitly specify the encoding to read them.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Example usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">dballe</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s2">&quot;test.bufr&quot;</span><span class="p">,</span> <span class="s2">&quot;BUFR&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">binmsg</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;#</span><span class="si">{m.index}</span><span class="s2">: </span><span class="si">{m.pathname}</span><span class="s2">:</span><span class="si">{m.offset}</span><span class="s2">: </span><span class="si">{m.encoding}</span><span class="s2"> message&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="n">binmsg</span><span class="p">))</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="dballe.File.encoding">
+<code class="descname">encoding</code><a class="headerlink" href="#dballe.File.encoding" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the file encoding</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.File.name">
+<code class="descname">name</code><a class="headerlink" href="#dballe.File.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the file name</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dballe.Message">
+<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">Message</code><a class="headerlink" href="#dballe.Message" title="Permalink to this definition">¶</a></dt>
+<dd><p>The contents of a decoded BUFR or CREX message.</p>
+<p>DB-All.e can interpret the contents of most weather messages commonly in use,
+and represent them as variables identified by <a class="reference internal" href="dballe_types.html#dballe.Level" title="dballe.Level"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Level</span></code></a>, <a class="reference internal" href="dballe_types.html#dballe.Trange" title="dballe.Trange"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Trange</span></code></a>,
+datetime, coordinates, network, and mobile station identifier.</p>
+<p>A message contains only one reference station (coordinates, network, mobile
+station identifier), only one reference datetime, and many (level, trange,
+varcode, value) variables.</p>
+<p>Variables that describe the station are accessible using None for level and
+trange.</p>
+<p>Constructor: Message(type: str)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>type</strong> – <p>a string identifying the message type, and it will affect how the
+message will be encoded by the exporter.</p>
+<dl class="docutils">
+<dt>Available values are:</dt>
+<dd><ul class="first last simple">
+<li>generic</li>
+<li>synop</li>
+<li>pilot</li>
+<li>temp</li>
+<li>temp_ship;</li>
+<li>airep</li>
+<li>amdar</li>
+<li>acars</li>
+<li>ship</li>
+<li>buoy</li>
+<li>metar</li>
+<li>sat</li>
+</ul>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Example usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">importer</span> <span class="o">=</span> <span class="n">dballe</span><span class="o">.</span><span class="n">Importer</span><span class="p">(</span><span class="s2">&quot;BUFR&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">importer</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s2">&quot;test.bufr&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{m.report}</span><span class="s2">,</span><span class="si">{m.coords}</span><span class="s2">,</span><span class="si">{m.ident}</span><span class="s2">,</span><span class="si">{m.datetime}</span><span class="s2">,</span><span class="si">{m.type}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="n">msg</span><span class="p">))</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="dballe.Message.coords">
+<code class="descname">coords</code><a class="headerlink" href="#dballe.Message.coords" title="Permalink to this definition">¶</a></dt>
+<dd><p>message coordinates</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Message.datetime">
+<code class="descname">datetime</code><a class="headerlink" href="#dballe.Message.datetime" title="Permalink to this definition">¶</a></dt>
+<dd><p>message datetime</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Message.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>level: dballe.Level</em>, <em>trange: dballe.Trange</em>, <em>code: str</em><span class="sig-paren">)</span> &#x2192; Union[dballe.Var, None]<a class="headerlink" href="#dballe.Message.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a Var given its level, timerange, and varcode; returns None if not found</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Message.get_named">
+<code class="descname">get_named</code><span class="sig-paren">(</span><em>name: str</em><span class="sig-paren">)</span> &#x2192; Union[dballe.Var, None]<a class="headerlink" href="#dballe.Message.get_named" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a Var given its shortcut name; returns None if not found</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Message.ident">
+<code class="descname">ident</code><a class="headerlink" href="#dballe.Message.ident" title="Permalink to this definition">¶</a></dt>
+<dd><p>message mobile station identifier</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Message.query_data">
+<code class="descname">query_data</code><span class="sig-paren">(</span><em>query: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; dballe.CursorData<a class="headerlink" href="#dballe.Message.query_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query the variables in the message</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Message.query_station_data">
+<code class="descname">query_station_data</code><span class="sig-paren">(</span><em>query: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; dballe.CursorStationData<a class="headerlink" href="#dballe.Message.query_station_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query the station variables in the message</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Message.query_stations">
+<code class="descname">query_stations</code><span class="sig-paren">(</span><em>query: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; dballe.CursorStation<a class="headerlink" href="#dballe.Message.query_stations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query the station data in the message</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Message.report">
+<code class="descname">report</code><a class="headerlink" href="#dballe.Message.report" title="Permalink to this definition">¶</a></dt>
+<dd><p>message report</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Message.set">
+<code class="descname">set</code><span class="sig-paren">(</span><em>level: dballe.Level</em>, <em>trange: dballe.Trange</em>, <em>var: dballe.Var</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.Message.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a Var given level and timerange</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Message.set_named">
+<code class="descname">set_named</code><span class="sig-paren">(</span><em>name: str, value: Union[dballe.Var, int, str, double]</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.Message.set_named" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a Var given its shortcut name</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dballe.Message.type">
+<code class="descname">type</code><a class="headerlink" href="#dballe.Message.type" title="Permalink to this definition">¶</a></dt>
+<dd><p>message type</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dballe.Importer">
+<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">Importer</code><a class="headerlink" href="#dballe.Importer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Message importer.</p>
+<p>This is the engine that decodes binary messages and interprets their contents
+using a uniform data model.</p>
+<p>Note that one binary message is often decoded to multiple data messages, in
+case, for example, of compressed BUFR files.</p>
+<p>Constructor: Importer(encoding: str, simplified: bool=True)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>encoding</strong> – can be <code class="code docutils literal notranslate"><span class="pre">&quot;BUFR&quot;</span></code> or <code class="code docutils literal notranslate"><span class="pre">&quot;CREX&quot;</span></code>.</li>
+<li><strong>simplified</strong> – controls whether messages are constructed using standard levels and
+time ranges, or using the exact levels and time ranges
+contained in the input. For example, a simplified
+intepretation of a synop message will place the temperature at
+2M above ground, regardless of the reported sensor height. A
+non-simplified import will place the temperature reading at
+the reported sensor height.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>When a message is imported in simplified mode, the actual context information
+will be stored as data attributes.</p>
+<p>Example usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">importer</span> <span class="o">=</span> <span class="n">dballe</span><span class="o">.</span><span class="n">Importer</span><span class="p">(</span><span class="s2">&quot;BUFR&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">importer</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s2">&quot;test.bufr&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{m.report}</span><span class="s2">,</span><span class="si">{m.coords}</span><span class="s2">,</span><span class="si">{m.ident}</span><span class="s2">,</span><span class="si">{m.datetime}</span><span class="s2">,</span><span class="si">{m.type}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="n">msg</span><span class="p">))</span>
+
+<span class="n">importer</span> <span class="o">=</span> <span class="n">dballe</span><span class="o">.</span><span class="n">Importer</span><span class="p">(</span><span class="s2">&quot;BUFR&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">dbale</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s2">&quot;test.bufr&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">binmsg</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">msgs</span> <span class="o">=</span> <span class="n">importer</span><span class="o">.</span><span class="n">from_binary</span><span class="p">(</span><span class="n">binmsg</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">msgs</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;#</span><span class="si">{b.index}</span><span class="s2">: </span><span class="si">{m.report}</span><span class="s2">,</span><span class="si">{m.coords}</span><span class="s2">,</span><span class="si">{m.ident}</span><span class="s2">,</span><span class="si">{m.datetime}</span><span class="s2">,</span><span class="si">{m.type}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">b</span><span class="o">=</span><span class="n">binmsg</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="n">msg</span><span class="p">))</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="dballe.Importer.from_binary">
+<code class="descname">from_binary</code><span class="sig-paren">(</span><em>binmsg: dballe.BinaryMessage</em><span class="sig-paren">)</span> &#x2192; Sequence[dballe.BinaryMessage]<a class="headerlink" href="#dballe.Importer.from_binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decode a BinaryMessage to a tuple of dballe.Message objects</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dballe.Importer.from_file">
+<code class="descname">from_file</code><span class="sig-paren">(</span><em>file: Union[dballe.File, str, File]</em><span class="sig-paren">)</span> &#x2192; dballe.ImporterFile<a class="headerlink" href="#dballe.Importer.from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrap a <a class="reference internal" href="#dballe.File" title="dballe.File"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.File</span></code></a> into a sequence of tuples of <a class="reference internal" href="#dballe.Message" title="dballe.Message"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Message</span></code></a> objects.</p>
+<p><cite>file</cite> can be a <a class="reference internal" href="#dballe.File" title="dballe.File"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.File</span></code></a>, a file name, or a file-like object. A <a class="reference internal" href="#dballe.File" title="dballe.File"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.File</span></code></a>
+is automatically constructed if needed, using the importer encoding.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dballe.ImporterFile">
+<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">ImporterFile</code><a class="headerlink" href="#dballe.ImporterFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Message importer iterating over the contents of a a <a class="reference internal" href="#dballe.File" title="dballe.File"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.File</span></code></a>.</p>
+<p>This is never instantiated explicitly, but is returned by
+<a class="reference internal" href="#dballe.Importer.from_file" title="dballe.Importer.from_file"><code class="xref py py-func docutils literal notranslate"><span class="pre">Importer.from_file()</span></code></a>.</p>
+<p>It can be used in a context manager, and it is an iterable that yields tuples
+of <a class="reference internal" href="#dballe.Message" title="dballe.Message"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Message</span></code></a> objects.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="dballe.Exporter">
+<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">Exporter</code><a class="headerlink" href="#dballe.Exporter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Message exporter.</p>
+<p>This is the engine that can reconstruct a standard BUFR or CREX message from
+the contents of a <a class="reference internal" href="#dballe.Message" title="dballe.Message"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Message</span></code></a>.</p>
+<dl class="method">
+<dt id="dballe.Exporter.to_binary">
+<code class="descname">to_binary</code><span class="sig-paren">(</span><em>contents: Union[dballe.Message, Sequence[dballe.Message], Iterable[dballe.Message]]</em><span class="sig-paren">)</span> &#x2192; bytes<a class="headerlink" href="#dballe.Exporter.to_binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Encode a <a class="reference internal" href="#dballe.Message" title="dballe.Message"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Message</span></code></a> or a sequence of <a class="reference internal" href="#dballe.Message" title="dballe.Message"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Message</span></code></a> into a bytes object.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">dballe</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="dballe.html">Python dballe package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dballe_types.html">dballe types</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">dballe messages I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dballe_cursors.html">dballe cursors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dballe_db.html">dballe database functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dballe.volnd.html">Python dballe.volnd package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="dballe.html">Python dballe package</a><ul>
+      <li>Previous: <a href="dballe_types.html" title="previous chapter">dballe types</a></li>
+      <li>Next: <a href="dballe_cursors.html" title="next chapter">dballe cursors</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Enrico Zini.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="../_sources/python/dballe_messages.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
