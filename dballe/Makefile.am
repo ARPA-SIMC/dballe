@@ -303,9 +303,7 @@ libdballe_la_LDFLAGS = -version-info @LIBDBALLE_VERSION_INFO@ $(common_libs)
 EXTRA_DIST += \
 	core/vasprintf.h \
 	core/byteswap.h \
-	msg/wr_importers/base.h \
-	msg/filter.cc \
-	msg/wr_importers/sat.cc
+	msg/wr_importers/base.h
 
 #
 # Unit testing
