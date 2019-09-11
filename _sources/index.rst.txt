@@ -13,6 +13,9 @@ volnd that allows to automatically export matrices of data out of the database.
    python/dballe
    python/dballe.volnd
 
+   cpp/dballe
+   fortran/dballe
+
 
 The C++ API documentation is also available as `doxgen documentation`__.
 

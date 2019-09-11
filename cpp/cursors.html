@@ -1,0 +1,283 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Cursors &#8212; dballe 3.23 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Database" href="db.html" />
+    <link rel="prev" title="Messages" href="messages.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="cursors">
+<h1>Cursors<a class="headerlink" href="#cursors" title="Permalink to this headline">¶</a></h1>
+<p>Classes that contain multiple data, like <a class="reference internal" href="messages.html#_CPPv4N6dballe7MessageE" title="dballe::Message"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">dballe::Message</span></code></a> and
+<a class="reference internal" href="db.html#_CPPv4N6dballe2DBE" title="dballe::DB"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">dballe::DB</span></code></a>, can be iterated via a <code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">Cursor</span></code> subclass.</p>
+<p>All cursors can be iterated in the same way, and each <code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">Cursor</span></code>
+subclass provides access to the specific type of information being queried.</p>
+<dl class="class">
+<dt id="_CPPv4N6dballe6CursorE">
+<span id="_CPPv3N6dballe6CursorE"></span><span id="_CPPv2N6dballe6CursorE"></span><span id="dballe::Cursor"></span><span class="target" id="classdballe_1_1Cursor"></span><em class="property">class </em><code class="descname">Cursor</code><a class="headerlink" href="#_CPPv4N6dballe6CursorE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Base class for cursors that iterate over <a class="reference internal" href="db.html#classdballe_1_1DB"><span class="std std-ref">DB</span></a> query results. </p>
+<p>Subclassed by <a class="reference internal" href="#classdballe_1_1CursorData"><span class="std std-ref">dballe::CursorData</span></a>, <a class="reference internal" href="#classdballe_1_1CursorMessage"><span class="std std-ref">dballe::CursorMessage</span></a>, <a class="reference internal" href="#classdballe_1_1CursorStation"><span class="std std-ref">dballe::CursorStation</span></a>, <a class="reference internal" href="#classdballe_1_1CursorStationData"><span class="std std-ref">dballe::CursorStationData</span></a>, <a class="reference internal" href="#classdballe_1_1CursorSummary"><span class="std std-ref">dballe::CursorSummary</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="function">
+<dt id="_CPPv4NK6dballe6Cursor9remainingEv">
+<span id="_CPPv3NK6dballe6Cursor9remainingEv"></span><span id="_CPPv2NK6dballe6Cursor9remainingEv"></span><span id="dballe::Cursor::remainingC"></span><span class="target" id="classdballe_1_1Cursor_1a54ac1bf364398dd1a06e0ced96922ac9"></span><em class="property">virtual</em> int <code class="descname">remaining</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe6Cursor9remainingEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the number of rows still to be fetched. </p>
+<p><dl class="docutils">
+<dt><strong>Return</strong></dt>
+<dd>The number of rows still to be queried. The value is undefined if no query has been successfully peformed yet using this cursor. </dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe6Cursor4nextEv">
+<span id="_CPPv3N6dballe6Cursor4nextEv"></span><span id="_CPPv2N6dballe6Cursor4nextEv"></span><span id="dballe::Cursor::next"></span><span class="target" id="classdballe_1_1Cursor_1a6052d63da2a1dac38e079ddd8dd44ad8"></span><em class="property">virtual</em> bool <code class="descname">next</code><span class="sig-paren">(</span><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe6Cursor4nextEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get a new item from the results of a query. </p>
+<p><dl class="docutils">
+<dt><strong>Return</strong></dt>
+<dd>true if a new record has been read, false if there is no more data to read </dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe6Cursor7discardEv">
+<span id="_CPPv3N6dballe6Cursor7discardEv"></span><span id="_CPPv2N6dballe6Cursor7discardEv"></span><span id="dballe::Cursor::discard"></span><span class="target" id="classdballe_1_1Cursor_1a5f6863730abc6c3c3287392d291d0cfe"></span><em class="property">virtual</em> void <code class="descname">discard</code><span class="sig-paren">(</span><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe6Cursor7discardEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Discard the results that have not been read yet. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe6Cursor11get_stationEv">
+<span id="_CPPv3NK6dballe6Cursor11get_stationEv"></span><span id="_CPPv2NK6dballe6Cursor11get_stationEv"></span><span id="dballe::Cursor::get_stationC"></span><span class="target" id="classdballe_1_1Cursor_1a1c44b33d53b26cdc853fd360ac001170"></span><em class="property">virtual</em> DBStation <code class="descname">get_station</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe6Cursor11get_stationEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the whole station data in a single call. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="_CPPv4N6dballe13CursorStationE">
+<span id="_CPPv3N6dballe13CursorStationE"></span><span id="_CPPv2N6dballe13CursorStationE"></span><span id="dballe::CursorStation"></span><span class="target" id="classdballe_1_1CursorStation"></span><em class="property">class </em><code class="descname">CursorStation</code> : <em class="property">public</em> dballe::<a class="reference internal" href="#_CPPv4N6dballe6CursorE" title="dballe::Cursor">Cursor</a><a class="headerlink" href="#_CPPv4N6dballe13CursorStationE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classdballe_1_1Cursor"><span class="std std-ref">Cursor</span></a> iterating over stations. </p>
+<p>Subclassed by dballe::impl::CursorStation</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="function">
+<dt id="_CPPv4NK6dballe13CursorStation10get_valuesEv">
+<span id="_CPPv3NK6dballe13CursorStation10get_valuesEv"></span><span id="_CPPv2NK6dballe13CursorStation10get_valuesEv"></span><span id="dballe::CursorStation::get_valuesC"></span><span class="target" id="classdballe_1_1CursorStation_1a1b8df1fdd9e60214ffe59acf4cbf6636"></span><em class="property">virtual</em> DBValues <code class="descname">get_values</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe13CursorStation10get_valuesEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the station data values. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="_CPPv4N6dballe17CursorStationDataE">
+<span id="_CPPv3N6dballe17CursorStationDataE"></span><span id="_CPPv2N6dballe17CursorStationDataE"></span><span id="dballe::CursorStationData"></span><span class="target" id="classdballe_1_1CursorStationData"></span><em class="property">class </em><code class="descname">CursorStationData</code> : <em class="property">public</em> dballe::<a class="reference internal" href="#_CPPv4N6dballe6CursorE" title="dballe::Cursor">Cursor</a><a class="headerlink" href="#_CPPv4N6dballe17CursorStationDataE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classdballe_1_1Cursor"><span class="std std-ref">Cursor</span></a> iterating over station data values. </p>
+<p>Subclassed by dballe::impl::CursorStationData</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="function">
+<dt id="_CPPv4NK6dballe17CursorStationData11get_varcodeEv">
+<span id="_CPPv3NK6dballe17CursorStationData11get_varcodeEv"></span><span id="_CPPv2NK6dballe17CursorStationData11get_varcodeEv"></span><span id="dballe::CursorStationData::get_varcodeC"></span><span class="target" id="classdballe_1_1CursorStationData_1ae17ed05f0da3927a7ffe41d9f9ce5f8f"></span><em class="property">virtual</em> wreport::Varcode <code class="descname">get_varcode</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe17CursorStationData11get_varcodeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the variable code. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe17CursorStationData7get_varEv">
+<span id="_CPPv3NK6dballe17CursorStationData7get_varEv"></span><span id="_CPPv2NK6dballe17CursorStationData7get_varEv"></span><span id="dballe::CursorStationData::get_varC"></span><span class="target" id="classdballe_1_1CursorStationData_1adf72cb97655d8e422799c6d245337fe6"></span><em class="property">virtual</em> wreport::Var <code class="descname">get_var</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe17CursorStationData7get_varEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the variable. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="_CPPv4N6dballe10CursorDataE">
+<span id="_CPPv3N6dballe10CursorDataE"></span><span id="_CPPv2N6dballe10CursorDataE"></span><span id="dballe::CursorData"></span><span class="target" id="classdballe_1_1CursorData"></span><em class="property">class </em><code class="descname">CursorData</code> : <em class="property">public</em> dballe::<a class="reference internal" href="#_CPPv4N6dballe6CursorE" title="dballe::Cursor">Cursor</a><a class="headerlink" href="#_CPPv4N6dballe10CursorDataE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classdballe_1_1Cursor"><span class="std std-ref">Cursor</span></a> iterating over data values. </p>
+<p>Subclassed by dballe::impl::CursorData</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="function">
+<dt id="_CPPv4NK6dballe10CursorData11get_varcodeEv">
+<span id="_CPPv3NK6dballe10CursorData11get_varcodeEv"></span><span id="_CPPv2NK6dballe10CursorData11get_varcodeEv"></span><span id="dballe::CursorData::get_varcodeC"></span><span class="target" id="classdballe_1_1CursorData_1ad2b3722c74ab2d05b3c5f03485c183d6"></span><em class="property">virtual</em> wreport::Varcode <code class="descname">get_varcode</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe10CursorData11get_varcodeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the variable code. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe10CursorData7get_varEv">
+<span id="_CPPv3NK6dballe10CursorData7get_varEv"></span><span id="_CPPv2NK6dballe10CursorData7get_varEv"></span><span id="dballe::CursorData::get_varC"></span><span class="target" id="classdballe_1_1CursorData_1ad5568306135529f1f34dde6164f69a7d"></span><em class="property">virtual</em> wreport::Var <code class="descname">get_var</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe10CursorData7get_varEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the variable. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe10CursorData9get_levelEv">
+<span id="_CPPv3NK6dballe10CursorData9get_levelEv"></span><span id="_CPPv2NK6dballe10CursorData9get_levelEv"></span><span id="dballe::CursorData::get_levelC"></span><span class="target" id="classdballe_1_1CursorData_1a60f7f8c2f15eea2c4b8fbb666224cc1f"></span><em class="property">virtual</em> Level <code class="descname">get_level</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe10CursorData9get_levelEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the level. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe10CursorData10get_trangeEv">
+<span id="_CPPv3NK6dballe10CursorData10get_trangeEv"></span><span id="_CPPv2NK6dballe10CursorData10get_trangeEv"></span><span id="dballe::CursorData::get_trangeC"></span><span class="target" id="classdballe_1_1CursorData_1a6468d3a27e118a687f96c4f0fe53cdab"></span><em class="property">virtual</em> Trange <code class="descname">get_trange</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe10CursorData10get_trangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the time range. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe10CursorData12get_datetimeEv">
+<span id="_CPPv3NK6dballe10CursorData12get_datetimeEv"></span><span id="_CPPv2NK6dballe10CursorData12get_datetimeEv"></span><span id="dballe::CursorData::get_datetimeC"></span><span class="target" id="classdballe_1_1CursorData_1a3d09cb12a90d51a01f6cd66307b23664"></span><em class="property">virtual</em> Datetime <code class="descname">get_datetime</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe10CursorData12get_datetimeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the datetime. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="_CPPv4N6dballe13CursorSummaryE">
+<span id="_CPPv3N6dballe13CursorSummaryE"></span><span id="_CPPv2N6dballe13CursorSummaryE"></span><span id="dballe::CursorSummary"></span><span class="target" id="classdballe_1_1CursorSummary"></span><em class="property">class </em><code class="descname">CursorSummary</code> : <em class="property">public</em> dballe::<a class="reference internal" href="#_CPPv4N6dballe6CursorE" title="dballe::Cursor">Cursor</a><a class="headerlink" href="#_CPPv4N6dballe13CursorSummaryE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classdballe_1_1Cursor"><span class="std std-ref">Cursor</span></a> iterating over summary entries. </p>
+<p>Subclassed by dballe::impl::CursorSummary</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="function">
+<dt id="_CPPv4NK6dballe13CursorSummary9get_levelEv">
+<span id="_CPPv3NK6dballe13CursorSummary9get_levelEv"></span><span id="_CPPv2NK6dballe13CursorSummary9get_levelEv"></span><span id="dballe::CursorSummary::get_levelC"></span><span class="target" id="classdballe_1_1CursorSummary_1aea05a05064e76702924ad9955efb76ff"></span><em class="property">virtual</em> Level <code class="descname">get_level</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe13CursorSummary9get_levelEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the level. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe13CursorSummary10get_trangeEv">
+<span id="_CPPv3NK6dballe13CursorSummary10get_trangeEv"></span><span id="_CPPv2NK6dballe13CursorSummary10get_trangeEv"></span><span id="dballe::CursorSummary::get_trangeC"></span><span class="target" id="classdballe_1_1CursorSummary_1a13fd0eba77850a3524055d1cd67be281"></span><em class="property">virtual</em> Trange <code class="descname">get_trange</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe13CursorSummary10get_trangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the time range. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe13CursorSummary11get_varcodeEv">
+<span id="_CPPv3NK6dballe13CursorSummary11get_varcodeEv"></span><span id="_CPPv2NK6dballe13CursorSummary11get_varcodeEv"></span><span id="dballe::CursorSummary::get_varcodeC"></span><span class="target" id="classdballe_1_1CursorSummary_1a64bb9a3e5fc4f29e116bc7637907f15e"></span><em class="property">virtual</em> wreport::Varcode <code class="descname">get_varcode</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe13CursorSummary11get_varcodeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the variable code. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe13CursorSummary17get_datetimerangeEv">
+<span id="_CPPv3NK6dballe13CursorSummary17get_datetimerangeEv"></span><span id="_CPPv2NK6dballe13CursorSummary17get_datetimerangeEv"></span><span id="dballe::CursorSummary::get_datetimerangeC"></span><span class="target" id="classdballe_1_1CursorSummary_1a028bc03c14dece1e21727862335d6947"></span><em class="property">virtual</em> DatetimeRange <code class="descname">get_datetimerange</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe13CursorSummary17get_datetimerangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the datetime range. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe13CursorSummary9get_countEv">
+<span id="_CPPv3NK6dballe13CursorSummary9get_countEv"></span><span id="_CPPv2NK6dballe13CursorSummary9get_countEv"></span><span id="dballe::CursorSummary::get_countC"></span><span class="target" id="classdballe_1_1CursorSummary_1a1c8e581bc0368fda6b5b78c4e26a8fd3"></span><em class="property">virtual</em> size_t <code class="descname">get_count</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe13CursorSummary9get_countEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the count of elements. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="_CPPv4N6dballe13CursorMessageE">
+<span id="_CPPv3N6dballe13CursorMessageE"></span><span id="_CPPv2N6dballe13CursorMessageE"></span><span id="dballe::CursorMessage"></span><span class="target" id="classdballe_1_1CursorMessage"></span><em class="property">class </em><code class="descname">CursorMessage</code> : <em class="property">public</em> dballe::<a class="reference internal" href="#_CPPv4N6dballe6CursorE" title="dballe::Cursor">Cursor</a><a class="headerlink" href="#_CPPv4N6dballe13CursorMessageE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classdballe_1_1Cursor"><span class="std std-ref">Cursor</span></a> iterating over messages. </p>
+<p>Subclassed by dballe::impl::CursorMessage</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">dballe</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../python/dballe.html">Python dballe package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python/dballe.volnd.html">Python dballe.volnd package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="dballe.html">C++ dballe namespace</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="messages.html">Messages</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Cursors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db.html">Database</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../fortran/dballe.html">Fortran dballe functions</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="dballe.html">C++ dballe namespace</a><ul>
+      <li>Previous: <a href="messages.html" title="previous chapter">Messages</a></li>
+      <li>Next: <a href="db.html" title="next chapter">Database</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Enrico Zini.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="../_sources/cpp/cursors.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

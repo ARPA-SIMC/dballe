@@ -52,7 +52,7 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 
-<p>Base for <a class="el" href="structdballe_1_1File.html" title="File object for doing I/O on binary message streams. ">dballe::File</a> implementations.  
+<p>Base for <a class="el" href="classdballe_1_1File.html" title="File object for doing I/O on binary message streams. ">dballe::File</a> implementations.  
  <a href="classdballe_1_1core_1_1File.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="core_2file_8h_source.html">file.h</a>&gt;</code></p>
@@ -62,7 +62,7 @@ Inheritance diagram for dballe::core::File:</div>
  <div class="center">
   <img src="classdballe_1_1core_1_1File.png" usemap="#dballe::core::File_map" alt=""/>
   <map id="dballe::core::File_map" name="dballe::core::File_map">
-<area href="structdballe_1_1File.html" title="File object for doing I/O on binary message streams. " alt="dballe::File" shape="rect" coords="148,0,286,24"/>
+<area href="classdballe_1_1File.html" title="File object for doing I/O on binary message streams. " alt="dballe::File" shape="rect" coords="148,0,286,24"/>
 <area href="classdballe_1_1core_1_1ArrayFile.html" alt="dballe::core::ArrayFile" shape="rect" coords="0,112,138,136"/>
 <area href="classdballe_1_1core_1_1BufrFile.html" alt="dballe::core::BufrFile" shape="rect" coords="148,112,286,136"/>
 <area href="classdballe_1_1core_1_1CrexFile.html" alt="dballe::core::CrexFile" shape="rect" coords="296,112,434,136"/>
@@ -82,55 +82,55 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hre
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1core_1_1File.html#ac9d02b8ffcc5f03efec35645f65fe3b7">close</a> () override</td></tr>
 <tr class="memdesc:ac9d02b8ffcc5f03efec35645f65fe3b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Close the underlying file. <br /></td></tr>
 <tr class="separator:ac9d02b8ffcc5f03efec35645f65fe3b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca86415f0477da0a8dce03d5bdb1bca1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1core_1_1File.html#aca86415f0477da0a8dce03d5bdb1bca1">foreach</a> (std::function&lt; bool(const <a class="el" href="structdballe_1_1BinaryMessage.html">BinaryMessage</a> &amp;)&gt; dest) override</td></tr>
+<tr class="memitem:aca86415f0477da0a8dce03d5bdb1bca1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1core_1_1File.html#aca86415f0477da0a8dce03d5bdb1bca1">foreach</a> (std::function&lt; bool(const <a class="el" href="classdballe_1_1BinaryMessage.html">BinaryMessage</a> &amp;)&gt; dest) override</td></tr>
 <tr class="memdesc:aca86415f0477da0a8dce03d5bdb1bca1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read all the messages from the file, calling the function on each of them.  <a href="#aca86415f0477da0a8dce03d5bdb1bca1">More...</a><br /></td></tr>
 <tr class="separator:aca86415f0477da0a8dce03d5bdb1bca1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_methods_structdballe_1_1File"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structdballe_1_1File')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structdballe_1_1File.html">dballe::File</a></td></tr>
-<tr class="memitem:a1418439c8005a45bb104c8309aa9ef28 inherit pub_methods_structdballe_1_1File"><td class="memItemLeft" align="right" valign="top"><a id="a1418439c8005a45bb104c8309aa9ef28"></a>
-virtual Encoding&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdballe_1_1File.html#a1418439c8005a45bb104c8309aa9ef28">encoding</a> () const =0</td></tr>
-<tr class="memdesc:a1418439c8005a45bb104c8309aa9ef28 inherit pub_methods_structdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the file encoding. <br /></td></tr>
-<tr class="separator:a1418439c8005a45bb104c8309aa9ef28 inherit pub_methods_structdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5c20ebcedee1427a236b7c93c3bda6db inherit pub_methods_structdballe_1_1File"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="structdballe_1_1BinaryMessage.html">BinaryMessage</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdballe_1_1File.html#a5c20ebcedee1427a236b7c93c3bda6db">read</a> ()=0</td></tr>
-<tr class="memdesc:a5c20ebcedee1427a236b7c93c3bda6db inherit pub_methods_structdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read a message from the file.  <a href="structdballe_1_1File.html#a5c20ebcedee1427a236b7c93c3bda6db">More...</a><br /></td></tr>
-<tr class="separator:a5c20ebcedee1427a236b7c93c3bda6db inherit pub_methods_structdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9ef7edb4a7ee7100ea42b7710af7d18d inherit pub_methods_structdballe_1_1File"><td class="memItemLeft" align="right" valign="top"><a id="a9ef7edb4a7ee7100ea42b7710af7d18d"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdballe_1_1File.html#a9ef7edb4a7ee7100ea42b7710af7d18d">write</a> (const std::string &amp;msg)=0</td></tr>
-<tr class="memdesc:a9ef7edb4a7ee7100ea42b7710af7d18d inherit pub_methods_structdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append the binary message to the file. <br /></td></tr>
-<tr class="separator:a9ef7edb4a7ee7100ea42b7710af7d18d inherit pub_methods_structdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classdballe_1_1File"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classdballe_1_1File')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classdballe_1_1File.html">dballe::File</a></td></tr>
+<tr class="memitem:a1418439c8005a45bb104c8309aa9ef28 inherit pub_methods_classdballe_1_1File"><td class="memItemLeft" align="right" valign="top"><a id="a1418439c8005a45bb104c8309aa9ef28"></a>
+virtual Encoding&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1File.html#a1418439c8005a45bb104c8309aa9ef28">encoding</a> () const =0</td></tr>
+<tr class="memdesc:a1418439c8005a45bb104c8309aa9ef28 inherit pub_methods_classdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the file encoding. <br /></td></tr>
+<tr class="separator:a1418439c8005a45bb104c8309aa9ef28 inherit pub_methods_classdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c20ebcedee1427a236b7c93c3bda6db inherit pub_methods_classdballe_1_1File"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classdballe_1_1BinaryMessage.html">BinaryMessage</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1File.html#a5c20ebcedee1427a236b7c93c3bda6db">read</a> ()=0</td></tr>
+<tr class="memdesc:a5c20ebcedee1427a236b7c93c3bda6db inherit pub_methods_classdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read a message from the file.  <a href="classdballe_1_1File.html#a5c20ebcedee1427a236b7c93c3bda6db">More...</a><br /></td></tr>
+<tr class="separator:a5c20ebcedee1427a236b7c93c3bda6db inherit pub_methods_classdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ef7edb4a7ee7100ea42b7710af7d18d inherit pub_methods_classdballe_1_1File"><td class="memItemLeft" align="right" valign="top"><a id="a9ef7edb4a7ee7100ea42b7710af7d18d"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1File.html#a9ef7edb4a7ee7100ea42b7710af7d18d">write</a> (const std::string &amp;msg)=0</td></tr>
+<tr class="memdesc:a9ef7edb4a7ee7100ea42b7710af7d18d inherit pub_methods_classdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append the binary message to the file. <br /></td></tr>
+<tr class="separator:a9ef7edb4a7ee7100ea42b7710af7d18d inherit pub_methods_classdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a8c90524fe9ac96b2f4362ebe34149e56"><td class="memItemLeft" align="right" valign="top">static std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1core_1_1File.html#a8c90524fe9ac96b2f4362ebe34149e56">resolve_test_data_file</a> (const std::string &amp;name)</td></tr>
 <tr class="memdesc:a8c90524fe9ac96b2f4362ebe34149e56"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resolve the location of a test data file.  <a href="#a8c90524fe9ac96b2f4362ebe34149e56">More...</a><br /></td></tr>
 <tr class="separator:a8c90524fe9ac96b2f4362ebe34149e56"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a25fe478bf467485944c16c3f12297a0d"><td class="memItemLeft" align="right" valign="top">static std::unique_ptr&lt; <a class="el" href="structdballe_1_1File.html">dballe::File</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1core_1_1File.html#a25fe478bf467485944c16c3f12297a0d">open_test_data_file</a> (Encoding type, const std::string &amp;name)</td></tr>
+<tr class="memitem:a25fe478bf467485944c16c3f12297a0d"><td class="memItemLeft" align="right" valign="top">static std::unique_ptr&lt; <a class="el" href="classdballe_1_1File.html">dballe::File</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1core_1_1File.html#a25fe478bf467485944c16c3f12297a0d">open_test_data_file</a> (Encoding type, const std::string &amp;name)</td></tr>
 <tr class="memdesc:a25fe478bf467485944c16c3f12297a0d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Open a test data file.  <a href="#a25fe478bf467485944c16c3f12297a0d">More...</a><br /></td></tr>
 <tr class="separator:a25fe478bf467485944c16c3f12297a0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_static_methods_structdballe_1_1File"><td colspan="2" onclick="javascript:toggleInherit('pub_static_methods_structdballe_1_1File')"><img src="closed.png" alt="-"/>&#160;Static Public Member Functions inherited from <a class="el" href="structdballe_1_1File.html">dballe::File</a></td></tr>
-<tr class="memitem:a08959f20cf84b1bc857455fae7c4a5e7 inherit pub_static_methods_structdballe_1_1File"><td class="memItemLeft" align="right" valign="top">static std::unique_ptr&lt; <a class="el" href="structdballe_1_1File.html">File</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdballe_1_1File.html#a08959f20cf84b1bc857455fae7c4a5e7">create</a> (const std::string &amp;<a class="el" href="structdballe_1_1File.html#acc8fdc70b03f2e47a73e6e7889b8a199">pathname</a>, const char *mode)</td></tr>
-<tr class="memdesc:a08959f20cf84b1bc857455fae7c4a5e7 inherit pub_static_methods_structdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Open a file from the filesystem, autodetecting the encoding type.  <a href="structdballe_1_1File.html#a08959f20cf84b1bc857455fae7c4a5e7">More...</a><br /></td></tr>
-<tr class="separator:a08959f20cf84b1bc857455fae7c4a5e7 inherit pub_static_methods_structdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abe243af658162ea1465398389c6081f2 inherit pub_static_methods_structdballe_1_1File"><td class="memItemLeft" align="right" valign="top">static std::unique_ptr&lt; <a class="el" href="structdballe_1_1File.html">File</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdballe_1_1File.html#abe243af658162ea1465398389c6081f2">create</a> (Encoding type, const std::string &amp;<a class="el" href="structdballe_1_1File.html#acc8fdc70b03f2e47a73e6e7889b8a199">pathname</a>, const char *mode)</td></tr>
-<tr class="memdesc:abe243af658162ea1465398389c6081f2 inherit pub_static_methods_structdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Open a file from the filesystem.  <a href="structdballe_1_1File.html#abe243af658162ea1465398389c6081f2">More...</a><br /></td></tr>
-<tr class="separator:abe243af658162ea1465398389c6081f2 inherit pub_static_methods_structdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac9e146c627f81adeb2e84e7efd3ce201 inherit pub_static_methods_structdballe_1_1File"><td class="memItemLeft" align="right" valign="top">static std::unique_ptr&lt; <a class="el" href="structdballe_1_1File.html">File</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdballe_1_1File.html#ac9e146c627f81adeb2e84e7efd3ce201">create</a> (FILE *file, bool close_on_exit, const std::string &amp;name=&quot;(fp)&quot;)</td></tr>
-<tr class="memdesc:ac9e146c627f81adeb2e84e7efd3ce201 inherit pub_static_methods_structdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <a class="el" href="structdballe_1_1File.html" title="File object for doing I/O on binary message streams. ">File</a> from an existing FILE* stream, autodetecting the encoding type.  <a href="structdballe_1_1File.html#ac9e146c627f81adeb2e84e7efd3ce201">More...</a><br /></td></tr>
-<tr class="separator:ac9e146c627f81adeb2e84e7efd3ce201 inherit pub_static_methods_structdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afe387bb09de4ad8d746d6e93c0603c55 inherit pub_static_methods_structdballe_1_1File"><td class="memItemLeft" align="right" valign="top">static std::unique_ptr&lt; <a class="el" href="structdballe_1_1File.html">File</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdballe_1_1File.html#afe387bb09de4ad8d746d6e93c0603c55">create</a> (Encoding type, FILE *file, bool close_on_exit, const std::string &amp;name=&quot;(fp)&quot;)</td></tr>
-<tr class="memdesc:afe387bb09de4ad8d746d6e93c0603c55 inherit pub_static_methods_structdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <a class="el" href="structdballe_1_1File.html" title="File object for doing I/O on binary message streams. ">File</a> from an existing FILE* stream.  <a href="structdballe_1_1File.html#afe387bb09de4ad8d746d6e93c0603c55">More...</a><br /></td></tr>
-<tr class="separator:afe387bb09de4ad8d746d6e93c0603c55 inherit pub_static_methods_structdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8489e94cdd1919d2858569bb19d28c37 inherit pub_static_methods_structdballe_1_1File"><td class="memItemLeft" align="right" valign="top"><a id="a8489e94cdd1919d2858569bb19d28c37"></a>
-static const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdballe_1_1File.html#a8489e94cdd1919d2858569bb19d28c37">encoding_name</a> (Encoding enc)</td></tr>
-<tr class="memdesc:a8489e94cdd1919d2858569bb19d28c37 inherit pub_static_methods_structdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return a string with the name of this encoding. <br /></td></tr>
-<tr class="separator:a8489e94cdd1919d2858569bb19d28c37 inherit pub_static_methods_structdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7ad2b9511218fa1bbe6a42cd3391e0bf inherit pub_static_methods_structdballe_1_1File"><td class="memItemLeft" align="right" valign="top"><a id="a7ad2b9511218fa1bbe6a42cd3391e0bf"></a>
-static Encoding&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdballe_1_1File.html#a7ad2b9511218fa1bbe6a42cd3391e0bf">parse_encoding</a> (const char *s)</td></tr>
-<tr class="memdesc:a7ad2b9511218fa1bbe6a42cd3391e0bf inherit pub_static_methods_structdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the Encoding corresponding to the given name. <br /></td></tr>
-<tr class="separator:a7ad2b9511218fa1bbe6a42cd3391e0bf inherit pub_static_methods_structdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1488aa0b4eae2a8416e48ae86baa7439 inherit pub_static_methods_structdballe_1_1File"><td class="memItemLeft" align="right" valign="top"><a id="a1488aa0b4eae2a8416e48ae86baa7439"></a>
-static Encoding&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdballe_1_1File.html#a1488aa0b4eae2a8416e48ae86baa7439">parse_encoding</a> (const std::string &amp;s)</td></tr>
-<tr class="memdesc:a1488aa0b4eae2a8416e48ae86baa7439 inherit pub_static_methods_structdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the Encoding corresponding to the given name. <br /></td></tr>
-<tr class="separator:a1488aa0b4eae2a8416e48ae86baa7439 inherit pub_static_methods_structdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_static_methods_classdballe_1_1File"><td colspan="2" onclick="javascript:toggleInherit('pub_static_methods_classdballe_1_1File')"><img src="closed.png" alt="-"/>&#160;Static Public Member Functions inherited from <a class="el" href="classdballe_1_1File.html">dballe::File</a></td></tr>
+<tr class="memitem:a08959f20cf84b1bc857455fae7c4a5e7 inherit pub_static_methods_classdballe_1_1File"><td class="memItemLeft" align="right" valign="top">static std::unique_ptr&lt; <a class="el" href="classdballe_1_1File.html">File</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1File.html#a08959f20cf84b1bc857455fae7c4a5e7">create</a> (const std::string &amp;<a class="el" href="classdballe_1_1File.html#acc8fdc70b03f2e47a73e6e7889b8a199">pathname</a>, const char *mode)</td></tr>
+<tr class="memdesc:a08959f20cf84b1bc857455fae7c4a5e7 inherit pub_static_methods_classdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Open a file from the filesystem, autodetecting the encoding type.  <a href="classdballe_1_1File.html#a08959f20cf84b1bc857455fae7c4a5e7">More...</a><br /></td></tr>
+<tr class="separator:a08959f20cf84b1bc857455fae7c4a5e7 inherit pub_static_methods_classdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe243af658162ea1465398389c6081f2 inherit pub_static_methods_classdballe_1_1File"><td class="memItemLeft" align="right" valign="top">static std::unique_ptr&lt; <a class="el" href="classdballe_1_1File.html">File</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1File.html#abe243af658162ea1465398389c6081f2">create</a> (Encoding type, const std::string &amp;<a class="el" href="classdballe_1_1File.html#acc8fdc70b03f2e47a73e6e7889b8a199">pathname</a>, const char *mode)</td></tr>
+<tr class="memdesc:abe243af658162ea1465398389c6081f2 inherit pub_static_methods_classdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Open a file from the filesystem.  <a href="classdballe_1_1File.html#abe243af658162ea1465398389c6081f2">More...</a><br /></td></tr>
+<tr class="separator:abe243af658162ea1465398389c6081f2 inherit pub_static_methods_classdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9e146c627f81adeb2e84e7efd3ce201 inherit pub_static_methods_classdballe_1_1File"><td class="memItemLeft" align="right" valign="top">static std::unique_ptr&lt; <a class="el" href="classdballe_1_1File.html">File</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1File.html#ac9e146c627f81adeb2e84e7efd3ce201">create</a> (FILE *file, bool close_on_exit, const std::string &amp;name=&quot;(fp)&quot;)</td></tr>
+<tr class="memdesc:ac9e146c627f81adeb2e84e7efd3ce201 inherit pub_static_methods_classdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <a class="el" href="classdballe_1_1File.html" title="File object for doing I/O on binary message streams. ">File</a> from an existing FILE* stream, autodetecting the encoding type.  <a href="classdballe_1_1File.html#ac9e146c627f81adeb2e84e7efd3ce201">More...</a><br /></td></tr>
+<tr class="separator:ac9e146c627f81adeb2e84e7efd3ce201 inherit pub_static_methods_classdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe387bb09de4ad8d746d6e93c0603c55 inherit pub_static_methods_classdballe_1_1File"><td class="memItemLeft" align="right" valign="top">static std::unique_ptr&lt; <a class="el" href="classdballe_1_1File.html">File</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1File.html#afe387bb09de4ad8d746d6e93c0603c55">create</a> (Encoding type, FILE *file, bool close_on_exit, const std::string &amp;name=&quot;(fp)&quot;)</td></tr>
+<tr class="memdesc:afe387bb09de4ad8d746d6e93c0603c55 inherit pub_static_methods_classdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <a class="el" href="classdballe_1_1File.html" title="File object for doing I/O on binary message streams. ">File</a> from an existing FILE* stream.  <a href="classdballe_1_1File.html#afe387bb09de4ad8d746d6e93c0603c55">More...</a><br /></td></tr>
+<tr class="separator:afe387bb09de4ad8d746d6e93c0603c55 inherit pub_static_methods_classdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8489e94cdd1919d2858569bb19d28c37 inherit pub_static_methods_classdballe_1_1File"><td class="memItemLeft" align="right" valign="top"><a id="a8489e94cdd1919d2858569bb19d28c37"></a>
+static const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1File.html#a8489e94cdd1919d2858569bb19d28c37">encoding_name</a> (Encoding enc)</td></tr>
+<tr class="memdesc:a8489e94cdd1919d2858569bb19d28c37 inherit pub_static_methods_classdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return a string with the name of this encoding. <br /></td></tr>
+<tr class="separator:a8489e94cdd1919d2858569bb19d28c37 inherit pub_static_methods_classdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7ad2b9511218fa1bbe6a42cd3391e0bf inherit pub_static_methods_classdballe_1_1File"><td class="memItemLeft" align="right" valign="top"><a id="a7ad2b9511218fa1bbe6a42cd3391e0bf"></a>
+static Encoding&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1File.html#a7ad2b9511218fa1bbe6a42cd3391e0bf">parse_encoding</a> (const char *s)</td></tr>
+<tr class="memdesc:a7ad2b9511218fa1bbe6a42cd3391e0bf inherit pub_static_methods_classdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the Encoding corresponding to the given name. <br /></td></tr>
+<tr class="separator:a7ad2b9511218fa1bbe6a42cd3391e0bf inherit pub_static_methods_classdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1488aa0b4eae2a8416e48ae86baa7439 inherit pub_static_methods_classdballe_1_1File"><td class="memItemLeft" align="right" valign="top"><a id="a1488aa0b4eae2a8416e48ae86baa7439"></a>
+static Encoding&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1File.html#a1488aa0b4eae2a8416e48ae86baa7439">parse_encoding</a> (const std::string &amp;s)</td></tr>
+<tr class="memdesc:a1488aa0b4eae2a8416e48ae86baa7439 inherit pub_static_methods_classdballe_1_1File"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the Encoding corresponding to the given name. <br /></td></tr>
+<tr class="separator:a1488aa0b4eae2a8416e48ae86baa7439 inherit pub_static_methods_classdballe_1_1File"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
@@ -152,7 +152,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 <tr class="separator:a85430be4cf91ae99abf775dc2a3340d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Base for <a class="el" href="structdballe_1_1File.html" title="File object for doing I/O on binary message streams. ">dballe::File</a> implementations. </p>
+<div class="textblock"><p>Base for <a class="el" href="classdballe_1_1File.html" title="File object for doing I/O on binary message streams. ">dballe::File</a> implementations. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="aca86415f0477da0a8dce03d5bdb1bca1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aca86415f0477da0a8dce03d5bdb1bca1">&#9670;&nbsp;</a></span>foreach()</h2>
@@ -166,7 +166,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
         <tr>
           <td class="memname">bool dballe::core::File::foreach </td>
           <td>(</td>
-          <td class="paramtype">std::function&lt; bool(const <a class="el" href="structdballe_1_1BinaryMessage.html">BinaryMessage</a> &amp;)&gt;&#160;</td>
+          <td class="paramtype">std::function&lt; bool(const <a class="el" href="classdballe_1_1BinaryMessage.html">BinaryMessage</a> &amp;)&gt;&#160;</td>
           <td class="paramname"><em>dest</em></td><td>)</td>
           <td></td>
         </tr>
@@ -182,7 +182,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 <p>If <em>dest</em> returns false, reading will stop.</p>
 <dl class="section return"><dt>Returns</dt><dd>true if all file was read, false if reading was stopped because <em>dest</em> returned false. </dd></dl>
 
-<p>Implements <a class="el" href="structdballe_1_1File.html#af42bf493e533f1807d5413c72a5b5ad8">dballe::File</a>.</p>
+<p>Implements <a class="el" href="classdballe_1_1File.html#af42bf493e533f1807d5413c72a5b5ad8">dballe::File</a>.</p>
 
 </div>
 </div>
@@ -196,7 +196,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static std::unique_ptr&lt;<a class="el" href="structdballe_1_1File.html">dballe::File</a>&gt; dballe::core::File::open_test_data_file </td>
+          <td class="memname">static std::unique_ptr&lt;<a class="el" href="classdballe_1_1File.html">dballe::File</a>&gt; dballe::core::File::open_test_data_file </td>
           <td>(</td>
           <td class="paramtype">Encoding&#160;</td>
           <td class="paramname"><em>type</em>, </td>

@@ -1,0 +1,813 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Database &#8212; dballe 3.23 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Fortran dballe functions" href="../fortran/dballe.html" />
+    <link rel="prev" title="Cursors" href="cursors.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="database">
+<h1>Database<a class="headerlink" href="#database" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference internal" href="#_CPPv4N6dballe2DBE" title="dballe::DB"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">dballe::DB</span></code></a> is the class implementing access to a DB-All.e
+database. Operations are performed via a <a class="reference internal" href="#_CPPv4N6dballe11TransactionE" title="dballe::Transaction"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">dballe::Transaction</span></code></a>,
+although <a class="reference internal" href="#_CPPv4N6dballe2DBE" title="dballe::DB"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">dballe::DB</span></code></a> provides shortcut methods that transparently
+create a transaction, perform the operation and commit it.</p>
+<p>Data is queried using a <a class="reference internal" href="#_CPPv4N6dballe5QueryE" title="dballe::Query"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">dballe::Query</span></code></a>, and inserted using a
+<a class="reference internal" href="#_CPPv4N6dballe4DataE" title="dballe::Data"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">dballe::Data</span></code></a>.</p>
+<dl class="class">
+<dt id="_CPPv4N6dballe2DBE">
+<span id="_CPPv3N6dballe2DBE"></span><span id="_CPPv2N6dballe2DBE"></span><span id="dballe::DB"></span><span class="target" id="classdballe_1_1DB"></span><em class="property">class </em><code class="descname">DB</code> : <em class="property">public</em> std::enable_shared_from_this&lt;<a class="reference internal" href="#_CPPv4N6dballe2DBE" title="dballe::DB">DB</a>&gt;<a class="headerlink" href="#_CPPv4N6dballe2DBE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Subclassed by dballe::db::DB</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="function">
+<dt id="_CPPv4N6dballe2DB11transactionEb">
+<span id="_CPPv3N6dballe2DB11transactionEb"></span><span id="_CPPv2N6dballe2DB11transactionEb"></span><span id="dballe::DB::transaction__b"></span><span class="target" id="classdballe_1_1DB_1ac38c9da231c7a95b0b801ab3499166d6"></span><em class="property">virtual</em> std::shared_ptr&lt;dballe::<a class="reference internal" href="#_CPPv4N6dballe11TransactionE" title="dballe::Transaction">Transaction</a>&gt; <code class="descname">transaction</code><span class="sig-paren">(</span>bool <em>readonly</em> = false<span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe2DB11transactionEb" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Begin a transaction on this database, and return a <a class="reference internal" href="#classdballe_1_1Transaction"><span class="std std-ref">Transaction</span></a> object that can be used to commit it. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe2DB14query_stationsERK5Query">
+<span id="_CPPv3N6dballe2DB14query_stationsERK5Query"></span><span id="_CPPv2N6dballe2DB14query_stationsERK5Query"></span><span id="dballe::DB::query_stations__QueryCR"></span><span class="target" id="classdballe_1_1DB_1a520bdf757706c9130926f6194201bbf8"></span><em class="property">virtual</em> std::unique_ptr&lt;<a class="reference internal" href="cursors.html#_CPPv4N6dballe13CursorStationE" title="dballe::CursorStation">CursorStation</a>&gt; <code class="descname">query_stations</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe5QueryE" title="dballe::Query">Query</a> &amp;<em>query</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6dballe2DB14query_stationsERK5Query" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Start a query on the station variables archive. </p>
+<p>The cursor will iterate over unique lat, lon, ident triples, and will contain all station vars. If a station var exists twice on two different networks, only one will be present: the one of the network with the highest priority.</p>
+<p><dl class="docutils">
+<dt><strong>Return</strong></dt>
+<dd>The cursor to use to iterate over the results </dd>
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">query</span></code>: The <a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a> selecting the stations to return </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe2DB18query_station_dataERK5Query">
+<span id="_CPPv3N6dballe2DB18query_station_dataERK5Query"></span><span id="_CPPv2N6dballe2DB18query_station_dataERK5Query"></span><span id="dballe::DB::query_station_data__QueryCR"></span><span class="target" id="classdballe_1_1DB_1a042eee48a079108eef10da6fddc66642"></span><em class="property">virtual</em> std::unique_ptr&lt;<a class="reference internal" href="cursors.html#_CPPv4N6dballe17CursorStationDataE" title="dballe::CursorStationData">CursorStationData</a>&gt; <code class="descname">query_station_data</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe5QueryE" title="dballe::Query">Query</a> &amp;<em>query</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6dballe2DB18query_station_dataERK5Query" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a> the station variables in the database. </p>
+<p>When multiple values per variable are present, the results will be presented in increasing order of priority.</p>
+<p><dl class="docutils">
+<dt><strong>Return</strong></dt>
+<dd>The cursor to use to iterate over the results </dd>
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">query</span></code>: The <a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a> selecting the station data to return </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe2DB10query_dataERK5Query">
+<span id="_CPPv3N6dballe2DB10query_dataERK5Query"></span><span id="_CPPv2N6dballe2DB10query_dataERK5Query"></span><span id="dballe::DB::query_data__QueryCR"></span><span class="target" id="classdballe_1_1DB_1a014934becffcb1626a23318928a990b7"></span><em class="property">virtual</em> std::unique_ptr&lt;<a class="reference internal" href="cursors.html#_CPPv4N6dballe10CursorDataE" title="dballe::CursorData">CursorData</a>&gt; <code class="descname">query_data</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe5QueryE" title="dballe::Query">Query</a> &amp;<em>query</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6dballe2DB10query_dataERK5Query" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a> the database. </p>
+<p>When multiple values per variable are present, the results will be presented in increasing order of priority.</p>
+<p><dl class="docutils">
+<dt><strong>Return</strong></dt>
+<dd>The cursor to use to iterate over the results </dd>
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">query</span></code>: The <a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a> selecting the data to return </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe2DB13query_summaryERK5Query">
+<span id="_CPPv3N6dballe2DB13query_summaryERK5Query"></span><span id="_CPPv2N6dballe2DB13query_summaryERK5Query"></span><span id="dballe::DB::query_summary__QueryCR"></span><span class="target" id="classdballe_1_1DB_1a9ab1e39d7a23d507cdfb8e6bb2c06b48"></span><em class="property">virtual</em> std::unique_ptr&lt;<a class="reference internal" href="cursors.html#_CPPv4N6dballe13CursorSummaryE" title="dballe::CursorSummary">CursorSummary</a>&gt; <code class="descname">query_summary</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe5QueryE" title="dballe::Query">Query</a> &amp;<em>query</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6dballe2DB13query_summaryERK5Query" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a> a summary of what the result would be for a query. </p>
+<p><dl class="docutils">
+<dt><strong>Return</strong></dt>
+<dd>The cursor to use to iterate over the results </dd>
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">query</span></code>: The <a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a> selecting the data to summarise </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe2DB14query_messagesERK5Query">
+<span id="_CPPv3N6dballe2DB14query_messagesERK5Query"></span><span id="_CPPv2N6dballe2DB14query_messagesERK5Query"></span><span id="dballe::DB::query_messages__QueryCR"></span><span class="target" id="classdballe_1_1DB_1accd40f7fd09f114d4b39ee36f872329e"></span><em class="property">virtual</em> std::unique_ptr&lt;<a class="reference internal" href="cursors.html#_CPPv4N6dballe13CursorMessageE" title="dballe::CursorMessage">CursorMessage</a>&gt; <code class="descname">query_messages</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe5QueryE" title="dballe::Query">Query</a> &amp;<em>query</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6dballe2DB14query_messagesERK5Query" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a> the database returning the matching data as <a class="reference internal" href="messages.html#classdballe_1_1Message"><span class="std std-ref">Message</span></a> objects. </p>
+<p><dl class="docutils">
+<dt><strong>Return</strong></dt>
+<dd>The cursor to use to iterate over the results </dd>
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">query</span></code>: The <a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a> selecting the data that will go into the <a class="reference internal" href="messages.html#classdballe_1_1Message"><span class="std std-ref">Message</span></a> objects </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe2DB10remove_allEv">
+<span id="_CPPv3N6dballe2DB10remove_allEv"></span><span id="_CPPv2N6dballe2DB10remove_allEv"></span><span id="dballe::DB::remove_all"></span><span class="target" id="classdballe_1_1DB_1a6053875d0e2e4c66cbae06320aa94aca"></span>void <code class="descname">remove_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6dballe2DB10remove_allEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Remove all data from the database. </p>
+<p>This is faster than remove() with an empty record, and unlike reset() it preserves existing report information. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe2DB19remove_station_dataERK5Query">
+<span id="_CPPv3N6dballe2DB19remove_station_dataERK5Query"></span><span id="_CPPv2N6dballe2DB19remove_station_dataERK5Query"></span><span id="dballe::DB::remove_station_data__QueryCR"></span><span class="target" id="classdballe_1_1DB_1a0b087017defd50e3d6517bc4665553af"></span>void <code class="descname">remove_station_data</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe5QueryE" title="dballe::Query">Query</a> &amp;<em>query</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6dballe2DB19remove_station_dataERK5Query" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Remove data from the database. </p>
+<p><dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">query</span></code>: The query selecting the data to remove </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe2DB11remove_dataERK5Query">
+<span id="_CPPv3N6dballe2DB11remove_dataERK5Query"></span><span id="_CPPv2N6dballe2DB11remove_dataERK5Query"></span><span id="dballe::DB::remove_data__QueryCR"></span><span class="target" id="classdballe_1_1DB_1a5079d562c3a2181d1f7fade844cf4f88"></span>void <code class="descname">remove_data</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe5QueryE" title="dballe::Query">Query</a> &amp;<em>query</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6dballe2DB11remove_dataERK5Query" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Remove data from the database. </p>
+<p><dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">rec</span></code>: The query selecting the data to remove </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe2DB14import_messageERK7MessageRK15DBImportOptions">
+<span id="_CPPv3N6dballe2DB14import_messageERK7MessageRK15DBImportOptions"></span><span id="_CPPv2N6dballe2DB14import_messageERK7MessageRK15DBImportOptions"></span><span id="dballe::DB::import_message__MessageCR.DBImportOptionsCR"></span><span class="target" id="classdballe_1_1DB_1a0056aac1a7d2494e5d2162386f7bae2b"></span>void <code class="descname">import_message</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="messages.html#_CPPv4N6dballe7MessageE" title="dballe::Message">Message</a> &amp;<em>message</em>, <em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe15DBImportOptionsE" title="dballe::DBImportOptions">DBImportOptions</a> &amp;<em>opts</em> = <a class="reference internal" href="#_CPPv4N6dballe15DBImportOptionsE" title="dballe::DBImportOptions">DBImportOptions</a>::defaults<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6dballe2DB14import_messageERK7MessageRK15DBImportOptions" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Import a <a class="reference internal" href="messages.html#classdballe_1_1Message"><span class="std std-ref">Message</span></a> into the DB-All.e database. </p>
+<p><dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">message</span></code>: The <a class="reference internal" href="messages.html#classdballe_1_1Message"><span class="std std-ref">Message</span></a> to import </li>
+<li><code class="docutils literal notranslate"><span class="pre">opts</span></code>: Options controlling the import process </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe2DB15import_messagesERKNSt6vectorINSt10shared_ptrI7MessageEEEERK15DBImportOptions">
+<span id="_CPPv3N6dballe2DB15import_messagesERKNSt6vectorINSt10shared_ptrI7MessageEEEERK15DBImportOptions"></span><span id="_CPPv2N6dballe2DB15import_messagesERKNSt6vectorINSt10shared_ptrI7MessageEEEERK15DBImportOptions"></span><span id="dballe::DB::import_messages__std::vector:std::shared_ptr:Message::CR.DBImportOptionsCR"></span><span class="target" id="classdballe_1_1DB_1a637d79b2f3865483b1d3f7e0813082d7"></span>void <code class="descname">import_messages</code><span class="sig-paren">(</span><em class="property">const</em> std::vector&lt;std::shared_ptr&lt;<a class="reference internal" href="messages.html#_CPPv4N6dballe7MessageE" title="dballe::Message">Message</a>&gt;&gt; &amp;<em>messages</em>, <em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe15DBImportOptionsE" title="dballe::DBImportOptions">DBImportOptions</a> &amp;<em>opts</em> = <a class="reference internal" href="#_CPPv4N6dballe15DBImportOptionsE" title="dballe::DBImportOptions">DBImportOptions</a>::defaults<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6dballe2DB15import_messagesERKNSt6vectorINSt10shared_ptrI7MessageEEEERK15DBImportOptions" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Import Messages into the DB-All.e database. </p>
+<p><dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">messages</span></code>: The messages to import </li>
+<li><code class="docutils literal notranslate"><span class="pre">opts</span></code>: Options controlling the import process </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe2DB19insert_station_dataER4DataRK15DBInsertOptions">
+<span id="_CPPv3N6dballe2DB19insert_station_dataER4DataRK15DBInsertOptions"></span><span id="_CPPv2N6dballe2DB19insert_station_dataER4DataRK15DBInsertOptions"></span><span id="dballe::DB::insert_station_data__DataR.DBInsertOptionsCR"></span><span class="target" id="classdballe_1_1DB_1aaab812a3d2dbea710b692dbec4fdbf89"></span>void <code class="descname">insert_station_data</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6dballe4DataE" title="dballe::Data">Data</a> &amp;<em>vals</em>, <em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe15DBInsertOptionsE" title="dballe::DBInsertOptions">DBInsertOptions</a> &amp;<em>opts</em> = <a class="reference internal" href="#_CPPv4N6dballe15DBInsertOptionsE" title="dballe::DBInsertOptions">DBInsertOptions</a>::defaults<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6dballe2DB19insert_station_dataER4DataRK15DBInsertOptions" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Insert station values into the database. </p>
+<p>The IDs of the station andl all variables that were inserted will be stored in vals.</p>
+<p><dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">vals</span></code>: The values to insert. </li>
+<li><code class="docutils literal notranslate"><span class="pre">opts</span></code>: Options controlling the insert operation </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe2DB11insert_dataER4DataRK15DBInsertOptions">
+<span id="_CPPv3N6dballe2DB11insert_dataER4DataRK15DBInsertOptions"></span><span id="_CPPv2N6dballe2DB11insert_dataER4DataRK15DBInsertOptions"></span><span id="dballe::DB::insert_data__DataR.DBInsertOptionsCR"></span><span class="target" id="classdballe_1_1DB_1ad87698e1a84a7fa130ffa09ec481a1fd"></span>void <code class="descname">insert_data</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6dballe4DataE" title="dballe::Data">Data</a> &amp;<em>vals</em>, <em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe15DBInsertOptionsE" title="dballe::DBInsertOptions">DBInsertOptions</a> &amp;<em>opts</em> = <a class="reference internal" href="#_CPPv4N6dballe15DBInsertOptionsE" title="dballe::DBInsertOptions">DBInsertOptions</a>::defaults<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6dballe2DB11insert_dataER4DataRK15DBInsertOptions" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Insert data values into the database. </p>
+<p>The IDs of the station andl all variables that were inserted will be stored in vals.</p>
+<p><dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">vals</span></code>: The values to insert. </li>
+<li><code class="docutils literal notranslate"><span class="pre">can_replace</span></code>: If true, then existing data can be rewritten, else data can only be added. </li>
+<li><code class="docutils literal notranslate"><span class="pre">station_can_add</span></code>: If false, it will not create a missing station record, and only data for existing stations can be added. If true, then if we are inserting data for a station that does not yet exists in the database, it will be created. </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Static Functions</p>
+<dl class="function">
+<dt id="_CPPv4N6dballe2DB7connectERK16DBConnectOptions">
+<span id="_CPPv3N6dballe2DB7connectERK16DBConnectOptions"></span><span id="_CPPv2N6dballe2DB7connectERK16DBConnectOptions"></span><span id="dballe::DB::connect__DBConnectOptionsCR"></span><span class="target" id="classdballe_1_1DB_1a9b3feb81a3d9101d75cd914bf9981cd3"></span><em class="property">static</em> std::shared_ptr&lt;<a class="reference internal" href="#_CPPv4N6dballe2DBE" title="dballe::DB">DB</a>&gt; <code class="descname">connect</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe16DBConnectOptionsE" title="dballe::DBConnectOptions">DBConnectOptions</a> &amp;<em>opts</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6dballe2DB7connectERK16DBConnectOptions" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Create a new <a class="reference internal" href="#classdballe_1_1DB"><span class="std std-ref">DB</span></a>. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="_CPPv4N6dballe11TransactionE">
+<span id="_CPPv3N6dballe11TransactionE"></span><span id="_CPPv2N6dballe11TransactionE"></span><span id="dballe::Transaction"></span><span class="target" id="classdballe_1_1Transaction"></span><em class="property">class </em><code class="descname">Transaction</code> : <em class="property">public</em> std::enable_shared_from_this&lt;<a class="reference internal" href="#_CPPv4N6dballe11TransactionE" title="dballe::Transaction">Transaction</a>&gt;<a class="headerlink" href="#_CPPv4N6dballe11TransactionE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Subclassed by dballe::db::Transaction</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="function">
+<dt id="_CPPv4N6dballe11Transaction6commitEv">
+<span id="_CPPv3N6dballe11Transaction6commitEv"></span><span id="_CPPv2N6dballe11Transaction6commitEv"></span><span id="dballe::Transaction::commit"></span><span class="target" id="classdballe_1_1Transaction_1ad3f92251e33c49be6b85407e664a6cda"></span><em class="property">virtual</em> void <code class="descname">commit</code><span class="sig-paren">(</span><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe11Transaction6commitEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Commit this transaction. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe11Transaction8rollbackEv">
+<span id="_CPPv3N6dballe11Transaction8rollbackEv"></span><span id="_CPPv2N6dballe11Transaction8rollbackEv"></span><span id="dballe::Transaction::rollback"></span><span class="target" id="classdballe_1_1Transaction_1afec321babcbddaf238ff54ecc75a4c07"></span><em class="property">virtual</em> void <code class="descname">rollback</code><span class="sig-paren">(</span><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe11Transaction8rollbackEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Roll back this transaction. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe11Transaction16rollback_nothrowEv">
+<span id="_CPPv3N6dballe11Transaction16rollback_nothrowEv"></span><span id="_CPPv2N6dballe11Transaction16rollback_nothrowEv"></span><span id="dballe::Transaction::rollback_nothrow"></span><span class="target" id="classdballe_1_1Transaction_1adc27d0405cd5826192fd71e585ab643d"></span><em class="property">virtual</em> void <code class="descname">rollback_nothrow</code><span class="sig-paren">(</span><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe11Transaction16rollback_nothrowEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Roll back this transaction. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe11Transaction14query_stationsERK5Query">
+<span id="_CPPv3N6dballe11Transaction14query_stationsERK5Query"></span><span id="_CPPv2N6dballe11Transaction14query_stationsERK5Query"></span><span id="dballe::Transaction::query_stations__QueryCR"></span><span class="target" id="classdballe_1_1Transaction_1a937fd003e43822769926f72256287134"></span><em class="property">virtual</em> std::unique_ptr&lt;<a class="reference internal" href="cursors.html#_CPPv4N6dballe13CursorStationE" title="dballe::CursorStation">CursorStation</a>&gt; <code class="descname">query_stations</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe5QueryE" title="dballe::Query">Query</a> &amp;<em>query</em><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe11Transaction14query_stationsERK5Query" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Start a query on the station variables archive. </p>
+<p>The cursor will iterate over unique lat, lon, ident triples, and will contain all station vars. If a station var exists twice on two different networks, only one will be present: the one of the network with the highest priority.</p>
+<p><dl class="docutils">
+<dt><strong>Return</strong></dt>
+<dd>The cursor to use to iterate over the results </dd>
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">query</span></code>: The <a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a> selecting the stations to return </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe11Transaction18query_station_dataERK5Query">
+<span id="_CPPv3N6dballe11Transaction18query_station_dataERK5Query"></span><span id="_CPPv2N6dballe11Transaction18query_station_dataERK5Query"></span><span id="dballe::Transaction::query_station_data__QueryCR"></span><span class="target" id="classdballe_1_1Transaction_1ade40f6d2fa211279790c8dd0616ce26d"></span><em class="property">virtual</em> std::unique_ptr&lt;<a class="reference internal" href="cursors.html#_CPPv4N6dballe17CursorStationDataE" title="dballe::CursorStationData">CursorStationData</a>&gt; <code class="descname">query_station_data</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe5QueryE" title="dballe::Query">Query</a> &amp;<em>query</em><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe11Transaction18query_station_dataERK5Query" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a> the station variables in the database. </p>
+<p>When multiple values per variable are present, the results will be presented in increasing order of priority.</p>
+<p><dl class="docutils">
+<dt><strong>Return</strong></dt>
+<dd>The cursor to use to iterate over the results </dd>
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">query</span></code>: The <a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a> selecting the station data to return </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe11Transaction10query_dataERK5Query">
+<span id="_CPPv3N6dballe11Transaction10query_dataERK5Query"></span><span id="_CPPv2N6dballe11Transaction10query_dataERK5Query"></span><span id="dballe::Transaction::query_data__QueryCR"></span><span class="target" id="classdballe_1_1Transaction_1af461cd377b1a6e3f1d00e7b52f749724"></span><em class="property">virtual</em> std::unique_ptr&lt;<a class="reference internal" href="cursors.html#_CPPv4N6dballe10CursorDataE" title="dballe::CursorData">CursorData</a>&gt; <code class="descname">query_data</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe5QueryE" title="dballe::Query">Query</a> &amp;<em>query</em><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe11Transaction10query_dataERK5Query" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a> the database. </p>
+<p>When multiple values per variable are present, the results will be presented in increasing order of priority.</p>
+<p><dl class="docutils">
+<dt><strong>Return</strong></dt>
+<dd>The cursor to use to iterate over the results </dd>
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">query</span></code>: The <a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a> selecting the data to return </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe11Transaction13query_summaryERK5Query">
+<span id="_CPPv3N6dballe11Transaction13query_summaryERK5Query"></span><span id="_CPPv2N6dballe11Transaction13query_summaryERK5Query"></span><span id="dballe::Transaction::query_summary__QueryCR"></span><span class="target" id="classdballe_1_1Transaction_1ad622c60ec0d9141d172bb5278a6a992c"></span><em class="property">virtual</em> std::unique_ptr&lt;<a class="reference internal" href="cursors.html#_CPPv4N6dballe13CursorSummaryE" title="dballe::CursorSummary">CursorSummary</a>&gt; <code class="descname">query_summary</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe5QueryE" title="dballe::Query">Query</a> &amp;<em>query</em><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe11Transaction13query_summaryERK5Query" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a> a summary of what the result would be for a query. </p>
+<p><dl class="docutils">
+<dt><strong>Return</strong></dt>
+<dd>The cursor to use to iterate over the results </dd>
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">query</span></code>: The <a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a> selecting the data to summarise </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe11Transaction14query_messagesERK5Query">
+<span id="_CPPv3N6dballe11Transaction14query_messagesERK5Query"></span><span id="_CPPv2N6dballe11Transaction14query_messagesERK5Query"></span><span id="dballe::Transaction::query_messages__QueryCR"></span><span class="target" id="classdballe_1_1Transaction_1af131269c54594b76983f37a1c3226291"></span><em class="property">virtual</em> std::unique_ptr&lt;<a class="reference internal" href="cursors.html#_CPPv4N6dballe13CursorMessageE" title="dballe::CursorMessage">CursorMessage</a>&gt; <code class="descname">query_messages</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe5QueryE" title="dballe::Query">Query</a> &amp;<em>query</em><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe11Transaction14query_messagesERK5Query" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a> the database returning the matching data as <a class="reference internal" href="messages.html#classdballe_1_1Message"><span class="std std-ref">Message</span></a> objects. </p>
+<p><dl class="docutils">
+<dt><strong>Return</strong></dt>
+<dd>The cursor to use to iterate over the results </dd>
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">query</span></code>: The <a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a> selecting the data that will go into the <a class="reference internal" href="messages.html#classdballe_1_1Message"><span class="std std-ref">Message</span></a> objects </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe11Transaction10remove_allEv">
+<span id="_CPPv3N6dballe11Transaction10remove_allEv"></span><span id="_CPPv2N6dballe11Transaction10remove_allEv"></span><span id="dballe::Transaction::remove_all"></span><span class="target" id="classdballe_1_1Transaction_1ae9605daaf2582ad7f8806c95ec0c6182"></span><em class="property">virtual</em> void <code class="descname">remove_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe11Transaction10remove_allEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Remove all data from the database. </p>
+<p>This is faster than remove() with an empty record, and unlike reset() it preserves existing report information.</p>
+<p><dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">transaction</span></code>: The current active transaction. </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe11Transaction19remove_station_dataERK5Query">
+<span id="_CPPv3N6dballe11Transaction19remove_station_dataERK5Query"></span><span id="_CPPv2N6dballe11Transaction19remove_station_dataERK5Query"></span><span id="dballe::Transaction::remove_station_data__QueryCR"></span><span class="target" id="classdballe_1_1Transaction_1ada9963b0a96e69fe464f2ea9c8ed3d25"></span><em class="property">virtual</em> void <code class="descname">remove_station_data</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe5QueryE" title="dballe::Query">Query</a> &amp;<em>query</em><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe11Transaction19remove_station_dataERK5Query" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Remove data from the database. </p>
+<p><dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">query</span></code>: The query selecting the data to remove </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe11Transaction11remove_dataERK5Query">
+<span id="_CPPv3N6dballe11Transaction11remove_dataERK5Query"></span><span id="_CPPv2N6dballe11Transaction11remove_dataERK5Query"></span><span id="dballe::Transaction::remove_data__QueryCR"></span><span class="target" id="classdballe_1_1Transaction_1a4b461ccc14061c66ef8545d1704b5090"></span><em class="property">virtual</em> void <code class="descname">remove_data</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe5QueryE" title="dballe::Query">Query</a> &amp;<em>query</em><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe11Transaction11remove_dataERK5Query" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Remove data from the database. </p>
+<p><dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">query</span></code>: The query selecting the data to remove </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe11Transaction14import_messageERK7MessageRK15DBImportOptions">
+<span id="_CPPv3N6dballe11Transaction14import_messageERK7MessageRK15DBImportOptions"></span><span id="_CPPv2N6dballe11Transaction14import_messageERK7MessageRK15DBImportOptions"></span><span id="dballe::Transaction::import_message__MessageCR.DBImportOptionsCR"></span><span class="target" id="classdballe_1_1Transaction_1ae1280aad235a65395fdc052114056971"></span><em class="property">virtual</em> void <code class="descname">import_message</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="messages.html#_CPPv4N6dballe7MessageE" title="dballe::Message">Message</a> &amp;<em>message</em>, <em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe15DBImportOptionsE" title="dballe::DBImportOptions">DBImportOptions</a> &amp;<em>opts</em> = <a class="reference internal" href="#_CPPv4N6dballe15DBImportOptionsE" title="dballe::DBImportOptions">DBImportOptions</a>::defaults<span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe11Transaction14import_messageERK7MessageRK15DBImportOptions" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Import a <a class="reference internal" href="messages.html#classdballe_1_1Message"><span class="std std-ref">Message</span></a> into the DB-All.e database. </p>
+<p><dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">message</span></code>: The <a class="reference internal" href="messages.html#classdballe_1_1Message"><span class="std std-ref">Message</span></a> to import </li>
+<li><code class="docutils literal notranslate"><span class="pre">opts</span></code>: Options controlling the import process </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe11Transaction15import_messagesERKNSt6vectorINSt10shared_ptrI7MessageEEEERK15DBImportOptions">
+<span id="_CPPv3N6dballe11Transaction15import_messagesERKNSt6vectorINSt10shared_ptrI7MessageEEEERK15DBImportOptions"></span><span id="_CPPv2N6dballe11Transaction15import_messagesERKNSt6vectorINSt10shared_ptrI7MessageEEEERK15DBImportOptions"></span><span id="dballe::Transaction::import_messages__std::vector:std::shared_ptr:Message::CR.DBImportOptionsCR"></span><span class="target" id="classdballe_1_1Transaction_1aca6a7a92bfc89c16e6c71333de2f4728"></span><em class="property">virtual</em> void <code class="descname">import_messages</code><span class="sig-paren">(</span><em class="property">const</em> std::vector&lt;std::shared_ptr&lt;<a class="reference internal" href="messages.html#_CPPv4N6dballe7MessageE" title="dballe::Message">Message</a>&gt;&gt; &amp;<em>messages</em>, <em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe15DBImportOptionsE" title="dballe::DBImportOptions">DBImportOptions</a> &amp;<em>opts</em> = <a class="reference internal" href="#_CPPv4N6dballe15DBImportOptionsE" title="dballe::DBImportOptions">DBImportOptions</a>::defaults<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6dballe11Transaction15import_messagesERKNSt6vectorINSt10shared_ptrI7MessageEEEERK15DBImportOptions" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Import Messages into the DB-All.e database. </p>
+<p><dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">messages</span></code>: The messages to import </li>
+<li><code class="docutils literal notranslate"><span class="pre">opts</span></code>: Options controlling the import process </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe11Transaction19insert_station_dataER4DataRK15DBInsertOptions">
+<span id="_CPPv3N6dballe11Transaction19insert_station_dataER4DataRK15DBInsertOptions"></span><span id="_CPPv2N6dballe11Transaction19insert_station_dataER4DataRK15DBInsertOptions"></span><span id="dballe::Transaction::insert_station_data__DataR.DBInsertOptionsCR"></span><span class="target" id="classdballe_1_1Transaction_1a86fa09d2e05c16b8db73a2afd848497b"></span><em class="property">virtual</em> void <code class="descname">insert_station_data</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6dballe4DataE" title="dballe::Data">Data</a> &amp;<em>data</em>, <em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe15DBInsertOptionsE" title="dballe::DBInsertOptions">DBInsertOptions</a> &amp;<em>opts</em> = <a class="reference internal" href="#_CPPv4N6dballe15DBInsertOptionsE" title="dballe::DBInsertOptions">DBInsertOptions</a>::defaults<span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe11Transaction19insert_station_dataER4DataRK15DBInsertOptions" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Insert station values into the database. </p>
+<p>The IDs of the station and all variables that were inserted will be stored in vals.</p>
+<p><dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">data</span></code>: The values to insert. </li>
+<li><code class="docutils literal notranslate"><span class="pre">opts</span></code>: Options controlling the insert operation </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe11Transaction11insert_dataER4DataRK15DBInsertOptions">
+<span id="_CPPv3N6dballe11Transaction11insert_dataER4DataRK15DBInsertOptions"></span><span id="_CPPv2N6dballe11Transaction11insert_dataER4DataRK15DBInsertOptions"></span><span id="dballe::Transaction::insert_data__DataR.DBInsertOptionsCR"></span><span class="target" id="classdballe_1_1Transaction_1a0f616c83a0b6b8a49aad1f414e96eeb8"></span><em class="property">virtual</em> void <code class="descname">insert_data</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6dballe4DataE" title="dballe::Data">Data</a> &amp;<em>data</em>, <em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe15DBInsertOptionsE" title="dballe::DBInsertOptions">DBInsertOptions</a> &amp;<em>opts</em> = <a class="reference internal" href="#_CPPv4N6dballe15DBInsertOptionsE" title="dballe::DBInsertOptions">DBInsertOptions</a>::defaults<span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe11Transaction11insert_dataER4DataRK15DBInsertOptions" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Insert data values into the database. </p>
+<p>The IDs of the station and all variables that were inserted will be stored in vals.</p>
+<p><dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">data</span></code>: The values to insert. </li>
+<li><code class="docutils literal notranslate"><span class="pre">opts</span></code>: Options controlling the insert operation </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="_CPPv4N6dballe5QueryE">
+<span id="_CPPv3N6dballe5QueryE"></span><span id="_CPPv2N6dballe5QueryE"></span><span id="dballe::Query"></span><span class="target" id="classdballe_1_1Query"></span><em class="property">class </em><code class="descname">Query</code><a class="headerlink" href="#_CPPv4N6dballe5QueryE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a> used to filter DB-All.e data. </p>
+<p>Subclassed by dballe::core::Query</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="function">
+<dt id="_CPPv4NK6dballe5Query17get_datetimerangeEv">
+<span id="_CPPv3NK6dballe5Query17get_datetimerangeEv"></span><span id="_CPPv2NK6dballe5Query17get_datetimerangeEv"></span><span id="dballe::Query::get_datetimerangeC"></span><span class="target" id="classdballe_1_1Query_1a3569cb14fac476fc76fd5713eda55332"></span><em class="property">virtual</em> DatetimeRange <code class="descname">get_datetimerange</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe5Query17get_datetimerangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the Datetime bounds set in this query. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe5Query17set_datetimerangeERK13DatetimeRange">
+<span id="_CPPv3N6dballe5Query17set_datetimerangeERK13DatetimeRange"></span><span id="_CPPv2N6dballe5Query17set_datetimerangeERK13DatetimeRange"></span><span id="dballe::Query::set_datetimerange__DatetimeRangeCR"></span><span class="target" id="classdballe_1_1Query_1a57fa11c2ca03dc8da0fd90d571417ea1"></span><em class="property">virtual</em> void <code class="descname">set_datetimerange</code><span class="sig-paren">(</span><em class="property">const</em> DatetimeRange &amp;<em>dt</em><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe5Query17set_datetimerangeERK13DatetimeRange" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Set the Datetime range for this query. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe5Query12get_latrangeEv">
+<span id="_CPPv3NK6dballe5Query12get_latrangeEv"></span><span id="_CPPv2NK6dballe5Query12get_latrangeEv"></span><span id="dballe::Query::get_latrangeC"></span><span class="target" id="classdballe_1_1Query_1a76659092be8a8efe35b885e79dd57a5e"></span><em class="property">virtual</em> LatRange <code class="descname">get_latrange</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe5Query12get_latrangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the range of latitudes to be matched. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe5Query12set_latrangeERK8LatRange">
+<span id="_CPPv3N6dballe5Query12set_latrangeERK8LatRange"></span><span id="_CPPv2N6dballe5Query12set_latrangeERK8LatRange"></span><span id="dballe::Query::set_latrange__LatRangeCR"></span><span class="target" id="classdballe_1_1Query_1a5bde5d89caef024bb4ae7fa26ec70ccf"></span><em class="property">virtual</em> void <code class="descname">set_latrange</code><span class="sig-paren">(</span><em class="property">const</em> LatRange &amp;<em>latrange</em><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe5Query12set_latrangeERK8LatRange" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Set the range of latitudes to be matched. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe5Query12get_lonrangeEv">
+<span id="_CPPv3NK6dballe5Query12get_lonrangeEv"></span><span id="_CPPv2NK6dballe5Query12get_lonrangeEv"></span><span id="dballe::Query::get_lonrangeC"></span><span class="target" id="classdballe_1_1Query_1a983da7d76aa2e3530fb7af4e2c4afbef"></span><em class="property">virtual</em> LonRange <code class="descname">get_lonrange</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe5Query12get_lonrangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the range of longitudes to be matched. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe5Query12set_lonrangeERK8LonRange">
+<span id="_CPPv3N6dballe5Query12set_lonrangeERK8LonRange"></span><span id="_CPPv2N6dballe5Query12set_lonrangeERK8LonRange"></span><span id="dballe::Query::set_lonrange__LonRangeCR"></span><span class="target" id="classdballe_1_1Query_1abe8b1d193f725750fc18a7c39bf8f05d"></span><em class="property">virtual</em> void <code class="descname">set_lonrange</code><span class="sig-paren">(</span><em class="property">const</em> LonRange &amp;<em>lonrange</em><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe5Query12set_lonrangeERK8LonRange" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Set the range of longitudes to be matched. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe5Query9get_levelEv">
+<span id="_CPPv3NK6dballe5Query9get_levelEv"></span><span id="_CPPv2NK6dballe5Query9get_levelEv"></span><span id="dballe::Query::get_levelC"></span><span class="target" id="classdballe_1_1Query_1a3a2b0b5d54151f16f2b5934fd424a2c4"></span><em class="property">virtual</em> Level <code class="descname">get_level</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe5Query9get_levelEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the level to be matched. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe5Query9set_levelERK5Level">
+<span id="_CPPv3N6dballe5Query9set_levelERK5Level"></span><span id="_CPPv2N6dballe5Query9set_levelERK5Level"></span><span id="dballe::Query::set_level__LevelCR"></span><span class="target" id="classdballe_1_1Query_1ac82a18159398bcb3bcf55402807ebc6d"></span><em class="property">virtual</em> void <code class="descname">set_level</code><span class="sig-paren">(</span><em class="property">const</em> Level &amp;<em>level</em><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe5Query9set_levelERK5Level" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Set the level to be matched. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe5Query10get_trangeEv">
+<span id="_CPPv3NK6dballe5Query10get_trangeEv"></span><span id="_CPPv2NK6dballe5Query10get_trangeEv"></span><span id="dballe::Query::get_trangeC"></span><span class="target" id="classdballe_1_1Query_1a8987704367644d685961737cd59454bb"></span><em class="property">virtual</em> Trange <code class="descname">get_trange</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe5Query10get_trangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the time range to be matched. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe5Query10set_trangeERK6Trange">
+<span id="_CPPv3N6dballe5Query10set_trangeERK6Trange"></span><span id="_CPPv2N6dballe5Query10set_trangeERK6Trange"></span><span id="dballe::Query::set_trange__TrangeCR"></span><span class="target" id="classdballe_1_1Query_1aefd2d17c9a2a259a00e97778c8e639be"></span><em class="property">virtual</em> void <code class="descname">set_trange</code><span class="sig-paren">(</span><em class="property">const</em> Trange &amp;<em>trange</em><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe5Query10set_trangeERK6Trange" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Set the level to be matched. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe5Query5clearEv">
+<span id="_CPPv3N6dballe5Query5clearEv"></span><span id="_CPPv2N6dballe5Query5clearEv"></span><span id="dballe::Query::clear"></span><span class="target" id="classdballe_1_1Query_1ad663aec1208f460ccd904f6efe033539"></span><em class="property">virtual</em> void <code class="descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe5Query5clearEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Clear the contents of the query, making it match all data. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe5Query11is_subqueryERK5Query">
+<span id="_CPPv3NK6dballe5Query11is_subqueryERK5Query"></span><span id="_CPPv2NK6dballe5Query11is_subqueryERK5Query"></span><span id="dballe::Query::is_subquery__QueryCRC"></span><span class="target" id="classdballe_1_1Query_1a8f25049bdfc118db3b2d752cbd775e3d"></span><em class="property">virtual</em> bool <code class="descname">is_subquery</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe5QueryE" title="dballe::Query">Query</a> &amp;<em>other</em><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe5Query11is_subqueryERK5Query" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return true if this query matches a subset of the given query. </p>
+<p>In other words, it returns true if this query is the same as <em>other</em>, plus zero or more extra fields set, or zero or more ranges narrowed. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe5Query5printEP4FILE">
+<span id="_CPPv3NK6dballe5Query5printEP4FILE"></span><span id="_CPPv2NK6dballe5Query5printEP4FILE"></span><span id="dballe::Query::print__FILEPC"></span><span class="target" id="classdballe_1_1Query_1a4e420faaaee27d792d3d638cbe9789ee"></span><em class="property">virtual</em> void <code class="descname">print</code><span class="sig-paren">(</span>FILE *<em>out</em><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe5Query5printEP4FILE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Print the query contents to stderr. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe5Query5cloneEv">
+<span id="_CPPv3NK6dballe5Query5cloneEv"></span><span id="_CPPv2NK6dballe5Query5cloneEv"></span><span id="dballe::Query::cloneC"></span><span class="target" id="classdballe_1_1Query_1a64c8999f50ae667307aff0862e570494"></span><em class="property">virtual</em> std::unique_ptr&lt;<a class="reference internal" href="#_CPPv4N6dballe5QueryE" title="dballe::Query">Query</a>&gt; <code class="descname">clone</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe5Query5cloneEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return a copy of this query. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Static Functions</p>
+<dl class="function">
+<dt id="_CPPv4N6dballe5Query6createEv">
+<span id="_CPPv3N6dballe5Query6createEv"></span><span id="_CPPv2N6dballe5Query6createEv"></span><span id="dballe::Query::create"></span><span class="target" id="classdballe_1_1Query_1a43e31d5dec022eab8c34d8f671cceb4c"></span><em class="property">static</em> std::unique_ptr&lt;<a class="reference internal" href="#_CPPv4N6dballe5QueryE" title="dballe::Query">Query</a>&gt; <code class="descname">create</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6dballe5Query6createEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Create a new <a class="reference internal" href="#classdballe_1_1Query"><span class="std std-ref">Query</span></a>. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="_CPPv4N6dballe4DataE">
+<span id="_CPPv3N6dballe4DataE"></span><span id="_CPPv2N6dballe4DataE"></span><span id="dballe::Data"></span><span class="target" id="classdballe_1_1Data"></span><em class="property">class </em><code class="descname">Data</code><a class="headerlink" href="#_CPPv4N6dballe4DataE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Key/value store where keys are strings and values are wreport variables. </p>
+<p>Keys are defined from a known vocabulary, where each key has an associated wreport::Varinfo structure. </p>
+<p>Subclassed by dballe::core::Data</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="function">
+<dt id="_CPPv4N6dballe4Data5clearEv">
+<span id="_CPPv3N6dballe4Data5clearEv"></span><span id="_CPPv2N6dballe4Data5clearEv"></span><span id="dballe::Data::clear"></span><span class="target" id="classdballe_1_1Data_1a92df658ff068c51ace14bf5644431564"></span><em class="property">virtual</em> void <code class="descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe4Data5clearEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Remove all contents from the record. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe4Data9clear_idsEv">
+<span id="_CPPv3N6dballe4Data9clear_idsEv"></span><span id="_CPPv2N6dballe4Data9clear_idsEv"></span><span id="dballe::Data::clear_ids"></span><span class="target" id="classdballe_1_1Data_1a4ae1a00d852250f4cada53e3ec8017b3"></span><em class="property">virtual</em> void <code class="descname">clear_ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe4Data9clear_idsEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Unset all database IDs in station and values. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe4Data10clear_varsEv">
+<span id="_CPPv3N6dballe4Data10clear_varsEv"></span><span id="_CPPv2N6dballe4Data10clear_varsEv"></span><span id="dballe::Data::clear_vars"></span><span class="target" id="classdballe_1_1Data_1a946b76689b925099ffbcd2d75c070b76"></span><em class="property">virtual</em> void <code class="descname">clear_vars</code><span class="sig-paren">(</span><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe4Data10clear_varsEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Remove all Bxxyyy keys from the record, leaving the rest intact. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe4DataeqERK4Data">
+<span id="_CPPv3NK6dballe4DataeqERK4Data"></span><span id="_CPPv2NK6dballe4DataeqERK4Data"></span><span id="dballe::Data::eq-operator__DataCRC"></span><span class="target" id="classdballe_1_1Data_1a9172d61db057bfc8778f07a66f312ee9"></span><em class="property">virtual</em> bool <code class="descname">operator==</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe4DataE" title="dballe::Data">Data</a> &amp;<em>rec</em><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe4DataeqERK4Data" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Check if two records are the same. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe4DataneERK4Data">
+<span id="_CPPv3NK6dballe4DataneERK4Data"></span><span id="_CPPv2NK6dballe4DataneERK4Data"></span><span id="dballe::Data::neq-operator__DataCRC"></span><span class="target" id="classdballe_1_1Data_1a1e106ad5e6c33e8d162d243688b80673"></span><em class="property">virtual</em> bool <code class="descname">operator!=</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N6dballe4DataE" title="dballe::Data">Data</a> &amp;<em>rec</em><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe4DataneERK4Data" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Check if two records differ. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK6dballe4Data5printEP4FILE">
+<span id="_CPPv3NK6dballe4Data5printEP4FILE"></span><span id="_CPPv2NK6dballe4Data5printEP4FILE"></span><span id="dballe::Data::print__FILEPC"></span><span class="target" id="classdballe_1_1Data_1a5ddbd5beca7da2744c36b8aaeaab07e2"></span><em class="property">virtual</em> void <code class="descname">print</code><span class="sig-paren">(</span>FILE *<em>out</em><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe4Data5printEP4FILE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Print the contents of this record to the given stream. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Static Functions</p>
+<dl class="function">
+<dt id="_CPPv4N6dballe4Data6createEv">
+<span id="_CPPv3N6dballe4Data6createEv"></span><span id="_CPPv2N6dballe4Data6createEv"></span><span id="dballe::Data::create"></span><span class="target" id="classdballe_1_1Data_1ab9db77ba65af8374dabe9ad7c808ad33"></span><em class="property">static</em> std::unique_ptr&lt;<a class="reference internal" href="#_CPPv4N6dballe4DataE" title="dballe::Data">Data</a>&gt; <code class="descname">create</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6dballe4Data6createEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Create a new Record. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="_CPPv4N6dballe16DBConnectOptionsE">
+<span id="_CPPv3N6dballe16DBConnectOptionsE"></span><span id="_CPPv2N6dballe16DBConnectOptionsE"></span><span id="dballe::DBConnectOptions"></span><span class="target" id="classdballe_1_1DBConnectOptions"></span><em class="property">class </em><code class="descname">DBConnectOptions</code><a class="headerlink" href="#_CPPv4N6dballe16DBConnectOptionsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Options controlling how to connect to a database. </p>
+<p>To allow to add members this structure without breaking the ABI, creation of new instances is restricted to <a class="reference internal" href="#classdballe_1_1DBConnectOptions_1a697b4319a1b7c00b6460dc30922d7c16"><span class="std std-ref">DBConnectOptions::create()</span></a>. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="function">
+<dt id="_CPPv4N6dballe16DBConnectOptions13reset_actionsEv">
+<span id="_CPPv3N6dballe16DBConnectOptions13reset_actionsEv"></span><span id="_CPPv2N6dballe16DBConnectOptions13reset_actionsEv"></span><span id="dballe::DBConnectOptions::reset_actions"></span><span class="target" id="classdballe_1_1DBConnectOptions_1a1564d05975144967bc64bf5ff0c6cb2d"></span>void <code class="descname">reset_actions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6dballe16DBConnectOptions13reset_actionsEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Disable all the one-off actions set to perform on connection. </p>
+<p>Call this after the first connection, if you need to reuse the <a class="reference internal" href="#classdballe_1_1DBConnectOptions"><span class="std std-ref">DBConnectOptions</span></a> multiple times. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Members</p>
+<dl class="member">
+<dt id="_CPPv4N6dballe16DBConnectOptions3urlE">
+<span id="_CPPv3N6dballe16DBConnectOptions3urlE"></span><span id="_CPPv2N6dballe16DBConnectOptions3urlE"></span><span id="dballe::DBConnectOptions::url__ss"></span><span class="target" id="classdballe_1_1DBConnectOptions_1a27a520bd223a7ee907fb7cc8ba3fd782"></span>std::string <code class="descname">url</code><a class="headerlink" href="#_CPPv4N6dballe16DBConnectOptions3urlE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>URL to use to connect to the database. </p>
+<p>See doc/fapi_connect.md for details. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N6dballe16DBConnectOptions4wipeE">
+<span id="_CPPv3N6dballe16DBConnectOptions4wipeE"></span><span id="_CPPv2N6dballe16DBConnectOptions4wipeE"></span><span id="dballe::DBConnectOptions::wipe__b"></span><span class="target" id="classdballe_1_1DBConnectOptions_1ae929e2af142dbc3a4cf2362a369b6cee"></span>bool <code class="descname">wipe</code> = false<a class="headerlink" href="#_CPPv4N6dballe16DBConnectOptions4wipeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Wipe database on connection. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Static Functions</p>
+<dl class="function">
+<dt id="_CPPv4N6dballe16DBConnectOptions6createERKNSt6stringE">
+<span id="_CPPv3N6dballe16DBConnectOptions6createERKNSt6stringE"></span><span id="_CPPv2N6dballe16DBConnectOptions6createERKNSt6stringE"></span><span id="dballe::DBConnectOptions::create__ssCR"></span><span class="target" id="classdballe_1_1DBConnectOptions_1a697b4319a1b7c00b6460dc30922d7c16"></span><em class="property">static</em> std::unique_ptr&lt;<a class="reference internal" href="#_CPPv4N6dballe16DBConnectOptionsE" title="dballe::DBConnectOptions">DBConnectOptions</a>&gt; <code class="descname">create</code><span class="sig-paren">(</span><em class="property">const</em> std::string &amp;<em>url</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6dballe16DBConnectOptions6createERKNSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Create a <a class="reference internal" href="#classdballe_1_1DBConnectOptions"><span class="std std-ref">DBConnectOptions</span></a> parsing the given URL. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N6dballe16DBConnectOptions11test_createEPKc">
+<span id="_CPPv3N6dballe16DBConnectOptions11test_createEPKc"></span><span id="_CPPv2N6dballe16DBConnectOptions11test_createEPKc"></span><span id="dballe::DBConnectOptions::test_create__cCP"></span><span class="target" id="classdballe_1_1DBConnectOptions_1aedeccb349f6bca6f4d33facecd379026"></span><em class="property">static</em> std::unique_ptr&lt;<a class="reference internal" href="#_CPPv4N6dballe16DBConnectOptionsE" title="dballe::DBConnectOptions">DBConnectOptions</a>&gt; <code class="descname">test_create</code><span class="sig-paren">(</span><em class="property">const</em> char *<em>backend</em> = nullptr<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6dballe16DBConnectOptions11test_createEPKc" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Create a <a class="reference internal" href="#classdballe_1_1DBConnectOptions"><span class="std std-ref">DBConnectOptions</span></a> for running unit tests. </p>
+<p>Optionally allows to select a backend database. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="_CPPv4N6dballe15DBImportOptionsE">
+<span id="_CPPv3N6dballe15DBImportOptionsE"></span><span id="_CPPv2N6dballe15DBImportOptionsE"></span><span id="dballe::DBImportOptions"></span><span class="target" id="classdballe_1_1DBImportOptions"></span><em class="property">class </em><code class="descname">DBImportOptions</code><a class="headerlink" href="#_CPPv4N6dballe15DBImportOptionsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Options controlling how messages are imported in the database. </p>
+<p>To allow to add members this structure without breaking the ABI, creation of new instances is restricted to DBImportOptions::create(). </p>
+<p>Subclassed by dballe::impl::DBImportOptions</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Members</p>
+<dl class="member">
+<dt id="_CPPv4N6dballe15DBImportOptions6reportE">
+<span id="_CPPv3N6dballe15DBImportOptions6reportE"></span><span id="_CPPv2N6dballe15DBImportOptions6reportE"></span><span id="dballe::DBImportOptions::report__ss"></span><span class="target" id="classdballe_1_1DBImportOptions_1a60761c3d0a12e177a288dd398aee01de"></span>std::string <code class="descname">report</code><a class="headerlink" href="#_CPPv4N6dballe15DBImportOptions6reportE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Report name to use to import data. </p>
+<p>If left empty (default), then it will be chosen automatically based on the message type. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N6dballe15DBImportOptions17import_attributesE">
+<span id="_CPPv3N6dballe15DBImportOptions17import_attributesE"></span><span id="_CPPv2N6dballe15DBImportOptions17import_attributesE"></span><span id="dballe::DBImportOptions::import_attributes__b"></span><span class="target" id="classdballe_1_1DBImportOptions_1aa142d0a9ce5e20deebfc58390524318c"></span>bool <code class="descname">import_attributes</code> = false<a class="headerlink" href="#_CPPv4N6dballe15DBImportOptions17import_attributesE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Import variable attributes. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N6dballe15DBImportOptions14update_stationE">
+<span id="_CPPv3N6dballe15DBImportOptions14update_stationE"></span><span id="_CPPv2N6dballe15DBImportOptions14update_stationE"></span><span id="dballe::DBImportOptions::update_station__b"></span><span class="target" id="classdballe_1_1DBImportOptions_1a6a68d6b07320c0ff4450b159f959010e"></span>bool <code class="descname">update_station</code> = false<a class="headerlink" href="#_CPPv4N6dballe15DBImportOptions14update_stationE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Update station information. </p>
+<p>If set to true, station information is merged with existing data in the database. If false (default), station information is imported only when the station did not exist in the database. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N6dballe15DBImportOptions9overwriteE">
+<span id="_CPPv3N6dballe15DBImportOptions9overwriteE"></span><span id="_CPPv2N6dballe15DBImportOptions9overwriteE"></span><span id="dballe::DBImportOptions::overwrite__b"></span><span class="target" id="classdballe_1_1DBImportOptions_1a3941ac242723d2b4b4cc04eb9801ffcb"></span>bool <code class="descname">overwrite</code> = false<a class="headerlink" href="#_CPPv4N6dballe15DBImportOptions9overwriteE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Replace existing data. </p>
+<p>If set to true, causes existing information already in the database to be overwritten. If false (default), trying to import a message which contains data already present in the database causes the import to fail. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N6dballe15DBImportOptions7varlistE">
+<span id="_CPPv3N6dballe15DBImportOptions7varlistE"></span><span id="_CPPv2N6dballe15DBImportOptions7varlistE"></span><span id="dballe::DBImportOptions::varlist__std::vector:wreport::Varcode:"></span><span class="target" id="classdballe_1_1DBImportOptions_1a556dea819c58dbef493a5528ea0bbe09"></span>std::vector&lt;wreport::Varcode&gt; <code class="descname">varlist</code><a class="headerlink" href="#_CPPv4N6dballe15DBImportOptions7varlistE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>If not empty, import only the given data values. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="_CPPv4N6dballe15DBInsertOptionsE">
+<span id="_CPPv3N6dballe15DBInsertOptionsE"></span><span id="_CPPv2N6dballe15DBInsertOptionsE"></span><span id="dballe::DBInsertOptions"></span><span class="target" id="classdballe_1_1DBInsertOptions"></span><em class="property">class </em><code class="descname">DBInsertOptions</code><a class="headerlink" href="#_CPPv4N6dballe15DBInsertOptionsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Options controlling how values are inserted in the database. </p>
+<p>To allow to add members this structure without breaking the ABI, creation of new instances is restricted to DBInsertOptions::create(). </p>
+<p>Subclassed by dballe::impl::DBInsertOptions</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Members</p>
+<dl class="member">
+<dt id="_CPPv4N6dballe15DBInsertOptions11can_replaceE">
+<span id="_CPPv3N6dballe15DBInsertOptions11can_replaceE"></span><span id="_CPPv2N6dballe15DBInsertOptions11can_replaceE"></span><span id="dballe::DBInsertOptions::can_replace__b"></span><span class="target" id="classdballe_1_1DBInsertOptions_1a02e9edb5d4bbb4199f38c49c0929ffe9"></span>bool <code class="descname">can_replace</code> = false<a class="headerlink" href="#_CPPv4N6dballe15DBInsertOptions11can_replaceE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>If true, then existing data can be rewritten, else data can only be added. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N6dballe15DBInsertOptions16can_add_stationsE">
+<span id="_CPPv3N6dballe15DBInsertOptions16can_add_stationsE"></span><span id="_CPPv2N6dballe15DBInsertOptions16can_add_stationsE"></span><span id="dballe::DBInsertOptions::can_add_stations__b"></span><span class="target" id="classdballe_1_1DBInsertOptions_1a8446961bc09c88628e98ac0bd6afd0eb"></span>bool <code class="descname">can_add_stations</code> = true<a class="headerlink" href="#_CPPv4N6dballe15DBInsertOptions16can_add_stationsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>If false, it will not create a missing station record, and only data for existing stations can be added. </p>
+<p>If true, then if we are inserting data for a station that does not yet exists in the database, it will be created. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">dballe</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../python/dballe.html">Python dballe package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python/dballe.volnd.html">Python dballe.volnd package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="dballe.html">C++ dballe namespace</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="messages.html">Messages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cursors.html">Cursors</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Database</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../fortran/dballe.html">Fortran dballe functions</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="dballe.html">C++ dballe namespace</a><ul>
+      <li>Previous: <a href="cursors.html" title="previous chapter">Cursors</a></li>
+      <li>Next: <a href="../fortran/dballe.html" title="next chapter">Fortran dballe functions</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Enrico Zini.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="../_sources/cpp/db.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
