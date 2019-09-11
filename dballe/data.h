@@ -14,8 +14,9 @@ namespace dballe {
  * Keys are defined from a known vocabulary, where each key has an associated
  * wreport::Varinfo structure.
  */
-struct Data
+class Data
 {
+public:
     virtual ~Data() {}
 
     /// Create a new Record

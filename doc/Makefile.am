@@ -41,6 +41,7 @@ sphinx_sources =  \
     src/cpp/dballe.rst \
     src/cpp/messages.rst \
     src/cpp/cursors.rst \
+    src/cpp/db.rst \
     src/fortran/dballe.rst \
     src/python/dballe.rst \
     src/python/dballe_types.rst \

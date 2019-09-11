@@ -11,8 +11,9 @@
 namespace dballe {
 
 /// Query used to filter DB-All.e data
-struct Query
+class Query
 {
+public:
     virtual ~Query() {}
 
     /// Get the Datetime bounds set in this query
