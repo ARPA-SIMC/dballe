@@ -21,10 +21,6 @@ The C++ API documentation is also available as `doxgen documentation`__.
 
 __ c_api/index.html
 
-The Fortran API documentation is also available as `doxgen documentation`__.
-
-__ fortran_api/index.html
-
 
 ==================
 
