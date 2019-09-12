@@ -23,8 +23,6 @@ cppdeps = libdballe.dox \
 
 # Fortran API documentation sources
 
-fortrandeps = libdballef.dox
-
 fapisources = fapi.md fapi_concepts.md fapi_walkthrough.md fapi_reference.md \
               fapi_parms.md fapi_aliases.md fapi_connect.md fapi_ltypes.md \
               fapi_tranges.md fapi_btable.md fapi_transactions.md
@@ -43,6 +41,7 @@ sphinx_sources =  \
     src/cpp/cursors.rst \
     src/cpp/db.rst \
     src/fortran/dballe.rst \
+    src/fortran/reference.rst \
     src/python/dballe.rst \
     src/python/dballe_types.rst \
     src/python/dballe_messages.rst \
@@ -55,11 +54,8 @@ EXTRA_DIST += $(sphinx_sources)
 # See https://stackoverflow.com/questions/19822435/multiple-targets-from-one-recipe-and-parallel-execution#19822767
 .INTERMEDIATE: build-docs
 
-libdballef.doxytags: $(fortrandeps) ../fortran/libdballef.la
-	$(DOXYGEN) libdballef.dox
-
 # Build doxygen + sphinx documentation
-build-docs: $(cppdeps) $(sphinx_sources) $(mainpages) ../dballe/libdballe.la ../python/_dballe.la libdballef.doxytags
+build-docs: $(cppdeps) $(sphinx_sources) $(mainpages) ../dballe/libdballe.la ../python/_dballe.la
 	rm -rf html
 	mkdir html
 	$(DOXYGEN) libdballe.dox
@@ -87,10 +83,7 @@ libwreport.doxytags:
 
 doc_DATA += libdballe.doxytags
 
-CLEANFILES += libdballe.doxytags libdballef.doxytags libwreport.doxytags aliases.dox ltypes.dox tranges.dox
-
-fapi_reference.md: $(top_srcdir)/doc/make_fortran_reference libdballef.doxytags
-	$< > $@ fortran_xml || rm $@
+CLEANFILES += libdballe.doxytags libwreport.doxytags aliases.dox ltypes.dox tranges.dox
 
 fapi_aliases.md: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
 	$(top_srcdir)/doc/mksnippet alias md < $< > $@ || rm $@

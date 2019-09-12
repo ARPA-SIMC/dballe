@@ -75,7 +75,6 @@ pygments_style = None
 
 breathe_projects = {
     "dballe": "../c_xml/",
-    "dballef": "../fortran_xml/",
 }
 
 breathe_default_project = "dballe"
