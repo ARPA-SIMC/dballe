@@ -368,6 +368,8 @@ For example::
     ierr = idba_insert_attributes(handle)
 
 
+.. _querying:
+
 Querying the database
 ---------------------
 

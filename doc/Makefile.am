@@ -42,6 +42,7 @@ sphinx_sources =  \
     src/cpp/db.rst \
     src/fortran/dballe.rst \
     src/fortran/walkthrough.rst \
+    src/fortran/concepts.rst \
     src/fortran/connect.rst \
     src/fortran/reference.rst \
     src/fortran/faq.rst \
