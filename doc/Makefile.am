@@ -44,6 +44,7 @@ sphinx_sources =  \
     src/fortran/walkthrough.rst \
     src/fortran/concepts.rst \
     src/fortran/connect.rst \
+    src/fortran/transactions.rst \
     src/fortran/reference.rst \
     src/fortran/faq.rst \
     src/python/dballe.rst \

@@ -15,6 +15,7 @@ get up to speed, and as a quick reference for everyday use.
    concepts
    walkthrough
    connect
+   transactions
    reference
    faq
 
@@ -23,9 +24,6 @@ get up to speed, and as a quick reference for everyday use.
     output and query parameters that are not B table entries.
   * [Varcode aliases](fapi_aliases.md), aliases that can be used in input
     routines instead of B table codes.
-  * [Transactional behaviour](fapi_transactions.md), documents if and when
-    updates to the database take effect, and what happens when multiple programs
-    work on the same DB-All.e database at the same time.
   * [Level types](fapi_ltypes.md), description of values that define vertical
     levels and layers.
   * [Time ranges](fapi_tranges.md), descriptions of values that define time
