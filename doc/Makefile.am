@@ -55,16 +55,17 @@ EXTRA_DIST += $(sphinx_sources)
 # See https://stackoverflow.com/questions/19822435/multiple-targets-from-one-recipe-and-parallel-execution#19822767
 .INTERMEDIATE: build-docs
 
+libdballef.doxytags: $(fortrandeps) ../fortran/libdballef.la
+	$(DOXYGEN) libdballef.dox
+
 # Build doxygen + sphinx documentation
-build-docs: $(cppdeps) $(fortrandeps) $(sphinx_sources) $(mainpages) ../dballe/libdballe.la ../fortran/libdballef.la ../python/_dballe.la
+build-docs: $(cppdeps) $(sphinx_sources) $(mainpages) ../dballe/libdballe.la ../python/_dballe.la libdballef.doxytags
 	rm -rf html
 	mkdir html
 	$(DOXYGEN) libdballe.dox
-	$(DOXYGEN) libdballef.dox
 	$(top_srcdir)/run-local $(SPHINX_BUILD) -b html src html/
 
 libdballe.doxytags: build-docs
-libdballef.doxytags: build-docs
 html/index.html: build-docs
 
 aliases.dox: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
