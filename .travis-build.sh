@@ -8,6 +8,7 @@ then
     pkgcmd="yum"
     builddep="yum-builddep"
     sed -i '/^tsflags=/d' /etc/yum.conf
+    yum update -y
     yum install -y epel-release
     yum install -y @buildsys-build
     yum install -y yum-utils
@@ -19,6 +20,7 @@ then
     pkgcmd="dnf"
     builddep="dnf builddep"
     sed -i '/^tsflags=/d' /etc/dnf/dnf.conf
+    dnf update -y
     dnf install -y --allowerasing @buildsys-build
     dnf install -y 'dnf-command(builddep)'
     dnf install -y git
