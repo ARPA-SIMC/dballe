@@ -4,6 +4,8 @@ Fortran dballe functions
 .. toctree::
     :maxdepth: 2
 
+.. highlight:: fortran
+
 Summary of routines
 -------------------
 
