@@ -10,6 +10,7 @@ import logging
 
 log = logging.getLogger()
 
+
 class Markdown:
     """
     Markdown output writer
@@ -66,12 +67,15 @@ class Markdown:
         for el in node:
             if el.tag == "computeroutput":
                 content.append("`{}`".format(el.text))
-                if el.tail: content.append(el.tail)
+                if el.tail:
+                    content.append(el.tail)
             elif el.tag == "ref":
                 content.append(el.text)
-                if el.tail: content.append(el.tail)
+                if el.tail:
+                    content.append(el.tail)
             elif el.tag == "anchor":
-                if el.tail: content.append(el.tail)
+                if el.tail:
+                    content.append(el.tail)
             elif el.tag == "itemizedlist":
                 # Flush the current content
                 flush_content()
@@ -80,7 +84,8 @@ class Markdown:
                 self.node_list(el, **wrap_kw)
                 self.print()
 
-                if el.tail: content.append(el.tail)
+                if el.tail:
+                    content.append(el.tail)
             elif el.tag == "programlisting":
                 # Flush the current content
                 flush_content()
@@ -89,7 +94,8 @@ class Markdown:
                 self.node_programlisting(el, **wrap_kw)
                 self.print()
 
-                if el.tail: content.append(el.tail)
+                if el.tail:
+                    content.append(el.tail)
             elif el.tag in ("parameterlist", "simplesect"):
                 continue
             else:
@@ -149,10 +155,13 @@ class Markdown:
 def collect_text(node):
     return "".join(x for x in node.itertext() if x and not x.isspace()).strip()
 
+
 def collect_desc(node):
     for para in node.iterfind("para"):
-        if para.find("parameterlist"): continue
+        if para.find("parameterlist"):
+            continue
         yield collect_text(para)
+
 
 class Argument:
     """
@@ -186,7 +195,6 @@ class Function:
             if paramlist_node.attrib["kind"] in ("param", "retval"):
                 for n in paramlist_node.findall("parameteritem"):
                     self.args.append(Argument(n))
-
 
         self.retval_desc = node.find(".//simplesect[@kind='return']")
 
@@ -228,13 +236,15 @@ class Section:
             self.summary = None
         log.debug("Found section %s", self.summary)
         self.desc_node = tree.find("description")
-        #if self.desc_node is None:
-            #log.warn("Section \"%s\" has no description", self.summary)
+        # if self.desc_node is None:
+        #     log.warn("Section \"%s\" has no description", self.summary)
 
         for node in tree.iter("memberdef"):
-            if node.attrib["kind"] != "function": continue
+            if node.attrib["kind"] != "function":
+                continue
             f = Function(node)
-            if not f.name.startswith("idba_"): continue
+            if not f.name.startswith("idba_"):
+                continue
             self.functions.append(f)
 
     def print_links(self, md):
@@ -259,7 +269,8 @@ class Section:
 <tbody>""")
 
         for f in self.functions:
-            md.raw("<tr><td><code><a href='#{f.name}'>{f.name}({f.arg_string})</a></code></td><td>{f.summary}</td></tr>".format(f=f))
+            md.raw("<tr><td><code><a href='#{f.name}'>{f.name}({f.arg_string})</a></code></td><td>{f.summary}</td></tr>"
+                   .format(f=f))
 
         md.raw("""</tbody>
 </table>
@@ -284,9 +295,11 @@ class API:
             etree = ET.fromstring(fd.read())
 
         for node in etree.iter("sectiondef"):
-            if node.attrib["kind"] not in ("define", "user-defined", "func"): continue
+            if node.attrib["kind"] not in ("define", "user-defined", "func"):
+                continue
             sec = Section(node)
-            if not sec.functions or not sec.summary: continue
+            if not sec.functions or not sec.summary:
+                continue
             self.sections.append(sec)
 
     def print_links(self, md):
@@ -334,7 +347,6 @@ def main():
         api.print_links(md)
     else:
         api.print_reference(md)
-
 
 
 if __name__ == "__main__":
