@@ -15,6 +15,7 @@ volnd that allows to automatically export matrices of data out of the database.
    ltypes
    tranges
    aliases
+   env
 
    python/dballe
    python/dballe.volnd

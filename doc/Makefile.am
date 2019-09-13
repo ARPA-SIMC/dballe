@@ -37,6 +37,7 @@ sphinx_packaged_sources =  \
     src/conf.py \
     src/index.rst \
     src/parms.rst \
+    src/env.rst \
     src/cpp/dballe.rst \
     src/cpp/messages.rst \
     src/cpp/cursors.rst \
