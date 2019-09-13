@@ -36,11 +36,7 @@ class Datetime;
 
 namespace sql {
 
-/** @enum ServerType
- * Supported SQL servers.
- *
- * @cond WORKAROUND
- */
+/// Supported SQL servers.
 enum class ServerType
 {
     MYSQL,
@@ -48,11 +44,8 @@ enum class ServerType
     ORACLE,
     POSTGRES,
 };
-/// @endcond
 
-/**
- * Return a string description for a ServerType value
- */
+/// Return a string description for a ServerType value
 const char* format_server_type(ServerType type);
 
 

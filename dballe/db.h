@@ -226,9 +226,6 @@ public:
      *
      * This is faster than remove() with an empty record, and unlike reset() it
      * preserves existing report information.
-     *
-     * @param transaction
-     *   The current active transaction.
      */
     virtual void remove_all() = 0;
 
@@ -392,7 +389,7 @@ public:
     /**
      * Remove data from the database
      *
-     * @param rec
+     * @param query
      *   The query selecting the data to remove
      */
     void remove_data(const Query& query);
@@ -438,13 +435,8 @@ public:
      *
      * @param vals
      *   The values to insert.
-     * @param can_replace
-     *   If true, then existing data can be rewritten, else data can only be added.
-     * @param station_can_add
-     *   If false, it will not create a missing station record, and only data
-     *   for existing stations can be added. If true, then if we are inserting
-     *   data for a station that does not yet exists in the database, it will
-     *   be created.
+     * @param opts
+     *   Options controlling the insert operation
      */
     void insert_data(Data& vals, const DBInsertOptions& opts=DBInsertOptions::defaults);
 };

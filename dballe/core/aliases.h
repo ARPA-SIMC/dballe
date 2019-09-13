@@ -18,7 +18,7 @@ namespace dballe {
  *   The alias to resolve
  * @return
  *   The varcode corresponding to the alias, or 0 if no variable has the given
- *   alias.  See @ref vartable.h
+ *   alias.
  */
 wreport::Varcode varcode_alias_resolve(const char* alias);
 
@@ -31,7 +31,7 @@ wreport::Varcode varcode_alias_resolve(const char* alias);
  *   The length of the string
  * @return
  *   The varcode corresponding to the aliase, or 0 if no variable has the given
- *   alias.  See @ref vartable.h
+ *   alias.
  */
 wreport::Varcode varcode_alias_resolve_substring(const char* alias, int len);
 
@@ -42,7 +42,7 @@ wreport::Varcode varcode_alias_resolve_substring(const char* alias, int len);
  *   The alias to resolve
  * @return
  *   The varcode corresponding to the alias, or 0 if no variable has the given
- *   alias.  See @ref vartable.h
+ *   alias.
  */
 wreport::Varcode varcode_alias_resolve(const std::string& alias);
 

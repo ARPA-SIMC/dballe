@@ -13,19 +13,19 @@ enum class Encoding {
 
 /// Type of the data in a message
 enum class MessageType {
-    GENERIC   =  1,  /**< Data from unspecified source */
-    SYNOP     =  2,  /**< Synop measured data */
-    PILOT     =  3,  /**< Pilot sounding data */
-    TEMP      =  4,  /**< Temp sounding data */
-    TEMP_SHIP =  5,  /**< Temp ship sounding data */
-    AIREP     =  6,  /**< Airep airplane data */
-    AMDAR     =  7,  /**< Amdar airplane data */
-    ACARS     =  8,  /**< Acars airplane data */
-    SHIP      =  9,  /**< Ship measured data */
-    BUOY      = 10,  /**< Buoy measured data */
-    METAR     = 11,  /**< Metar data */
-    SAT       = 12,  /**< Satellite data */
-    POLLUTION = 13,  /**< Pollution data */
+    GENERIC   =  1,  ///< Data from unspecified source
+    SYNOP     =  2,  ///< Synop measured data
+    PILOT     =  3,  ///< Pilot sounding data
+    TEMP      =  4,  ///< Temp sounding data
+    TEMP_SHIP =  5,  ///< Temp ship sounding data
+    AIREP     =  6,  ///< Airep airplane data
+    AMDAR     =  7,  ///< Amdar airplane data
+    ACARS     =  8,  ///< Acars airplane data
+    SHIP      =  9,  ///< Ship measured data
+    BUOY      = 10,  ///< Buoy measured data
+    METAR     = 11,  ///< Metar data
+    SAT       = 12,  ///< Satellite data
+    POLLUTION = 13,  ///< Pollution data
 };
 
 /**

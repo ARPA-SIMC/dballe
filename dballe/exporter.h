@@ -81,9 +81,9 @@ public:
     /**
      * Encode a message
      *
-     * @param msgs
+     * @param messages
      *   Message to encode
-     * @retval rmsg
+     * @returns
      *   The resulting encoded data
      */
     virtual std::string to_binary(const std::vector<std::shared_ptr<Message>>& messages) const = 0;
