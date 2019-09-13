@@ -1,0 +1,62 @@
+.. _aliases:
+
+Varcode aliases
+===============
+
+This table lists the aliases that can be used to refer to varcodes.
+
+.. list-table::
+   :widths: auto
+   :header-rows: 1
+
+   * - Alias
+     - Vartable
+
+   * - block
+     - :ref:`B01001 <B01001>`
+   * - conf
+     - :ref:`B33007 <B33007>`
+   * - data_id
+     - :ref:`B33195 <B33195>`
+   * - height
+     - :ref:`B07030 <B07030>`
+   * - heightbaro
+     - :ref:`B07031 <B07031>`
+   * - mslp
+     - :ref:`B10051 <B10051>`
+   * - mwd
+     - :ref:`B22001 <B22001>`
+   * - mwp
+     - :ref:`B22074 <B22074>`
+   * - name
+     - :ref:`B01019 <B01019>`
+   * - no
+     - :ref:`B15192 <B15192>`
+   * - no2
+     - :ref:`B15193 <B15193>`
+   * - o3
+     - :ref:`B15194 <B15194>`
+   * - p
+     - :ref:`B10004 <B10004>`
+   * - pm10
+     - :ref:`B15195 <B15195>`
+   * - pp1d
+     - :ref:`B22071 <B22071>`
+   * - q
+     - :ref:`B13001 <B13001>`
+   * - rh
+     - :ref:`B13003 <B13003>`
+   * - station
+     - :ref:`B01002 <B01002>`
+   * - swh
+     - :ref:`B22070 <B22070>`
+   * - t
+     - :ref:`B12101 <B12101>`
+   * - td
+     - :ref:`B12103 <B12103>`
+   * - tp
+     - :ref:`B13011 <B13011>`
+   * - u
+     - :ref:`B11003 <B11003>`
+   * - v
+     - :ref:`B11004 <B11004>`

@@ -162,7 +162,7 @@ create a transaction, perform the operation and commit it.</p>
 <p><dl class="docutils">
 <dt><strong>Parameters</strong></dt>
 <dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal notranslate"><span class="pre">rec</span></code>: The query selecting the data to remove </li>
+<li><code class="docutils literal notranslate"><span class="pre">query</span></code>: The query selecting the data to remove </li>
 </ul>
 </dd>
 </dl>
@@ -224,8 +224,7 @@ create a transaction, perform the operation and commit it.</p>
 <dt><strong>Parameters</strong></dt>
 <dd><ul class="breatheparameterlist first last simple">
 <li><code class="docutils literal notranslate"><span class="pre">vals</span></code>: The values to insert. </li>
-<li><code class="docutils literal notranslate"><span class="pre">can_replace</span></code>: If true, then existing data can be rewritten, else data can only be added. </li>
-<li><code class="docutils literal notranslate"><span class="pre">station_can_add</span></code>: If false, it will not create a missing station record, and only data for existing stations can be added. If true, then if we are inserting data for a station that does not yet exists in the database, it will be created. </li>
+<li><code class="docutils literal notranslate"><span class="pre">opts</span></code>: Options controlling the insert operation </li>
 </ul>
 </dd>
 </dl>
@@ -355,15 +354,7 @@ create a transaction, perform the operation and commit it.</p>
 <dt id="_CPPv4N6dballe11Transaction10remove_allEv">
 <span id="_CPPv3N6dballe11Transaction10remove_allEv"></span><span id="_CPPv2N6dballe11Transaction10remove_allEv"></span><span id="dballe::Transaction::remove_all"></span><span class="target" id="classdballe_1_1Transaction_1ae9605daaf2582ad7f8806c95ec0c6182"></span><em class="property">virtual</em> void <code class="descname">remove_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N6dballe11Transaction10remove_allEv" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Remove all data from the database. </p>
-<p>This is faster than remove() with an empty record, and unlike reset() it preserves existing report information.</p>
-<p><dl class="docutils">
-<dt><strong>Parameters</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal notranslate"><span class="pre">transaction</span></code>: The current active transaction. </li>
-</ul>
-</dd>
-</dl>
-</p>
+<p>This is faster than remove() with an empty record, and unlike reset() it preserves existing report information. </p>
 </dd></dl>
 
 <dl class="function">
@@ -756,6 +747,13 @@ create a transaction, perform the operation and commit it.</p>
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../parms.html">Input/output/query parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../btable.html">Local B table codes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ltypes.html">Level type values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tranges.html">Time range values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../aliases.html">Varcode aliases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../env.html">DB-All.e environment variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../connect.html">Connecting to DB-All.e</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../python/dballe.html">Python dballe package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../python/dballe.volnd.html">Python dballe.volnd package</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="dballe.html">C++ dballe namespace</a><ul class="current">

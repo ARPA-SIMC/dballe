@@ -1,0 +1,192 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Connecting to DB-All.e &#8212; dballe 3.23 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Python dballe package" href="python/dballe.html" />
+    <link rel="prev" title="DB-All.e environment variables" href="env.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="connecting-to-db-all-e">
+<span id="connect"></span><h1>Connecting to DB-All.e<a class="headerlink" href="#connecting-to-db-all-e" title="Permalink to this headline">¶</a></h1>
+<p>DB-All.e can work with several storage backends, identified via a URL.</p>
+<p>This is how to connect via URL using various ways of working with DB-All.e.
+<code class="docutils literal notranslate"><span class="pre">dbtype://info</span></code> is a placeholder for the connetion URL, that is documented
+below.</p>
+<p>Specifying the URL directly:</p>
+<p>Fortran:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_connect</span><span class="p">(</span><span class="n">dbhandle</span><span class="p">,</span> <span class="s2">&quot;dbtype://info&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>dbadb:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>dbadb --dsn<span class="o">=</span><span class="s2">&quot;dbtype://info&quot;</span> import …
+</pre></div>
+</div>
+<p>provami:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>provami <span class="s2">&quot;dbtype://info&quot;</span>
+</pre></div>
+</div>
+<p>python:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">db</span> <span class="o">=</span> <span class="n">dballe</span><span class="o">.</span><span class="n">DB</span><span class="o">.</span><span class="n">connect_from_url</span><span class="p">(</span><span class="s2">&quot;dbtype://info&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Specifying the URL via an environment variable:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Export the environment variable</span>
+<span class="nb">export</span> <span class="nv">DBA_DB</span><span class="o">=</span><span class="s2">&quot;dbtype://info&quot;</span>
+</pre></div>
+</div>
+<p>Fortran:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_connect</span><span class="p">(</span><span class="n">dbhandle</span><span class="p">,</span> <span class="n">DBA_MVC</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>dbadb:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>dbadb import …
+</pre></div>
+</div>
+<p>provami:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>provami
+</pre></div>
+</div>
+<p>python:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">db</span> <span class="o">=</span> <span class="n">dballe</span><span class="o">.</span><span class="n">DB</span><span class="o">.</span><span class="n">connect_from_url</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;DBA_DB&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="section" id="url-syntax">
+<h2>URL syntax<a class="headerlink" href="#url-syntax" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="for-sqlite">
+<h3>For SQLite<a class="headerlink" href="#for-sqlite" title="Permalink to this headline">¶</a></h3>
+<p>SQLite URLs need only specify the <code class="docutils literal notranslate"><span class="pre">.sqlite</span></code> file name.</p>
+<p>They can be either in the form <code class="docutils literal notranslate"><span class="pre">sqlite:file.sqlite</span></code> or <code class="docutils literal notranslate"><span class="pre">sqlite://file.sqlite</span></code>.</p>
+<p>If the environment variable <code class="docutils literal notranslate"><span class="pre">DBA_INSECURE_SQLITE</span></code> is set, then SQLite access
+will be faster but data consistency will not be guaranteed.</p>
+</div>
+<div class="section" id="for-postgresql">
+<h3>For PostgreSQL<a class="headerlink" href="#for-postgresql" title="Permalink to this headline">¶</a></h3>
+<p>DB-All.e uses standard PostgreSQL connection URIs. For example: <code class="docutils literal notranslate"><span class="pre">postgresql://user&#64;host/db</span></code></p>
+<p>See <a class="reference external" href="http://www.postgresql.org/docs/9.4/static/libpq-connect.html#LIBPQ-CONNSTRING">the PostgreSQL documentation</a> for the complete documentation.</p>
+</div>
+<div class="section" id="for-mysql">
+<h3>For MySQL<a class="headerlink" href="#for-mysql" title="Permalink to this headline">¶</a></h3>
+<p>DB-All.e uses a MySQL connection URL with a syntax similar to <a class="reference external" href="http://dev.mysql.com/doc/connector-j/en/connector-j-reference-configuration-properties.html">the one used by
+the JDBC connector</a>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mysql://[host][:port]/[database][?propertyName1][=propertyValue1][&amp;propertyName2][=propertyValue2]...
+</pre></div>
+</div>
+<p>The only property names currently used by DB-All.e are <code class="docutils literal notranslate"><span class="pre">user</span></code> and <code class="docutils literal notranslate"><span class="pre">password</span></code>;
+the rest are ignored.</p>
+<p>For example: <code class="docutils literal notranslate"><span class="pre">mysql://host/db?user=username&amp;password=secret</span></code></p>
+</div>
+</div>
+<div class="section" id="url-actions">
+<h2>URL actions<a class="headerlink" href="#url-actions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="wipe-yes-true-1">
+<h3><code class="docutils literal notranslate"><span class="pre">?wipe=yes/true/1</span></code><a class="headerlink" href="#wipe-yes-true-1" title="Permalink to this headline">¶</a></h3>
+<p>You can add a <code class="docutils literal notranslate"><span class="pre">wipe</span></code> query string argument to the connection URL to have
+DB-All.e create or recreate the database on connection.</p>
+<p>You can also use <code class="docutils literal notranslate"><span class="pre">?wipe</span></code> without argument. Note that <code class="docutils literal notranslate"><span class="pre">?wipe=</span></code> with an
+empty argument also triggers a wipe.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">dballe</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="parms.html">Input/output/query parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="btable.html">Local B table codes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ltypes.html">Level type values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tranges.html">Time range values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aliases.html">Varcode aliases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="env.html">DB-All.e environment variables</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Connecting to DB-All.e</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#url-syntax">URL syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#url-actions">URL actions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="python/dballe.html">Python dballe package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python/dballe.volnd.html">Python dballe.volnd package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp/dballe.html">C++ dballe namespace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fortran/dballe.html">Fortran dballe functions</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="env.html" title="previous chapter">DB-All.e environment variables</a></li>
+      <li>Next: <a href="python/dballe.html" title="next chapter">Python dballe package</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Enrico Zini.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="_sources/connect.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

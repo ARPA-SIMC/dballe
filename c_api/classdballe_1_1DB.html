@@ -217,8 +217,7 @@ static std::shared_ptr&lt; <a class="el" href="classdballe_1_1DB.html">DB</a> &g
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">vals</td><td>The values to insert. </td></tr>
-    <tr><td class="paramname">can_replace</td><td>If true, then existing data can be rewritten, else data can only be added. </td></tr>
-    <tr><td class="paramname">station_can_add</td><td>If false, it will not create a missing station record, and only data for existing stations can be added. If true, then if we are inserting data for a station that does not yet exists in the database, it will be created. </td></tr>
+    <tr><td class="paramname">opts</td><td>Options controlling the insert operation </td></tr>
   </table>
   </dd>
 </dl>
@@ -480,7 +479,7 @@ static std::shared_ptr&lt; <a class="el" href="classdballe_1_1DB.html">DB</a> &g
 <p>Remove data from the database. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">rec</td><td>The query selecting the data to remove </td></tr>
+    <tr><td class="paramname">query</td><td>The query selecting the data to remove </td></tr>
   </table>
   </dd>
 </dl>

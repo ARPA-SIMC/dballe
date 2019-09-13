@@ -87,10 +87,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:aabf6ece053435b770e273b0fc5a7d00e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Encode a message.  <a href="#aabf6ece053435b770e273b0fc5a7d00e">More...</a><br /></td></tr>
 <tr class="separator:aabf6ece053435b770e273b0fc5a7d00e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0c3a505e8c0ad50eb3b89d54961c9500"><td class="memItemLeft" align="right" valign="top"><a id="a0c3a505e8c0ad50eb3b89d54961c9500"></a>
-virtual std::unique_ptr&lt; <a class="elRef" doxygen="/tmp/tmpro2z5m6j/build/doc/libwreport.doxytags:/usr/share/doc/libwreport-doc/apidocs/" href="/usr/share/doc/libwreport-doc/apidocs/structwreport_1_1Bulletin.html">wreport::Bulletin</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1Exporter.html#a0c3a505e8c0ad50eb3b89d54961c9500">to_bulletin</a> (const std::vector&lt; std::shared_ptr&lt; <a class="el" href="classdballe_1_1Message.html">Message</a> &gt;&gt; &amp;msgs) const =0</td></tr>
+virtual std::unique_ptr&lt; <a class="elRef" doxygen="/tmp/tmp2bkz_syj/build/doc/libwreport.doxytags:/usr/share/doc/libwreport-doc/apidocs/" href="/usr/share/doc/libwreport-doc/apidocs/structwreport_1_1Bulletin.html">wreport::Bulletin</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1Exporter.html#a0c3a505e8c0ad50eb3b89d54961c9500">to_bulletin</a> (const std::vector&lt; std::shared_ptr&lt; <a class="el" href="classdballe_1_1Message.html">Message</a> &gt;&gt; &amp;msgs) const =0</td></tr>
 <tr class="memdesc:a0c3a505e8c0ad50eb3b89d54961c9500"><td class="mdescLeft">&#160;</td><td class="mdescRight">Export to a Bulletin. <br /></td></tr>
 <tr class="separator:a0c3a505e8c0ad50eb3b89d54961c9500"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0454d30f7a80c8538a0bb4546dc73f89"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="elRef" doxygen="/tmp/tmpro2z5m6j/build/doc/libwreport.doxytags:/usr/share/doc/libwreport-doc/apidocs/" href="/usr/share/doc/libwreport-doc/apidocs/structwreport_1_1Bulletin.html">wreport::Bulletin</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1Exporter.html#a0454d30f7a80c8538a0bb4546dc73f89">make_bulletin</a> () const</td></tr>
+<tr class="memitem:a0454d30f7a80c8538a0bb4546dc73f89"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="elRef" doxygen="/tmp/tmp2bkz_syj/build/doc/libwreport.doxytags:/usr/share/doc/libwreport-doc/apidocs/" href="/usr/share/doc/libwreport-doc/apidocs/structwreport_1_1Bulletin.html">wreport::Bulletin</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1Exporter.html#a0454d30f7a80c8538a0bb4546dc73f89">make_bulletin</a> () const</td></tr>
 <tr class="memdesc:a0454d30f7a80c8538a0bb4546dc73f89"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a bulletin that works with this exporter.  <a href="#a0454d30f7a80c8538a0bb4546dc73f89">More...</a><br /></td></tr>
 <tr class="separator:a0454d30f7a80c8538a0bb4546dc73f89"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -126,7 +126,7 @@ Protected Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual std::unique_ptr&lt;<a class="elRef" doxygen="/tmp/tmpro2z5m6j/build/doc/libwreport.doxytags:/usr/share/doc/libwreport-doc/apidocs/" href="/usr/share/doc/libwreport-doc/apidocs/structwreport_1_1Bulletin.html">wreport::Bulletin</a>&gt; dballe::Exporter::make_bulletin </td>
+          <td class="memname">virtual std::unique_ptr&lt;<a class="elRef" doxygen="/tmp/tmp2bkz_syj/build/doc/libwreport.doxytags:/usr/share/doc/libwreport-doc/apidocs/" href="/usr/share/doc/libwreport-doc/apidocs/structwreport_1_1Bulletin.html">wreport::Bulletin</a>&gt; dballe::Exporter::make_bulletin </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -173,16 +173,11 @@ Protected Attributes</h2></td></tr>
 <p>Encode a message. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">msgs</td><td><a class="el" href="classdballe_1_1Message.html" title="A bulletin that has been decoded and physically interpreted. ">Message</a> to encode </td></tr>
+    <tr><td class="paramname">messages</td><td><a class="el" href="classdballe_1_1Message.html" title="A bulletin that has been decoded and physically interpreted. ">Message</a> to encode </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="retval"><dt>Return values</dt><dd>
-  <table class="retval">
-    <tr><td class="paramname">rmsg</td><td>The resulting encoded data </td></tr>
-  </table>
-  </dd>
-</dl>
+<dl class="section return"><dt>Returns</dt><dd>The resulting encoded data </dd></dl>
 
 </div>
 </div>

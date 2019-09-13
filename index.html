@@ -16,7 +16,7 @@
     <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Python dballe package" href="python/dballe.html" />
+    <link rel="next" title="Input/output/query parameters" href="parms.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -38,6 +38,38 @@ volnd that allows to automatically export matrices of data out of the database.<
 <div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="parms.html">Input/output/query parameters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="parms.html#parameters-used-when-setting-up-a-query">Parameters used when setting up a query</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parms.html#parameters-used-when-inserting-values">Parameters used when inserting values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parms.html#parameters-used-when-reading-station-query-results">Parameters used when reading station query results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parms.html#parameters-used-when-reading-query-results-for-station-values">Parameters used when reading query results for station values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parms.html#parameters-used-when-reading-query-results-for-data-values">Parameters used when reading query results for data values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parms.html#parameters-used-when-reading-query-results-for-summary-values">Parameters used when reading query results for summary values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parms.html#input-parameters-for-attribute-related-action-routines">Input parameters for attribute-related action routines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="btable.html">Local B table codes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ltypes.html">Level type values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tranges.html">Time range values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aliases.html">Varcode aliases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="env.html">DB-All.e environment variables</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="env.html#dba-db"><code class="docutils literal notranslate"><span class="pre">DBA_DB</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="env.html#tmpdir"><code class="docutils literal notranslate"><span class="pre">TMPDIR</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="env.html#dba-repinfo"><code class="docutils literal notranslate"><span class="pre">DBA_REPINFO</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="env.html#wreport-tables"><code class="docutils literal notranslate"><span class="pre">WREPORT_TABLES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="env.html#dba-db-format"><code class="docutils literal notranslate"><span class="pre">DBA_DB_FORMAT</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="env.html#dba-explain"><code class="docutils literal notranslate"><span class="pre">DBA_EXPLAIN</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="env.html#dba-profile"><code class="docutils literal notranslate"><span class="pre">DBA_PROFILE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="env.html#dba-insecure-sqlite"><code class="docutils literal notranslate"><span class="pre">DBA_INSECURE_SQLITE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="env.html#dba-fortran-trace"><code class="docutils literal notranslate"><span class="pre">DBA_FORTRAN_TRACE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="env.html#dba-fortran-transaction"><code class="docutils literal notranslate"><span class="pre">DBA_FORTRAN_TRANSACTION</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="connect.html">Connecting to DB-All.e</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="connect.html#url-syntax">URL syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connect.html#url-actions">URL actions</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="python/dballe.html">Python dballe package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="python/dballe_types.html">dballe types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="python/dballe_messages.html">dballe messages I/O</a></li>
@@ -55,13 +87,17 @@ volnd that allows to automatically export matrices of data out of the database.<
 <li class="toctree-l2"><a class="reference internal" href="cpp/db.html">Database</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="fortran/dballe.html">Fortran dballe functions</a><ul class="simple">
+<li class="toctree-l1"><a class="reference internal" href="fortran/dballe.html">Fortran dballe functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="fortran/concepts.html">Fortran API concepts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fortran/walkthrough.html">A walk through the Fortran API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fortran/transactions.html">Transactional behaviour</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fortran/reference.html">Fortran dballe functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fortran/faq.html">FAQ and Troubleshooting</a></li>
 </ul>
 </li>
 </ul>
 </div>
 <p>The C++ API documentation is also available as <a class="reference external" href="c_api/index.html">doxgen documentation</a>.</p>
-<p>The Fortran API documentation is also available as <a class="reference external" href="fortran_api/index.html">doxgen documentation</a>.</p>
 <hr class="docutils" />
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
@@ -88,6 +124,13 @@ volnd that allows to automatically export matrices of data out of the database.<
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="parms.html">Input/output/query parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="btable.html">Local B table codes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ltypes.html">Level type values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tranges.html">Time range values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aliases.html">Varcode aliases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="env.html">DB-All.e environment variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connect.html">Connecting to DB-All.e</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python/dballe.html">Python dballe package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python/dballe.volnd.html">Python dballe.volnd package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cpp/dballe.html">C++ dballe namespace</a></li>
@@ -98,7 +141,7 @@ volnd that allows to automatically export matrices of data out of the database.<
 <h3>Related Topics</h3>
 <ul>
   <li><a href="#">Documentation overview</a><ul>
-      <li>Next: <a href="python/dballe.html" title="next chapter">Python dballe package</a></li>
+      <li>Next: <a href="parms.html" title="next chapter">Input/output/query parameters</a></li>
   </ul></li>
 </ul>
 </div>

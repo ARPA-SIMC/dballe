@@ -1,0 +1,191 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Time range values &#8212; dballe 3.23 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Varcode aliases" href="aliases.html" />
+    <link rel="prev" title="Level type values" href="ltypes.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="time-range-values">
+<span id="tranges"></span><h1>Time range values<a class="headerlink" href="#time-range-values" title="Permalink to this headline">¶</a></h1>
+<p>Definition of the main concepts related to the description of time
+range and statistical processing for observed and forecast data:</p>
+<ul class="simple">
+<li>Validity time is defined as the time at which the data are measured or at which forecast is valid; for statistically processed data, the validity time is the end of the time interval.</li>
+<li>Reference time is defined as the nominal time of an observation for observed values, or as the time at which a model forecast starts for forecast values.</li>
+<li>The date and time in DB-All.e are always the validity date and time of a value, regardless of the value being an observation or a forecast.</li>
+<li>P1 is defined as the difference in seconds between validity time and reference time. For forecasts it is the positive forecast time. For observed values, the reference time is usually the same as the validity time, therefore P1 is zero. However P1 &lt; 0 is a valid case for reports containing data in the past with respect to the nominal report time.</li>
+<li>P2 is defined as the duration of the period over which statistical processing is performed, and is always nonnegative. Note that, for instantaneous values, P2 is always zero.</li>
+</ul>
+<p>The following table lists the possible values for pindicator and the
+interpretation of the corresponding values of P1 and P2 specifying a
+time range:</p>
+<table border="1" class="colwidths-auto docutils">
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Value</th>
+<th class="head">Meaning</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0</td>
+<td>Average</td>
+</tr>
+<tr class="row-odd"><td>1</td>
+<td>Accumulation</td>
+</tr>
+<tr class="row-even"><td>2</td>
+<td>Maximum</td>
+</tr>
+<tr class="row-odd"><td>3</td>
+<td>Minimum</td>
+</tr>
+<tr class="row-even"><td>4</td>
+<td>Difference (value at the end of the time range minus value at the beginning)</td>
+</tr>
+<tr class="row-odd"><td>5</td>
+<td>Root Mean Square</td>
+</tr>
+<tr class="row-even"><td>6</td>
+<td>Standard Deviation</td>
+</tr>
+<tr class="row-odd"><td>7</td>
+<td>Covariance (temporal variance)</td>
+</tr>
+<tr class="row-even"><td>8</td>
+<td>Difference (value at the beginning of the time range minus value at the end)</td>
+</tr>
+<tr class="row-odd"><td>9</td>
+<td>Ratio</td>
+</tr>
+<tr class="row-even"><td>51</td>
+<td>Climatological Mean Value</td>
+</tr>
+<tr class="row-odd"><td>10-191</td>
+<td>Reserved</td>
+</tr>
+<tr class="row-even"><td>192-254</td>
+<td>Reserved for Local Use</td>
+</tr>
+<tr class="row-odd"><td>200</td>
+<td>Vectorial mean</td>
+</tr>
+<tr class="row-even"><td>201</td>
+<td>Mode</td>
+</tr>
+<tr class="row-odd"><td>202</td>
+<td>Standard deviation vectorial mean</td>
+</tr>
+<tr class="row-even"><td>203</td>
+<td>Vectorial maximum</td>
+</tr>
+<tr class="row-odd"><td>204</td>
+<td>Vectorial minimum</td>
+</tr>
+<tr class="row-even"><td>205</td>
+<td>Product with a valid time ranging inside the given period</td>
+</tr>
+<tr class="row-odd"><td>254</td>
+<td>Istantaneous value</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">dballe</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="parms.html">Input/output/query parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="btable.html">Local B table codes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ltypes.html">Level type values</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Time range values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aliases.html">Varcode aliases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="env.html">DB-All.e environment variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connect.html">Connecting to DB-All.e</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python/dballe.html">Python dballe package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python/dballe.volnd.html">Python dballe.volnd package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp/dballe.html">C++ dballe namespace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fortran/dballe.html">Fortran dballe functions</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="ltypes.html" title="previous chapter">Level type values</a></li>
+      <li>Next: <a href="aliases.html" title="next chapter">Varcode aliases</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Enrico Zini.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="_sources/tranges.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
