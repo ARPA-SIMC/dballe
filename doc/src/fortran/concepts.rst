@@ -98,7 +98,7 @@ numerical value (``l1``).
 A layer is defined univocally by its two bounding levels (``leveltype1``,
 ``l1``, ``leveltype2``, ``l2``). 
 
-See [the levels table](fapi_levels.md) for a description of the level types and
+See :ref:`levels` for a description of the level types and
 associated level values.
 
 Time range
@@ -109,8 +109,7 @@ datum refers: it can be, for example, a value measured in a specific instant,
 or a cumulated or averaged value over an interval of time.
 
 The time range is defined by a table code (``pindicator``) and two
-numerical values (``p1`` and ``p2``). For their meaning, see [the Time ranges
-table](fapi_tranges.md).
+numerical values (``p1`` and ``p2``). For their meaning, see :ref:`tranges`.
 
 .. _varcode:
 
@@ -119,7 +118,7 @@ Variable code (varcode)
 
 A code from a local variation of BUFR/CREX Table B that describes the nature of
 the variable, such as what it measures and the units used for measuring. It is
-identified by a [*local B table descriptor*](fapi_btable.md).
+identified by a *local B table descriptor* (see :ref:`btable`).
 
 Value
 -----
@@ -139,8 +138,6 @@ Every datum is univocally defined by a system of coordinates with 7 dimensions:
 5. The vertical coordinates in space, as a description of the *level*.
 6. The *time range* of the measurement.
 
-See section [Querying](#sec_querying) for examples on how to work with values.
-
 Attributes
 ----------
 
@@ -157,8 +154,6 @@ table descriptor of the attribute.  As a consequence, you can only have one
 attribute per value with a specific B table descriptor.  This means that, for
 example, a variable can have at most one confidence interval attribute.
 
-See section [Attributes](#sec_attrs) for examples on how to handle attributes.
-
 .. _routines:
 
 Input, output, actions
@@ -170,8 +165,7 @@ Example of action routines are [idba_query_data][] to query data from a
 database and [idba_insert_data][] to write data into the database.
 
 The input and the output of action routines are collections of parameters which
-have a name and a value.  A list of parameters can be found [in the
-appendix](#parmtable).
+have a name and a value.  A list of parameters can be found in :ref:`parms`.
 
 You can set the input parameters using the `idba_set*` functions:
 

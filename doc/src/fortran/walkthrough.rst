@@ -330,10 +330,10 @@ There are three different kinds of parameter names one can use:
   DB-All.e: for example they can be part of the coordinate system, or
   space/time extremes to use to query the database.  They are indicated simply
   with their name (for example, `"lat"` or `"yearmin"`).
-* [WMO table B variables](fapi_btable.md), represent all possible sorts of
+* :ref:`btable`, represent all possible sorts of
   observed data, and are indicated in the form `Bxxyyy`, where `xxyyy` are the
   X and Y values from the WMO table B.
-* [Variable aliases](fapi_aliases.md) that are short, easy to remember names which
+* :ref:`aliases` that are short, easy to remember names which
   can be used instead of frequently used WMO B variables.
 
 

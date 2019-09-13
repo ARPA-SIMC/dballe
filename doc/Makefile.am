@@ -38,6 +38,7 @@ sphinx_packaged_sources =  \
     src/index.rst \
     src/parms.rst \
     src/env.rst \
+    src/connect.rst \
     src/cpp/dballe.rst \
     src/cpp/messages.rst \
     src/cpp/cursors.rst \
@@ -45,7 +46,6 @@ sphinx_packaged_sources =  \
     src/fortran/dballe.rst \
     src/fortran/walkthrough.rst \
     src/fortran/concepts.rst \
-    src/fortran/connect.rst \
     src/fortran/transactions.rst \
     src/fortran/reference.rst \
     src/fortran/faq.rst \

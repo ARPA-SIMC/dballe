@@ -207,7 +207,7 @@ where possible.
             table.print_row((type, desc, li))
 
     def print_rst(self):
-        print(""".. _ltypes:
+        print(""".. _levels:
 
 Level type values
 =================
@@ -427,8 +427,8 @@ digits and description.
     def print_rst(self):
         print(""".. _btable:
 
-Local B table
-=============
+Local B table codes
+===================
 
 This table lists all the entries of the local B table.  You can use them to
 provide context information for a measured value.

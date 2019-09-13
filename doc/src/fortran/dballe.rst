@@ -14,7 +14,6 @@ get up to speed, and as a quick reference for everyday use.
 
    concepts
    walkthrough
-   connect
    transactions
    reference
    faq

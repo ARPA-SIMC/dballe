@@ -7,8 +7,7 @@ DB-All.e environment variables
 ``DBA_DB``
 ----------
 
-Default URL to use to connect to a database. See [Connection
-methods](fapi_connect.md) for details.
+Default URL to use to connect to a database. See :ref:`connect` for details.
 
 
 ``TMPDIR``
