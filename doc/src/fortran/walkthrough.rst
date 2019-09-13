@@ -1,6 +1,9 @@
 A walk through the Fortran API
 ==============================
 
+.. toctree::
+   :maxdepth: 2
+
 .. highlight:: fortran
 
 Including the DB-All.e interface file

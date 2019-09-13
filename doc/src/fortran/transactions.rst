@@ -1,6 +1,9 @@
 Transactional behaviour
 =======================
 
+.. toctree::
+   :maxdepth: 2
+
 .. highlight:: fortran
 
 DB-All.e operations are grouped into *transactions*, which succeed or fail as a

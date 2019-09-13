@@ -1,6 +1,9 @@
 FAQ and Troubleshooting
 =======================
 
+.. toctree::
+   :maxdepth: 2
+
 .. highlight:: fortran
 
 How do I access the station values?
