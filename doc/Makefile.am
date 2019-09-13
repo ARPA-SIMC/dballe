@@ -38,6 +38,7 @@ sphinx_sources =  \
     src/index.rst \
     src/parms.rst \
     src/ltypes.rst \
+    src/tranges.rst \
     src/btable.rst \
     src/cpp/dballe.rst \
     src/cpp/messages.rst \
@@ -87,6 +88,9 @@ src/btable.rst: ../tables/dballe.txt mksnippet
 src/ltypes.rst: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
 	$(top_srcdir)/doc/mksnippet levels rst < $< > $@ || rm $@
 
+src/tranges.rst: mksnippet
+	$(top_srcdir)/doc/mksnippet tranges rst > $@ || rm $@
+
 libwreport.doxytags:
 	if test x$(suffix @WREPORT_DOXYGEN_TAGFILE@) = x.gz ; then \
 	        zcat @WREPORT_DOXYGEN_TAGFILE@ > $@ ; \
@@ -101,9 +105,6 @@ CLEANFILES += libdballe.doxytags libwreport.doxytags aliases.dox ltypes.dox tran
 
 fapi_aliases.md: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
 	$(top_srcdir)/doc/mksnippet alias md < $< > $@ || rm $@
-
-fapi_tranges.md: mksnippet
-	$(top_srcdir)/doc/mksnippet tranges md > $@ || rm $@
 
 
 EXTRA_DIST += make_fortran_reference

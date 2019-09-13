@@ -22,9 +22,5 @@ get up to speed, and as a quick reference for everyday use.
 ..
   * [Varcode aliases](fapi_aliases.md), aliases that can be used in input
     routines instead of B table codes.
-  * [Level types](fapi_ltypes.md), description of values that define vertical
-    levels and layers.
-  * [Time ranges](fapi_tranges.md), descriptions of values that define time
-    ranges.
   * [Environment variable](dballe_env.md), environment variables that influence the
     behaviour of DB-All.e.

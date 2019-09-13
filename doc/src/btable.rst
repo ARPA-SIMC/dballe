@@ -10,6 +10,7 @@ Every entry is listed together with its measure unit, length in characters or
 digits and description.
 
 .. list-table::
+   :widths: auto
    :header-rows: 1
 
    * - Code

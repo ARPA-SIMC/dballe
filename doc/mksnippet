@@ -207,6 +207,7 @@ concept and the values for leveltype coincide with the GRIB standard
 where possible.
 
 .. list-table::
+   :widths: auto
    :header-rows: 1
 
    * - Level type
@@ -313,6 +314,36 @@ time range:
         for d in self.descs:
             print('* **{}** {}'.format(d[0], re_newlines.sub(d[1], "\n")))
 
+    def print_rst(self):
+        print(""".. _tranges:
+
+Time range values
+=================
+
+Definition of the main concepts related to the description of time
+range and statistical processing for observed and forecast data:
+""")
+        re_newlines = re.compile(r"\n+")
+        for n in self.notes:
+            print("* {}".format(re_newlines.sub(n, "\n")))
+
+        print("""
+The following table lists the possible values for pindicator and the
+interpretation of the corresponding values of P1 and P2 specifying a
+time range:
+
+.. list-table::
+   :widths: auto
+   :header-rows: 1
+
+   * - Value
+     - Meaning
+""")
+
+        for d in self.descs:
+            print("   * - {}".format(d[0]))
+            print("     - {}".format(re_newlines.sub(d[1], "\n")))
+
 
 class Btable:
     def read(self):
@@ -387,6 +418,7 @@ Every entry is listed together with its measure unit, length in characters or
 digits and description.
 
 .. list-table::
+   :widths: auto
    :header-rows: 1
 
    * - Code
