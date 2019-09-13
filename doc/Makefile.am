@@ -37,6 +37,7 @@ sphinx_sources =  \
     src/conf.py \
     src/index.rst \
     src/parms.rst \
+    src/btable.rst \
     src/cpp/dballe.rst \
     src/cpp/messages.rst \
     src/cpp/cursors.rst \
@@ -79,6 +80,9 @@ ltypes.dox: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
 tranges.dox: mksnippet
 	$(top_srcdir)/doc/mksnippet tranges dox > $@ || rm $@
 
+src/btable.rst: ../tables/dballe.txt mksnippet
+	$(top_srcdir)/doc/mksnippet btable rst < $< > $@ || rm $@
+
 libwreport.doxytags:
 	if test x$(suffix @WREPORT_DOXYGEN_TAGFILE@) = x.gz ; then \
 	        zcat @WREPORT_DOXYGEN_TAGFILE@ > $@ ; \
@@ -99,9 +103,6 @@ fapi_ltypes.md: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
 
 fapi_tranges.md: mksnippet
 	$(top_srcdir)/doc/mksnippet tranges md > $@ || rm $@
-
-fapi_btable.md: ../tables/dballe.txt mksnippet
-	$(top_srcdir)/doc/mksnippet btable md < $< > $@ || rm $@
 
 
 EXTRA_DIST += make_fortran_reference

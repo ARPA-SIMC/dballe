@@ -220,14 +220,17 @@ class Tranges:
             "Reference time is defined as the nominal time of an observation for observed values,"
             " or as the time at which a model forecast starts for forecast values.",
 
-            "The date and time in DB-All.e are always the validity date and time of a value, regardless of the value being an observation or a forecast.",
+            "The date and time in DB-All.e are always the validity date and time of a value,"
+            " regardless of the value being an observation or a forecast.",
 
-            "P1 is defined as the difference in seconds between validity time and reference time. For forecasts it is the positive forecast time."
+            "P1 is defined as the difference in seconds between validity time and reference time."
+            " For forecasts it is the positive forecast time."
             " For observed values, the reference time is usually the same as the validity time, therefore P1 is zero."
-            " However P1 < 0 is a valid case for reports containing data in the past with respect to the nominal report time.",
+            " However P1 < 0 is a valid case for reports containing data in the past with respect to the nominal"
+            " report time.",
 
-            "P2 is defined as the duration of the period over which statistical processing is performed, and is always nonnegative."
-            " Note that, for instantaneous values, P2 is always zero.",
+            "P2 is defined as the duration of the period over which statistical processing is performed, and is always"
+            " nonnegative. Note that, for instantaneous values, P2 is always zero.",
 
             # "The Eta (NAM) vertical coordinate system involves normalizing
             # the pressure at some point on a specific level by the mean sea
@@ -339,6 +342,37 @@ digits and description.
             unit = re.sub("CHARACTER", "Character", unit)
             unit = re.sub("(NUMERIC|NUMBER)", "Numeric", unit)
             table.print_row((code, desc, unit, fmt))
+
+    def print_rst(self):
+        print(""".. _btable:
+
+Local B table
+=============
+
+This table lists all the entries of the local B table.  You can use them to
+provide context information for a measured value.
+
+Every entry is listed together with its measure unit, length in characters or
+digits and description.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Code
+     - Description
+     - Unit
+     - Format
+""")
+
+        for info in self.data:
+            code, desc, unit, dec, sz = info[0], info[1], info[6], int(info[7]), int(info[8])
+            fmt = mkformat(unit, sz, dec)
+            unit = re.sub("CHARACTER", "Character", unit)
+            unit = re.sub("(NUMERIC|NUMBER)", "Numeric", unit)
+            print("   * - {}".format(code))
+            print("     - {}".format(desc))
+            print("     - {}".format(unit))
+            print("     - {}".format(fmt))
 
 
 def main():

@@ -26,6 +26,5 @@ get up to speed, and as a quick reference for everyday use.
     levels and layers.
   * [Time ranges](fapi_tranges.md), descriptions of values that define time
     ranges.
-  * [Local B table](fapi_btable.md), contents of the local B table.
   * [Environment variable](dballe_env.md), environment variables that influence the
     behaviour of DB-All.e.
