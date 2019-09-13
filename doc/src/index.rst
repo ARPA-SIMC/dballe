@@ -10,6 +10,8 @@ volnd that allows to automatically export matrices of data out of the database.
    :maxdepth: 2
    :caption: Contents:
 
+   parms
+
    python/dballe
    python/dballe.volnd
 

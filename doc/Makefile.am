@@ -36,6 +36,7 @@ EXTRA_DIST += $(fapisources)
 sphinx_sources =  \
     src/conf.py \
     src/index.rst \
+    src/parms.rst \
     src/cpp/dballe.rst \
     src/cpp/messages.rst \
     src/cpp/cursors.rst \
