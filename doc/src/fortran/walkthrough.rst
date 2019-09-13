@@ -223,7 +223,7 @@ Setting input and reading output
 --------------------------------
 
 Input to action routines is done using the functions ``idba_set*``, and output
-is read with the functions ``idba_enq*`` (see [the introduction](fapi_concepts.md#routines))::
+is read with the functions ``idba_enq*`` (see :ref:`routines`)::
 
     ! Set the extremes of an area and retrieve all the stations in it
     ierr = idba_setd(handle, "latmin", 30.D0)
@@ -323,7 +323,7 @@ Parameter names
 
 There are three different kinds of parameter names one can use:
 
-* [DB-All.e parameters](fapi_parms.md), that have a special meaning to
+* DB-All.e parameters (see :ref:`parms`), that have a special meaning to
   DB-All.e: for example they can be part of the coordinate system, or
   space/time extremes to use to query the database.  They are indicated simply
   with their name (for example, `"lat"` or `"yearmin"`).
@@ -374,8 +374,7 @@ Querying the database
 ---------------------
 
 Queries are made by giving one or more extremes of space, time, level or time
-range.  See [the parameter table](fapi_parms.md) for a list of all available query
-parameters, in the column "On query input".
+range.  See :ref:`parms_query` for a list of all available query parameters.
 
 
 Querying the station values

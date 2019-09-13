@@ -365,7 +365,7 @@ Input/output routines
    :arg parameter: Parameter to set. It can be the code of a WMO variable
                    prefixed by ``"B"`` (such as ``"B01023"``); the code of a QC value
                    prefixed by ``"*B"`` (such as ``"*B01023"``) or a keyword among the ones
-                   defined in [fapi_parms.md](fapi_parms.md)
+                   defined in :ref:`parms`.
    :arg value: The value to assign to the parameter
    :return: The error indicator for the function
 
@@ -378,7 +378,7 @@ Input/output routines
    :arg parameter: Parameter to set. It can be the code of a WMO variable
                    prefixed by ``"B"`` (such as ``"B01023"``); the code of a QC value
                    prefixed by ``"*B"`` (such as ``"*B01023"``) or a keyword among the ones
-                   defined in [fapi_parms.md](fapi_parms.md)
+                   defined in :ref:`parms`.
    :arg value: The value to assign to the parameter
    :return: The error indicator for the function
 
@@ -391,7 +391,7 @@ Input/output routines
    :arg parameter: Parameter to set. It can be the code of a WMO variable
                    prefixed by ``"B"`` (such as ``"B01023"``); the code of a QC value
                    prefixed by ``"*B"`` (such as ``"*B01023"``) or a keyword among the ones
-                   defined in [fapi_parms.md](fapi_parms.md)
+                   defined in :ref:`parms`.
    :arg value: The value to assign to the parameter
    :return: The error indicator for the function
 
@@ -404,7 +404,7 @@ Input/output routines
    :arg parameter: Parameter to set. It can be the code of a WMO variable
                    prefixed by ``"B"`` (such as ``"B01023"``); the code of a QC value
                    prefixed by ``"*B"`` (such as ``"*B01023"``) or a keyword among the ones
-                   defined in [fapi_parms.md](fapi_parms.md)
+                   defined in :ref:`parms`.
    :arg value: The value to assign to the parameter
    :return: The error indicator for the function
 
@@ -417,7 +417,7 @@ Input/output routines
    :arg parameter: Parameter to set. It can be the code of a WMO variable
                    prefixed by ``"B"`` (such as ``"B01023"``); the code of a QC value
                    prefixed by ``"*B"`` (such as ``"*B01023"``) or a keyword among the ones
-                   defined in [fapi_parms.md](fapi_parms.md)
+                   defined in :ref:`parms`.
    :arg value: The value to assign to the parameter
    :return: The error indicator for the function
 
@@ -430,7 +430,7 @@ Input/output routines
    :arg parameter: Parameter to query. It can be the code of a WMO variable
                    prefixed by ``"B"`` (such as ``"B01023"``); the code of a QC value
                    prefixed by ``"*B"`` (such as ``"*B01023"``) or a keyword among the ones
-                   defined in [fapi_parms.md](fapi_parms.md)
+                   defined in :ref:`parms`.
    :arg value: Where the value will be returned
    :return: The error indicator for the function
 
@@ -443,7 +443,7 @@ Input/output routines
    :arg parameter: Parameter to query. It can be the code of a WMO variable
                    prefixed by ``"B"`` (such as ``"B01023"``); the code of a QC value
                    prefixed by ``"*B"`` (such as ``"*B01023"``) or a keyword among the ones
-                   defined in [fapi_parms.md](fapi_parms.md)
+                   defined in :ref:`parms`.
    :arg value: Where the value will be returned
    :return: The error indicator for the function
 
@@ -456,7 +456,7 @@ Input/output routines
    :arg parameter: Parameter to query. It can be the code of a WMO variable
                    prefixed by ``"B"`` (such as ``"B01023"``); the code of a QC value
                    prefixed by ``"*B"`` (such as ``"*B01023"``) or a keyword among the ones
-                   defined in [fapi_parms.md](fapi_parms.md)
+                   defined in :ref:`parms`.
    :arg value: Where the value will be returned
    :return: The error indicator for the function
 
@@ -469,7 +469,7 @@ Input/output routines
    :arg parameter: Parameter to query. It can be the code of a WMO variable
                    prefixed by ``"B"`` (such as ``"B01023"``); the code of a QC value
                    prefixed by ``"*B"`` (such as ``"*B01023"``) or a keyword among the ones
-                   defined in [fapi_parms.md](fapi_parms.md)
+                   defined in :ref:`parms`.
    :arg value: Where the value will be returned
    :return: The error indicator for the function
 
@@ -482,7 +482,7 @@ Input/output routines
    :arg parameter: Parameter to query. It can be the code of a WMO variable
                    prefixed by ``"B"`` (such as ``"B01023"``); the code of a QC value
                    prefixed by ``"*B"`` (such as ``"*B01023"``) or a keyword among the ones
-                   defined in [fapi_parms.md](fapi_parms.md)
+                   defined in :ref:`parms`.
    :arg value: Where the value will be returned
    :return: The error indicator for the function
 
@@ -495,7 +495,7 @@ Input/output routines
    :arg parameter: Parameter to remove. It can be the code of a WMO variable
                    prefixed by ``"B"`` (such as ``"B01023"``); the code of a QC value
                    prefixed by ``"*B"`` (such as ``"*B01023"``) or a keyword among the ones
-                   defined in [fapi_parms.md](fapi_parms.md)
+                   defined in :ref:`parms`.
    :return: The error indicator for the function
 
 

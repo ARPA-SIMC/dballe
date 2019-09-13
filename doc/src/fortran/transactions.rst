@@ -25,7 +25,7 @@ For example, this code will print ``0`` and then ``1``::
     
     ! Write some data
     idba_begin(dbhandle, handle_write, "write", "write", "write")
-    …
+    ! …
     idba_insert_data(handle_write)
     
     ! Read it before calling idba_commit: the modifications are not yet visible

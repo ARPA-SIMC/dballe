@@ -156,6 +156,8 @@ example, a variable can have at most one confidence interval attribute.
 
 See section [Attributes](#sec_attrs) for examples on how to handle attributes.
 
+.. _routines:
+
 Input, output, actions
 ----------------------
 

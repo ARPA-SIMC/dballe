@@ -20,8 +20,6 @@ get up to speed, and as a quick reference for everyday use.
    faq
 
 ..
-  * [Input/output/query parameters](fapi_parms.md), a table with all input,
-    output and query parameters that are not B table entries.
   * [Varcode aliases](fapi_aliases.md), aliases that can be used in input
     routines instead of B table codes.
   * [Level types](fapi_ltypes.md), description of values that define vertical

@@ -1,3 +1,5 @@
+.. _parms:
+
 Input/output/query parameters
 =============================
 
