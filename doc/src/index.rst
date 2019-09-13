@@ -12,6 +12,7 @@ volnd that allows to automatically export matrices of data out of the database.
 
    parms
    btable
+   ltypes
 
    python/dballe
    python/dballe.volnd

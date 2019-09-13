@@ -37,6 +37,7 @@ sphinx_sources =  \
     src/conf.py \
     src/index.rst \
     src/parms.rst \
+    src/ltypes.rst \
     src/btable.rst \
     src/cpp/dballe.rst \
     src/cpp/messages.rst \
@@ -83,6 +84,9 @@ tranges.dox: mksnippet
 src/btable.rst: ../tables/dballe.txt mksnippet
 	$(top_srcdir)/doc/mksnippet btable rst < $< > $@ || rm $@
 
+src/ltypes.rst: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
+	$(top_srcdir)/doc/mksnippet levels rst < $< > $@ || rm $@
+
 libwreport.doxytags:
 	if test x$(suffix @WREPORT_DOXYGEN_TAGFILE@) = x.gz ; then \
 	        zcat @WREPORT_DOXYGEN_TAGFILE@ > $@ ; \
@@ -97,9 +101,6 @@ CLEANFILES += libdballe.doxytags libwreport.doxytags aliases.dox ltypes.dox tran
 
 fapi_aliases.md: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
 	$(top_srcdir)/doc/mksnippet alias md < $< > $@ || rm $@
-
-fapi_ltypes.md: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
-	$(top_srcdir)/doc/mksnippet levels md < $< > $@ || rm $@
 
 fapi_tranges.md: mksnippet
 	$(top_srcdir)/doc/mksnippet tranges md > $@ || rm $@
