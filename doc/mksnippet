@@ -116,6 +116,25 @@ This table lists the aliases that can be used to refer to varcodes.
         for alias, var in self.data:
             table.print_row((alias, var))
 
+    def print_rst(self):
+        print(""".. _aliases:
+
+Varcode aliases
+===============
+
+This table lists the aliases that can be used to refer to varcodes.
+
+.. list-table::
+   :widths: auto
+   :header-rows: 1
+
+   * - Alias
+     - Vartable
+""")
+        for alias, var in self.data:
+            print("   * - {}".format(alias))
+            print("     - :ref:`{} <{}>`".format(var, var))
+
 
 class Levels:
     def read(self):
@@ -187,6 +206,38 @@ where possible.
         for type, desc, li in self.data:
             table.print_row((type, desc, li))
 
+    def print_rst(self):
+        print(""".. _levels:
+
+Level type values
+=================
+
+This table lists the possible values for ``leveltype1`` or
+``leveltype2`` and the interpretation of the corresponding numerical
+value ``l1`` or ``l2``.  Leveltype values in the range 0-255 can
+be used for defining either a single level (``leveltype1``) or a surface
+delimiting a layer (``leveltype1`` and ``leveltype2``) with any meaningful
+combination of leveltypes; values of ``leveltype`` ``>255`` have a special use
+for encoding cloud values in SYNOP reports and they do not strictly
+define physical surfaces.
+
+The idea is borrowed from the GRIB edition 2 fixed surface
+concept and the values for leveltype coincide with the GRIB standard
+where possible.
+
+.. list-table::
+   :widths: auto
+   :header-rows: 1
+
+   * - Level type
+     - Meaning
+     - Unit/contents of ``l1``/``l2``
+""")
+        for type, desc, li in self.data:
+            print("   * - {}".format(type))
+            print("     - {}".format(desc))
+            print("     - {}".format(li))
+
 
 class Tranges:
     def __init__(self):
@@ -220,14 +271,17 @@ class Tranges:
             "Reference time is defined as the nominal time of an observation for observed values,"
             " or as the time at which a model forecast starts for forecast values.",
 
-            "The date and time in DB-All.e are always the validity date and time of a value, regardless of the value being an observation or a forecast.",
+            "The date and time in DB-All.e are always the validity date and time of a value,"
+            " regardless of the value being an observation or a forecast.",
 
-            "P1 is defined as the difference in seconds between validity time and reference time. For forecasts it is the positive forecast time."
+            "P1 is defined as the difference in seconds between validity time and reference time."
+            " For forecasts it is the positive forecast time."
             " For observed values, the reference time is usually the same as the validity time, therefore P1 is zero."
-            " However P1 < 0 is a valid case for reports containing data in the past with respect to the nominal report time.",
+            " However P1 < 0 is a valid case for reports containing data in the past with respect to the nominal"
+            " report time.",
 
-            "P2 is defined as the duration of the period over which statistical processing is performed, and is always nonnegative."
-            " Note that, for instantaneous values, P2 is always zero.",
+            "P2 is defined as the duration of the period over which statistical processing is performed, and is always"
+            " nonnegative. Note that, for instantaneous values, P2 is always zero.",
 
             # "The Eta (NAM) vertical coordinate system involves normalizing
             # the pressure at some point on a specific level by the mean sea
@@ -278,6 +332,36 @@ time range:
 
         for d in self.descs:
             print('* **{}** {}'.format(d[0], re_newlines.sub(d[1], "\n")))
+
+    def print_rst(self):
+        print(""".. _tranges:
+
+Time range values
+=================
+
+Definition of the main concepts related to the description of time
+range and statistical processing for observed and forecast data:
+""")
+        re_newlines = re.compile(r"\n+")
+        for n in self.notes:
+            print("* {}".format(re_newlines.sub(n, "\n")))
+
+        print("""
+The following table lists the possible values for pindicator and the
+interpretation of the corresponding values of P1 and P2 specifying a
+time range:
+
+.. list-table::
+   :widths: auto
+   :header-rows: 1
+
+   * - Value
+     - Meaning
+""")
+
+        for d in self.descs:
+            print("   * - {}".format(d[0]))
+            print("     - {}".format(re_newlines.sub(d[1], "\n")))
 
 
 class Btable:
@@ -339,6 +423,42 @@ digits and description.
             unit = re.sub("CHARACTER", "Character", unit)
             unit = re.sub("(NUMERIC|NUMBER)", "Numeric", unit)
             table.print_row((code, desc, unit, fmt))
+
+    def print_rst(self):
+        print(""".. _btable:
+
+Local B table codes
+===================
+
+This table lists all the entries of the local B table.  You can use them to
+provide context information for a measured value.
+
+Every entry is listed together with its measure unit, length in characters or
+digits and description.
+
+.. list-table::
+   :widths: auto
+   :header-rows: 1
+
+   * - Code
+     - Description
+     - Unit
+     - Format
+""")
+
+        for info in self.data:
+            code, desc, unit, dec, sz = info[0], info[1], info[6], int(info[7]), int(info[8])
+            if code[0] == '0':
+                code = 'B' + code[1:]
+            fmt = mkformat(unit, sz, dec)
+            unit = re.sub("CHARACTER", "Character", unit)
+            unit = re.sub("(NUMERIC|NUMBER)", "Numeric", unit)
+            print("   * - .. _{}:".format(code))
+            print("")
+            print("       {}".format(code))
+            print("     - {}".format(desc))
+            print("     - {}".format(unit))
+            print("     - {}".format(fmt))
 
 
 def main():

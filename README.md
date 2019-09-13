@@ -51,7 +51,7 @@ The main characteristics of DB-ALL.e are:
  * Does not need backup, since it only contains replicated or derived data.
  * Write access is enabled for its users.
 
-[C++ and Python API documentation](https://arpa-simc.github.io/dballe/).
+[DB-All.e documentation](https://arpa-simc.github.io/dballe/).
 
 Building DB-All.e
 -----------------

@@ -620,13 +620,13 @@ std::ostream& operator<<(std::ostream& out, const LonRange& lr);
 /// Vertical level or layer
 struct Level
 {
-    /// Type of the level or the first layer. See @ref level_table.
+    /// Type of the level or the first layer
     int ltype1;
-    /// L1 value of the level or the first layer. See @ref level_table.
+    /// L1 value of the level or the first layer
     int l1;
-    /// Type of the the second layer. See @ref level_table.
+    /// Type of the the second layer
     int ltype2;
-    /// L2 value of the second layer. See @ref level_table.
+    /// L2 value of the second layer
     int l2;
 
     Level(int ltype1=MISSING_INT, int l1=MISSING_INT, int ltype2=MISSING_INT, int l2=MISSING_INT)
@@ -667,7 +667,7 @@ struct Level
      */
     void to_csv(CSVWriter& out) const;
 
-    /// Create a cloud special level. See @ref level_table.
+    /// Create a cloud special level
     static Level cloud(int ltype2=MISSING_INT, int l2=MISSING_INT);
 
     /// Print to an output stream

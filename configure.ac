@@ -349,7 +349,6 @@ python/Makefile
 bench/Makefile
 doc/Makefile
 doc/libdballe.dox
-doc/libdballef.dox
 libdballe.pc
 libdballef.pc
 ])

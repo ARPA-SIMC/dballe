@@ -56,6 +56,8 @@ public:
     /**
      * Load from the database all the attributes for var
      *
+     * @param trc
+     *   Operation tracer using for debugging and diagnostics
      * @param id_data
      *   ID of the data row for the value of which we will read attributes
      * @param dest

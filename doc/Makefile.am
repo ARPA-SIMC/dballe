@@ -23,8 +23,6 @@ cppdeps = libdballe.dox \
 
 # Fortran API documentation sources
 
-fortrandeps = libdballef.dox
-
 fapisources = fapi.md fapi_concepts.md fapi_walkthrough.md fapi_reference.md \
               fapi_parms.md fapi_aliases.md fapi_connect.md fapi_ltypes.md \
               fapi_tranges.md fapi_btable.md fapi_transactions.md
@@ -35,14 +33,22 @@ EXTRA_DIST += $(fapisources)
 
 # Sphinx sources
 
-sphinx_sources =  \
+sphinx_packaged_sources =  \
     src/conf.py \
     src/index.rst \
+    src/parms.rst \
+    src/env.rst \
+    src/connect.rst \
     src/cpp/dballe.rst \
     src/cpp/messages.rst \
     src/cpp/cursors.rst \
     src/cpp/db.rst \
     src/fortran/dballe.rst \
+    src/fortran/walkthrough.rst \
+    src/fortran/concepts.rst \
+    src/fortran/transactions.rst \
+    src/fortran/reference.rst \
+    src/fortran/faq.rst \
     src/python/dballe.rst \
     src/python/dballe_types.rst \
     src/python/dballe_messages.rst \
@@ -50,21 +56,27 @@ sphinx_sources =  \
     src/python/dballe_db.rst \
     src/python/dballe.volnd.rst
 
-EXTRA_DIST += $(sphinx_sources)
+sphinx_generated_sources =  \
+    src/aliases.rst \
+    src/ltypes.rst \
+    src/tranges.rst \
+    src/btable.rst
+
+sphinx_sources = $(sphinx_packaged_sources) $(sphinx_generated_sources)
+
+EXTRA_DIST += $(sphinx_packaged_sources)
 
 # See https://stackoverflow.com/questions/19822435/multiple-targets-from-one-recipe-and-parallel-execution#19822767
 .INTERMEDIATE: build-docs
 
 # Build doxygen + sphinx documentation
-build-docs: $(cppdeps) $(fortrandeps) $(sphinx_sources) $(mainpages) ../dballe/libdballe.la ../fortran/libdballef.la ../python/_dballe.la
+build-docs: $(cppdeps) $(sphinx_sources) $(mainpages) ../dballe/libdballe.la ../python/_dballe.la
 	rm -rf html
 	mkdir html
 	$(DOXYGEN) libdballe.dox
-	$(DOXYGEN) libdballef.dox
 	$(top_srcdir)/run-local $(SPHINX_BUILD) -b html src html/
 
 libdballe.doxytags: build-docs
-libdballef.doxytags: build-docs
 html/index.html: build-docs
 
 aliases.dox: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
@@ -76,6 +88,19 @@ ltypes.dox: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
 tranges.dox: mksnippet
 	$(top_srcdir)/doc/mksnippet tranges dox > $@ || rm $@
 
+src/btable.rst: ../tables/dballe.txt mksnippet
+	$(top_srcdir)/doc/mksnippet btable rst < $< > $@ || rm $@
+
+src/ltypes.rst: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
+	$(top_srcdir)/doc/mksnippet levels rst < $< > $@ || rm $@
+
+src/tranges.rst: mksnippet
+	$(top_srcdir)/doc/mksnippet tranges rst > $@ || rm $@
+
+src/aliases.rst: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
+	$(top_srcdir)/doc/mksnippet alias rst < $< > $@ || rm $@
+
+
 libwreport.doxytags:
 	if test x$(suffix @WREPORT_DOXYGEN_TAGFILE@) = x.gz ; then \
 	        zcat @WREPORT_DOXYGEN_TAGFILE@ > $@ ; \
@@ -86,22 +111,7 @@ libwreport.doxytags:
 
 doc_DATA += libdballe.doxytags
 
-CLEANFILES += libdballe.doxytags libdballef.doxytags libwreport.doxytags aliases.dox ltypes.dox tranges.dox
-
-fapi_reference.md: $(top_srcdir)/doc/make_fortran_reference libdballef.doxytags
-	$< > $@ fortran_xml || rm $@
-
-fapi_aliases.md: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
-	$(top_srcdir)/doc/mksnippet alias md < $< > $@ || rm $@
-
-fapi_ltypes.md: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
-	$(top_srcdir)/doc/mksnippet levels md < $< > $@ || rm $@
-
-fapi_tranges.md: mksnippet
-	$(top_srcdir)/doc/mksnippet tranges md > $@ || rm $@
-
-fapi_btable.md: ../tables/dballe.txt mksnippet
-	$(top_srcdir)/doc/mksnippet btable md < $< > $@ || rm $@
+CLEANFILES += libdballe.doxytags libwreport.doxytags aliases.dox ltypes.dox tranges.dox
 
 
 EXTRA_DIST += make_fortran_reference
