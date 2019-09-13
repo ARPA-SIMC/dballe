@@ -116,6 +116,25 @@ This table lists the aliases that can be used to refer to varcodes.
         for alias, var in self.data:
             table.print_row((alias, var))
 
+    def print_rst(self):
+        print(""".. _aliases:
+
+Varcode aliases
+===============
+
+This table lists the aliases that can be used to refer to varcodes.
+
+.. list-table::
+   :widths: auto
+   :header-rows: 1
+
+   * - Alias
+     - Vartable
+""")
+        for alias, var in self.data:
+            print("   * - {}".format(alias))
+            print("     - :ref:`{} <{}>`".format(var, var))
+
 
 class Levels:
     def read(self):
@@ -429,10 +448,14 @@ digits and description.
 
         for info in self.data:
             code, desc, unit, dec, sz = info[0], info[1], info[6], int(info[7]), int(info[8])
+            if code[0] == '0':
+                code = 'B' + code[1:]
             fmt = mkformat(unit, sz, dec)
             unit = re.sub("CHARACTER", "Character", unit)
             unit = re.sub("(NUMERIC|NUMBER)", "Numeric", unit)
-            print("   * - {}".format(code))
+            print("   * - .. _{}:".format(code))
+            print("")
+            print("       {}".format(code))
             print("     - {}".format(desc))
             print("     - {}".format(unit))
             print("     - {}".format(fmt))

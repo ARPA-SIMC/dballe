@@ -33,13 +33,10 @@ EXTRA_DIST += $(fapisources)
 
 # Sphinx sources
 
-sphinx_sources =  \
+sphinx_packaged_sources =  \
     src/conf.py \
     src/index.rst \
     src/parms.rst \
-    src/ltypes.rst \
-    src/tranges.rst \
-    src/btable.rst \
     src/cpp/dballe.rst \
     src/cpp/messages.rst \
     src/cpp/cursors.rst \
@@ -58,7 +55,15 @@ sphinx_sources =  \
     src/python/dballe_db.rst \
     src/python/dballe.volnd.rst
 
-EXTRA_DIST += $(sphinx_sources)
+sphinx_generated_sources =  \
+    src/aliases.rst \
+    src/ltypes.rst \
+    src/tranges.rst \
+    src/btable.rst
+
+sphinx_sources = $(sphinx_packaged_sources) $(sphinx_generated_sources)
+
+EXTRA_DIST += $(sphinx_packaged_sources)
 
 # See https://stackoverflow.com/questions/19822435/multiple-targets-from-one-recipe-and-parallel-execution#19822767
 .INTERMEDIATE: build-docs
@@ -91,6 +96,10 @@ src/ltypes.rst: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
 src/tranges.rst: mksnippet
 	$(top_srcdir)/doc/mksnippet tranges rst > $@ || rm $@
 
+src/aliases.rst: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
+	$(top_srcdir)/doc/mksnippet alias rst < $< > $@ || rm $@
+
+
 libwreport.doxytags:
 	if test x$(suffix @WREPORT_DOXYGEN_TAGFILE@) = x.gz ; then \
 	        zcat @WREPORT_DOXYGEN_TAGFILE@ > $@ ; \
@@ -102,9 +111,6 @@ libwreport.doxytags:
 doc_DATA += libdballe.doxytags
 
 CLEANFILES += libdballe.doxytags libwreport.doxytags aliases.dox ltypes.dox tranges.dox
-
-fapi_aliases.md: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
-	$(top_srcdir)/doc/mksnippet alias md < $< > $@ || rm $@
 
 
 EXTRA_DIST += make_fortran_reference
