@@ -6,7 +6,7 @@ TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 
 export PYTHONPATH=.
 
-dballe_python_tests = test-core.py testlibmsg.py test-types.py test-binarymessage.py test-file.py test-message.py test-importer.py test-exporter.py test-db.py test-explorer.py test-volnd.py test-csv.py
+dballe_python_tests = test-version.py test-core.py testlibmsg.py test-types.py test-binarymessage.py test-file.py test-message.py test-importer.py test-exporter.py test-db.py test-explorer.py test-volnd.py test-csv.py
 
 # TESTS = $(dballe_python_tests)
 

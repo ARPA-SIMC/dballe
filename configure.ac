@@ -358,7 +358,6 @@ doc/Makefile
 doc/libdballe.dox
 libdballe.pc
 libdballef.pc
-python/dballe/__init__.py
 ])
 AC_OUTPUT
 
