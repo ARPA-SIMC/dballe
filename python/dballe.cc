@@ -1,3 +1,4 @@
+#include "config.h"
 #include <wreport/python.h>
 #include "common.h"
 #include "types.h"
@@ -167,6 +168,7 @@ PyMODINIT_FUNC PyInit__dballe(void)
         c_api.version_minor = 0;
 
         pyo_unique_ptr m(PyModule_Create(&dballe_module));
+        PyModule_AddStringConstant(m, "__version__", PACKAGE_VERSION);
         register_types(m);
         register_data(m);
         register_binarymessage(m);
