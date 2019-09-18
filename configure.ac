@@ -42,6 +42,8 @@ if test x$enable_dballe_python = xyes
 then
     PYTHON_CFLAGS=`unset CFLAGS; $PYTHON-config --cflags`
     AC_SUBST(PYTHON_CFLAGS)
+    AX_PYTHON_MODULE(wreport, yes)
+    AX_PYTHON_MODULE(numpy, yes)
 fi
 
 dnl Export information about the current major python version
