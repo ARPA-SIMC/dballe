@@ -34,6 +34,23 @@ AC_ARG_ENABLE([docs],
     [],
     [enable_docs="yes"])
 
+dnl Check for python
+AM_PATH_PYTHON([3], [], [
+	enable_dballe_python=no
+])
+if test x$enable_dballe_python = xyes
+then
+    PYTHON_CFLAGS=`unset CFLAGS; $PYTHON-config --cflags`
+    AC_SUBST(PYTHON_CFLAGS)
+fi
+
+dnl Export information about the current major python version
+dnl FIXME: remove when we finally only support python3
+PYTHON_MAJOR_VERSION=[`$PYTHON -c 'import sys; print(sys.version_info[0])'`]
+AC_SUBST(PYTHON_MAJOR_VERSION)
+AM_CONDITIONAL([HAVE_PYTHON2], [test $PYTHON_MAJOR_VERSION = 2])
+AM_CONDITIONAL([HAVE_PYTHON3], [test $PYTHON_MAJOR_VERSION = 3])
+
 AC_ARG_VAR([WREPORT_DOXYGEN_DIR], [path of wreport doxygen doc])
 if test x$WREPORT_DOXYGEN_DIR = x
 then
@@ -85,6 +102,11 @@ then
 
     AC_CHECK_PROGS(SPHINX_BUILD, [sphinx-build sphinx-build-3 sphinx-build-3.6], [no])
     if test $SPHINX_BUILD = no
+    then
+        enable_docs=no
+    fi
+    AX_PYTHON_MODULE(breathe)
+    if test x$HAVE_PYMOD_BREATHE != xyes
     then
         enable_docs=no
     fi
@@ -172,23 +194,6 @@ then
 	docdir='${datadir}/doc/${PACKAGE_TARNAME}'
 	AC_SUBST(docdir)
 fi
-
-dnl Check for python
-AM_PATH_PYTHON([3], [], [
-	enable_dballe_python=no
-])
-if test x$enable_dballe_python = xyes
-then
-    PYTHON_CFLAGS=`unset CFLAGS; $PYTHON-config --cflags`
-    AC_SUBST(PYTHON_CFLAGS)
-fi
-
-dnl Export information about the current major python version
-dnl FIXME: remove when we finally only support python3
-PYTHON_MAJOR_VERSION=[`$PYTHON -c 'import sys; print(sys.version_info[0])'`]
-AC_SUBST(PYTHON_MAJOR_VERSION)
-AM_CONDITIONAL([HAVE_PYTHON2], [test $PYTHON_MAJOR_VERSION = 2])
-AM_CONDITIONAL([HAVE_PYTHON3], [test $PYTHON_MAJOR_VERSION = 3])
 
 PKGCONFIG_LIBS="-lm"
 PKGCONFIG_CFLAGS=""
