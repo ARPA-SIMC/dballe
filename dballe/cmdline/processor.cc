@@ -345,6 +345,8 @@ void Reader::read_csv(const std::list<std::string>& fnames, Action& action)
 
 void Reader::read_json(const std::list<std::string>& fnames, Action& action)
 {
+    using core::JSONParseException;
+
     struct JSONMsgReader : public core::JSONReader {
         std::istream* in;
         bool close_on_exit;
@@ -414,12 +416,12 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                 }
             }
             if (not state.empty())
-                throw std::runtime_error("Incomplete JSON");
+                throw JSONParseException("Incomplete JSON");
         }
 
         void throw_error_if_empty_state() {
             if (state.empty())
-                throw std::runtime_error("Invalid JSON value");
+                throw JSONParseException("Invalid JSON value");
         }
 
         virtual void on_start_list() {
@@ -440,7 +442,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     state.push(MSG_DATA_LIST_ITEM_TRANGE_LIST);
                     state.push(MSG_DATA_LIST_ITEM_TRANGE_LIST_PIND);
                     break;
-                default: throw std::runtime_error("Invalid JSON value start_list");
+                default: throw JSONParseException("Invalid JSON value start_list");
             }
         }
         virtual void on_end_list() {
@@ -450,7 +452,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                 case MSG_DATA_LIST: state.pop(); break;
                 case MSG_DATA_LIST_ITEM_LEVEL_LIST: state.pop(); break;
                 case MSG_DATA_LIST_ITEM_TRANGE_LIST: state.pop(); break;
-                default: throw std::runtime_error("Invalid JSON value end_list");
+                default: throw JSONParseException("Invalid JSON value end_list");
             }
         }
         virtual void on_start_mapping() {
@@ -479,7 +481,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                         state.pop();
                         state.push(MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING);
                         break;
-                    default: throw std::runtime_error("Invalid JSON value start_mapping");
+                    default: throw JSONParseException("Invalid JSON value start_mapping");
                 }
             }
         }
@@ -514,7 +516,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_MAPPING:
                     state.pop();
                     break;
-                default: throw std::runtime_error("Invalid JSON value end_mapping");
+                default: throw JSONParseException("Invalid JSON value end_mapping");
             }
         }
         virtual void on_add_null() {
@@ -568,7 +570,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     var->seta(*attr);
                     ctx->values.set(*var);
                     break;
-                default: throw std::runtime_error("Invalid JSON value add_null");
+                default: throw JSONParseException("Invalid JSON value add_null");
             }
         }
         virtual void on_add_bool(bool val) {
@@ -586,7 +588,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     var->seta(*attr);
                     ctx->values.set(*var);
                     break;
-                default: throw std::runtime_error("Invalid JSON value add_bool");
+                default: throw JSONParseException("Invalid JSON value add_bool");
             }
         }
         virtual void on_add_int(int val) {
@@ -647,7 +649,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     var->seta(*attr);
                     ctx->values.set(*var);
                     break;
-                default: throw std::runtime_error("Invalid JSON value add_int");
+                default: throw JSONParseException("Invalid JSON value add_int");
             }
         }
         virtual void on_add_double(double val) {
@@ -665,7 +667,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     var->seta(*attr);
                     ctx->values.set(*var);
                     break;
-                default: throw std::runtime_error("Invalid JSON value add_double");
+                default: throw JSONParseException("Invalid JSON value add_double");
             }
         }
         virtual void on_add_string(const std::string& val) {
@@ -688,7 +690,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     else if (val == "data")
                         state.push(MSG_DATA_KEY);
                     else
-                        throw std::runtime_error("Invalid JSON value");
+                        throw JSONParseException("Invalid JSON value");
                     break;
                 case MSG_IDENT_KEY:
                     msg.set_ident(val.c_str());
@@ -696,7 +698,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     break;
                 case MSG_VERSION_KEY:
                     if (strcmp(val.c_str(), DBALLE_JSON_VERSION) != 0)
-                        throw std::runtime_error("Invalid JSON version " + val);
+                        throw JSONParseException("Invalid JSON version " + val);
                     state.pop();
                     break;
                 case MSG_NETWORK_KEY:
@@ -715,7 +717,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     else if (val == "timerange")
                         state.push(MSG_DATA_LIST_ITEM_TRANGE_KEY);
                     else
-                        throw std::runtime_error("Invalid JSON value");
+                        throw JSONParseException("Invalid JSON value");
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING:
                     state.push(MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR);
@@ -727,7 +729,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     else if (val == "a")
                         state.push(MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_KEY);
                     else
-                        throw std::runtime_error("Invalid JSON value");
+                        throw JSONParseException("Invalid JSON value");
                     break;
                 case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY:
                     var->set(val);
@@ -744,7 +746,7 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
                     var->seta(*attr);
                     ctx->values.set(*var);
                     break;
-                default: throw std::runtime_error("Invalid JSON value add_string");
+                default: throw JSONParseException("Invalid JSON value add_string");
             }
         }
     };
@@ -752,27 +754,36 @@ void Reader::read_json(const std::list<std::string>& fnames, Action& action)
     std::unique_ptr<JSONMsgReader> jsonreader;
 
     list<string>::const_iterator name = fnames.begin();
-    do {
-        if (name != fnames.end()) {
-            jsonreader.reset(new JSONMsgReader(*name));
-            ++name;
-        } else {
-            jsonreader.reset(new JSONMsgReader(cin));
-        }
-        jsonreader->parse_msgs([&](const impl::Message& msg) {
-            ++item.idx;
-            if (!filter.match_index(item.idx))
-                return;
-            unique_ptr<impl::Messages> msgs(new impl::Messages);
-            msgs->emplace_back(make_shared<impl::Message>(msg));
-            item.set_msgs(msgs.release());
+    try {
+        do {
+            if (name != fnames.end()) {
+                jsonreader.reset(new JSONMsgReader(*name));
+                ++name;
+            } else {
+                jsonreader.reset(new JSONMsgReader(cin));
+            }
+            jsonreader->parse_msgs([&](const impl::Message& msg) {
+                ++item.idx;
+                if (!filter.match_index(item.idx))
+                    return;
+                unique_ptr<impl::Messages> msgs(new impl::Messages);
+                msgs->emplace_back(make_shared<impl::Message>(msg));
+                item.set_msgs(msgs.release());
 
-            if (!filter.match_item(item))
-                return;
+                if (!filter.match_item(item))
+                    return;
 
-            action(item);
-        });
-    } while (name != fnames.end());
+                action(item);
+            });
+        } while (name != fnames.end());
+    } catch (const JSONParseException& e) {
+        // If name points to begin(), then it's the standard input, because
+        // after parsing a file the iterator is incremented.
+        const std::string f = ( name != fnames.begin() ? *(--name) : "stdin" );
+        throw JSONParseException("Error while parsing JSON from " + f +
+                                 " at char " + std::to_string(jsonreader->in->tellg()) +
+                                 ": " + e.what());
+    }
 }
 
 void Reader::read_file(const std::list<std::string>& fnames, Action& action)
