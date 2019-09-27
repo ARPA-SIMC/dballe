@@ -242,6 +242,7 @@ void CommonSynopExporter::scan_context(const msg::Context& c)
             }
             break;
         case 160:
+        case 161:
             if (c.values.maybe_var(WR_VAR(0, 22, 43)))
                 c_depth = &c;
             break;
