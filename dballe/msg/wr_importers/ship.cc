@@ -78,7 +78,7 @@ void ShipImporter::import_var(const Var& var)
             if (level.sea_depth == LevelContext::missing)
                 set(var, WR_VAR(0, 22, 43), Level(1), Trange::instant());
             else
-                set(var, WR_VAR(0, 22, 43), Level(160, level.sea_depth * 1000), Trange::instant());
+                set(var, WR_VAR(0, 22, 43), Level(161, level.sea_depth * 1000), Trange::instant());
             break;
 
         // Waves
