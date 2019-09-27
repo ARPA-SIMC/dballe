@@ -215,6 +215,23 @@ this->add_method("ident_case", [](Fixture& f) {
     wassert(actual(f.tr).try_station_query("ident=TEST", 0));
 });
 
+this->add_method("ident_encoding", [](Fixture& f) {
+    // Insert a mobile station
+    core::Data vals;
+    vals.station.report = "synop";
+    vals.station.coords = Coords(44.10, 11.50);
+    vals.station.ident = "🍕";
+    vals.level = Level(1);
+    vals.trange = Trange::instant();
+    vals.datetime = Datetime(2015, 4, 25, 12, 30, 45);
+    vals.values.set("B12101", 295.1);
+    f.tr->insert_data(vals);
+
+    wassert(actual(f.tr).try_station_query("ident=🍕", 1));
+    wassert(actual(f.tr).try_station_query("ident=?", 0));
+    wassert(actual(f.tr).try_station_query("ident=test", 0));
+});
+
 this->add_method("missing_repmemo", [](Fixture& f) {
     // Test querying with a missing rep_memo
     core::Query query;

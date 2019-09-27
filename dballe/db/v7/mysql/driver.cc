@@ -58,6 +58,9 @@ std::unique_ptr<v7::Data> Driver::create_data(v7::Transaction& tr)
     return unique_ptr<v7::Data>(new MySQLData(tr, conn));
 }
 
+// Extra options needed to fix MySQL's defaults. See: #153
+#define DBA_MYSQL_DEFAULT_TABLE_OPTIONS "CHARACTER SET = utf8mb4, COLLATE = utf8mb4_bin, ENGINE = InnoDB"
+
 void Driver::create_tables_v7()
 {
     conn.exec_no_data(R"(
@@ -70,8 +73,8 @@ void Driver::create_tables_v7()
            tablea       INTEGER NOT NULL,
            UNIQUE INDEX (prio),
            UNIQUE INDEX (memo)
-        ) ENGINE=InnoDB;
-    )");
+        )
+    )" DBA_MYSQL_DEFAULT_TABLE_OPTIONS);
     conn.exec_no_data(R"(
         CREATE TABLE station (
            id         INTEGER auto_increment PRIMARY KEY,
@@ -82,8 +85,8 @@ void Driver::create_tables_v7()
            UNIQUE INDEX(rep, lat, lon, ident(8)),
            INDEX(rep),
            INDEX(lon)
-        ) ENGINE=InnoDB;
-    )");
+        )
+    )" DBA_MYSQL_DEFAULT_TABLE_OPTIONS);
     conn.exec_no_data(R"(
         CREATE TABLE levtr (
            id          INTEGER auto_increment PRIMARY KEY,
@@ -95,8 +98,8 @@ void Driver::create_tables_v7()
            p1          INTEGER NOT NULL,
            p2          INTEGER NOT NULL,
            UNIQUE INDEX (ltype1, l1, ltype2, l2, pind, p1, p2)
-       ) ENGINE=InnoDB;
-    )");
+        )
+    )" DBA_MYSQL_DEFAULT_TABLE_OPTIONS);
     conn.exec_no_data(R"(
         CREATE TABLE station_data (
            id          INTEGER auto_increment PRIMARY KEY,
@@ -105,8 +108,8 @@ void Driver::create_tables_v7()
            value       VARCHAR(255) NOT NULL,
            attrs       BLOB,
            UNIQUE INDEX(id_station, code)
-       ) ENGINE=InnoDB;
-    )");
+        )
+    )" DBA_MYSQL_DEFAULT_TABLE_OPTIONS);
     conn.exec_no_data(R"(
         CREATE TABLE data (
            id          INTEGER auto_increment PRIMARY KEY,
@@ -118,8 +121,8 @@ void Driver::create_tables_v7()
            attrs       BLOB,
            UNIQUE INDEX(id_station, datetime, id_levtr, code),
            INDEX(id_levtr)
-       ) ENGINE=InnoDB;
-    )");
+        )
+    )" DBA_MYSQL_DEFAULT_TABLE_OPTIONS);
 
     conn.set_setting("version", "V7");
 }

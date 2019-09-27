@@ -235,6 +235,7 @@ void MySQLConnection::open(const mysql::ConnectInfo& info)
 {
     // See http://www.enricozini.org/2012/tips/sa-sqlmode-traditional/
     mysql_options(db, MYSQL_INIT_COMMAND, "SET sql_mode='traditional'");
+    mysql_options(db, MYSQL_SET_CHARSET_NAME, "utf8mb4");
     // TODO: benchmark with and without compression
     //mysql_options(db, MYSQL_OPT_COMPRESS, 0);
     // Auto-reconnect transparently messes up all assumptions, so we switch it
