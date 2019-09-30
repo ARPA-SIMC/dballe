@@ -5,13 +5,13 @@ be stored, searched, retrieved and updated.  To make computation easier, data
 is stored as physical data, that is, as measures of a variable in a specific
 point of space and time, rather than as a sequence of reports.
 
-The Fortran documentation [can be found here](https://arpa-simc.github.io/dballe/fortran/index.html):
+The Fortran documentation [can be found here](https://arpa-simc.github.io/dballe/fortran/dballe.html):
 
 * [Fortran API concepts](https://arpa-simc.github.io/dballe/fortran/concepts.html),
   explains terms used through the documentation and concepts specific to DB-All.e.
 * [Walk through the API](https://arpa-simc.github.io/dballe/fortran/walkthrough.html),
   introduces most aspects of the API.
-* [Connection methods](https://arpa-simc.github.io/dballe/fortran/connect.html),
+* [Connection methods](https://arpa-simc.github.io/dballe/connect.html),
   documents the various ways that can be used to connect to a DB-All.e database.
 * [API function reference](https://arpa-simc.github.io/dballe/fortran/reference.html),
   the complete reference to every function.
