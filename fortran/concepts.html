@@ -21,6 +21,7 @@
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
+  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head><body>
@@ -29,6 +30,8 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <div class="section" id="fortran-api-concepts">
@@ -154,8 +157,8 @@ example, a variable can have at most one confidence interval attribute.</p>
 <span id="routines"></span><h2>Input, output, actions<a class="headerlink" href="#input-output-actions" title="Permalink to this headline">¶</a></h2>
 <p>Work with DB-All.e happens using <em>action routines</em>.  An action routine
 typically reads some input, performs an action and produces some output.
-Example of action routines are [idba_query_data][] to query data from a
-database and [idba_insert_data][] to write data into the database.</p>
+Example of action routines are <a class="reference internal" href="reference.html#c.idba_query_data" title="idba_query_data"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_query_data()</span></code></a> to query data from a
+database and <a class="reference internal" href="reference.html#c.idba_insert_data" title="idba_insert_data"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_insert_data()</span></code></a> to write data into the database.</p>
 <p>The input and the output of action routines are collections of parameters which
 have a name and a value.  A list of parameters can be found in <a class="reference internal" href="../parms.html#parms"><span class="std std-ref">Input/output/query parameters</span></a>.</p>
 <p>You can set the input parameters using the <cite>idba_set*</cite> functions:</p>
@@ -184,7 +187,7 @@ Read the output parameter into the real value <cite>realvalue</cite></li>
 <li><cite>idba_enqd(handle, “param”, doublevalue)</cite>:
 Read the output parameter into the <cite>real*8</cite> value <cite>doublevalue</cite></li>
 </ul>
-<p>Note that all [idba_set][] functions set input parameters, while all <cite>idb_enq*</cite>
+<p>Note that all <code class="docutils literal notranslate"><span class="pre">idba_set*</span></code> functions set input parameters, while all <code class="docutils literal notranslate"><span class="pre">idb_enq*</span></code>
 functions read output parameters.  You cannot read input parameters or set
 output parameters: that is the job of action routines.</p>
 <p>In other words, input and output parameters are different things.  In this
@@ -254,6 +257,7 @@ value”.  This is a list of such special values:</p>
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -313,6 +317,14 @@ value”.  This is a list of such special values:</p>
     </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
@@ -322,7 +334,7 @@ value”.  This is a list of such special values:</p>
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="../_sources/fortran/concepts.rst.txt"

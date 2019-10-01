@@ -161,8 +161,8 @@ Input, output, actions
 
 Work with DB-All.e happens using *action routines*.  An action routine
 typically reads some input, performs an action and produces some output.
-Example of action routines are [idba_query_data][] to query data from a
-database and [idba_insert_data][] to write data into the database.
+Example of action routines are :c:func:`idba_query_data` to query data from a
+database and :c:func:`idba_insert_data` to write data into the database.
 
 The input and the output of action routines are collections of parameters which
 have a name and a value.  A list of parameters can be found in :ref:`parms`.
@@ -193,7 +193,7 @@ You can read the output parameters using the `idba_enq*` functions:
 * `idba_enqd(handle, "param", doublevalue)`:
   Read the output parameter into the `real*8` value `doublevalue`
 
-Note that all [idba_set][] functions set input parameters, while all `idb_enq*`
+Note that all ``idba_set*`` functions set input parameters, while all ``idb_enq*``
 functions read output parameters.  You cannot read input parameters or set
 output parameters: that is the job of action routines.
 

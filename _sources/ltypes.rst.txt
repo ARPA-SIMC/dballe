@@ -109,9 +109,12 @@ where possible.
      - 
      - 
    * - 160
-     - Depth Below Sea Level
+     - Depth Below Mean Sea Level
      - mm
-   * - 161-191 Reserved
+   * - 161
+     - Depth Below Water Surface
+     - mm
+   * - 162-191 Reserved
      - 
      - 
    * - 200
