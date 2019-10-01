@@ -192,16 +192,6 @@
  013211 Volume of basin                                                  M**3                       0            0  37 M**3                      0         12
  013212 Leaf wetness duration                                            S                         -1            0  24 S                        -1          7
  013215 River level                                                      M                          2      -100000  18 M                         2          6
- 013216 Hourly precipitation                                             KG/M**2                    1           -1  14 KG/M**2                   1          5
- 013217 5 minutes precipitation                                          KG/M**2                    1           -1  14 KG/M**2                   1          5
- 013218 10 minutes precipitation                                         KG/M**2                    1           -1  14 KG/M**2                   1          5
- 013219 15 minutes precipitation                                         KG/M**2                    1           -1  14 KG/M**2                   1          5
- 013220 20 minutes precipitation                                         KG/M**2                    1           -1  14 KG/M**2                   1          5
- 013221 30 minutes precipitation                                         KG/M**2                    1           -1  14 KG/M**2                   1          5
- 013222 180 minutes precipitation                                        KG/M**2                    1           -1  14 KG/M**2                   1          5
- 013223 360 minutes precipitation                                        KG/M**2                    1           -1  14 KG/M**2                   1          5
- 013224 720 minutes precipitation                                        KG/M**2                    1           -1  14 KG/M**2                   1          5
- 013225 1440 minutes precipitation                                       KG/M**2                    1           -1  14 KG/M**2                   1          5
  013226 River discharge                                                  M**3/S                     2            0  21 M**3/S                    2          7
  013227 Soil volumetric water content                                    %                          1            0  10 %                         1          4
  013228 Piezometric level                                                M                          3            0  18 M                         3          6
