@@ -70,7 +70,7 @@ EXTRA_DIST += $(sphinx_packaged_sources)
 .INTERMEDIATE: build-docs
 
 # Build doxygen + sphinx documentation
-build-docs: $(cppdeps) $(sphinx_sources) $(mainpages) ../dballe/libdballe.la ../python/_dballe.la
+build-docs: $(cppdeps) $(sphinx_sources) ../dballe/libdballe.la ../python/_dballe.la
 	rm -rf html
 	mkdir html
 	$(DOXYGEN) libdballe.dox
