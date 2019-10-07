@@ -43,7 +43,6 @@ BuildRequires: help2man
 BuildRequires: libwreport-doc
 BuildRequires: %{python3_vers}-wreport3
 BuildRequires: gcc-gfortran
-BuildRequires: numpy
 BuildRequires: %{python3_vers}-numpy
 
 Requires: %{python3_vers}-dballe = %{?epoch:%epoch:}%{version}-%{release}
@@ -293,9 +292,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 %files -n libdballe-doc
 %defattr(-,root,root,-)
-%if ! 0%{?rhel}
+#if ! 0%{?rhel}
 %doc %{_docdir}/%{name}/*
-%endif
+#endif
 
 %files -n %{python3_vers}-dballe
 %defattr(-,root,root,-)
@@ -313,7 +312,7 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
-* Mon Aug  6 2019 Emanuele Di Giacomo <edigiacomo@arpae.it> - 8.3-1
+* Mon Aug  5 2019 Emanuele Di Giacomo <edigiacomo@arpae.it> - 8.3-1
 - ported python bindings to wobblepy
 - cleaned use of wreport python bindings
 
