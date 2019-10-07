@@ -293,10 +293,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 %files -n libdballe-doc
 %defattr(-,root,root,-)
-%if ! 0%{?el7}
-%doc %{_docdir}/dballe/*
+%if ! 0%{?rhel}
+%doc %{_docdir}/%{name}/*
 %endif
-
 
 %files -n %{python3_vers}-dballe
 %defattr(-,root,root,-)
