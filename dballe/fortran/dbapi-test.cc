@@ -1402,76 +1402,76 @@ this->add_method("issue144", [](Fixture& f) {
     wassert(actual(p2) == 3600);
 
     wassert(actual(dbapi0.test_enqc("var", 255)) == "B14198");
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-658");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "0");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-247");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "0");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-905");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "0");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-82");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "0");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "658");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "0");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-411");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "0");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "1727");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "1");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "5593");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "5");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "44662");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "44");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "141637");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "141");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "238611");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "238");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "339286");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "339");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "294048");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "294");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "202503");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "202");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "91299");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "91");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "9294");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "9");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-1316");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-1");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-2961");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-2");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-1481");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-1");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-823");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "0");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-2221");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-2");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-2056");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-2");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-3208");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-3");
 
     wassert(actual(dbapi0.next_data()) == WR_VAR(0, 14, 198));
-    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-4113");
+    wassert(actual(dbapi0.test_enqc("B14198", 255)) == "-4");
 });
 
 }
