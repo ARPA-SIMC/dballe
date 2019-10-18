@@ -22,8 +22,8 @@ void query_setpy(core::Query& query, const char* key, unsigned len, PyObject* va
         case "lon":         { int ival = dballe_int_lon_from_python(val); query.lonrange.set(ival, ival); }
         case "latmax":      query.latrange.set(query.latrange.imin, dballe_int_lat_from_python(val));
         case "latmin":      query.latrange.set(dballe_int_lat_from_python(val), query.latrange.imax);
-        case "lonmax":      query.lonrange.set(query.lonrange.imin, dballe_int_lon_from_python(val));
-        case "lonmin":      query.lonrange.set(dballe_int_lon_from_python(val), query.lonrange.imax);
+        case "lonmax":      query.lonrange.imax = dballe_int_lon_from_python(val);
+        case "lonmin":      query.lonrange.imin = dballe_int_lon_from_python(val);
         case "year":        query.dtrange.min.year   = query.dtrange.max.year   = datetime_int16_from_python(val);
         case "month":       query.dtrange.min.month  = query.dtrange.max.month  = datetime_int8_from_python(val);
         case "day":         query.dtrange.min.day    = query.dtrange.max.day    = datetime_int8_from_python(val);
