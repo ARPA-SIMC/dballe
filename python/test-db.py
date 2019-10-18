@@ -139,6 +139,11 @@ class CommonDBTestMixin(DballeDBMixin):
             cur = self.db.query_data({"yearmax": 1945, "monthmax": 4, "daymax": 25, "hourmax": 8})
         self.assertEqual(cur.remaining, 2)
 
+    def testQueryLongitude(self):
+        with self.deprecated_on_db():
+            cur = self.db.query_data({"latmin": 12.0, "latmax": 13.0, "lonmin": 76.0, "lonmax": 77.0})
+        self.assertEqual(cur.remaining, 2)
+
     def testQueryDataAttrs(self):
         expected = [
             {"code": "B01011", "val": "Hey Hey!!", "attrs": {'B33007': 50, 'B33036': 75}},
