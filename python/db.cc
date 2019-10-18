@@ -1130,7 +1130,7 @@ Examples:
     # be iterated to get results as dict objects.
     with db.transaction() as tr:
         for row in tr.query_data(query):
-            print(row["lat"], row["lon"], row["var"], row.var().format("undefined"))
+            print(row["lat"], row["lon"], row["var"], row["variable"].format("undefined"))
 
     # Insert 2 new variables in the database
     db.insert_data({
