@@ -134,6 +134,11 @@ class CommonDBTestMixin(DballeDBMixin):
             # FIXME: this should trigger a query: how do we test it?
             self.assertEqual({k: v.enq() for k, v in result.query_attrs().items()}, expected[idx]["attrs"])
 
+    def testQueryValidation(self):
+        with self.deprecated_on_db():
+            cur = self.db.query_data({"yearmax": 1945, "monthmax": 4, "daymax": 25, "hourmax": 8})
+        self.assertEqual(cur.remaining, 2)
+
     def testQueryDataAttrs(self):
         expected = [
             {"code": "B01011", "val": "Hey Hey!!", "attrs": {'B33007': 50, 'B33036': 75}},
