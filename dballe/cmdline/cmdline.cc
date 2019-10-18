@@ -515,6 +515,7 @@ unsigned dba_cmdline_get_query(poptContext optCon, Query& query)
 
         q.set_from_string(queryparm);
     }
+    q.validate();
     return res;
 }
 
