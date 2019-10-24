@@ -393,18 +393,46 @@ struct BaseQuerySummary : public MethKwargs<Base, typename ImplTraits<Station>::
     }
 };
 
+template<typename T>
+struct query_summary_doc_traits
+{
+};
+
+template<>
+struct query_summary_doc_traits<Station>
+{
+    constexpr static const char* returns = "dballe.CursorSummarySummary";
+    constexpr static const char* doc = R"(
+:return: a cursor to iterate the query results (see :py:class:`dballe.CursorSummarySummary`)
+)";
+};
+
+template<>
+struct query_summary_doc_traits<DBStation>
+{
+    constexpr static const char* returns = "dballe.CursorSummaryDBSummary";
+    constexpr static const char* doc = R"(
+:return: a cursor to iterate the query results (see :py:class:`dballe.CursorSummaryDBSummary`)
+)";
+};
+
+
 template<typename Station>
 struct query_summary_all : public BaseQuerySummary<query_summary_all<Station>, Station, All>
 {
     constexpr static const char* name = "query_summary_all";
-    constexpr static const char* doc = "Get all the Explorer summary information; returns a Cursor";
+    constexpr static const char* returns = query_summary_doc_traits<Station>::returns;
+    constexpr static const char* summary = "Get all the Explorer summary information.";
+    constexpr static const char* doc = query_summary_doc_traits<Station>::doc;
 };
 
 template<typename Station>
 struct query_summary : public BaseQuerySummary<query_summary<Station>, Station, Selected>
 {
     constexpr static const char* name = "query_summary";
-    constexpr static const char* doc = "Get the currently selected Explorer summary information; returns a Cursor";
+    constexpr static const char* returns = query_summary_doc_traits<Station>::returns;
+    constexpr static const char* summary = "Get the currently selected Explorer summary information";
+    constexpr static const char* doc = query_summary_doc_traits<Station>::doc;
 };
 
 

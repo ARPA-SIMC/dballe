@@ -465,22 +465,7 @@ struct __exit__ : MethVarargs<__exit__<Impl>, Impl>
 template<typename Definition, typename Impl>
 struct DefinitionBase : public Type<Definition, Impl>
 {
-    constexpr static const char* doc = R"(
-A Cursor is the result of database queries. It is generally iterated through
-the contents of the result. Each iteration returns the cursor itself, that can
-be used to access the result values.
-
-A Cursor works like a read-only dict to access data from the current result.
-The list of available keys is documented in doc/fapi_parms.md.
-
-For example::
-
-    with self.db.query_data({...}) as cur:
-        for row in cur:
-            print("Station:", cur["station"])
-            print("Var:", cur["var"], cur.enqf(cur["var"]))
-
-)";
+    constexpr static const char* doc = "TODO";
 
     static void _dealloc(Impl* self)
     {
@@ -536,7 +521,24 @@ struct DefinitionStation : public DefinitionBase<DefinitionStation, dpy_CursorSt
 {
     constexpr static const char* name = "CursorStation";
     constexpr static const char* qual_name = "dballe.CursorStation";
-    constexpr static const char* summary = "cursor iterating generic query_station results";
+    constexpr static const char* summary = "Cursor iterating generic query_station results";
+    constexpr static const char* doc = R"(
+This cursor is the iterable result of a ``query_stations`` operation performed
+outside a database, like :func:`dballe.Message.query_stations`.
+
+Each iteration returns the cursor itself, that can be used to access the
+current values.
+
+Data is read from the using dict-like access or the various `enq*`
+functions. For the keys available, see :ref:`parms_read_station`.
+
+For example::
+
+    with msg.query_station({...}) as cur:
+        for row in cur:
+            print("Station:", cur["station"])
+)";
+
 
     GetSetters<remaining<Impl>, query<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
@@ -548,6 +550,22 @@ struct DefinitionStationDB : public DefinitionBase<DefinitionStationDB, dpy_Curs
     constexpr static const char* name = "CursorStationDB";
     constexpr static const char* qual_name = "dballe.CursorStationDB";
     constexpr static const char* summary = "cursor iterating dballe.DB query_station results";
+    constexpr static const char* doc = R"(
+This cursor is the iterable result of a ``query_stations`` operation performed
+in a database, like :func:`dballe.Transaction.query_stations`.
+
+Each iteration returns the cursor itself, that can be used to access the
+current values.
+
+Data is read from the using dict-like access or the various `enq*`
+functions. For the keys available, see :ref:`parms_read_station`.
+
+For example::
+
+    with tr.query_station({...}) as cur:
+        for row in cur:
+            print("Station:", cur["station"])
+)";
 
     GetSetters<remaining<Impl>, query<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, remove<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
@@ -559,6 +577,22 @@ struct DefinitionStationData : public DefinitionBase<DefinitionStationData, dpy_
     constexpr static const char* name = "CursorStationData";
     constexpr static const char* qual_name = "dballe.CursorStationData";
     constexpr static const char* summary = "cursor iterating generic query_station_data results";
+    constexpr static const char* doc = R"(
+This cursor is the iterable result of a ``query_station_data`` operation performed
+outside a database, like :func:`dballe.Message.query_station_data`.
+
+Each iteration returns the cursor itself, that can be used to access the
+current values.
+
+Data is read from the using dict-like access or the various `enq*`
+functions. For the keys available, see :ref:`parms_read_stationdata`.
+
+For example::
+
+    with msg.query_station_data({...}) as cur:
+        for row in cur:
+            print("Station:", cur["station"])
+)";
 
     GetSetters<remaining<Impl>, query<Impl>, data<Impl>, data_dict<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
@@ -570,6 +604,22 @@ struct DefinitionStationDataDB : public DefinitionBase<DefinitionStationDataDB, 
     constexpr static const char* name = "CursorStationDataDB";
     constexpr static const char* qual_name = "dballe.CursorStationDataDB";
     constexpr static const char* summary = "cursor iterating dballe.DB query_station_data results";
+    constexpr static const char* doc = R"(
+This cursor is the iterable result of a ``query_station_data`` operation performed
+in a database, like :func:`dballe.Transaction.query_station_data`.
+
+Each iteration returns the cursor itself, that can be used to access the
+current values.
+
+Data is read from the using dict-like access or the various `enq*`
+functions. For the keys available, see :ref:`parms_read_stationdata`.
+
+For example::
+
+    with tr.query_station_data({...}) as cur:
+        for row in cur:
+            print("Station:", cur["station"])
+)";
 
     GetSetters<remaining<Impl>, query<Impl>, data<Impl>, data_dict<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, remove<Impl>, query_attrs<Impl>, insert_attrs<Impl>, remove_attrs<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
@@ -581,6 +631,22 @@ struct DefinitionData : public DefinitionBase<DefinitionData, dpy_CursorData>
     constexpr static const char* name = "CursorData";
     constexpr static const char* qual_name = "dballe.CursorData";
     constexpr static const char* summary = "cursor iterating generic query_data results";
+    constexpr static const char* doc = R"(
+This cursor is the iterable result of a ``query_data`` operation performed
+outside a database, like :func:`dballe.Message.query_data`.
+
+Each iteration returns the cursor itself, that can be used to access the
+current values.
+
+Data is read from the using dict-like access or the various `enq*`
+functions. For the keys available, see :ref:`parms_read_data`.
+
+For example::
+
+    with msg.query_data({...}) as cur:
+        for row in cur:
+            print("Station:", cur["station"])
+)";
 
     GetSetters<remaining<Impl>, query<Impl>, data<Impl>, data_dict<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
@@ -592,6 +658,22 @@ struct DefinitionDataDB : public DefinitionBase<DefinitionDataDB, dpy_CursorData
     constexpr static const char* name = "CursorDataDB";
     constexpr static const char* qual_name = "dballe.CursorDataDB";
     constexpr static const char* summary = "cursor iterating dballe.DB query_data results";
+    constexpr static const char* doc = R"(
+This cursor is the iterable result of a ``query_data`` operation performed
+in a database, like :func:`dballe.Transaction.query_data`.
+
+Each iteration returns the cursor itself, that can be used to access the
+current values.
+
+Data is read from the using dict-like access or the various `enq*`
+functions. For the keys available, see :ref:`parms_read_data`.
+
+For example::
+
+    with tr.query_data({...}) as cur:
+        for row in cur:
+            print("Station:", cur["station"])
+)";
 
     GetSetters<remaining<Impl>, query<Impl>, data<Impl>, data_dict<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, remove<Impl>, query_attrs<Impl>, insert_attrs<Impl>, remove_attrs<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
@@ -603,6 +685,22 @@ struct DefinitionSummaryDB : public DefinitionBase<DefinitionSummaryDB, dpy_Curs
     constexpr static const char* name = "CursorSummaryDB";
     constexpr static const char* qual_name = "dballe.CursorSummaryDB";
     constexpr static const char* summary = "cursor iterating dballe.DB query_summary results";
+    constexpr static const char* doc = R"(
+This cursor is the iterable result of a ``query_summary`` operation performed
+in a database, like :func:`dballe.Transaction.query_summary`.
+
+Each iteration returns the cursor itself, that can be used to access the
+current values.
+
+Data is read from the using dict-like access or the various `enq*`
+functions. For the keys available, see :ref:`parms_read_summary`.
+
+For example::
+
+    with tr.query_summary({...}) as cur:
+        for row in cur:
+            print("Station:", cur["station"])
+)";
 
     GetSetters<remaining<Impl>, query<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, remove<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
@@ -614,6 +712,22 @@ struct DefinitionSummarySummary : public DefinitionBase<DefinitionSummarySummary
     constexpr static const char* name = "CursorSummarySummary";
     constexpr static const char* qual_name = "dballe.CursorSummarySummary";
     constexpr static const char* summary = "cursor iterating dballe.Explorer query_summary* results";
+    constexpr static const char* doc = R"(
+This cursor is the iterable result of a :class:`dballe.Explorer` ``query_*``.
+like :func:`dballe.Explorer.query_summary` or :func:`dballe.Explorer.query_summary_all`.
+
+Each iteration returns the cursor itself, that can be used to access the
+current values.
+
+Data is read from the using dict-like access or the various `enq*`
+functions. For the keys available, see :ref:`parms_read_summary`.
+
+For example::
+
+    with explorer.query_all({...}) as cur:
+        for row in cur:
+            print("Station:", cur["station"])
+)";
 
     GetSetters<remaining<Impl>, query<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
@@ -625,6 +739,22 @@ struct DefinitionSummaryDBSummary : public DefinitionBase<DefinitionSummaryDBSum
     constexpr static const char* name = "CursorSummaryDBSummary";
     constexpr static const char* qual_name = "dballe.CursorSummaryDBSummary";
     constexpr static const char* summary = "cursor iterating dballe.DBExplorer query_summary* results";
+    constexpr static const char* doc = R"(
+This cursor is the iterable result of a :class:`dballe.DBExplorer` ``query_*``.
+like :func:`dballe.DBExplorer.query_summary` or :func:`dballe.DBExplorer.query_summary_all`.
+
+Each iteration returns the cursor itself, that can be used to access the
+current values.
+
+Data is read from the using dict-like access or the various `enq*`
+functions. For the keys available, see :ref:`parms_read_summary`.
+
+For example::
+
+    with explorer.query_all({...}) as cur:
+        for row in cur:
+            print("Station:", cur["station"])
+)";
 
     GetSetters<remaining<Impl>, query<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
