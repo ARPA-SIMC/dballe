@@ -276,7 +276,7 @@ struct query_stations : MethQuery<query_stations<Impl>, Impl>
 {
     constexpr static const char* name = "query_stations";
     constexpr static const char* returns = "dballe.CursorStation";
-    constexpr static const char* summary = "Query the station archive in the database";
+    constexpr static const char* summary = "Query the stations in the database";
     constexpr static const char* doc = R"(
 :return: a cursor to iterate the query results (see :py:class:`dballe.CursorStationDB`)
 )";
@@ -294,7 +294,7 @@ struct query_station_data : MethQuery<query_station_data<Impl>, Impl>
 {
     constexpr static const char* name = "query_station_data";
     constexpr static const char* returns = "dballe.CursorStationData";
-    constexpr static const char* summary = "Query the station variables in the database";
+    constexpr static const char* summary = "Query the constant station data in the database";
     constexpr static const char* doc = R"(
 :return: a cursor to iterate the query results (see :py:class:`dballe.CursorStationDataDB`)
 )";
@@ -312,7 +312,7 @@ struct query_data : MethQuery<query_data<Impl>, Impl>
 {
     constexpr static const char* name = "query_data";
     constexpr static const char* returns = "dballe.CursorData";
-    constexpr static const char* summary = "Query the variables in the database";
+    constexpr static const char* summary = "Query the data in the database";
     constexpr static const char* doc = R"(
 :return: a cursor to iterate the query results (see :py:class:`dballe.CursorDataDB`)
 )";
@@ -397,7 +397,7 @@ struct attr_query_station : MethKwargs<attr_query_station<Impl>, Impl>
     constexpr static const char* name = "attr_query_station";
     constexpr static const char* signature = "varid: int";
     constexpr static const char* returns = "Dict[str, Any]";
-    constexpr static const char* summary = "query station data attributes";
+    constexpr static const char* summary = "query constant station data attributes";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         if (deprecate_on_db(self, name)) return nullptr;
@@ -484,7 +484,7 @@ struct attr_insert_station : MethKwargs<attr_insert_station<Impl>, Impl>
 {
     constexpr static const char* name = "attr_insert_station";
     constexpr static const char* signature = "varid: int, attrs: Dict[str, Any]";
-    constexpr static const char* summary = "Insert new attributes into the database";
+    constexpr static const char* summary = "Insert new constant station data attributes into the database";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         if (deprecate_on_db(self, name)) return nullptr;
@@ -509,7 +509,7 @@ struct attr_insert_data : MethKwargs<attr_insert_data<Impl>, Impl>
 {
     constexpr static const char* name = "attr_insert_data";
     constexpr static const char* signature = "varid: int, attrs: Dict[str, Any]";
-    constexpr static const char* summary = "Insert new attributes into the database";
+    constexpr static const char* summary = "Insert new data attributes into the database";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         if (deprecate_on_db(self, name)) return nullptr;
@@ -562,7 +562,7 @@ struct attr_remove_station : MethKwargs<attr_remove_station<Impl>, Impl>
 {
     constexpr static const char* name = "attr_remove_station";
     constexpr static const char* signature = "varid: int, attrs: Iterable[str]";
-    constexpr static const char* summary = "Remove attributes from station variables";
+    constexpr static const char* summary = "Remove attributes from constant station data";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         if (deprecate_on_db(self, name)) return nullptr;
@@ -587,7 +587,7 @@ struct attr_remove_data : MethKwargs<attr_remove_data<Impl>, Impl>
 {
     constexpr static const char* name = "attr_remove_data";
     constexpr static const char* signature = "varid: int, attrs: Iterable[str]";
-    constexpr static const char* summary = "Remove attributes from data variables";
+    constexpr static const char* summary = "Remove attributes from data";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         if (deprecate_on_db(self, name)) return nullptr;
