@@ -21,7 +21,6 @@
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
-  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head><body>
@@ -30,8 +29,6 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <div class="section" id="dballe-database-functions">
@@ -73,13 +70,13 @@ by automatically creating a temporary transaction and running the equivalent
 <dl class="method">
 <dt id="dballe.DB.attr_insert_data">
 <code class="descname">attr_insert_data</code><span class="sig-paren">(</span><em>varid: int, attrs: Dict[str, Any]</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.DB.attr_insert_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Insert new attributes into the database</p>
+<dd><p>Insert new data attributes into the database</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.DB.attr_insert_station">
 <code class="descname">attr_insert_station</code><span class="sig-paren">(</span><em>varid: int, attrs: Dict[str, Any]</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.DB.attr_insert_station" title="Permalink to this definition">¶</a></dt>
-<dd><p>Insert new attributes into the database</p>
+<dd><p>Insert new constant station data attributes into the database</p>
 </dd></dl>
 
 <dl class="method">
@@ -91,19 +88,19 @@ by automatically creating a temporary transaction and running the equivalent
 <dl class="method">
 <dt id="dballe.DB.attr_query_station">
 <code class="descname">attr_query_station</code><span class="sig-paren">(</span><em>varid: int</em><span class="sig-paren">)</span> &#x2192; Dict[str, Any]<a class="headerlink" href="#dballe.DB.attr_query_station" title="Permalink to this definition">¶</a></dt>
-<dd><p>query station data attributes</p>
+<dd><p>query constant station data attributes</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.DB.attr_remove_data">
 <code class="descname">attr_remove_data</code><span class="sig-paren">(</span><em>varid: int, attrs: Iterable[str]</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.DB.attr_remove_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove attributes from data variables</p>
+<dd><p>Remove attributes from data</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.DB.attr_remove_station">
 <code class="descname">attr_remove_station</code><span class="sig-paren">(</span><em>varid: int, attrs: Iterable[str]</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.DB.attr_remove_station" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove attributes from station variables</p>
+<dd><p>Remove attributes from constant station data</p>
 </dd></dl>
 
 <dl class="method">
@@ -205,7 +202,15 @@ database ID of its value.</p>
 <dl class="method">
 <dt id="dballe.DB.query_data">
 <code class="descname">query_data</code><span class="sig-paren">(</span><em>query: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; dballe.CursorData<a class="headerlink" href="#dballe.DB.query_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Query the variables in the database</p>
+<dd><p>Query the data in the database</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a cursor to iterate the query results (see <a class="reference internal" href="dballe_cursors.html#dballe.CursorDataDB" title="dballe.CursorDataDB"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.CursorDataDB</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -217,19 +222,43 @@ database ID of its value.</p>
 <dl class="method">
 <dt id="dballe.DB.query_station_data">
 <code class="descname">query_station_data</code><span class="sig-paren">(</span><em>query: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; dballe.CursorStationData<a class="headerlink" href="#dballe.DB.query_station_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Query the station variables in the database</p>
+<dd><p>Query the constant station data in the database</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a cursor to iterate the query results (see <a class="reference internal" href="dballe_cursors.html#dballe.CursorStationDataDB" title="dballe.CursorStationDataDB"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.CursorStationDataDB</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.DB.query_stations">
 <code class="descname">query_stations</code><span class="sig-paren">(</span><em>query: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; dballe.CursorStation<a class="headerlink" href="#dballe.DB.query_stations" title="Permalink to this definition">¶</a></dt>
-<dd><p>Query the station archive in the database</p>
+<dd><p>Query the stations in the database</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a cursor to iterate the query results (see <a class="reference internal" href="dballe_cursors.html#dballe.CursorStationDB" title="dballe.CursorStationDB"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.CursorStationDB</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.DB.query_summary">
 <code class="descname">query_summary</code><span class="sig-paren">(</span><em>query: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; dballe.CursorSummary<a class="headerlink" href="#dballe.DB.query_summary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Query the summary of the results of a query</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a cursor to iterate the query results (see <a class="reference internal" href="dballe_cursors.html#dballe.CursorSummaryDB" title="dballe.CursorSummaryDB"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.CursorSummaryDB</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -316,13 +345,13 @@ and running the dballe.Transaction method inside it.</p>
 <dl class="method">
 <dt id="dballe.Transaction.attr_insert_data">
 <code class="descname">attr_insert_data</code><span class="sig-paren">(</span><em>varid: int, attrs: Dict[str, Any]</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.Transaction.attr_insert_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Insert new attributes into the database</p>
+<dd><p>Insert new data attributes into the database</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.Transaction.attr_insert_station">
 <code class="descname">attr_insert_station</code><span class="sig-paren">(</span><em>varid: int, attrs: Dict[str, Any]</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.Transaction.attr_insert_station" title="Permalink to this definition">¶</a></dt>
-<dd><p>Insert new attributes into the database</p>
+<dd><p>Insert new constant station data attributes into the database</p>
 </dd></dl>
 
 <dl class="method">
@@ -334,19 +363,19 @@ and running the dballe.Transaction method inside it.</p>
 <dl class="method">
 <dt id="dballe.Transaction.attr_query_station">
 <code class="descname">attr_query_station</code><span class="sig-paren">(</span><em>varid: int</em><span class="sig-paren">)</span> &#x2192; Dict[str, Any]<a class="headerlink" href="#dballe.Transaction.attr_query_station" title="Permalink to this definition">¶</a></dt>
-<dd><p>query station data attributes</p>
+<dd><p>query constant station data attributes</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.Transaction.attr_remove_data">
 <code class="descname">attr_remove_data</code><span class="sig-paren">(</span><em>varid: int, attrs: Iterable[str]</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.Transaction.attr_remove_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove attributes from data variables</p>
+<dd><p>Remove attributes from data</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.Transaction.attr_remove_station">
 <code class="descname">attr_remove_station</code><span class="sig-paren">(</span><em>varid: int, attrs: Iterable[str]</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.Transaction.attr_remove_station" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove attributes from station variables</p>
+<dd><p>Remove attributes from constant station data</p>
 </dd></dl>
 
 <dl class="method">
@@ -412,7 +441,15 @@ database ID of its value.</p>
 <dl class="method">
 <dt id="dballe.Transaction.query_data">
 <code class="descname">query_data</code><span class="sig-paren">(</span><em>query: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; dballe.CursorData<a class="headerlink" href="#dballe.Transaction.query_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Query the variables in the database</p>
+<dd><p>Query the data in the database</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a cursor to iterate the query results (see <a class="reference internal" href="dballe_cursors.html#dballe.CursorDataDB" title="dballe.CursorDataDB"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.CursorDataDB</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -424,19 +461,43 @@ database ID of its value.</p>
 <dl class="method">
 <dt id="dballe.Transaction.query_station_data">
 <code class="descname">query_station_data</code><span class="sig-paren">(</span><em>query: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; dballe.CursorStationData<a class="headerlink" href="#dballe.Transaction.query_station_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Query the station variables in the database</p>
+<dd><p>Query the constant station data in the database</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a cursor to iterate the query results (see <a class="reference internal" href="dballe_cursors.html#dballe.CursorStationDataDB" title="dballe.CursorStationDataDB"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.CursorStationDataDB</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.Transaction.query_stations">
 <code class="descname">query_stations</code><span class="sig-paren">(</span><em>query: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; dballe.CursorStation<a class="headerlink" href="#dballe.Transaction.query_stations" title="Permalink to this definition">¶</a></dt>
-<dd><p>Query the station archive in the database</p>
+<dd><p>Query the stations in the database</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a cursor to iterate the query results (see <a class="reference internal" href="dballe_cursors.html#dballe.CursorStationDB" title="dballe.CursorStationDB"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.CursorStationDB</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.Transaction.query_summary">
 <code class="descname">query_summary</code><span class="sig-paren">(</span><em>query: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; dballe.CursorSummary<a class="headerlink" href="#dballe.Transaction.query_summary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Query the summary of the results of a query</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a cursor to iterate the query results (see <a class="reference internal" href="dballe_cursors.html#dballe.CursorSummaryDB" title="dballe.CursorSummaryDB"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.CursorSummaryDB</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -519,14 +580,30 @@ database ID of its value.</p>
 
 <dl class="method">
 <dt id="dballe.Explorer.query_summary">
-<code class="descname">query_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dballe.Explorer.query_summary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the currently selected Explorer summary information; returns a Cursor</p>
+<code class="descname">query_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; dballe.CursorSummarySummary<a class="headerlink" href="#dballe.Explorer.query_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the currently selected Explorer summary information</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a cursor to iterate the query results (see <a class="reference internal" href="dballe_cursors.html#dballe.CursorSummarySummary" title="dballe.CursorSummarySummary"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.CursorSummarySummary</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.Explorer.query_summary_all">
-<code class="descname">query_summary_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dballe.Explorer.query_summary_all" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get all the Explorer summary information; returns a Cursor</p>
+<code class="descname">query_summary_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; dballe.CursorSummarySummary<a class="headerlink" href="#dballe.Explorer.query_summary_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all the Explorer summary information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a cursor to iterate the query results (see <a class="reference internal" href="dballe_cursors.html#dballe.CursorSummarySummary" title="dballe.CursorSummarySummary"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.CursorSummarySummary</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -639,14 +716,30 @@ add data to the explorer in a single transaction.</p>
 
 <dl class="method">
 <dt id="dballe.DBExplorer.query_summary">
-<code class="descname">query_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dballe.DBExplorer.query_summary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the currently selected Explorer summary information; returns a Cursor</p>
+<code class="descname">query_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; dballe.CursorSummaryDBSummary<a class="headerlink" href="#dballe.DBExplorer.query_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the currently selected Explorer summary information</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a cursor to iterate the query results (see <a class="reference internal" href="dballe_cursors.html#dballe.CursorSummaryDBSummary" title="dballe.CursorSummaryDBSummary"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.CursorSummaryDBSummary</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.DBExplorer.query_summary_all">
-<code class="descname">query_summary_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dballe.DBExplorer.query_summary_all" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get all the Explorer summary information; returns a Cursor</p>
+<code class="descname">query_summary_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; dballe.CursorSummaryDBSummary<a class="headerlink" href="#dballe.DBExplorer.query_summary_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all the Explorer summary information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a cursor to iterate the query results (see <a class="reference internal" href="dballe_cursors.html#dballe.CursorSummaryDBSummary" title="dballe.CursorSummaryDBSummary"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.CursorSummaryDBSummary</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -777,7 +870,6 @@ add data to the explorer in a single transaction.</p>
 
 
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -836,14 +928,6 @@ add data to the explorer in a single transaction.</p>
     </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
-
-
-
-
-
-
-
-
         </div>
       </div>
       <div class="clearer"></div>
@@ -853,7 +937,7 @@ add data to the explorer in a single transaction.</p>
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
       |
       <a href="../_sources/python/dballe_db.rst.txt"

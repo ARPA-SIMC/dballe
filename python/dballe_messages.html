@@ -21,7 +21,6 @@
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
-  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head><body>
@@ -30,8 +29,6 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <div class="section" id="dballe-messages-i-o">
@@ -195,19 +192,43 @@ message will be encoded by the exporter.</p>
 <dl class="method">
 <dt id="dballe.Message.query_data">
 <code class="descname">query_data</code><span class="sig-paren">(</span><em>query: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; dballe.CursorData<a class="headerlink" href="#dballe.Message.query_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Query the variables in the message</p>
+<dd><p>Query the data in the message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a cursor to iterate the query results (see <a class="reference internal" href="dballe_cursors.html#dballe.CursorData" title="dballe.CursorData"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.CursorData</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.Message.query_station_data">
 <code class="descname">query_station_data</code><span class="sig-paren">(</span><em>query: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; dballe.CursorStationData<a class="headerlink" href="#dballe.Message.query_station_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Query the station variables in the message</p>
+<dd><p>Query the constant station data in the message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a cursor to iterate the query results (see <a class="reference internal" href="dballe_cursors.html#dballe.CursorStationData" title="dballe.CursorStationData"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.CursorStationData</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.Message.query_stations">
 <code class="descname">query_stations</code><span class="sig-paren">(</span><em>query: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; dballe.CursorStation<a class="headerlink" href="#dballe.Message.query_stations" title="Permalink to this definition">¶</a></dt>
-<dd><p>Query the station data in the message</p>
+<dd><p>Query the stations in the message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a cursor to iterate the query results (see <a class="reference internal" href="dballe_cursors.html#dballe.CursorStation" title="dballe.CursorStation"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.CursorStation</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
@@ -323,7 +344,6 @@ the contents of a <a class="reference internal" href="#dballe.Message" title="db
 
 
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -382,14 +402,6 @@ the contents of a <a class="reference internal" href="#dballe.Message" title="db
     </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
-
-
-
-
-
-
-
-
         </div>
       </div>
       <div class="clearer"></div>
@@ -399,7 +411,7 @@ the contents of a <a class="reference internal" href="#dballe.Message" title="db
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
       |
       <a href="../_sources/python/dballe_messages.rst.txt"

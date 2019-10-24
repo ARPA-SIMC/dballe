@@ -21,7 +21,6 @@
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
-  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head><body>
@@ -30,8 +29,6 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <div class="section" id="dballe-cursors">
@@ -41,16 +38,16 @@
 <dl class="class">
 <dt id="dballe.CursorStation">
 <em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorStation</code><a class="headerlink" href="#dballe.CursorStation" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Cursor is the result of database queries. It is generally iterated through
-the contents of the result. Each iteration returns the cursor itself, that can
-be used to access the result values.</p>
-<p>A Cursor works like a read-only dict to access data from the current result.
-The list of available keys is documented in doc/fapi_parms.md.</p>
+<dd><p>This cursor is the iterable result of a <code class="docutils literal notranslate"><span class="pre">query_stations</span></code> operation performed
+outside a database, like <a class="reference internal" href="dballe_messages.html#dballe.Message.query_stations" title="dballe.Message.query_stations"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Message.query_stations()</span></code></a>.</p>
+<p>Each iteration returns the cursor itself, that can be used to access the
+current values.</p>
+<p>Data is read from the using dict-like access or the various <cite>enq*</cite>
+functions. For the keys available, see <a class="reference internal" href="../parms.html#parms-read-station"><span class="std std-ref">Parameters used when reading station query results</span></a>.</p>
 <p>For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query_data</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">msg</span><span class="o">.</span><span class="n">query_station</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Station:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;station&quot;</span><span class="p">])</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Var:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">],</span> <span class="n">cur</span><span class="o">.</span><span class="n">enqf</span><span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">]))</span>
 </pre></div>
 </div>
 <dl class="method">
@@ -94,16 +91,16 @@ The list of available keys is documented in doc/fapi_parms.md.</p>
 <dl class="class">
 <dt id="dballe.CursorStationDB">
 <em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorStationDB</code><a class="headerlink" href="#dballe.CursorStationDB" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Cursor is the result of database queries. It is generally iterated through
-the contents of the result. Each iteration returns the cursor itself, that can
-be used to access the result values.</p>
-<p>A Cursor works like a read-only dict to access data from the current result.
-The list of available keys is documented in doc/fapi_parms.md.</p>
+<dd><p>This cursor is the iterable result of a <code class="docutils literal notranslate"><span class="pre">query_stations</span></code> operation performed
+in a database, like <a class="reference internal" href="dballe_db.html#dballe.Transaction.query_stations" title="dballe.Transaction.query_stations"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Transaction.query_stations()</span></code></a>.</p>
+<p>Each iteration returns the cursor itself, that can be used to access the
+current values.</p>
+<p>Data is read from the using dict-like access or the various <cite>enq*</cite>
+functions. For the keys available, see <a class="reference internal" href="../parms.html#parms-read-station"><span class="std std-ref">Parameters used when reading station query results</span></a>.</p>
 <p>For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query_data</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">tr</span><span class="o">.</span><span class="n">query_station</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Station:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;station&quot;</span><span class="p">])</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Var:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">],</span> <span class="n">cur</span><span class="o">.</span><span class="n">enqf</span><span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">]))</span>
 </pre></div>
 </div>
 <dl class="method">
@@ -153,16 +150,16 @@ The list of available keys is documented in doc/fapi_parms.md.</p>
 <dl class="class">
 <dt id="dballe.CursorStationData">
 <em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorStationData</code><a class="headerlink" href="#dballe.CursorStationData" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Cursor is the result of database queries. It is generally iterated through
-the contents of the result. Each iteration returns the cursor itself, that can
-be used to access the result values.</p>
-<p>A Cursor works like a read-only dict to access data from the current result.
-The list of available keys is documented in doc/fapi_parms.md.</p>
+<dd><p>This cursor is the iterable result of a <code class="docutils literal notranslate"><span class="pre">query_station_data</span></code> operation performed
+outside a database, like <a class="reference internal" href="dballe_messages.html#dballe.Message.query_station_data" title="dballe.Message.query_station_data"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Message.query_station_data()</span></code></a>.</p>
+<p>Each iteration returns the cursor itself, that can be used to access the
+current values.</p>
+<p>Data is read from the using dict-like access or the various <cite>enq*</cite>
+functions. For the keys available, see <a class="reference internal" href="../parms.html#parms-read-stationdata"><span class="std std-ref">Parameters used when reading query results for station values</span></a>.</p>
 <p>For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query_data</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">msg</span><span class="o">.</span><span class="n">query_station_data</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Station:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;station&quot;</span><span class="p">])</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Var:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">],</span> <span class="n">cur</span><span class="o">.</span><span class="n">enqf</span><span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">]))</span>
 </pre></div>
 </div>
 <dl class="attribute">
@@ -218,16 +215,16 @@ The list of available keys is documented in doc/fapi_parms.md.</p>
 <dl class="class">
 <dt id="dballe.CursorStationDataDB">
 <em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorStationDataDB</code><a class="headerlink" href="#dballe.CursorStationDataDB" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Cursor is the result of database queries. It is generally iterated through
-the contents of the result. Each iteration returns the cursor itself, that can
-be used to access the result values.</p>
-<p>A Cursor works like a read-only dict to access data from the current result.
-The list of available keys is documented in doc/fapi_parms.md.</p>
+<dd><p>This cursor is the iterable result of a <code class="docutils literal notranslate"><span class="pre">query_station_data</span></code> operation performed
+in a database, like <a class="reference internal" href="dballe_db.html#dballe.Transaction.query_station_data" title="dballe.Transaction.query_station_data"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Transaction.query_station_data()</span></code></a>.</p>
+<p>Each iteration returns the cursor itself, that can be used to access the
+current values.</p>
+<p>Data is read from the using dict-like access or the various <cite>enq*</cite>
+functions. For the keys available, see <a class="reference internal" href="../parms.html#parms-read-stationdata"><span class="std std-ref">Parameters used when reading query results for station values</span></a>.</p>
 <p>For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query_data</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">tr</span><span class="o">.</span><span class="n">query_station_data</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Station:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;station&quot;</span><span class="p">])</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Var:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">],</span> <span class="n">cur</span><span class="o">.</span><span class="n">enqf</span><span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">]))</span>
 </pre></div>
 </div>
 <dl class="attribute">
@@ -301,16 +298,16 @@ The list of available keys is documented in doc/fapi_parms.md.</p>
 <dl class="class">
 <dt id="dballe.CursorData">
 <em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorData</code><a class="headerlink" href="#dballe.CursorData" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Cursor is the result of database queries. It is generally iterated through
-the contents of the result. Each iteration returns the cursor itself, that can
-be used to access the result values.</p>
-<p>A Cursor works like a read-only dict to access data from the current result.
-The list of available keys is documented in doc/fapi_parms.md.</p>
+<dd><p>This cursor is the iterable result of a <code class="docutils literal notranslate"><span class="pre">query_data</span></code> operation performed
+outside a database, like <a class="reference internal" href="dballe_messages.html#dballe.Message.query_data" title="dballe.Message.query_data"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Message.query_data()</span></code></a>.</p>
+<p>Each iteration returns the cursor itself, that can be used to access the
+current values.</p>
+<p>Data is read from the using dict-like access or the various <cite>enq*</cite>
+functions. For the keys available, see <a class="reference internal" href="../parms.html#parms-read-data"><span class="std std-ref">Parameters used when reading query results for data values</span></a>.</p>
 <p>For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query_data</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">msg</span><span class="o">.</span><span class="n">query_data</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Station:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;station&quot;</span><span class="p">])</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Var:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">],</span> <span class="n">cur</span><span class="o">.</span><span class="n">enqf</span><span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">]))</span>
 </pre></div>
 </div>
 <dl class="attribute">
@@ -366,16 +363,16 @@ The list of available keys is documented in doc/fapi_parms.md.</p>
 <dl class="class">
 <dt id="dballe.CursorDataDB">
 <em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorDataDB</code><a class="headerlink" href="#dballe.CursorDataDB" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Cursor is the result of database queries. It is generally iterated through
-the contents of the result. Each iteration returns the cursor itself, that can
-be used to access the result values.</p>
-<p>A Cursor works like a read-only dict to access data from the current result.
-The list of available keys is documented in doc/fapi_parms.md.</p>
+<dd><p>This cursor is the iterable result of a <code class="docutils literal notranslate"><span class="pre">query_data</span></code> operation performed
+in a database, like <a class="reference internal" href="dballe_db.html#dballe.Transaction.query_data" title="dballe.Transaction.query_data"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Transaction.query_data()</span></code></a>.</p>
+<p>Each iteration returns the cursor itself, that can be used to access the
+current values.</p>
+<p>Data is read from the using dict-like access or the various <cite>enq*</cite>
+functions. For the keys available, see <a class="reference internal" href="../parms.html#parms-read-data"><span class="std std-ref">Parameters used when reading query results for data values</span></a>.</p>
 <p>For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query_data</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">tr</span><span class="o">.</span><span class="n">query_data</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Station:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;station&quot;</span><span class="p">])</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Var:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">],</span> <span class="n">cur</span><span class="o">.</span><span class="n">enqf</span><span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">]))</span>
 </pre></div>
 </div>
 <dl class="attribute">
@@ -449,16 +446,16 @@ The list of available keys is documented in doc/fapi_parms.md.</p>
 <dl class="class">
 <dt id="dballe.CursorSummaryDB">
 <em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorSummaryDB</code><a class="headerlink" href="#dballe.CursorSummaryDB" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Cursor is the result of database queries. It is generally iterated through
-the contents of the result. Each iteration returns the cursor itself, that can
-be used to access the result values.</p>
-<p>A Cursor works like a read-only dict to access data from the current result.
-The list of available keys is documented in doc/fapi_parms.md.</p>
+<dd><p>This cursor is the iterable result of a <code class="docutils literal notranslate"><span class="pre">query_summary</span></code> operation performed
+in a database, like <a class="reference internal" href="dballe_db.html#dballe.Transaction.query_summary" title="dballe.Transaction.query_summary"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Transaction.query_summary()</span></code></a>.</p>
+<p>Each iteration returns the cursor itself, that can be used to access the
+current values.</p>
+<p>Data is read from the using dict-like access or the various <cite>enq*</cite>
+functions. For the keys available, see <a class="reference internal" href="../parms.html#parms-read-summary"><span class="std std-ref">Parameters used when reading query results for summary values</span></a>.</p>
 <p>For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query_data</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">tr</span><span class="o">.</span><span class="n">query_summary</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Station:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;station&quot;</span><span class="p">])</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Var:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">],</span> <span class="n">cur</span><span class="o">.</span><span class="n">enqf</span><span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">]))</span>
 </pre></div>
 </div>
 <dl class="method">
@@ -508,16 +505,16 @@ The list of available keys is documented in doc/fapi_parms.md.</p>
 <dl class="class">
 <dt id="dballe.CursorSummarySummary">
 <em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorSummarySummary</code><a class="headerlink" href="#dballe.CursorSummarySummary" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Cursor is the result of database queries. It is generally iterated through
-the contents of the result. Each iteration returns the cursor itself, that can
-be used to access the result values.</p>
-<p>A Cursor works like a read-only dict to access data from the current result.
-The list of available keys is documented in doc/fapi_parms.md.</p>
+<dd><p>This cursor is the iterable result of a <a class="reference internal" href="dballe_db.html#dballe.Explorer" title="dballe.Explorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Explorer</span></code></a> <code class="docutils literal notranslate"><span class="pre">query_*</span></code>.
+like <a class="reference internal" href="dballe_db.html#dballe.Explorer.query_summary" title="dballe.Explorer.query_summary"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Explorer.query_summary()</span></code></a> or <a class="reference internal" href="dballe_db.html#dballe.Explorer.query_summary_all" title="dballe.Explorer.query_summary_all"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Explorer.query_summary_all()</span></code></a>.</p>
+<p>Each iteration returns the cursor itself, that can be used to access the
+current values.</p>
+<p>Data is read from the using dict-like access or the various <cite>enq*</cite>
+functions. For the keys available, see <a class="reference internal" href="../parms.html#parms-read-summary"><span class="std std-ref">Parameters used when reading query results for summary values</span></a>.</p>
 <p>For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query_data</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">explorer</span><span class="o">.</span><span class="n">query_all</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Station:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;station&quot;</span><span class="p">])</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Var:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">],</span> <span class="n">cur</span><span class="o">.</span><span class="n">enqf</span><span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">]))</span>
 </pre></div>
 </div>
 <dl class="method">
@@ -561,16 +558,16 @@ The list of available keys is documented in doc/fapi_parms.md.</p>
 <dl class="class">
 <dt id="dballe.CursorSummaryDBSummary">
 <em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorSummaryDBSummary</code><a class="headerlink" href="#dballe.CursorSummaryDBSummary" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Cursor is the result of database queries. It is generally iterated through
-the contents of the result. Each iteration returns the cursor itself, that can
-be used to access the result values.</p>
-<p>A Cursor works like a read-only dict to access data from the current result.
-The list of available keys is documented in doc/fapi_parms.md.</p>
+<dd><p>This cursor is the iterable result of a <a class="reference internal" href="dballe_db.html#dballe.DBExplorer" title="dballe.DBExplorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.DBExplorer</span></code></a> <code class="docutils literal notranslate"><span class="pre">query_*</span></code>.
+like <a class="reference internal" href="dballe_db.html#dballe.DBExplorer.query_summary" title="dballe.DBExplorer.query_summary"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.DBExplorer.query_summary()</span></code></a> or <a class="reference internal" href="dballe_db.html#dballe.DBExplorer.query_summary_all" title="dballe.DBExplorer.query_summary_all"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.DBExplorer.query_summary_all()</span></code></a>.</p>
+<p>Each iteration returns the cursor itself, that can be used to access the
+current values.</p>
+<p>Data is read from the using dict-like access or the various <cite>enq*</cite>
+functions. For the keys available, see <a class="reference internal" href="../parms.html#parms-read-summary"><span class="std std-ref">Parameters used when reading query results for summary values</span></a>.</p>
 <p>For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query_data</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">explorer</span><span class="o">.</span><span class="n">query_all</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Station:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;station&quot;</span><span class="p">])</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Var:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">],</span> <span class="n">cur</span><span class="o">.</span><span class="n">enqf</span><span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">]))</span>
 </pre></div>
 </div>
 <dl class="method">
@@ -614,18 +611,7 @@ The list of available keys is documented in doc/fapi_parms.md.</p>
 <dl class="class">
 <dt id="dballe.CursorMessage">
 <em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorMessage</code><a class="headerlink" href="#dballe.CursorMessage" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Cursor is the result of database queries. It is generally iterated through
-the contents of the result. Each iteration returns the cursor itself, that can
-be used to access the result values.</p>
-<p>A Cursor works like a read-only dict to access data from the current result.
-The list of available keys is documented in doc/fapi_parms.md.</p>
-<p>For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query_data</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
-    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Station:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;station&quot;</span><span class="p">])</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Var:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">],</span> <span class="n">cur</span><span class="o">.</span><span class="n">enqf</span><span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">]))</span>
-</pre></div>
-</div>
+<dd><p>TODO</p>
 <dl class="method">
 <dt id="dballe.CursorMessage.enqd">
 <code class="descname">enqd</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorMessage.enqd" title="Permalink to this definition">¶</a></dt>
@@ -674,7 +660,6 @@ The list of available keys is documented in doc/fapi_parms.md.</p>
 
 
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -733,14 +718,6 @@ The list of available keys is documented in doc/fapi_parms.md.</p>
     </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
-
-
-
-
-
-
-
-
         </div>
       </div>
       <div class="clearer"></div>
@@ -750,7 +727,7 @@ The list of available keys is documented in doc/fapi_parms.md.</p>
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
       |
       <a href="../_sources/python/dballe_cursors.rst.txt"
