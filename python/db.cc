@@ -277,6 +277,9 @@ struct query_stations : MethQuery<query_stations<Impl>, Impl>
     constexpr static const char* name = "query_stations";
     constexpr static const char* returns = "dballe.CursorStation";
     constexpr static const char* summary = "Query the station archive in the database";
+    constexpr static const char* doc = R"(
+:return: a cursor to iterate the query results (see :py:class:`dballe.CursorStationDB`)
+)";
     static PyObject* run_query(Impl* self, dballe::Query& query)
     {
         ReleaseGIL gil;
@@ -292,6 +295,9 @@ struct query_station_data : MethQuery<query_station_data<Impl>, Impl>
     constexpr static const char* name = "query_station_data";
     constexpr static const char* returns = "dballe.CursorStationData";
     constexpr static const char* summary = "Query the station variables in the database";
+    constexpr static const char* doc = R"(
+:return: a cursor to iterate the query results (see :py:class:`dballe.CursorStationDataDB`)
+)";
     static PyObject* run_query(Impl* self, dballe::Query& query)
     {
         ReleaseGIL gil;
@@ -307,6 +313,9 @@ struct query_data : MethQuery<query_data<Impl>, Impl>
     constexpr static const char* name = "query_data";
     constexpr static const char* returns = "dballe.CursorData";
     constexpr static const char* summary = "Query the variables in the database";
+    constexpr static const char* doc = R"(
+:return: a cursor to iterate the query results (see :py:class:`dballe.CursorDataDB`)
+)";
     static PyObject* run_query(Impl* self, dballe::Query& query)
     {
         ReleaseGIL gil;
@@ -322,6 +331,9 @@ struct query_summary : MethQuery<query_summary<Impl>, Impl>
     constexpr static const char* name = "query_summary";
     constexpr static const char* returns = "dballe.CursorSummary";
     constexpr static const char* summary = "Query the summary of the results of a query";
+    constexpr static const char* doc = R"(
+:return: a cursor to iterate the query results (see :py:class:`dballe.CursorSummaryDB`)
+)";
     static PyObject* run_query(Impl* self, dballe::Query& query)
     {
         ReleaseGIL gil;
