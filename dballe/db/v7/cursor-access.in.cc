@@ -135,7 +135,7 @@ void SummaryRows::enq(impl::Enq& enq) const
         case "coords":      enq.set_coords(cur->station.coords);
         case "station":     enq.set_station(cur->station);
         case "datetimemax": if (cur->dtrange.is_missing()) return; else enq.set_datetime(cur->dtrange.max);
-        case "datetimemin": if (cur->dtrange.is_missing()) return; else enq.set_datetime(cur->dtrange.max);
+        case "datetimemin": if (cur->dtrange.is_missing()) return; else enq.set_datetime(cur->dtrange.min);
         case "yearmax":     if (cur->dtrange.is_missing()) return; else enq.set_int(cur->dtrange.max.year);
         case "yearmin":     if (cur->dtrange.is_missing()) return; else enq.set_int(cur->dtrange.min.year);
         case "monthmax":    if (cur->dtrange.is_missing()) return; else enq.set_int(cur->dtrange.max.month);
