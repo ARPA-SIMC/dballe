@@ -722,6 +722,7 @@ struct export_to_file : MethKwargs<export_to_file<Impl>, Impl>
     constexpr static const char* name = "export_to_file";
     constexpr static const char* signature = "query: Dict[str, Any], format: str, filename: Union[str, file], generic: bool=False";
     constexpr static const char* summary = "Export data matching a query as bulletins to a named file (deprecated)";
+
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "query", "format", "filename", "generic", NULL };
@@ -731,6 +732,9 @@ struct export_to_file : MethKwargs<export_to_file<Impl>, Impl>
         int as_generic = 0;
         if (!PyArg_ParseTupleAndKeywords(args, kw, "OsO|i", const_cast<char**>(kwlist), &pyquery, &format, &file, &as_generic))
             return NULL;
+
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "please use query_messages instead of export_to_file", 1))
+            return nullptr;
 
         try {
             Encoding encoding = Encoding::BUFR;
@@ -1251,7 +1255,7 @@ transaction.
 
 You cannot have more than one active dballe.Transaction for each dballe.DB. An
 attempt to start a second one will result in an exception being raised. Note
-that dballe.DB functions like `insert_data` or `export_to_file` create a
+that dballe.DB functions like :func:`dballe.Transaction.insert_data` or :func:`dballe.Transaction.export_to_file` create a
 temporary transaction to run, and so they will also fail if a transaction is
 currently open. The general idea is that all database work should be done
 inside a transaction.

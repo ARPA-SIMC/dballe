@@ -29,6 +29,25 @@ class CommonDBTestMixin(DballeDBMixin):
             else:
                 self.fail("DeprecationWarning not raised")
 
+    @contextmanager
+    def assert_deprecated(self, msg):
+        """
+        Make sure this function raises DeprecationWarning
+        """
+        with warnings.catch_warnings(record=True) as warning_list:
+            yield
+
+        for w in warning_list:
+            if w.category != DeprecationWarning:
+                continue
+            if "please use" not in w.message.args[0]:
+                continue
+            if msg not in w.message.args[0]:
+                self.fail("{} does not contain {}".format(repr(w.message.args[0]), repr(msg)))
+            break
+        else:
+            self.fail("DeprecationWarning not raised")
+
     def setUp(self):
         super(CommonDBTestMixin, self).setUp()
         self.raise_db_method_deprecation_warnings = True
@@ -54,14 +73,19 @@ class CommonDBTestMixin(DballeDBMixin):
                 self.attr_ref = rec["context_id"]
 
     def testQueryExport(self):
-        self.db.export_to_file({}, "BUFR", "/dev/null")
-        self.db.export_to_file({}, "CREX", "/dev/null")
-        self.db.export_to_file({}, "BUFR", "/dev/null", generic=True)
-        self.db.export_to_file({}, "CREX", "/dev/null", generic=True)
+        with self.assert_deprecated("please use query_messages instead of export_to_file"):
+            self.db.export_to_file({}, "BUFR", "/dev/null")
+        with self.assert_deprecated("please use query_messages instead of export_to_file"):
+            self.db.export_to_file({}, "CREX", "/dev/null")
+        with self.assert_deprecated("please use query_messages instead of export_to_file"):
+            self.db.export_to_file({}, "BUFR", "/dev/null", generic=True)
+        with self.assert_deprecated("please use query_messages instead of export_to_file"):
+            self.db.export_to_file({}, "CREX", "/dev/null", generic=True)
 
     def testExportFileObject(self):
         out = io.BytesIO()
-        self.db.export_to_file({}, "BUFR", out)
+        with self.assert_deprecated("please use query_messages instead of export_to_file"):
+            self.db.export_to_file({}, "BUFR", out)
         self.assertTrue(out.getvalue().startswith(b"BUFR"))
 
     def testQueryStations(self):
