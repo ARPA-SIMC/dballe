@@ -256,7 +256,7 @@ class CommonDBTestMixin(DballeDBMixin):
 
                     # self.assertEqual(result.enqs("context_id"), ?)
 
-                    # # FIXME: when not using query=atttrs, this should trigger a query: how do we test it?
+                    # # FIXME: when not using query=attrs, this should trigger a query: how do we test it?
                     # self.assertEqual({k: v.enq() for k, v in result.query_attrs().items()}, expected[idx]["attrs"])
 
     def testQueryValidation(self):
