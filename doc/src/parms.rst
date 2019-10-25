@@ -242,7 +242,6 @@ Name            Unit                     Description                        Comm
 ``secmax``      Integer                  Maximum seconds for this variable
 ``secmin``      Integer                  Minimum seconds for this variable
 ``var``         String                   Variable code
-``variable``    :class:`dballe.Var`      Variable                           Only available in Python
 ``count``       Integer                  Number of values for this variable
 ``context_id``  Integer                  Number of values for this variable Deprecated: use ``count``
 =============== ======================== ================================== ====================================================== 
