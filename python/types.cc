@@ -164,7 +164,13 @@ Constructor: Level(ltype1: int=None, l1: int=None, ltype2: int=None, l2: int=Non
     static PyObject* _richcompare(dpy_Level *a, PyObject *b, int op)
     {
         try {
-            Level lev_b = level_from_python(b);
+            Level lev_b;
+            try {
+                lev_b = level_from_python(b);
+            } catch (PythonException&) {
+                PyErr_Clear();
+                Py_RETURN_NOTIMPLEMENTED;
+            }
             return impl_richcompare(a->val, lev_b, op);
         } DBALLE_CATCH_RETURN_PYO
     }
@@ -287,8 +293,14 @@ Constructor: Trange(pind: int=None, p1: int=None, p2: int=None)
     static PyObject* _richcompare(dpy_Trange *a, PyObject *b, int op)
     {
         try {
-            Trange lev_b = trange_from_python(b);
-            return impl_richcompare(a->val, lev_b, op);
+            Trange tr_b;
+            try {
+                tr_b = trange_from_python(b);
+            } catch (PythonException&) {
+                PyErr_Clear();
+                Py_RETURN_NOTIMPLEMENTED;
+            }
+            return impl_richcompare(a->val, tr_b, op);
         } DBALLE_CATCH_RETURN_PYO
     }
 
@@ -438,7 +450,13 @@ struct BaseDefinition : public Type<Base, typename StationImplTraits<Station>::I
     static PyObject* _richcompare(Impl *a, PyObject *b, int op)
     {
         try {
-            Station st_b = from_python<Station>(b);
+            Station st_b;
+            try {
+                st_b = from_python<Station>(b);
+            } catch (PythonException&) {
+                PyErr_Clear();
+                Py_RETURN_NOTIMPLEMENTED;
+            }
             return impl_richcompare(a->val, st_b, op);
         } DBALLE_CATCH_RETURN_PYO
     }
