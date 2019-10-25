@@ -332,7 +332,7 @@ struct ExportCmd : public DatabaseCmd
     ExportCmd()
     {
         names.push_back("export");
-        usage = "export [options] rep_memo [queryparm1=val1 [queryparm2=val2 [...]]]";
+        usage = "export [options] [queryparm1=val1 [queryparm2=val2 [...]]]";
         desc = "Export data from the database";
         longdesc = "Query parameters are the same of the Fortran API. "
             "Please see the section \"Input and output parameters -- For data "
