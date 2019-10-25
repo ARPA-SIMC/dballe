@@ -1259,8 +1259,17 @@ PyObject* attrs_to_python(const wreport::Var& var)
 {
     pyo_unique_ptr list(PyList_New(0));
     for (const wreport::Var* a = var.next_attr(); a; a = a->next_attr())
-        if (PyList_Append(list, wreport_api.var_create(*a)) == -1)
+    {
+        // Create an empty variable, then set value from the attribute. This is
+        // to avoid copying the rest of the attribute chain for every attribute
+        // we are returning
+        pyo_unique_ptr var(wreport_api.var_create(a->info(), *a));
+        if (!var)
             throw PythonException();
+
+        if (PyList_Append(list, (PyObject*)var.get()) == -1)
+            throw PythonException();
+    }
     return list.release();
 }
 
