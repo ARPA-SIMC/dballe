@@ -124,10 +124,14 @@ class CommonDBTestMixin(DballeDBMixin):
         self.assertEqual(cur.remaining, 2)
         for idx, result in enumerate(cur):
             self.assertEqual(cur.remaining, 2-idx-1)
+            self.assertEqual(result["lat"], Decimal("12.34560"))
             self.assertEqual(result.enqi("lat"), 1234560)
             self.assertEqual(result.enqd("lat"), 12.34560)
             self.assertEqual(result.enqs("lat"), "1234560")
             self.assertEqual(result.enqf("lat"), "12.34560")
+            self.assertIsNone(result["ident"])
+            self.assertIsNone(result.enqs("ident"))
+            self.assertIsNone(result.enqf("ident"))
             var = result["variable"]
             self.assertEqual(var.code, expected[idx]["code"])
             self.assertEqual(var.enq(), expected[idx]["val"])

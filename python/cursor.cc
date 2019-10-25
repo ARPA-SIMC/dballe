@@ -507,10 +507,7 @@ struct DefinitionBase : public Type<Definition, Impl>
             Enqpy enq(key, len);
             self->cur->enq(enq);
             if (enq.missing)
-            {
-                PyErr_Format(PyExc_KeyError, "key %s not found", key);
-                throw PythonException();
-            }
+                Py_RETURN_NONE;
             return enq.res;
         } DBALLE_CATCH_RETURN_PYO
     }
