@@ -44,6 +44,10 @@ BuildRequires: libwreport-doc
 BuildRequires: %{python3_vers}-wreport3
 BuildRequires: gcc-gfortran
 BuildRequires: %{python3_vers}-numpy
+%if ! 0%{?rhel}
+BuildRequires: %{python3_vers}-sphinx
+BuildRequires: %{python3_vers}-breathe
+%endif
 
 Requires: %{python3_vers}-dballe = %{?epoch:%epoch:}%{version}-%{release}
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
