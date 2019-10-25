@@ -138,12 +138,134 @@ class CommonDBTestMixin(DballeDBMixin):
             # FIXME: this should trigger a query: how do we test it?
             self.assertEqual({k: v.enq() for k, v in result.query_attrs().items()}, expected[idx]["attrs"])
 
+    def testQueryDataCursorAccess(self):
+        def assertResultIntEqual(result, name, value):
+            self.assertEqual(result[name], value)
+            self.assertEqual(result.enqi(name), value)
+            self.assertEqual(result.enqs(name), str(value))
+            self.assertEqual(result.enqd(name), float(value))
+            self.assertEqual(result.enqf(name), str(value))
+
+        def assertResultStringEqual(result, name, value):
+            self.assertEqual(result[name], value)
+            self.assertRaises(RuntimeError, result.enqi, name)
+            self.assertRaises(RuntimeError, result.enqd, name)
+            self.assertEqual(result.enqs(name), value)
+            self.assertEqual(result.enqf(name), value)
+
+        with self.deprecated_on_db():
+            with self.db.query_data({"latmin": 10.0, "var": "B01011", "query": "attrs"}) as cur:
+                self.assertEqual(cur.remaining, 1)
+                for result in cur:
+                    self.assertEqual(cur.remaining, 0)
+
+                    assertResultIntEqual(result, "priority", 101)
+
+                    assertResultStringEqual(result, "rep_memo", "synop")
+                    assertResultStringEqual(result, "report", "synop")
+
+                    # self.assertEqual(result.enqs("ana_id"), ?)
+
+                    self.assertIsNone(result["ident"])
+                    self.assertRaises(RuntimeError, result.enqi, "ident")
+                    self.assertRaises(RuntimeError, result.enqd, "ident")
+                    self.assertIsNone(result.enqs("ident"))
+                    self.assertIsNone(result.enqf("ident"))
+
+                    self.assertIs(result["mobile"], False)
+                    self.assertEqual(result.enqi("mobile"), 0)
+                    self.assertEqual(result.enqd("mobile"), 0)
+                    self.assertEqual(result.enqs("mobile"), "0")
+                    self.assertEqual(result.enqf("mobile"), "0")
+
+                    self.assertEqual(result["lat"], Decimal("12.34560"))
+                    self.assertEqual(result.enqi("lat"), 1234560)
+                    self.assertEqual(result.enqd("lat"), 12.34560)
+                    self.assertEqual(result.enqs("lat"), "1234560")
+                    self.assertEqual(result.enqf("lat"), "12.34560")
+
+                    self.assertEqual(result["lon"], Decimal("76.54320"))
+                    self.assertEqual(result.enqi("lon"), 7654320)
+                    self.assertEqual(result.enqd("lon"), 76.54320)
+                    self.assertEqual(result.enqs("lon"), "7654320")
+                    self.assertEqual(result.enqf("lon"), "76.54320")
+
+                    self.assertEqual(result["coords"], (Decimal("12.34560"), Decimal("76.54320")))
+                    self.assertRaises(RuntimeError, result.enqi, "coords")
+                    self.assertRaises(RuntimeError, result.enqd, "coords")
+                    self.assertRaises(RuntimeError, result.enqs, "coords")
+                    self.assertRaises(RuntimeError, result.enqf, "coords")
+
+                    self.assertEqual(result["station"], dballe.Station("synop", 12.345600, 76.543200, None))
+                    self.assertRaises(RuntimeError, result.enqi, "station")
+                    self.assertRaises(RuntimeError, result.enqd, "station")
+                    self.assertRaises(RuntimeError, result.enqs, "station")
+                    self.assertRaises(RuntimeError, result.enqf, "station")
+
+                    self.assertEqual(result["datetime"], datetime.datetime(1945, 4, 25, 8, 0))
+                    self.assertRaises(RuntimeError, result.enqi, "datetime")
+                    self.assertRaises(RuntimeError, result.enqd, "datetime")
+                    self.assertRaises(RuntimeError, result.enqs, "datetime")
+                    self.assertRaises(RuntimeError, result.enqf, "datetime")
+
+                    assertResultIntEqual(result, "year", 1945)
+                    assertResultIntEqual(result, "month", 4)
+                    assertResultIntEqual(result, "day", 25)
+                    assertResultIntEqual(result, "hour", 8)
+                    assertResultIntEqual(result, "min", 0)
+                    assertResultIntEqual(result, "sec", 0)
+
+                    self.assertEqual(result["level"], dballe.Level(10, 11, 15, 22))
+                    self.assertRaises(RuntimeError, result.enqi, "level")
+                    self.assertRaises(RuntimeError, result.enqd, "level")
+                    self.assertRaises(RuntimeError, result.enqs, "level")
+                    self.assertRaises(RuntimeError, result.enqf, "level")
+
+                    assertResultIntEqual(result, "leveltype1", 10)
+                    assertResultIntEqual(result, "l1", 11)
+                    assertResultIntEqual(result, "leveltype2", 15)
+                    assertResultIntEqual(result, "l2", 22)
+
+                    self.assertEqual(result["trange"], dballe.Trange(20, 111, 222))
+                    self.assertRaises(RuntimeError, result.enqi, "trange")
+                    self.assertRaises(RuntimeError, result.enqd, "trange")
+                    self.assertRaises(RuntimeError, result.enqs, "trange")
+                    self.assertRaises(RuntimeError, result.enqf, "trange")
+
+                    assertResultIntEqual(result, "pindicator", 20)
+                    assertResultIntEqual(result, "p1", 111)
+                    assertResultIntEqual(result, "p2", 222)
+
+                    assertResultStringEqual(result, "var", "B01011")
+
+                    # Because we use query=attrs, result["variable"] includes attributes
+                    expected = dballe.var('B01011', 'Hey Hey!!')
+                    expected.seta(dballe.var('B33007', 50))
+                    expected.seta(dballe.var('B33036', 75))
+                    self.assertEqual(result["variable"], expected)
+                    self.assertRaises(RuntimeError, result.enqi, "variable")
+                    self.assertRaises(RuntimeError, result.enqd, "variable")
+                    self.assertRaises(RuntimeError, result.enqs, "variable")
+                    self.assertRaises(RuntimeError, result.enqf, "variable")
+
+                    self.assertEqual(result["attrs"], [dballe.var('B33007', 50), dballe.var('B33036', 75)])
+                    self.assertRaises(RuntimeError, result.enqi, "attrs")
+                    self.assertRaises(RuntimeError, result.enqd, "attrs")
+                    self.assertRaises(RuntimeError, result.enqs, "attrs")
+                    self.assertRaises(RuntimeError, result.enqf, "attrs")
+
+                    # self.assertEqual(result.enqs("context_id"), ?)
+
+                    # # FIXME: when not using query=atttrs, this should trigger a query: how do we test it?
+                    # self.assertEqual({k: v.enq() for k, v in result.query_attrs().items()}, expected[idx]["attrs"])
+
     def testQueryValidation(self):
         with self.deprecated_on_db():
             cur = self.db.query_data({"yearmax": 1945, "monthmax": 4, "daymax": 25, "hourmax": 8})
         self.assertEqual(cur.remaining, 2)
 
     def testQueryLongitude(self):
+        # See issue #177
         with self.deprecated_on_db():
             cur = self.db.query_data({"latmin": 12.0, "latmax": 13.0, "lonmin": 76.0, "lonmax": 77.0})
         self.assertEqual(cur.remaining, 2)
