@@ -781,7 +781,25 @@ struct DefinitionMessage : public DefinitionBase<DefinitionMessage, dpy_CursorMe
 {
     constexpr static const char* name = "CursorMessage";
     constexpr static const char* qual_name = "dballe.CursorMessage";
-    constexpr static const char* summary = "cursor iterating Message results";
+    constexpr static const char* summary = "cursor iterating query_message results";
+    constexpr static const char* doc = R"(
+This cursor is the iterable result of a ``query_messages`` operation, like
+:func:`dballe.Transaction.query_messages`.
+
+Each iteration returns the cursor itself, that can be used to access the
+current values.
+
+Data is read from the cursor using the ``message`` property. The dict-like
+access and the various `enq*` functions are present for uniformity with other
+cursors, but there are currently no valid keys that can be used.
+
+For example::
+
+    exporter = dballe.Exporter("BUFR")
+    with open("file.bufr", "wb") as outfile:
+        for cur in tr.query_messages(...):
+            outfile.write(exporter.to_binary(cur.message))
+)";
 
     GetSetters<remaining<Impl>, message<Impl>, query<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;

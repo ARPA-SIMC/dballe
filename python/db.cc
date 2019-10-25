@@ -349,6 +349,16 @@ struct query_messages : MethQuery<query_messages<Impl>, Impl>
     constexpr static const char* name = "query_messages";
     constexpr static const char* returns = "dballe.CursorMessage";
     constexpr static const char* summary = "Query the database returning the matching data as Message objects";
+    constexpr static const char* doc = R"(
+This can also be used to export messages to a file. For example::
+
+    exporter = dballe.Exporter("BUFR")
+    with open("file.bufr", "wb") as outfile:
+        for row in tr.query_messages(...):
+            outfile.write(exporter.to_binary(row.message))
+
+See: :class:`dballe.Exporter` and :py:class:`dballe.CursorMessage`.
+)";
     static PyObject* run_query(Impl* self, dballe::Query& query)
     {
         ReleaseGIL gil;
@@ -1255,7 +1265,7 @@ transaction.
 
 You cannot have more than one active dballe.Transaction for each dballe.DB. An
 attempt to start a second one will result in an exception being raised. Note
-that dballe.DB functions like :func:`dballe.Transaction.insert_data` or :func:`dballe.Transaction.export_to_file` create a
+that dballe.DB functions like :func:`dballe.Transaction.insert_data` create a
 temporary transaction to run, and so they will also fail if a transaction is
 currently open. The general idea is that all database work should be done
 inside a transaction.
