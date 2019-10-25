@@ -724,7 +724,7 @@ PyObject* station_to_python(const Station& st)
 
 Station station_from_python(PyObject* o)
 {
-    if (Py_TYPE(o) == dpy_Station_Type || PyType_IsSubtype(Py_TYPE(o), dpy_Station_Type))
+    if (dpy_Station_Check(o))
         return ((dpy_Station*)o)->val;
 
     if (PyTuple_Check(o))
@@ -758,7 +758,7 @@ PyObject* dbstation_to_python(const DBStation& st)
 
 DBStation dbstation_from_python(PyObject* o)
 {
-    if (Py_TYPE(o) == dpy_DBStation_Type || PyType_IsSubtype(Py_TYPE(o), dpy_DBStation_Type))
+    if (dpy_DBStation_Check(o))
         return ((dpy_DBStation*)o)->val;
 
     if (PyTuple_Check(o))
