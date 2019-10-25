@@ -27,7 +27,7 @@ void StationRows::enq(impl::Enq& enq) const
         case "rep_memo":    enq.set_string(cur->station.report);
         case "report":      enq.set_string(cur->station.report);
         case "ana_id":      enq.set_dballe_int(cur->station.id);
-        case "mobile":      enq.set_bool(cur->station.ident.is_missing());
+        case "mobile":      enq.set_bool(!cur->station.ident.is_missing());
         case "ident":       enq.set_ident(cur->station.ident);
         case "lat":         enq.set_lat(cur->station.coords.lat);
         case "lon":         enq.set_lon(cur->station.coords.lon);
@@ -54,7 +54,7 @@ void StationDataRows::enq(impl::Enq& enq) const
         case "rep_memo":    enq.set_string(cur->station.report);
         case "report":      enq.set_string(cur->station.report);
         case "ana_id":      enq.set_dballe_int(cur->station.id);
-        case "mobile":      enq.set_bool(cur->station.ident.is_missing());
+        case "mobile":      enq.set_bool(!cur->station.ident.is_missing());
         case "ident":       enq.set_ident(cur->station.ident);
         case "lat":         enq.set_lat(cur->station.coords.lat);
         case "lon":         enq.set_lon(cur->station.coords.lon);
@@ -84,7 +84,7 @@ void BaseDataRows::enq(impl::Enq& enq) const
         case "rep_memo":    enq.set_string(cur->station.report);
         case "report":      enq.set_string(cur->station.report);
         case "ana_id":      enq.set_dballe_int(cur->station.id);
-        case "mobile":      enq.set_bool(cur->station.ident.is_missing());
+        case "mobile":      enq.set_bool(!cur->station.ident.is_missing());
         case "ident":       enq.set_ident(cur->station.ident);
         case "lat":         enq.set_lat(cur->station.coords.lat);
         case "lon":         enq.set_lon(cur->station.coords.lon);
@@ -128,7 +128,7 @@ void SummaryRows::enq(impl::Enq& enq) const
         case "rep_memo":    enq.set_string(cur->station.report);
         case "report":      enq.set_string(cur->station.report);
         case "ana_id":      enq.set_dballe_int(cur->station.id);
-        case "mobile":      enq.set_bool(cur->station.ident.is_missing());
+        case "mobile":      enq.set_bool(!cur->station.ident.is_missing());
         case "ident":       enq.set_ident(cur->station.ident);
         case "lat":         enq.set_lat(cur->station.coords.lat);
         case "lon":         enq.set_lon(cur->station.coords.lon);
