@@ -262,7 +262,7 @@ It can be changed by editing /etc/dballe/repinfo.csv</td>
 <tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">query</span></code></td>
 <td>String</td>
 <td>Query behaviour modifier</td>
-<td>Comma-separated list of query modifiers.  Can have one of: ‘best’, ‘bigana’, ‘nosort’, ‘stream’.  Examples: ‘best’, ‘nosort,stream’</td>
+<td>Comma-separated list of query modifiers.  See <a class="reference internal" href="#parms-query-modifiers"><span class="std std-ref">Possible values for query modifiers</span></a>.</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">ana_filter</span></code></td>
 <td>String</td>
@@ -293,6 +293,42 @@ It can be changed by editing /etc/dballe/repinfo.csv</td>
 <td>Integer</td>
 <td>WMO station number of the station</td>
 <td>&#160;</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="possible-values-for-query-modifiers">
+<span id="parms-query-modifiers"></span><h2>Possible values for query modifiers<a class="headerlink" href="#possible-values-for-query-modifiers" title="Permalink to this headline">¶</a></h2>
+<p>When setting <code class="docutils literal notranslate"><span class="pre">query=…</span></code> to alter behaviour of a query, one can use a
+comma-separated list of these values:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="91%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">best</span></code></td>
+<td>When the same datum exists in multiple networks, return only the one with the highest priority.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">attrs</span></code></td>
+<td>Optimize for when data attributes will be read on the query result. See <a class="reference external" href="https://github.com/ARPA-SIMC/dballe/issues/114">issue114</a>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">bigana</span></code></td>
+<td>Not used anymore.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">nosort</span></code></td>
+<td>Run the query faster, but give no guarantees on the ordering of the results.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">stream</span></code></td>
+<td>Not used anymore.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">details</span></code></td>
+<td>Populate <code class="docutils literal notranslate"><span class="pre">count</span></code> and minimum/maximum datetime information in summary query results. See: <a class="reference internal" href="#parms-read-summary"><span class="std std-ref">Parameters used when reading query results for summary values</span></a>.</td>
 </tr>
 </tbody>
 </table>
@@ -865,92 +901,87 @@ same physical space.  It can be changed by editing <code class="docutils literal
 <tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">datetimemax</span></code></td>
 <td>datetime</td>
 <td>Maximum datetime for this variable</td>
-<td>Only available in Python</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>. Only available in Python</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">datetimemin</span></code></td>
 <td>datetime</td>
 <td>Minimum datetime for this variable</td>
-<td>Only available in Python</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>. Only available in Python</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">yearmax</span></code></td>
 <td>Integer</td>
 <td>Maximum year for this variable</td>
-<td>&#160;</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">yearmin</span></code></td>
 <td>Integer</td>
 <td>Minimum year for this variable</td>
-<td>&#160;</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">monthmax</span></code></td>
 <td>Integer</td>
 <td>Maximum month for this variable</td>
-<td>&#160;</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">monthmin</span></code></td>
 <td>Integer</td>
 <td>Minimum month for this variable</td>
-<td>&#160;</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">daymax</span></code></td>
 <td>Integer</td>
 <td>Maximum day for this variable</td>
-<td>&#160;</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">daymin</span></code></td>
 <td>Integer</td>
 <td>Minimum day for this variable</td>
-<td>&#160;</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">hourmax</span></code></td>
 <td>Integer</td>
 <td>Maximum hour for this variable</td>
-<td>&#160;</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">hourmin</span></code></td>
 <td>Integer</td>
 <td>Minumum hour for this variable</td>
-<td>&#160;</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">minumax</span></code></td>
 <td>Integer</td>
 <td>Maximum minutes for this variable</td>
-<td>&#160;</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">minumin</span></code></td>
 <td>Integer</td>
 <td>Minimum minutes for this variable</td>
-<td>&#160;</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">secmax</span></code></td>
 <td>Integer</td>
 <td>Maximum seconds for this variable</td>
-<td>&#160;</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">secmin</span></code></td>
 <td>Integer</td>
 <td>Minimum seconds for this variable</td>
-<td>&#160;</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">var</span></code></td>
 <td>String</td>
 <td>Variable code</td>
 <td>&#160;</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">variable</span></code></td>
-<td><a class="reference internal" href="python/dballe_types.html#dballe.Var" title="dballe.Var"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Var</span></code></a></td>
-<td>Variable</td>
-<td>Only available in Python</td>
-</tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">count</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">count</span></code></td>
 <td>Integer</td>
 <td>Number of values for this variable</td>
-<td>&#160;</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">context_id</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">context_id</span></code></td>
 <td>Integer</td>
 <td>Number of values for this variable</td>
-<td>Deprecated: use <code class="docutils literal notranslate"><span class="pre">count</span></code></td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>. Deprecated: use <code class="docutils literal notranslate"><span class="pre">count</span></code></td>
 </tr>
 </tbody>
 </table>
@@ -1050,6 +1081,7 @@ same physical space.  It can be changed by editing <code class="docutils literal
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Input/output/query parameters</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#parameters-used-when-setting-up-a-query">Parameters used when setting up a query</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#possible-values-for-query-modifiers">Possible values for query modifiers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#parameters-used-when-inserting-values">Parameters used when inserting values</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#parameters-used-when-reading-station-query-results">Parameters used when reading station query results</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#parameters-used-when-reading-query-results-for-station-values">Parameters used when reading query results for station values</a></li>

@@ -52,7 +52,7 @@ The type of report implicitly defines a priority of the measured value over
 other equivalent values.  This can be used to select a "best value" from a
 specific set of coordinates, where for example, values measured by synoptic
 stations are preferred over values measured by a satellite, which in turn is
-preferred over a value computed by a forecast model.
+preferred over a value computed by a forecast model (see :ref:`parms_query_modifiers`).
 
 Priorities associated to the report type can be customized when creating the
 database (see :c:func:`idba_reinit_db`).
