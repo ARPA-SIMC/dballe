@@ -1,3 +1,16 @@
+# New in version 8.4
+
+* Redesigned and unified all the documentation
+* B table updates
+* Allow querying from python without specifying all the datetime min/max values
+* Fixed querying longitude ranges from python
+* Fixed reading unset query results from python
+
+# New in version 8.3
+
+* Python API: allow other C python extensions to access dballe python objects
+* B table updates
+
 # New in version 8.2
 
 * Python API: fixed `Message.query_station_data` method (#160)
