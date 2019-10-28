@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(dballe, [8.3], [enrico@enricozini.org])
+AC_INIT(dballe, [8.4], [enrico@enricozini.org])
 AC_CONFIG_SRCDIR([configure.ac])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_CONFIG_HEADER(config.h)
@@ -56,8 +56,7 @@ AM_CONDITIONAL([HAVE_PYTHON3], [test $PYTHON_MAJOR_VERSION = 3])
 AC_ARG_VAR([WREPORT_DOXYGEN_DIR], [path of wreport doxygen doc])
 if test x$WREPORT_DOXYGEN_DIR = x
 then
-    WREPORT_DOXYGEN_DIR=/usr/share/doc/wreport/apidocs
-    test -d "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR=/usr/share/doc/libwreport-doc/apidocs
+    WREPORT_DOXYGEN_DIR=/usr/share/doc/wreport/html/doxygen
 fi
 AC_ARG_VAR([WREPORT_DOXYGEN_TAGFILE], [path of libwreport.doxytags])
 if test x$WREPORT_DOXYGEN_TAGFILE = x
