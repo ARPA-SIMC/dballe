@@ -57,6 +57,7 @@ AC_ARG_VAR([WREPORT_DOXYGEN_DIR], [path of wreport doxygen doc])
 if test x$WREPORT_DOXYGEN_DIR = x
 then
     WREPORT_DOXYGEN_DIR=/usr/share/doc/wreport/html/doxygen
+    test -e "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR="/usr/share/doc/libwreport-doc/apidocs/"
 fi
 AC_ARG_VAR([WREPORT_DOXYGEN_TAGFILE], [path of libwreport.doxytags])
 if test x$WREPORT_DOXYGEN_TAGFILE = x
@@ -368,5 +369,4 @@ AS_HELP_STRING([MySQL:], [$have_mysql])
 AS_HELP_STRING([Fortran:], [$enable_dballef])
 AS_HELP_STRING([Python:], [$enable_dballe_python])
 AS_HELP_STRING([documentation:], [$enable_docs])
-AS_HELP_STRING([sphinx:], [$have_sphinx])
 ===================================================])
