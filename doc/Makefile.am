@@ -27,7 +27,6 @@ fapisources = fapi.md fapi_concepts.md fapi_walkthrough.md fapi_reference.md \
               fapi_parms.md fapi_aliases.md fapi_connect.md fapi_ltypes.md \
               fapi_tranges.md fapi_btable.md fapi_transactions.md
 
-doc_DATA += $(fapisources)
 EXTRA_DIST += $(fapisources)
 
 
