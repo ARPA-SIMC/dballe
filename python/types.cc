@@ -1209,7 +1209,11 @@ unsigned short datetime_int16_from_python(PyObject* o)
             throw PythonException();
         return res;
     }
-    PyErr_SetString(PyExc_TypeError, "datetime value must be an instance of int, or None");
+    if (PyUnicode_Check(o))
+    {
+        return strtoul(throw_ifnull(PyUnicode_AsUTF8(o)), nullptr, 10);
+    }
+    PyErr_SetString(PyExc_TypeError, "datetime value must be an instance of int, str, or None");
     throw PythonException();
 }
 
@@ -1224,7 +1228,11 @@ unsigned char datetime_int8_from_python(PyObject* o)
             throw PythonException();
         return res;
     }
-    PyErr_SetString(PyExc_TypeError, "datetime value must be an instance of int, or None");
+    if (PyUnicode_Check(o))
+    {
+        return strtoul(throw_ifnull(PyUnicode_AsUTF8(o)), nullptr, 10);
+    }
+    PyErr_SetString(PyExc_TypeError, "datetime value must be an instance of int, str, or None");
     throw PythonException();
 }
 

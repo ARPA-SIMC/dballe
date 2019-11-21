@@ -283,6 +283,16 @@ class CommonDBTestMixin(DballeDBMixin):
                     # # FIXME: when not using query=attrs, this should trigger a query: how do we test it?
                     # self.assertEqual({k: v.enq() for k, v in result.query_attrs().items()}, expected[idx]["attrs"])
 
+    def testQueryFromCommandLine(self):
+        with self.deprecated_on_db():
+            cur = self.db.query_data({
+                'yearmin': '1945', 'monthmin': '4', 'daymin': '25', 'hourmin': '08',
+                'yearmax': '1945', 'monthmax': '4', 'daymax': '25', 'hourmax': '08',
+                'latmin': '12.34560', 'latmax': '12.34560',
+                'lonmin': '76.54320', 'lonmax': '76.54320',
+            })
+        self.assertEqual(cur.remaining, 2)
+
     def testQueryValidation(self):
         with self.deprecated_on_db():
             cur = self.db.query_data({"yearmax": 1945, "monthmax": 4, "daymax": 25, "hourmax": 8})
