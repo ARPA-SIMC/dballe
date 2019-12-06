@@ -223,6 +223,16 @@ add_method("issue107", []() {
     wassert_throws(wreport::error_consistency, q.set_from_test_string("month=6"));
 });
 
+add_method("setf_unset", []() {
+    core::Query q;
+
+    q.set_from_string("leveltype2=42");
+    wassert(actual(q.level.ltype2) == 42);
+
+    q.set_from_string("leveltype2=-");
+    wassert(actual(q.level.ltype2) == MISSING_INT);
+});
+
 }
 
 }
