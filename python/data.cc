@@ -27,7 +27,27 @@ struct Definition : public Type<Definition, dpy_Data>
     constexpr static const char* name = "Data";
     constexpr static const char* qual_name = "dballe.Data";
     constexpr static const char* doc = R"(
-key-value representation of a value with its associated metadata
+key-value representation of a value with its associated metadata.
+
+This is used when inserting values in a database, and can be indexed and
+assigned using insert parameters: see :ref:`parms_insert` for a list.
+
+Indexing by variable code also works. Assignment can take None, int, str,
+float, or a wreport.Var object. Assigning a wreport.Var object with a different
+varcode performs automatic unit conversion if possible.
+
+For example::
+
+    # Select B12001 values and convert them to B12101
+    with tr.query_data({"var": "B12001"}) as cur:
+        self.assertEqual(cur.remaining, 1)
+        for rec in cur:
+            data = rec.data
+            rec.remove()
+            # This converts units automatically
+            data["B12101"] = data["12001"]
+            del data["B12001"]
+            tr.insert_data(data)
 )";
     GetSetters<> getsetters;
     Methods<> methods;
@@ -40,7 +60,24 @@ key-value representation of a value with its associated metadata
 
     static PyObject* _str(Impl* self)
     {
-        return PyUnicode_FromString(name);
+        std::string res = name;
+        res += "(station:";
+        res += self->data->station.to_string();
+        res += ", datetime:";
+        res += self->data->datetime.to_string();
+        res += ", level:";
+        res += self->data->level.to_string();
+        res += ", trange:";
+        res += self->data->trange.to_string();
+        for (const auto& val: self->data->values)
+        {
+            res += ", ";
+            res += varcode_format(val->code());
+            res += ":";
+            res += val->format();
+        }
+        res += ")";
+        return PyUnicode_FromStringAndSize(res.data(), res.size());
     }
 
     static PyObject* _repr(Impl* self)

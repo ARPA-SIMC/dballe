@@ -842,6 +842,25 @@ class CommonDBTestMixin(DballeDBMixin):
                 self.assertEqual(v["var"], "B01012")
                 self.assertEqual(v["B01012"].enqi(), 500)
 
+    def test_var_rename(self):
+        # See: #191
+        with self.transaction() as tr:
+            with tr.query_data({"var": "B01011"}) as cur:
+                self.assertEqual(cur.remaining, 1)
+                for rec in cur:
+                    data = rec.data
+                    rec.remove()
+                    data["B01008"] = data["B01011"]
+                    del data["B01011"]
+                    tr.insert_data(data)
+
+        with self.transaction() as tr:
+            with tr.query_data({"var": "B01011"}) as cur:
+                self.assertEqual(cur.remaining, 0)
+
+            with tr.query_data({"var": "B01008"}) as cur:
+                self.assertEqual(cur.remaining, 1)
+
 
 class FullDBTestMixin(CommonDBTestMixin):
     def test_transaction_enter_exit(self):
