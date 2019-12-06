@@ -42,6 +42,17 @@ void ensure_valid_cursor(Impl* self)
 }
 
 template<typename Impl>
+void ensure_valid_iterating_cursor(Impl* self)
+{
+    ensure_valid_cursor(self);
+    if (!self->cur->has_value())
+    {
+        PyErr_SetString(PyExc_RuntimeError, "cannot access values on a cursor before or after iteration");
+        throw PythonException();
+    }
+}
+
+template<typename Impl>
 struct remaining : Getter<remaining<Impl>, Impl>
 {
     constexpr static const char* name = "remaining";
@@ -196,7 +207,7 @@ struct query : Getter<query<Impl>, Impl>
     static PyObject* get(Impl* self, void* closure)
     {
         try {
-            ensure_valid_cursor(self);
+            ensure_valid_iterating_cursor(self);
             pyo_unique_ptr result(throw_ifnull(PyDict_New()));
             _set_query(result, *self->cur);
             return result.release();
@@ -212,7 +223,7 @@ struct data : Getter<data<Impl>, Impl>
     static PyObject* get(Impl* self, void* closure)
     {
         try {
-            ensure_valid_cursor(self);
+            ensure_valid_iterating_cursor(self);
             dpy_Data* d;
             pyo_unique_ptr result((PyObject*)(d = throw_ifnull(python::data_create())));
             _set_data(*d->data, *self->cur);
@@ -229,7 +240,7 @@ struct data_dict : Getter<data_dict<Impl>, Impl>
     static PyObject* get(Impl* self, void* closure)
     {
         try {
-            ensure_valid_cursor(self);
+            ensure_valid_iterating_cursor(self);
             pyo_unique_ptr result(throw_ifnull(PyDict_New()));
             _set_data(result, *self->cur);
             return result.release();
@@ -256,7 +267,7 @@ struct remove : MethNoargs<remove<Impl>, Impl>
     static PyObject* run(Impl* self)
     {
         try {
-            ensure_valid_cursor(self);
+            ensure_valid_iterating_cursor(self);
             ReleaseGIL gil;
             self->cur->remove();
         } DBALLE_CATCH_RETURN_PYO
@@ -273,7 +284,7 @@ struct query_attrs : MethNoargs<query_attrs<Impl>, Impl>
     static PyObject* run(Impl* self)
     {
         try {
-            ensure_valid_cursor(self);
+            ensure_valid_iterating_cursor(self);
             pyo_unique_ptr res(throw_ifnull(PyDict_New()));
             run_attr_query(*self->cur, [&](unique_ptr<Var>&& var) {
                 add_var_to_dict(res, *var);
@@ -292,7 +303,7 @@ struct insert_attrs : MethKwargs<insert_attrs<Impl>, Impl>
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         try {
-            ensure_valid_cursor(self);
+            ensure_valid_iterating_cursor(self);
 
             static const char* kwlist[] = { "attrs", NULL };
             PyObject* attrs;
@@ -316,7 +327,7 @@ struct remove_attrs : MethKwargs<remove_attrs<Impl>, Impl>
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         try {
-            ensure_valid_cursor(self);
+            ensure_valid_iterating_cursor(self);
 
             static const char* kwlist[] = { "attrs", NULL };
             PyObject* attrs = nullptr;
@@ -341,7 +352,7 @@ struct enqi : MethKwargs<enqi<Impl>, Impl>
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         try {
-            ensure_valid_cursor(self);
+            ensure_valid_iterating_cursor(self);
 
             static const char* kwlist[] = { "key", nullptr };
             const char* key;
@@ -368,7 +379,7 @@ struct enqd : MethKwargs<enqd<Impl>, Impl>
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         try {
-            ensure_valid_cursor(self);
+            ensure_valid_iterating_cursor(self);
 
             static const char* kwlist[] = { "key", nullptr };
             const char* key;
@@ -395,7 +406,7 @@ struct enqs : MethKwargs<enqs<Impl>, Impl>
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         try {
-            ensure_valid_cursor(self);
+            ensure_valid_iterating_cursor(self);
 
             static const char* kwlist[] = { "key", nullptr };
             const char* key;
@@ -422,7 +433,7 @@ struct enqf : MethKwargs<enqf<Impl>, Impl>
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         try {
-            ensure_valid_cursor(self);
+            ensure_valid_iterating_cursor(self);
 
             static const char* kwlist[] = { "key", nullptr };
             const char* key;
@@ -500,7 +511,7 @@ struct DefinitionBase : public Type<Definition, Impl>
     static PyObject* mp_subscript(Impl* self, PyObject* pykey)
     {
         try {
-            ensure_valid_cursor(self);
+            ensure_valid_iterating_cursor(self);
             Py_ssize_t len;
             const char* key = throw_ifnull(PyUnicode_AsUTF8AndSize(pykey, &len));
             // return enqpy(*self->cur, key, len);
@@ -766,7 +777,7 @@ struct message : Getter<message<Impl>, Impl>
     static PyObject* get(Impl* self, void* closure)
     {
         try {
-            ensure_valid_cursor(self);
+            ensure_valid_iterating_cursor(self);
             if (self->curmsg)
             {
                 Py_INCREF(self->curmsg);

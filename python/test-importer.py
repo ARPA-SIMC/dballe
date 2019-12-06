@@ -118,7 +118,9 @@ class TestImporter(MessageTestMixin, unittest.TestCase):
         importer = dballe.Importer("BUFR")
         msgs = importer.from_binary(binmsg)
         with msgs[0].query_data() as m:
-            print(m.data)
+            with self.assertRaises(RuntimeError) as e:
+                m.data
+            self.assertEqual(str(e.exception), "cannot access values on a cursor before or after iteration")
 
 
 if __name__ == "__main__":
