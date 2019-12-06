@@ -79,7 +79,7 @@ void Query::set_from_string(const char* str)
     if (strcmp(val, "-") == 0)
         unset(key.data(), key.size());
     else
-        setf(key.data(), key.size(), s + 1);
+        setf(key.data(), key.size(), val);
 }
 
 void Query::set_from_test_string(const std::string& s)
