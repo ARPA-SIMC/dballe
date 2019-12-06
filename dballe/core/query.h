@@ -160,6 +160,7 @@ struct Query : public dballe::Query
 
 protected:
     void setf(const char* key, unsigned len, const char* val);
+    void unset(const char* key, unsigned len);
 };
 
 }

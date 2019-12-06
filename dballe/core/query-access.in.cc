@@ -62,5 +62,60 @@ void Query::setf(const char* key, unsigned len, const char* val)
     }
 }
 
+void Query::unset(const char* key, unsigned len)
+{
+    switch (key) { // mklookup
+        case "priority":    priomin = priomax = MISSING_INT;
+        case "priomax":     priomax = MISSING_INT;
+        case "priomin":     priomin = MISSING_INT;
+        case "rep_memo":    report.clear();
+        case "report":      report.clear();
+        case "ana_id":      ana_id = MISSING_INT;
+        case "mobile":      mobile = MISSING_INT;
+        case "ident":       ident.clear();
+        case "lat":         latrange = LatRange();
+        case "lon":         lonrange = LonRange();
+        case "latmax":      latrange.imax = LatRange::IMAX;
+        case "latmin":      latrange.imin = LatRange::IMIN;
+        case "lonmax":      lonrange.imax = MISSING_INT;
+        case "lonmin":      lonrange.imin = MISSING_INT;
+        case "year":        dtrange.min.year   = dtrange.max.year = 0xffff;
+        case "month":       dtrange.min.month  = dtrange.max.month = 0xff;
+        case "day":         dtrange.min.day    = dtrange.max.day = 0xff;
+        case "hour":        dtrange.min.hour   = dtrange.max.hour = 0xff;
+        case "min":         dtrange.min.minute = dtrange.max.minute = 0xff;
+        case "sec":         dtrange.min.second = dtrange.max.second = 0xff;
+        case "yearmax":     dtrange.max.year = 0xffff;
+        case "yearmin":     dtrange.min.year = 0xffff;
+        case "monthmax":    dtrange.max.month = 0xff;
+        case "monthmin":    dtrange.min.month = 0xff;
+        case "daymax":      dtrange.max.day = 0xff;
+        case "daymin":      dtrange.min.day = 0xff;
+        case "hourmax":     dtrange.max.hour = 0xff;
+        case "hourmin":     dtrange.min.hour = 0xff;
+        case "minumax":     dtrange.max.minute = 0xff;
+        case "minumin":     dtrange.min.minute = 0xff;
+        case "secmax":      dtrange.max.second = 0xff;
+        case "secmin":      dtrange.min.second = 0xff;
+        case "leveltype1":  level.ltype1 = MISSING_INT;
+        case "l1":          level.l1 = MISSING_INT;
+        case "leveltype2":  level.ltype2 = MISSING_INT;
+        case "l2":          level.l2 = MISSING_INT;
+        case "pindicator":  trange.pind = MISSING_INT;
+        case "p1":          trange.p1 = MISSING_INT;
+        case "p2":          trange.p2 = MISSING_INT;
+        case "var":         varcodes.clear();
+        case "varlist":     varcodes.clear();
+        case "query":       query.clear();
+        case "ana_filter":  ana_filter.clear();
+        case "data_filter": data_filter.clear();
+        case "attr_filter": attr_filter.clear();
+        case "limit":       limit = MISSING_INT;
+        case "block":       block = MISSING_INT;
+        case "station":     station = MISSING_INT;
+        default: wreport::error_notfound::throwf("key %s is not valid for a query", key);
+    }
+}
+
 }
 }

@@ -75,7 +75,11 @@ void Query::set_from_string(const char* str)
     if (!s) error_consistency::throwf("there should be an = between the name and the value in '%s'", str);
 
     string key(str, s - str);
-    setf(key.data(), key.size(), s + 1);
+    const char* val = s + 1;
+    if (strcmp(val, "-") == 0)
+        unset(key.data(), key.size());
+    else
+        setf(key.data(), key.size(), s + 1);
 }
 
 void Query::set_from_test_string(const std::string& s)
