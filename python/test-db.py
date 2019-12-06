@@ -398,22 +398,26 @@ class CommonDBTestMixin(DballeDBMixin):
     def testCursorStationsRemove(self):
         with self.deprecated_on_db():
             with self.db.query_stations() as cur:
-                cur.remove()
+                for row in cur:
+                    row.remove()
 
     def testCursorStationDataRemove(self):
         with self.deprecated_on_db():
             with self.db.query_station_data() as cur:
-                cur.remove()
+                for row in cur:
+                    row.remove()
 
     def testCursorDataRemove(self):
         with self.deprecated_on_db():
             with self.db.query_data() as cur:
-                cur.remove()
+                for row in cur:
+                    row.remove()
 
     def testCursorSummaryRemove(self):
         with self.deprecated_on_db():
             with self.db.query_summary() as cur:
-                cur.remove()
+                for row in cur:
+                    row.remove()
 
     def testAttrRemove(self):
         with self.deprecated_on_db():
@@ -625,14 +629,16 @@ class CommonDBTestMixin(DballeDBMixin):
         with self.deprecated_on_db():
             with self.db.query_data({"var": "B01011"}) as cur:
                 self.assertEqual(cur.remaining, 1)
-                self.assertEqual(cur["variable"].code, "B01011")
-                self.assertCountEqual(cur["attrs"], [])
+                for row in cur:
+                    self.assertEqual(row["variable"].code, "B01011")
+                    self.assertCountEqual(row["attrs"], [])
 
         with self.deprecated_on_db():
             with self.db.query_data({"var": "B01011", "query": "attrs"}) as cur:
                 self.assertEqual(cur.remaining, 1)
-                self.assertEqual(cur["variable"].code, "B01011")
-                self.assertCountEqual((repr(x) for x in cur["attrs"]), ["Var('B33007', 50)", "Var('B33036', 75)"])
+                for row in cur:
+                    self.assertEqual(row["variable"].code, "B01011")
+                    self.assertCountEqual((repr(x) for x in row["attrs"]), ["Var('B33007', 50)", "Var('B33036', 75)"])
 
     def test_delete_by_context_id(self):
         # See issue #140

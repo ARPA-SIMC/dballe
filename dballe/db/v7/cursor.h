@@ -246,6 +246,7 @@ struct Base : public ImplTraits<Impl>::Parent
     virtual ~Base() {}
 
     int remaining() const override;
+    bool has_value() const { return !rows.at_start && rows.cur != rows.results.end(); }
     bool next() override { return rows.next(); }
     void discard() override;
 

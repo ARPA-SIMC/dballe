@@ -109,6 +109,19 @@ class TestImporter(MessageTestMixin, unittest.TestCase):
         self.assertEqual(sys.getrefcount(f), 3)  # f, fimp, getrefcount
         self.assertEqual(len(decoded), 1)
 
+    def test_issue197(self):
+        pathname = test_pathname("bufr/gts-acars-uk1.bufr")
+
+        with dballe.File(pathname) as f:
+            binmsg = next(f)
+
+        importer = dballe.Importer("BUFR")
+        msgs = importer.from_binary(binmsg)
+        with msgs[0].query_data() as m:
+            with self.assertRaises(RuntimeError) as e:
+                m.data
+            self.assertEqual(str(e.exception), "cannot access values on a cursor before or after iteration")
+
 
 if __name__ == "__main__":
     from testlib import main
