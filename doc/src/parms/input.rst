@@ -1,11 +1,11 @@
+.. _parms_insert:
+
 Parameters used when inserting values
 =====================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
-.. _parms_insert:
 
 ============== ======================== ========================== ======================================================
 Name           Unit                     Description                Comment
