@@ -197,6 +197,8 @@ struct Cursor : public impl::CursorSummary
 
     Cursor(const summary::StationEntries<Station>& entries, const Query& query);
 
+    bool has_value() const { return !at_start && cur != results.end(); }
+
     int remaining() const override
     {
         if (at_start) return results.size();

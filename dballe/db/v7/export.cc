@@ -60,6 +60,8 @@ struct Cursor : public impl::CursorMessage
     Results::iterator cur;
     bool at_start = true;
 
+    bool has_value() const { return !at_start && cur != results.end(); }
+
     const Message& get_message() const override
     {
         return **cur;

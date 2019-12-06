@@ -18,6 +18,15 @@ public:
     virtual ~Cursor();
 
     /**
+     * Check if the cursor points to a valid value.
+     *
+     * @returns true if the cursor points to a valid accessible value, false if
+     *          next() has not been called yet, or if at the end of iteration
+     *          (i.e. next() returned false)
+     */
+    virtual bool has_value() const = 0;
+
+    /**
      * Get the number of rows still to be fetched
      *
      * @return

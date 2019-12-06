@@ -25,6 +25,11 @@ struct CursorStation : public impl::CursorStation
     }
     ~CursorStation();
 
+    bool has_value() const override
+    {
+        return !at_start;
+    }
+
     int remaining() const override
     {
         if (at_start)
@@ -83,6 +88,11 @@ struct CursorStationData : public impl::CursorStationData
         station.ident = msg.get_ident();
     }
     ~CursorStationData();
+
+    bool has_value() const override
+    {
+        return !at_start && cur != station_values.end();
+    }
 
     int remaining() const override
     {
@@ -175,6 +185,11 @@ struct CursorData : public impl::CursorData
     }
     ~CursorData();
 
+    bool has_value() const override
+    {
+        return !at_start && cur != rows.end();
+    }
+
     int remaining() const override
     {
         if (at_start)
@@ -226,7 +241,6 @@ struct CursorData : public impl::CursorData
         return std::unique_ptr<CursorData>(res);
     }
 };
-
 
 
 }
