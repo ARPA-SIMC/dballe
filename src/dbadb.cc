@@ -337,7 +337,9 @@ struct ExportCmd : public DatabaseCmd
         longdesc = "Query parameters are the same of the Fortran API. "
             "Please see the section \"Input and output parameters -- For data "
             "related action routines\" of the Fortran API documentation for a "
-            "complete list.";
+            "complete list.\n\n"
+            "The database is specified with --url or with the DBA_DB"
+            " environment variable";
     }
 
     void add_to_optable(std::vector<poptOption>& opts) const override
