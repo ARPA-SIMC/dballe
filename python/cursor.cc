@@ -542,7 +542,7 @@ functions. For the keys available, see :ref:`parms_read_station`.
 
 For example::
 
-    with msg.query_station({...}) as cur:
+    with msg.query_stations({...}) as cur:
         for row in cur:
             print("Station:", cur["station"])
 )";
@@ -570,7 +570,7 @@ functions. For the keys available, see :ref:`parms_read_station`.
 
 For example::
 
-    with tr.query_station({...}) as cur:
+    with tr.query_stations({...}) as cur:
         for row in cur:
             print("Station:", cur["station"])
 )";
