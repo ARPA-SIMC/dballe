@@ -124,7 +124,7 @@ static PyObject* dballe_describe_trange(PyTypeObject *type, PyObject *args, PyOb
 
 static PyMethodDef dballe_methods[] = {
     {"varinfo", (PyCFunction)dballe_varinfo, METH_VARARGS, R"(
-varinfo(str) -> str
+varinfo(str) -> dballe.Varinfo
 
 Query the DB-All.e variable table returning a Varinfo)" },
     {"var", (PyCFunction)dballe_var, METH_VARARGS, R"(
