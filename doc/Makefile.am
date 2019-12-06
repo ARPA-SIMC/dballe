@@ -36,6 +36,10 @@ sphinx_packaged_sources =  \
     src/conf.py \
     src/index.rst \
     src/parms.rst \
+    src/parms/input.rst \
+    src/parms/output.rst \
+    src/parms/query.rst \
+    src/parms/attrs.rst \
     src/env.rst \
     src/connect.rst \
     src/cpp/dballe.rst \
