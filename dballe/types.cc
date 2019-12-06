@@ -523,6 +523,14 @@ void Datetime::to_csv_iso8601(CSVWriter& out, char sep, const char* tz) const
     }
 }
 
+std::string Datetime::to_string(char sep, const char* tz) const
+{
+    char buf[32];
+    int len = snprintf(buf, 32, "%04hu-%02hhu-%02hhu%c%02hhu:%02hhu:%02hhu%s",
+            year, month, day, sep, hour, minute, second, tz);
+    return std::string(buf, len);
+}
+
 std::ostream& operator<<(std::ostream& out, const Datetime& dt)
 {
     dt.to_stream_iso8601(out);
