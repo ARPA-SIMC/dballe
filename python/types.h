@@ -195,6 +195,7 @@ void add_var_to_dict(PyObject* dict, const wreport::Var& var);
 
 void query_setpy(core::Query& query, const char* key, unsigned len, PyObject* val);
 void data_setpy(core::Data& data, const char* key, unsigned len, PyObject* val);
+void data_unsetpy(core::Data& data, const char* key, unsigned len);
 
 void set_dict(PyObject* dict, const char* key, const char* val);
 void set_dict(PyObject* dict, const char* key, const std::string& val);

@@ -89,11 +89,7 @@ key-value representation of a value with its associated metadata
             if (val)
                 data_setpy(*self->data, key, len, val);
             else
-            {
-                // TODO: if v is nullptr, delete/unset
-                PyErr_Format(PyExc_NotImplementedError, "mp_ass_subscript unset %s", key);
-                throw PythonException();
-            }
+                data_unsetpy(*self->data, key, len);
             return 0;
         } DBALLE_CATCH_RETURN_INT
     }

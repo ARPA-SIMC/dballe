@@ -36,5 +36,34 @@ void data_setpy(core::Data& data, const char* key, unsigned len, PyObject* val)
     }
 }
 
+void data_unsetpy(core::Data& data, const char* key, unsigned len)
+{
+    switch (key) { // mklookup
+        case "rep_memo":    data.station.report.clear();
+        case "report":      data.station.report.clear();
+        case "ana_id":      data.station.id = MISSING_INT;
+        case "ident":       data.station.ident.clear();
+        case "lat":         data.station.coords.lat = MISSING_INT;
+        case "lon":         data.station.coords.lon = MISSING_INT;
+        case "year":        data.datetime.year   = 0xffff;
+        case "month":       data.datetime.month  = 0xff;
+        case "day":         data.datetime.day    = 0xff;
+        case "hour":        data.datetime.hour   = 0xff;
+        case "min":         data.datetime.minute = 0xff;
+        case "sec":         data.datetime.second = 0xff;
+        case "leveltype1":  data.level.ltype1 = MISSING_INT;
+        case "l1":          data.level.l1     = MISSING_INT;
+        case "leveltype2":  data.level.ltype2 = MISSING_INT;
+        case "l2":          data.level.l2     = MISSING_INT;
+        case "pindicator":  data.trange.pind  = MISSING_INT;
+        case "p1":          data.trange.p1    = MISSING_INT;
+        case "p2":          data.trange.p2    = MISSING_INT;
+        case "datetime":    data.datetime = Datetime();
+        case "level":       data.level = Level();
+        case "trange":      data.trange = Trange();
+        default:            data.values.unset(resolve_varcode(key));
+    }
+}
+
 }
 }
