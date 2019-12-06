@@ -1254,6 +1254,8 @@ void set_values_from_python(Values& values, wreport::Varcode code, PyObject* val
         values.set(code, (int)v);
     } else if (PyUnicode_Check(val) || PyBytes_Check(val)) {
         values.set(code, string_from_python(val));
+    } else if (wreport_api.var_check(val)) {
+        values.set(dballe::var(code, wreport_api.var(val)));
     } else {
         PyErr_SetString(PyExc_TypeError, "Expected int, float, str, unicode, or None");
         throw PythonException();

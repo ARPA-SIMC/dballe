@@ -255,6 +255,9 @@ struct Datetime
      */
     void to_csv_iso8601(CSVWriter& out, char sep='T', const char* tz="") const;
 
+    /// Write to a string in ISO8601 combined format
+    std::string to_string(char sep='T', const char* tz="") const;
+
     /**
      * Parse an ISO8601 datetime string.
      *
