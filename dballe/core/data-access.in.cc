@@ -11,6 +11,7 @@ void Data::setf(const char* key, unsigned len, const char* val)
 {
     switch (key) { // mklookup
         case "rep_memo":    station.report = val;
+        case "report":      station.report = val;
         case "ana_id":      station.id = strtol(val, nullptr, 10);
         case "ident":       station.ident = val;
         case "lat":         { double dval = strtod(val, nullptr); station.coords.set_lat(dval); }
