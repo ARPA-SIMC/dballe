@@ -21,6 +21,7 @@
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
+  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head><body>
@@ -29,6 +30,8 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <div class="section" id="cursors">
@@ -44,6 +47,17 @@ subclass provides access to the specific type of information being queried.</p>
 <p>Subclassed by <a class="reference internal" href="#classdballe_1_1CursorData"><span class="std std-ref">dballe::CursorData</span></a>, <a class="reference internal" href="#classdballe_1_1CursorMessage"><span class="std std-ref">dballe::CursorMessage</span></a>, <a class="reference internal" href="#classdballe_1_1CursorStation"><span class="std std-ref">dballe::CursorStation</span></a>, <a class="reference internal" href="#classdballe_1_1CursorStationData"><span class="std std-ref">dballe::CursorStationData</span></a>, <a class="reference internal" href="#classdballe_1_1CursorSummary"><span class="std std-ref">dballe::CursorSummary</span></a></p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="function">
+<dt id="_CPPv4NK6dballe6Cursor9has_valueEv">
+<span id="_CPPv3NK6dballe6Cursor9has_valueEv"></span><span id="_CPPv2NK6dballe6Cursor9has_valueEv"></span><span id="dballe::Cursor::has_valueC"></span><span class="target" id="classdballe_1_1Cursor_1afedeccf3bc2355a14b3f031bca231533"></span><em class="property">virtual</em> bool <code class="descname">has_value</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe6Cursor9has_valueEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Check if the cursor points to a valid value. </p>
+<p><dl class="docutils">
+<dt><strong>Return</strong></dt>
+<dd>true if the cursor points to a valid accessible value, false if <a class="reference internal" href="#classdballe_1_1Cursor_1a6052d63da2a1dac38e079ddd8dd44ad8"><span class="std std-ref">next()</span></a> has not been called yet, or if at the end of iteration (i.e. <a class="reference internal" href="#classdballe_1_1Cursor_1a6052d63da2a1dac38e079ddd8dd44ad8"><span class="std std-ref">next()</span></a> returned false) </dd>
+</dl>
+</p>
+</dd></dl>
+
 <dl class="function">
 <dt id="_CPPv4NK6dballe6Cursor9remainingEv">
 <span id="_CPPv3NK6dballe6Cursor9remainingEv"></span><span id="_CPPv2NK6dballe6Cursor9remainingEv"></span><span id="dballe::Cursor::remainingC"></span><span class="target" id="classdballe_1_1Cursor_1a54ac1bf364398dd1a06e0ced96922ac9"></span><em class="property">virtual</em> int <code class="descname">remaining</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe6Cursor9remainingEv" title="Permalink to this definition">¶</a><br /></dt>
@@ -210,6 +224,7 @@ subclass provides access to the specific type of information being queried.</p>
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -267,6 +282,14 @@ subclass provides access to the specific type of information being queried.</p>
     </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
@@ -276,7 +299,7 @@ subclass provides access to the specific type of information being queried.</p>
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="../_sources/cpp/cursors.rst.txt"

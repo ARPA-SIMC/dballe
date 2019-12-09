@@ -21,6 +21,7 @@
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
+  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head><body>
@@ -29,6 +30,8 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <div class="section" id="dballe-database-functions">
@@ -177,7 +180,7 @@ parameter, only imports data whose varcode is in the list.</li>
 
 <dl class="method">
 <dt id="dballe.DB.insert_data">
-<code class="descname">insert_data</code><span class="sig-paren">(</span><em>record: Union[Dict[str, Any], dballe.Cursor], can_replace: bool=False, can_add_stations: bool=False</em><span class="sig-paren">)</span> &#x2192; Dict[str, int]<a class="headerlink" href="#dballe.DB.insert_data" title="Permalink to this definition">¶</a></dt>
+<code class="descname">insert_data</code><span class="sig-paren">(</span><em>record: Union[Dict[str, Any], dballe.Cursor, dballe.Data], can_replace: bool=False, can_add_stations: bool=False</em><span class="sig-paren">)</span> &#x2192; Dict[str, int]<a class="headerlink" href="#dballe.DB.insert_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Insert data values in the database</p>
 <p>The return value is a dict that always contains <cite>ana_id</cite> mapped to the station
 ID just inserted, and an entry for each varcode inserted mapping to the
@@ -186,7 +189,7 @@ database ID of its value.</p>
 
 <dl class="method">
 <dt id="dballe.DB.insert_station_data">
-<code class="descname">insert_station_data</code><span class="sig-paren">(</span><em>record: Union[Dict[str, Any], dballe.Cursor], can_replace: bool=False, can_add_stations: bool=False</em><span class="sig-paren">)</span> &#x2192; Dict[str, int]<a class="headerlink" href="#dballe.DB.insert_station_data" title="Permalink to this definition">¶</a></dt>
+<code class="descname">insert_station_data</code><span class="sig-paren">(</span><em>record: Union[Dict[str, Any], dballe.Cursor, dballe.Data], can_replace: bool=False, can_add_stations: bool=False</em><span class="sig-paren">)</span> &#x2192; Dict[str, int]<a class="headerlink" href="#dballe.DB.insert_station_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Insert station values in the database</p>
 <p>The return value is a dict that always contains <cite>ana_id</cite> mapped to the station
 ID just inserted, and an entry for each varcode inserted mapping to the
@@ -217,6 +220,14 @@ database ID of its value.</p>
 <dt id="dballe.DB.query_messages">
 <code class="descname">query_messages</code><span class="sig-paren">(</span><em>query: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; dballe.CursorMessage<a class="headerlink" href="#dballe.DB.query_messages" title="Permalink to this definition">¶</a></dt>
 <dd><p>Query the database returning the matching data as Message objects</p>
+<p>This can also be used to export messages to a file. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">exporter</span> <span class="o">=</span> <span class="n">dballe</span><span class="o">.</span><span class="n">Exporter</span><span class="p">(</span><span class="s2">&quot;BUFR&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;file.bufr&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">tr</span><span class="o">.</span><span class="n">query_messages</span><span class="p">(</span><span class="o">...</span><span class="p">):</span>
+        <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">exporter</span><span class="o">.</span><span class="n">to_binary</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">message</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>See: <a class="reference internal" href="dballe_messages.html#dballe.Exporter" title="dballe.Exporter"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Exporter</span></code></a> and <a class="reference internal" href="dballe_cursors.html#dballe.CursorMessage" title="dballe.CursorMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.CursorMessage</span></code></a>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -320,7 +331,7 @@ fact, most DB methods are implemented using a short-lived temporary
 transaction.</p>
 <p>You cannot have more than one active dballe.Transaction for each dballe.DB. An
 attempt to start a second one will result in an exception being raised. Note
-that dballe.DB functions like <cite>insert_data</cite> or <cite>export_to_file</cite> create a
+that dballe.DB functions like <a class="reference internal" href="#dballe.Transaction.insert_data" title="dballe.Transaction.insert_data"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Transaction.insert_data()</span></code></a> create a
 temporary transaction to run, and so they will also fail if a transaction is
 currently open. The general idea is that all database work should be done
 inside a transaction.</p>
@@ -422,7 +433,7 @@ parameter, only imports data whose varcode is in the list.</li>
 
 <dl class="method">
 <dt id="dballe.Transaction.insert_data">
-<code class="descname">insert_data</code><span class="sig-paren">(</span><em>record: Union[Dict[str, Any], dballe.Cursor], can_replace: bool=False, can_add_stations: bool=False</em><span class="sig-paren">)</span> &#x2192; Dict[str, int]<a class="headerlink" href="#dballe.Transaction.insert_data" title="Permalink to this definition">¶</a></dt>
+<code class="descname">insert_data</code><span class="sig-paren">(</span><em>record: Union[Dict[str, Any], dballe.Cursor, dballe.Data], can_replace: bool=False, can_add_stations: bool=False</em><span class="sig-paren">)</span> &#x2192; Dict[str, int]<a class="headerlink" href="#dballe.Transaction.insert_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Insert data values in the database</p>
 <p>The return value is a dict that always contains <cite>ana_id</cite> mapped to the station
 ID just inserted, and an entry for each varcode inserted mapping to the
@@ -431,7 +442,7 @@ database ID of its value.</p>
 
 <dl class="method">
 <dt id="dballe.Transaction.insert_station_data">
-<code class="descname">insert_station_data</code><span class="sig-paren">(</span><em>record: Union[Dict[str, Any], dballe.Cursor], can_replace: bool=False, can_add_stations: bool=False</em><span class="sig-paren">)</span> &#x2192; Dict[str, int]<a class="headerlink" href="#dballe.Transaction.insert_station_data" title="Permalink to this definition">¶</a></dt>
+<code class="descname">insert_station_data</code><span class="sig-paren">(</span><em>record: Union[Dict[str, Any], dballe.Cursor, dballe.Data], can_replace: bool=False, can_add_stations: bool=False</em><span class="sig-paren">)</span> &#x2192; Dict[str, int]<a class="headerlink" href="#dballe.Transaction.insert_station_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Insert station values in the database</p>
 <p>The return value is a dict that always contains <cite>ana_id</cite> mapped to the station
 ID just inserted, and an entry for each varcode inserted mapping to the
@@ -456,6 +467,14 @@ database ID of its value.</p>
 <dt id="dballe.Transaction.query_messages">
 <code class="descname">query_messages</code><span class="sig-paren">(</span><em>query: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; dballe.CursorMessage<a class="headerlink" href="#dballe.Transaction.query_messages" title="Permalink to this definition">¶</a></dt>
 <dd><p>Query the database returning the matching data as Message objects</p>
+<p>This can also be used to export messages to a file. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">exporter</span> <span class="o">=</span> <span class="n">dballe</span><span class="o">.</span><span class="n">Exporter</span><span class="p">(</span><span class="s2">&quot;BUFR&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;file.bufr&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">tr</span><span class="o">.</span><span class="n">query_messages</span><span class="p">(</span><span class="o">...</span><span class="p">):</span>
+        <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">exporter</span><span class="o">.</span><span class="n">to_binary</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">message</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>See: <a class="reference internal" href="dballe_messages.html#dballe.Exporter" title="dballe.Exporter"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Exporter</span></code></a> and <a class="reference internal" href="dballe_cursors.html#dballe.CursorMessage" title="dballe.CursorMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.CursorMessage</span></code></a>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -870,6 +889,7 @@ add data to the explorer in a single transaction.</p>
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -928,6 +948,14 @@ add data to the explorer in a single transaction.</p>
     </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
@@ -937,7 +965,7 @@ add data to the explorer in a single transaction.</p>
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="../_sources/python/dballe_db.rst.txt"

@@ -21,6 +21,7 @@
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
+  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head><body>
@@ -29,6 +30,8 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <div class="section" id="dballe-cursors">
@@ -43,9 +46,9 @@ outside a database, like <a class="reference internal" href="dballe_messages.htm
 <p>Each iteration returns the cursor itself, that can be used to access the
 current values.</p>
 <p>Data is read from the using dict-like access or the various <cite>enq*</cite>
-functions. For the keys available, see <a class="reference internal" href="../parms.html#parms-read-station"><span class="std std-ref">Parameters used when reading station query results</span></a>.</p>
+functions. For the keys available, see <a class="reference internal" href="../parms/output.html#parms-read-station"><span class="std std-ref">Parameters used when reading station query results</span></a>.</p>
 <p>For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">msg</span><span class="o">.</span><span class="n">query_station</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">msg</span><span class="o">.</span><span class="n">query_stations</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Station:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;station&quot;</span><span class="p">])</span>
 </pre></div>
@@ -96,9 +99,9 @@ in a database, like <a class="reference internal" href="dballe_db.html#dballe.Tr
 <p>Each iteration returns the cursor itself, that can be used to access the
 current values.</p>
 <p>Data is read from the using dict-like access or the various <cite>enq*</cite>
-functions. For the keys available, see <a class="reference internal" href="../parms.html#parms-read-station"><span class="std std-ref">Parameters used when reading station query results</span></a>.</p>
+functions. For the keys available, see <a class="reference internal" href="../parms/output.html#parms-read-station"><span class="std std-ref">Parameters used when reading station query results</span></a>.</p>
 <p>For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">tr</span><span class="o">.</span><span class="n">query_station</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">tr</span><span class="o">.</span><span class="n">query_stations</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Station:&quot;</span><span class="p">,</span> <span class="n">cur</span><span class="p">[</span><span class="s2">&quot;station&quot;</span><span class="p">])</span>
 </pre></div>
@@ -155,7 +158,7 @@ outside a database, like <a class="reference internal" href="dballe_messages.htm
 <p>Each iteration returns the cursor itself, that can be used to access the
 current values.</p>
 <p>Data is read from the using dict-like access or the various <cite>enq*</cite>
-functions. For the keys available, see <a class="reference internal" href="../parms.html#parms-read-stationdata"><span class="std std-ref">Parameters used when reading query results for station values</span></a>.</p>
+functions. For the keys available, see <a class="reference internal" href="../parms/output.html#parms-read-stationdata"><span class="std std-ref">Parameters used when reading query results for station values</span></a>.</p>
 <p>For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">msg</span><span class="o">.</span><span class="n">query_station_data</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
@@ -220,7 +223,7 @@ in a database, like <a class="reference internal" href="dballe_db.html#dballe.Tr
 <p>Each iteration returns the cursor itself, that can be used to access the
 current values.</p>
 <p>Data is read from the using dict-like access or the various <cite>enq*</cite>
-functions. For the keys available, see <a class="reference internal" href="../parms.html#parms-read-stationdata"><span class="std std-ref">Parameters used when reading query results for station values</span></a>.</p>
+functions. For the keys available, see <a class="reference internal" href="../parms/output.html#parms-read-stationdata"><span class="std std-ref">Parameters used when reading query results for station values</span></a>.</p>
 <p>For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">tr</span><span class="o">.</span><span class="n">query_station_data</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
@@ -303,7 +306,7 @@ outside a database, like <a class="reference internal" href="dballe_messages.htm
 <p>Each iteration returns the cursor itself, that can be used to access the
 current values.</p>
 <p>Data is read from the using dict-like access or the various <cite>enq*</cite>
-functions. For the keys available, see <a class="reference internal" href="../parms.html#parms-read-data"><span class="std std-ref">Parameters used when reading query results for data values</span></a>.</p>
+functions. For the keys available, see <a class="reference internal" href="../parms/output.html#parms-read-data"><span class="std std-ref">Parameters used when reading query results for data values</span></a>.</p>
 <p>For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">msg</span><span class="o">.</span><span class="n">query_data</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
@@ -368,7 +371,7 @@ in a database, like <a class="reference internal" href="dballe_db.html#dballe.Tr
 <p>Each iteration returns the cursor itself, that can be used to access the
 current values.</p>
 <p>Data is read from the using dict-like access or the various <cite>enq*</cite>
-functions. For the keys available, see <a class="reference internal" href="../parms.html#parms-read-data"><span class="std std-ref">Parameters used when reading query results for data values</span></a>.</p>
+functions. For the keys available, see <a class="reference internal" href="../parms/output.html#parms-read-data"><span class="std std-ref">Parameters used when reading query results for data values</span></a>.</p>
 <p>For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">tr</span><span class="o">.</span><span class="n">query_data</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
@@ -451,7 +454,7 @@ in a database, like <a class="reference internal" href="dballe_db.html#dballe.Tr
 <p>Each iteration returns the cursor itself, that can be used to access the
 current values.</p>
 <p>Data is read from the using dict-like access or the various <cite>enq*</cite>
-functions. For the keys available, see <a class="reference internal" href="../parms.html#parms-read-summary"><span class="std std-ref">Parameters used when reading query results for summary values</span></a>.</p>
+functions. For the keys available, see <a class="reference internal" href="../parms/output.html#parms-read-summary"><span class="std std-ref">Parameters used when reading query results for summary values</span></a>.</p>
 <p>For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">tr</span><span class="o">.</span><span class="n">query_summary</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
@@ -510,7 +513,7 @@ like <a class="reference internal" href="dballe_db.html#dballe.Explorer.query_su
 <p>Each iteration returns the cursor itself, that can be used to access the
 current values.</p>
 <p>Data is read from the using dict-like access or the various <cite>enq*</cite>
-functions. For the keys available, see <a class="reference internal" href="../parms.html#parms-read-summary"><span class="std std-ref">Parameters used when reading query results for summary values</span></a>.</p>
+functions. For the keys available, see <a class="reference internal" href="../parms/output.html#parms-read-summary"><span class="std std-ref">Parameters used when reading query results for summary values</span></a>.</p>
 <p>For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">explorer</span><span class="o">.</span><span class="n">query_all</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
@@ -563,7 +566,7 @@ like <a class="reference internal" href="dballe_db.html#dballe.DBExplorer.query_
 <p>Each iteration returns the cursor itself, that can be used to access the
 current values.</p>
 <p>Data is read from the using dict-like access or the various <cite>enq*</cite>
-functions. For the keys available, see <a class="reference internal" href="../parms.html#parms-read-summary"><span class="std std-ref">Parameters used when reading query results for summary values</span></a>.</p>
+functions. For the keys available, see <a class="reference internal" href="../parms/output.html#parms-read-summary"><span class="std std-ref">Parameters used when reading query results for summary values</span></a>.</p>
 <p>For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">explorer</span><span class="o">.</span><span class="n">query_all</span><span class="p">({</span><span class="o">...</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
@@ -611,7 +614,20 @@ functions. For the keys available, see <a class="reference internal" href="../pa
 <dl class="class">
 <dt id="dballe.CursorMessage">
 <em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorMessage</code><a class="headerlink" href="#dballe.CursorMessage" title="Permalink to this definition">¶</a></dt>
-<dd><p>TODO</p>
+<dd><p>This cursor is the iterable result of a <code class="docutils literal notranslate"><span class="pre">query_messages</span></code> operation, like
+<a class="reference internal" href="dballe_db.html#dballe.Transaction.query_messages" title="dballe.Transaction.query_messages"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Transaction.query_messages()</span></code></a>.</p>
+<p>Each iteration returns the cursor itself, that can be used to access the
+current values.</p>
+<p>Data is read from the cursor using the <code class="docutils literal notranslate"><span class="pre">message</span></code> property. The dict-like
+access and the various <cite>enq*</cite> functions are present for uniformity with other
+cursors, but there are currently no valid keys that can be used.</p>
+<p>For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">exporter</span> <span class="o">=</span> <span class="n">dballe</span><span class="o">.</span><span class="n">Exporter</span><span class="p">(</span><span class="s2">&quot;BUFR&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;file.bufr&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">cur</span> <span class="ow">in</span> <span class="n">tr</span><span class="o">.</span><span class="n">query_messages</span><span class="p">(</span><span class="o">...</span><span class="p">):</span>
+        <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">exporter</span><span class="o">.</span><span class="n">to_binary</span><span class="p">(</span><span class="n">cur</span><span class="o">.</span><span class="n">message</span><span class="p">))</span>
+</pre></div>
+</div>
 <dl class="method">
 <dt id="dballe.CursorMessage.enqd">
 <code class="descname">enqd</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorMessage.enqd" title="Permalink to this definition">¶</a></dt>
@@ -660,6 +676,7 @@ functions. For the keys available, see <a class="reference internal" href="../pa
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -718,6 +735,14 @@ functions. For the keys available, see <a class="reference internal" href="../pa
     </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
@@ -727,7 +752,7 @@ functions. For the keys available, see <a class="reference internal" href="../pa
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="../_sources/python/dballe_cursors.rst.txt"

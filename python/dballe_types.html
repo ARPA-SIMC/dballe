@@ -21,6 +21,7 @@
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
+  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head><body>
@@ -29,19 +30,32 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <div class="section" id="dballe-types">
 <h1>dballe types<a class="headerlink" href="#dballe-types" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 </div>
+<div class="section" id="measured-variables">
+<h2>Measured variables<a class="headerlink" href="#measured-variables" title="Permalink to this headline">¶</a></h2>
+<p>A measured variable is represented by a <a class="reference internal" href="#dballe.Var" title="dballe.Var"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Var</span></code></a> object, which
+contains a value (int, float, or str) annotated with information in a
+<a class="reference internal" href="#dballe.Varinfo" title="dballe.Varinfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Varinfo</span></code></a> object.</p>
+<p><a class="reference internal" href="#dballe.Varinfo" title="dballe.Varinfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Varinfo</span></code></a> objects are catalogued in <a class="reference internal" href="#dballe.Vartable" title="dballe.Vartable"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Vartable</span></code></a>
+tables, which associate WMO B variable codes (like <code class="docutils literal notranslate"><span class="pre">B12101</span></code>) to name,
+descriptions, measurement units, significant digits, and so on.</p>
+<p><a class="reference internal" href="#dballe.Var" title="dballe.Var"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Var</span></code></a>, <a class="reference internal" href="#dballe.Varinfo" title="dballe.Varinfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Varinfo</span></code></a>, and <a class="reference internal" href="#dballe.Vartable" title="dballe.Vartable"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Vartable</span></code></a> come
+via <a class="reference external" href="https://github.com/ARPA-SIMC/wreport">wreport</a>, and <cite>dballe.txt</cite> contents (see <a class="reference internal" href="../btable.html#btable"><span class="std std-ref">Local B table codes</span></a>) can be accessed
+with the shortcut functions <a class="reference internal" href="#dballe.varinfo" title="dballe.varinfo"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.varinfo()</span></code></a> and <a class="reference internal" href="#dballe.var" title="dballe.var"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.var()</span></code></a>.</p>
 <dl class="class">
 <dt id="dballe.Var">
 <em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">Var</code><a class="headerlink" href="#dballe.Var" title="Permalink to this definition">¶</a></dt>
 <dd><p>Var holds a measured value, which can be integer, float or string, and
-a <a href="#id1"><span class="problematic" id="id2">`wreport.Varinfo`_</span></a> with all available information (description, unit,
+a <a class="reference internal" href="#dballe.Varinfo" title="dballe.Varinfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">Varinfo</span></code></a> with all available information (description, unit,
 precision, …) related to it.</p>
-<p>Var objects can be created from a <a href="#id3"><span class="problematic" id="id4">`wreport.Varinfo`_</span></a> object, and an
+<p>Var objects can be created from a <a class="reference internal" href="#dballe.Varinfo" title="dballe.Varinfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">Varinfo</span></code></a> object, and an
 optional value. Omitting the value creates an unset variable.</p>
 <p>Examples:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">v</span> <span class="o">=</span> <span class="n">wreport</span><span class="o">.</span><span class="n">Var</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">&quot;B12101&quot;</span><span class="p">],</span> <span class="mf">32.5</span><span class="p">)</span>
@@ -49,6 +63,19 @@ optional value. Omitting the value creates an unset variable.</p>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">v</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">desc</span><span class="p">))</span>
 </pre></div>
 </div>
+<p><strong>Constructor</strong>: Var(varinfo: Union[wreport.Varinfo, wreport.Var], value: Union[str, int, float] = None)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>varinfo</strong> – <a class="reference internal" href="#dballe.Varinfo" title="dballe.Varinfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">Varinfo</span></code></a> or <a class="reference internal" href="#dballe.Var" title="dballe.Var"><code class="xref py py-class docutils literal notranslate"><span class="pre">Var</span></code></a> to use to create the variable</li>
+<li><strong>value</strong> – value for the variable</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <dl class="attribute">
 <dt id="dballe.Var.code">
 <code class="descname">code</code><a class="headerlink" href="#dballe.Var.code" title="Permalink to this definition">¶</a></dt>
@@ -135,7 +162,7 @@ optional value. Omitting the value creates an unset variable.</p>
 <dd><p>Varinfo object holds all possible information about a variable, such as its
 measurement unit, description and number of significant digits.</p>
 <p>Varinfo objects cannot be instantiated directly, and are created by
-querying <a href="#id5"><span class="problematic" id="id6">`wreport.Vartable`_</span></a> objects.</p>
+querying <a class="reference internal" href="#dballe.Vartable" title="dballe.Vartable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vartable</span></code></a> objects.</p>
 <dl class="attribute">
 <dt id="dballe.Varinfo.bit_len">
 <code class="descname">bit_len</code><a class="headerlink" href="#dballe.Varinfo.bit_len" title="Permalink to this definition">¶</a></dt>
@@ -190,10 +217,9 @@ querying <a href="#id5"><span class="problematic" id="id6">`wreport.Vartable`_</
 <dt id="dballe.Vartable">
 <em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">Vartable</code><a class="headerlink" href="#dballe.Vartable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collection of Varinfo objects indexed by WMO BUFR/CREX table B code.</p>
-<p>A Vartable is instantiated by the name (without extension) of the table
-file installed in wreport’s data directory (normally,
-<code class="docutils literal notranslate"><span class="pre">/usr/share/wreport/</span></code>):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">table</span> <span class="o">=</span> <span class="n">wreport</span><span class="o">.</span><span class="n">Vartable</span><span class="p">(</span><span class="s2">&quot;B0000000000000023000&quot;</span><span class="p">)</span>
+<p>A Vartable is instantiated by one of the <a class="reference internal" href="#dballe.Vartable.get_bufr" title="dballe.Vartable.get_bufr"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_bufr()</span></code></a>, <a class="reference internal" href="#dballe.Vartable.get_crex" title="dballe.Vartable.get_crex"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_crex()</span></code></a>,
+<a class="reference internal" href="#dballe.Vartable.load_bufr" title="dballe.Vartable.load_bufr"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_bufr()</span></code></a>, <a class="reference internal" href="#dballe.Vartable.load_crex" title="dballe.Vartable.load_crex"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_crex()</span></code></a> class methods:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">table</span> <span class="o">=</span> <span class="n">wreport</span><span class="o">.</span><span class="n">Vartable</span><span class="o">.</span><span class="n">get_bufr</span><span class="p">(</span><span class="n">master_table_version_number</span><span class="o">=</span><span class="mi">23</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">&quot;B12101&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">desc</span><span class="p">)</span>
 
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">table</span><span class="p">:</span>
@@ -206,6 +232,22 @@ file installed in wreport’s data directory (normally,
 <dd><p>Look up a table B file using the information given, then load BUFR
 information from it.</p>
 <p>You need to provide either basename or master_table_version_number.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>basename</strong> – load the table with the given name in <code class="docutils literal notranslate"><span class="pre">/usr/share/wreport/</span></code></li>
+<li><strong>originating_centre</strong> – originating centre for the table data</li>
+<li><strong>originating_subcentre</strong> – originating subcentre for the table data</li>
+<li><strong>master_table_number</strong> – master table number for the table data</li>
+<li><strong>master_table_version_number</strong> – master table version number for the table data</li>
+<li><strong>master_table_version_number_local</strong> – local master table version number for the table data</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -215,6 +257,24 @@ information from it.</p>
 information from it.</p>
 <p>You need to provide either basename or master_table_version_number
 or master_table_version_number_bufr.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>basename</strong> – load the table with the given name in <code class="docutils literal notranslate"><span class="pre">/usr/share/wreport/</span></code></li>
+<li><strong>edition_number</strong> – edition number for the table data</li>
+<li><strong>originating_centre</strong> – originating centre for the table data</li>
+<li><strong>originating_subcentre</strong> – originating subcentre for the table data</li>
+<li><strong>master_table_number</strong> – master table number for the table data</li>
+<li><strong>master_table_version_number</strong> – master table version number for the table data</li>
+<li><strong>master_table_version_number_bufr</strong> – BUFR master table version number for the table data</li>
+<li><strong>master_table_version_number_local</strong> – local master table version number for the table data</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -222,6 +282,14 @@ or master_table_version_number_bufr.</p>
 <code class="descname">load_bufr</code><span class="sig-paren">(</span><em>pathname: str</em><span class="sig-paren">)</span> &#x2192; wreport.Vartable<a class="headerlink" href="#dballe.Vartable.load_bufr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load BUFR information from a Table B file and return it as a
 wreport.Vartable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pathname</strong> – pathname of the file to load</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -229,6 +297,14 @@ wreport.Vartable.</p>
 <code class="descname">load_crex</code><span class="sig-paren">(</span><em>pathname: str</em><span class="sig-paren">)</span> &#x2192; wreport.Vartable<a class="headerlink" href="#dballe.Vartable.load_crex" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load CREX information from a Table B file and return it as a
 wreport.Vartable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pathname</strong> – pathname of the file to load</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
@@ -239,6 +315,29 @@ wreport.Vartable.</p>
 
 </dd></dl>
 
+<dl class="function">
+<dt id="dballe.varinfo">
+<code class="descclassname">dballe.</code><code class="descname">varinfo</code><span class="sig-paren">(</span><em>str</em><span class="sig-paren">)</span> &#x2192; dballe.Varinfo<a class="headerlink" href="#dballe.varinfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query the DB-All.e variable table returning a Varinfo</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="dballe.var">
+<code class="descclassname">dballe.</code><code class="descname">var</code><span class="sig-paren">(</span><em>code</em>, <em>val: Any=None</em><span class="sig-paren">)</span> &#x2192; dballe.Var<a class="headerlink" href="#dballe.var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query the DB-All.e variable table returning a Var, optionally initialized with a value</p>
+</dd></dl>
+
+</div>
+<div class="section" id="variable-metadata">
+<h2>Variable metadata<a class="headerlink" href="#variable-metadata" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="#dballe.Level" title="dballe.Level"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Level</span></code></a>, <a class="reference internal" href="#dballe.Trange" title="dballe.Trange"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Trange</span></code></a>, <a class="reference internal" href="#dballe.Station" title="dballe.Station"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Station</span></code></a>, and
+<a class="reference internal" href="#dballe.DBStation" title="dballe.DBStation"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.DBStation</span></code></a>, together with python’s <code class="docutils literal notranslate"><span class="pre">datetime.datetime</span></code> class,
+can be used to describe the DB-All.e metadata for measured variables, as
+shortcuts for groups of closely related values.</p>
+<p>The difference between <a class="reference internal" href="#dballe.Station" title="dballe.Station"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Station</span></code></a> and <a class="reference internal" href="#dballe.DBStation" title="dballe.DBStation"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.DBStation</span></code></a> is
+that the <code class="docutils literal notranslate"><span class="pre">DB</span></code> version also contains the database ID as <code class="docutils literal notranslate"><span class="pre">ana_id</span></code>.</p>
+<p>DB-All.e also provides <a class="reference internal" href="#dballe.describe_level" title="dballe.describe_level"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.describe_level()</span></code></a> and <a class="reference internal" href="#dballe.describe_trange" title="dballe.describe_trange"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.describe_trange()</span></code></a>
+to turn level and timerange information into a string describing them.</p>
 <dl class="class">
 <dt id="dballe.Level">
 <em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">Level</code><a class="headerlink" href="#dballe.Level" title="Permalink to this definition">¶</a></dt>
@@ -363,16 +462,53 @@ wreport.Vartable.</p>
 
 </dd></dl>
 
+<dl class="function">
+<dt id="dballe.describe_level">
+<code class="descclassname">dballe.</code><code class="descname">describe_level</code><span class="sig-paren">(</span><em>ltype1: int</em>, <em>l1: int=None</em>, <em>ltype2: int=None</em>, <em>l2: int=None</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#dballe.describe_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a string description for a level</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="dballe.describe_trange">
+<code class="descclassname">dballe.</code><code class="descname">describe_trange</code><span class="sig-paren">(</span><em>pind: int</em>, <em>p1: int=None</em>, <em>p2: int=None</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#dballe.describe_trange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a string description for a time range</p>
+</dd></dl>
+
+</div>
+<div class="section" id="variables-and-their-metadata">
+<h2>Variables and their metadata<a class="headerlink" href="#variables-and-their-metadata" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="#dballe.Data" title="dballe.Data"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Data</span></code></a> finally provides a way to group together one or more
+variables and their metadata.</p>
 <dl class="class">
 <dt id="dballe.Data">
 <em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">Data</code><a class="headerlink" href="#dballe.Data" title="Permalink to this definition">¶</a></dt>
-<dd><p>key-value representation of a value with its associated metadata</p>
+<dd><p>key-value representation of a value with its associated metadata.</p>
+<p>This is used when inserting values in a database, and can be indexed and
+assigned using insert parameters: see <a class="reference internal" href="../parms/input.html#parms-insert"><span class="std std-ref">Parameters used when inserting values</span></a> for a list.</p>
+<p>Indexing by variable code also works. Assignment can take None, int, str,
+float, or a wreport.Var object. Assigning a wreport.Var object with a different
+varcode performs automatic unit conversion if possible.</p>
+<p>For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Select B12001 values and convert them to B12101</span>
+<span class="k">with</span> <span class="n">tr</span><span class="o">.</span><span class="n">query_data</span><span class="p">({</span><span class="s2">&quot;var&quot;</span><span class="p">:</span> <span class="s2">&quot;B12001&quot;</span><span class="p">})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">cur</span><span class="o">.</span><span class="n">remaining</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">rec</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+        <span class="c1"># This converts units automatically</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;B12101&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;12001&quot;</span><span class="p">]</span>
+        <span class="k">del</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;B12001&quot;</span><span class="p">]</span>
+        <span class="n">tr</span><span class="o">.</span><span class="n">insert_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
+</div>
 </div>
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -431,6 +567,14 @@ wreport.Vartable.</p>
     </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
@@ -440,7 +584,7 @@ wreport.Vartable.</p>
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="../_sources/python/dballe_types.rst.txt"
