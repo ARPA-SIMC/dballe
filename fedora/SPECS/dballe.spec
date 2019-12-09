@@ -4,7 +4,7 @@
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 8.5
+Version: 8.6
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -316,6 +316,10 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Mon Dec  9 2019 Daniele Branchini <dbranchini@arpae.it> - 8.6-1
+- Turned a segfault into a proper exception (#197)
+- Parse again '-' as missing (#200)
+
 * Thu Nov 21 2019 Daniele Branchini <dbranchini@arpae.it> - 8.5-1
 - Fixed passing strings as datetime values from python (#174)
 

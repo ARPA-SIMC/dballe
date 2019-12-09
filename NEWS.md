@@ -1,3 +1,13 @@
+# New in version 8.6
+* Improved python API documentation (#187, #189, #191)
+* Improved documentation of dballe types (#199)
+* Turned a segfault into a proper exception (#197)
+* Parse again '-' as missing (#200)
+
+# New in version 8.5
+
+* Fixed passing strings as datetime values from python (#174)
+
 # New in version 8.4
 
 * Redesigned and unified all the documentation
