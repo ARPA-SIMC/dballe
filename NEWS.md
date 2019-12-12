@@ -1,4 +1,9 @@
+# New in version 8.7
+
+* Fixed the command line documentation of possible input types (#202)
+
 # New in version 8.6
+
 * Improved python API documentation (#187, #189, #191)
 * Improved documentation of dballe types (#199)
 * Turned a segfault into a proper exception (#197)

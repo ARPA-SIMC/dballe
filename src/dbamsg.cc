@@ -551,7 +551,7 @@ struct Scan : public cmdline::Subcommand
     {
         Subcommand::add_to_optable(opts);
         opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
-            "format of the input data ('bufr', 'crex')", "type" });
+            "format of the input data ('bufr', 'crex', 'json', 'csv')", "type" });
         opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
@@ -586,7 +586,7 @@ struct HeadCmd : public cmdline::Subcommand
     {
         Subcommand::add_to_optable(opts);
         opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
-            "format of the input data ('bufr', 'crex')", "type" });
+            "format of the input data ('bufr', 'crex', 'json', 'csv')", "type" });
         opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
@@ -622,7 +622,7 @@ struct Dump : public cmdline::Subcommand
     {
         Subcommand::add_to_optable(opts);
         opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
-            "format of the input data ('bufr', 'crex')", "type" });
+            "format of the input data ('bufr', 'crex', 'json', 'csv')", "type" });
         opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ "interpreted", 0, 0, &op_dump_interpreted, 0,
@@ -693,7 +693,7 @@ struct Cat : public cmdline::Subcommand
     {
         Subcommand::add_to_optable(opts);
         opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
-            "format of the input data ('bufr', 'crex')", "type" });
+            "format of the input data ('bufr', 'crex', 'json', 'csv')", "type" });
         opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
@@ -802,7 +802,7 @@ struct Bisect : public cmdline::Subcommand
         opts.push_back({ "test", 0, POPT_ARG_STRING, &op_bisect_cmd, 0,
             "command to run to test a message group", "cmd" });
         opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
-            "format of the input data ('bufr', 'crex')", "type" });
+            "format of the input data ('bufr', 'crex', 'json', 'csv')", "type" });
         opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
@@ -877,7 +877,7 @@ struct Convert : public cmdline::Subcommand
     {
         Subcommand::add_to_optable(opts);
         opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
-            "format of the input data ('bufr', 'crex', 'csv')", "type" });
+            "format of the input data ('bufr', 'crex', 'json', 'csv')", "type" });
         opts.push_back({ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
             "format of the data in output ('bufr', 'crex')", "type" });
         opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
@@ -966,9 +966,9 @@ struct Compare : public cmdline::Subcommand
     {
         Subcommand::add_to_optable(opts);
         opts.push_back({ "type1", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
-            "format of the first file to compare ('bufr', 'crex')", "type" });
+            "format of the first file to compare ('bufr', 'crex', 'json', 'csv')", "type" });
         opts.push_back({ "type2", 'd', POPT_ARG_STRING, &op_output_type, 0,
-            "format of the second file to compare ('bufr', 'crex')", "type" });
+            "format of the second file to compare ('bufr', 'crex', 'json', 'csv')", "type" });
         opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
