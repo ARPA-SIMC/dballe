@@ -1,3 +1,9 @@
+dballe (8.6-1) unstable; urgency=medium
+
+  * New upstream version, see NEWS.md for what's new.
+
+ -- Enrico Zini <enrico@debian.org>  Sun, 29 Dec 2019 16:48:39 +0100
+
 dballe (8.3-1) unstable; urgency=medium
 
   * New upstream version. Closes: #853367, #934814, #793229, #936368
