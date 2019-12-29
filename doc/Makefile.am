@@ -117,9 +117,6 @@ doc_DATA += libdballe.doxytags
 CLEANFILES += libdballe.doxytags libwreport.doxytags aliases.dox ltypes.dox tranges.dox
 
 
-EXTRA_DIST += make_fortran_reference
-
-
 # make install machinery
 
 install-data-local:

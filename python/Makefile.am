@@ -57,7 +57,6 @@ clean-local:
 	rm -rf __pycache__ dballe/__pycache__
 
 EXTRA_DIST += \
-    doc-dballe \
     utils/core.h \
     utils/methods.h \
     utils/type.h \
