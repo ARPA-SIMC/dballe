@@ -44,6 +44,7 @@ EXTRA_DIST = README.md NEWS.md LICENSE BENCHMARKS autogen.sh \
 	     fabfile.py \
 	     UPGRADE-5.x \
 	     dbaexport.1 \
+	     rebuild-gh-pages \
              fedora/SPECS/dballe.spec
 
 CLEANFILES = dbatbl.1 dbamsg.1 dbadb.1 fabfile.pyc

@@ -114,7 +114,7 @@ libwreport.doxytags:
 
 doc_DATA += libdballe.doxytags
 
-CLEANFILES += libdballe.doxytags libwreport.doxytags aliases.dox ltypes.dox tranges.dox
+CLEANFILES += libdballe.doxytags libwreport.doxytags aliases.dox ltypes.dox tranges.dox $(sphinx_generated_sources)
 
 
 # make install machinery
