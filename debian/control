@@ -2,8 +2,8 @@ Source: dballe
 Section: misc
 Priority: optional
 Maintainer: Enrico Zini <enrico@debian.org>
-Build-Depends: debhelper (>= 10), dh-python, dh-autoreconf,
-  autotools-dev, pkg-config, libtool,
+Build-Depends: debhelper (>= 10), dh-python,
+  pkg-config, libtool,
   doxygen, help2man, python3-sphinx, python3-breathe,
   libsqlite3-dev (>= 3.14), libpq-dev, default-libmysqlclient-dev,
   libwreport-dev (>= 3.23-2), python3-wreport (>= 3.22),
