@@ -2,6 +2,7 @@
 
 import argparse
 import multiprocessing
+import contextlib
 from collections import defaultdict
 import os
 import sys
@@ -63,20 +64,21 @@ class RunEnv:
         if a != b:
             raise AssertionError(f"{a!r} != {b!r}")
 
-    def run(self, code):
-        """
-        Run a compiled test snippet
-        """
+    @contextlib.contextmanager
+    def setup(self):
         import dballe
 
         # Build a test environment in a temporary directory
         with tempfile.TemporaryDirectory() as root:
             shutil.copy(self.TEST_BUFR, os.path.join(root, "test.bufr"))
+            db = dballe.DB.connect("sqlite:" + os.path.join(root, "db.sqlite?wipe=yes"))
+            importer = dballe.Importer("BUFR")
+            with importer.from_file(os.path.join(root, "test.bufr")) as f:
+                db.import_messages(f)
 
             # Create well-known variables if needed
             if "db" in self.wanted or "tr" in self.wanted or "explorer" in self.wanted:
-                self.locals["db"] = dballe.DB.connect("mem:")
-                self.locals["db"].reset()
+                self.locals["db"] = db
             if "explorer" in self.wanted:
                 self.locals["explorer"] = dballe.Explorer()
                 with self.locals["explorer"].rebuild() as update:
@@ -100,10 +102,16 @@ class RunEnv:
                 sys.stdout = null
                 os.chdir(root)
                 try:
-                    exec(code, self.globals, self.locals)
+                    yield
                 finally:
                     sys.stdout = orig
                     os.chdir(curdir)
+
+    def run(self, code):
+        """
+        Run a compiled test snippet
+        """
+        exec(code, self.globals, self.locals)
 
 
 def run_python_test(entry):
@@ -111,6 +119,14 @@ def run_python_test(entry):
     Run a collected python code snippet, annotating its information with run
     results
     """
+    def store_exc(entry):
+        type, value, tb = sys.exc_info()
+        for frame, lineno in traceback.walk_tb(tb):
+            if frame.f_code.co_filename == entry["src"]:
+                entry["exception"] = (lineno, str(value))
+        if "exception" not in entry:
+            entry["exception"] = None, traceback.format_exc()
+
     with warnings.catch_warnings(record=True) as w:
         env = RunEnv()
 
@@ -121,23 +137,18 @@ def run_python_test(entry):
             code = compile(entry["code"], entry["src"], "exec")
         except Exception:
             entry["result"] = "fail-compile"
-            type, value, tb = sys.exc_info()
-            for frame, lineno in traceback.walk_tb(tb):
-                pass
-            entry["exception"] = (lineno, str(value))
+            store_exc(entry)
             return entry
 
         env.check_reqs(entry)
 
-        try:
-            env.run(code)
-        except Exception:
-            entry["result"] = "fail-run"
-            type, value, tb = sys.exc_info()
-            for frame, lineno in traceback.walk_tb(tb):
-                pass
-            entry["exception"] = (lineno, str(value))
-            return entry
+        with env.setup():
+            try:
+                env.run(code)
+            except Exception:
+                entry["result"] = "fail-run"
+                store_exc(entry)
+                return entry
 
     entry["result"] = "ok"
     return entry
@@ -165,6 +176,12 @@ def format_python_result(entry):
             cprint(f" {idx:2d} {line}", "red" if idx == lineno else "grey", attrs=["bold"])
             if idx == lineno:
                 cprint(f"  ↪ {msg}", "red")
+
+        if lineno is None:
+            for line in msg.splitlines():
+                cprint(f"  ↪ {line}", "red")
+        elif lineno > idx:
+            cprint(f"  ↪ {msg}", "red")
 
     if entry["warnings"]:
         for w in entry["warnings"]:
