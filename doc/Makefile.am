@@ -37,13 +37,14 @@ sphinx_packaged_sources =  \
     index.rst \
     howtos.rst \
     reference.rst \
-    ref/parms.rst \
-    ref/parms/input.rst \
-    ref/parms/output.rst \
-    ref/parms/query.rst \
-    ref/parms/attrs.rst \
-    ref/env.rst \
-    ref/connect.rst \
+    general_ref/index.rst \
+    general_ref/parms.rst \
+    general_ref/parms/input.rst \
+    general_ref/parms/output.rst \
+    general_ref/parms/query.rst \
+    general_ref/parms/attrs.rst \
+    general_ref/env.rst \
+    general_ref/connect.rst \
     cpp_ref/index.rst \
     cpp_ref/messages.rst \
     cpp_ref/cursors.rst \
@@ -71,10 +72,10 @@ sphinx_packaged_sources =  \
     python_ref/volnd.rst
 
 sphinx_generated_sources =  \
-    ref/aliases.rst \
-    ref/ltypes.rst \
-    ref/tranges.rst \
-    ref/btable.rst
+    general_ref/aliases.rst \
+    general_ref/ltypes.rst \
+    general_ref/tranges.rst \
+    general_ref/btable.rst
 
 sphinx_sources = $(sphinx_packaged_sources) $(sphinx_generated_sources)
 
@@ -102,16 +103,16 @@ ltypes.dox: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
 tranges.dox: mksnippet
 	$(top_srcdir)/doc/mksnippet tranges dox > $@ || rm $@
 
-ref/btable.rst: ../tables/dballe.txt mksnippet
+general_ref/btable.rst: ../tables/dballe.txt mksnippet
 	$(top_srcdir)/doc/mksnippet btable rst < $< > $@ || rm $@
 
-ref/ltypes.rst: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
+general_ref/ltypes.rst: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
 	$(top_srcdir)/doc/mksnippet levels rst < $< > $@ || rm $@
 
-ref/tranges.rst: mksnippet
+general_ref/tranges.rst: mksnippet
 	$(top_srcdir)/doc/mksnippet tranges rst > $@ || rm $@
 
-ref/aliases.rst: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
+general_ref/aliases.rst: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
 	$(top_srcdir)/doc/mksnippet alias rst < $< > $@ || rm $@
 
 
