@@ -324,7 +324,7 @@ Constructor: Message(type: str)
             * synop
             * pilot
             * temp
-            * temp_ship;
+            * temp_ship
             * airep
             * amdar
             * acars

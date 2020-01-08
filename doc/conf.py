@@ -1,3 +1,5 @@
+import os
+import sys
 # -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.
@@ -35,6 +37,8 @@ release = '3.23'
 #
 # needs_sphinx = '1.0'
 
+sys.path.append(os.path.join(os.path.dirname(__file__), "ext"))
+
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
@@ -43,7 +47,11 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
     'breathe',
+    'test_code',
 ]
+
+# Set TEST_CODE_OUTPUT to collect code from literal blocks in a json file
+test_code_output = os.environ.get("TEST_CODE_OUTPUT")
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

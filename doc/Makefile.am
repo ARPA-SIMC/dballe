@@ -81,20 +81,23 @@ sphinx_generated_sources =  \
 
 sphinx_sources = $(sphinx_packaged_sources) $(sphinx_generated_sources)
 
-EXTRA_DIST += $(sphinx_packaged_sources)
+sphinx_extensions = ext/test_code.py
+
+EXTRA_DIST += $(sphinx_packaged_sources) $(sphinx_extensions)
 
 # See https://stackoverflow.com/questions/19822435/multiple-targets-from-one-recipe-and-parallel-execution#19822767
 .INTERMEDIATE: build-docs
 
 # Build doxygen + sphinx documentation
-build-docs: $(cppdeps) $(sphinx_sources) ../dballe/libdballe.la ../python/_dballe.la
+build-docs: $(cppdeps) $(sphinx_sources) $(sphinx_extensions) ../dballe/libdballe.la ../python/_dballe.la
 	rm -rf html
 	mkdir html
 	$(DOXYGEN) libdballe.dox
-	$(top_srcdir)/run-local $(SPHINX_BUILD) -b html . html/
+	TEST_CODE_OUTPUT=test_code.json $(top_srcdir)/run-local $(SPHINX_BUILD) -b html . html/
 
 libdballe.doxytags: build-docs
 html/index.html: build-docs
+test_code.json: build-docs
 
 aliases.dox: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
 	$(top_srcdir)/doc/mksnippet alias dox < $< > $@ || rm $@
@@ -131,7 +134,7 @@ libwreport.doxytags:
 
 doc_DATA += libdballe.doxytags
 
-CLEANFILES += libdballe.doxytags libwreport.doxytags aliases.dox ltypes.dox tranges.dox $(sphinx_generated_sources)
+CLEANFILES += libdballe.doxytags libwreport.doxytags aliases.dox ltypes.dox tranges.dox test_code.json $(sphinx_generated_sources)
 
 
 # make install machinery
