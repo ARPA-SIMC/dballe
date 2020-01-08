@@ -806,7 +806,7 @@ std::unique_ptr<Query> query_from_python(PyObject* o)
 {
     core::Query* q;
     std::unique_ptr<dballe::Query> res(q = new core::Query);
-    if (!o || o == Py_None)
+    if (!o || o == Py_None || o == Py_Ellipsis)
         return res;
 
     if (PyDict_Check(o))
