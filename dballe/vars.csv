@@ -5,6 +5,8 @@ ST_SPEED,       int,    B01013,       1,     -, -, -,  254,      0,     0, Speed
 ST_NAME,        str,    B01019,       -,     -, -, -,    -,      -,     -, Station or site name
 ST_NAME_ICAO,   str,    B01063,       -,     -, -, -,    -,      -,     -, ICAO location indicator
 REP_MEMO,       str,    B01194,       -,     -, -, -,    -,      -,     -, Report mnemonic
+REPORT,         str,    B01194,       -,     -, -, -,    -,      -,     -, Report mnemonic
+NETWORK,        str,    B01194,       -,     -, -, -,    -,      -,     -, Report mnemonic
 POLL_LCODE,     int,    B01212,       -,     -, -, -,    -,      -,     -, Air quality observing station local code
 POLL_SCODE,     int,    B01213,       -,     -, -, -,    -,      -,     -, Airbase air quality observing station code
 POLL_GEMSCODE,  int,    B01214,       -,     -, -, -,    -,      -,     -, GEMS air quality observing station code
