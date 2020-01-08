@@ -732,7 +732,7 @@ functions. For the keys available, see :ref:`parms_read_summary`.
 
 For example::
 
-    with explorer.query_all(...) as cur:
+    with explorer.query_summary_all(...) as cur:
         for row in cur:
             print("Station:", cur["station"])
 )";
@@ -759,7 +759,7 @@ functions. For the keys available, see :ref:`parms_read_summary`.
 
 For example::
 
-    with explorer.query_all(...) as cur:
+    with explorer.query_summary_all(...) as cur:
         for row in cur:
             print("Station:", cur["station"])
 )";
