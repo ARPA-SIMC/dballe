@@ -450,11 +450,11 @@ populate it.
 
 ::
 
-# Populate an explorer with the contents of a database
-explorer = dballe.Explorer()
-with explorer.rebuild() as update:
-    with db.transaction() as tr:
-        update.add_db(tr)
+    # Populate an explorer with the contents of a database
+    explorer = dballe.Explorer()
+    with explorer.rebuild() as update:
+        with db.transaction() as tr:
+            update.add_db(tr)
 )";
     GetSetters<
         GetAllStations<Station>, GetStations<Station>,

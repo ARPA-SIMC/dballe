@@ -12,14 +12,15 @@ the same meaning.
 
 This example code extracts temperatures in a station by datetime matrix::
 
+        from dballe import volnd
         query = dict()
-        query["var"] = "B12001"
+        query["var"] = "B12101"
         query["rep_memo"] = "synop"
-        query["level"] = (105, 2)
-        query["trange"] = (0,)
+        query["level"] = (103, 2000)
+        query["trange"] = (254, 0, 0)
         with db.transaction() as tr:
-            vars = read(tr.query_data(query), (AnaIndex(), DateTimeIndex()))
-        data = vars["B12001"]
+            vars = volnd.read(tr.query_data(query), (volnd.AnaIndex(), volnd.DateTimeIndex()))
+        data = vars["B12101"]
         # Data is now a 2-dimensional Masked Array with the data
         #
         # Information about what values correspond to an index in the various
