@@ -3,11 +3,14 @@
 import argparse
 import multiprocessing
 from collections import defaultdict
+import os
 import sys
 import warnings
+import shutil
 import logging
 import textwrap
 import traceback
+import tempfile
 import ast
 from termcolor import cprint
 import importlib
@@ -17,13 +20,15 @@ log = logging.getLogger()
 
 
 class RunEnv:
+    TEST_BUFR = "extra/bufr/synop-sunshine.bufr"
+
     def __init__(self):
         self.globals = dict(globals())
         self.locals = dict(locals())
         self.assigned = set()
         self.wanted = set()
 
-        for modname in ("dballe", "wreport", "os"):
+        for modname in ("dballe", "wreport", "os", "datetime"):
             self.globals[modname] = importlib.__import__(modname)
 
     def check_reqs(self, entry):
@@ -44,25 +49,32 @@ class RunEnv:
 
     def run(self, code):
         import dballe
-        print("WANTED", self.wanted)
-        if "db" in self.wanted or "tr" in self.wanted:
-            self.locals["db"] = dballe.DB.connect("mem:")
-            self.locals["db"].reset()
-        if "tr" in self.wanted:
-            self.locals["tr"] = self.locals["db"].transaction()
-        if "msg" in self.wanted:
-            importer = dballe.Importer("BUFR")
-            with importer.from_file("extra/bufr/synop-sunshine.bufr") as f:
-                for msg in f:
-                    self.locals["msg"] = msg
 
-        with open("/dev/null", "wt") as null:
-            orig = sys.stdout
-            sys.stdout = null
-            try:
-                exec(code, self.globals, self.locals)
-            finally:
-                sys.stdout = orig
+        with tempfile.TemporaryDirectory() as root:
+            shutil.copy(self.TEST_BUFR, os.path.join(root, "test.bufr"))
+
+            if "db" in self.wanted or "tr" in self.wanted:
+                self.locals["db"] = dballe.DB.connect("mem:")
+                self.locals["db"].reset()
+            if "tr" in self.wanted:
+                self.locals["tr"] = self.locals["db"].transaction()
+            if "msg" in self.wanted:
+                importer = dballe.Importer("BUFR")
+                with importer.from_file("extra/bufr/synop-sunshine.bufr") as f:
+                    for msg in f:
+                        self.locals["msg"] = msg[0]
+            os.environ["DBA_DB"] = "mem:"
+
+            with open("/dev/null", "wt") as null:
+                orig = sys.stdout
+                curdir = os.getcwd()
+                sys.stdout = null
+                os.chdir(root)
+                try:
+                    exec(code, self.globals, self.locals)
+                finally:
+                    sys.stdout = orig
+                    os.chdir(curdir)
 
 
 def run_python_test(entry):
