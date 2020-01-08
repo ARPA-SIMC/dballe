@@ -1,5 +1,5 @@
-dballe database functions
-=========================
+database functions
+==================
 
 .. toctree::
     :maxdepth: 2
@@ -13,19 +13,3 @@ dballe database functions
     :members:
     :undoc-members:
     :exclude-members: load, export_to_file
-
-.. autoclass:: dballe.Explorer
-    :members:
-    :undoc-members:
-
-.. autoclass:: dballe.DBExplorer
-    :members:
-    :undoc-members:
-
-.. autoclass:: dballe.ExplorerUpdate
-    :members:
-    :undoc-members:
-
-.. autoclass:: dballe.DBExplorerUpdate
-    :members:
-    :undoc-members:

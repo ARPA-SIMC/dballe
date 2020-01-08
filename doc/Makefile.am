@@ -70,6 +70,7 @@ sphinx_packaged_sources =  \
     python_ref/messages.rst \
     python_ref/cursors.rst \
     python_ref/db.rst \
+    python_ref/explorer.rst \
     python_ref/volnd.rst
 
 sphinx_generated_sources =  \

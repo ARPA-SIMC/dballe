@@ -12,4 +12,5 @@ volnd that allows to automatically export matrices of data out of the database.
     messages
     cursors
     db
+    explorer
     volnd
