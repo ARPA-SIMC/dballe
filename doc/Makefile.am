@@ -42,6 +42,7 @@ sphinx_packaged_sources =  \
     src/parms/attrs.rst \
     src/env.rst \
     src/connect.rst \
+    src/reference.rst \
     src/cpp/dballe.rst \
     src/cpp/messages.rst \
     src/cpp/cursors.rst \
@@ -52,7 +53,7 @@ sphinx_packaged_sources =  \
     src/fortran/transactions.rst \
     src/fortran/reference.rst \
     src/fortran/faq.rst \
-    src/python/dballe.rst \
+    src/python/reference.rst \
     src/python/dballe_types.rst \
     src/python/dballe_messages.rst \
     src/python/dballe_cursors.rst \

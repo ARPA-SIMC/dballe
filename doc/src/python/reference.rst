@@ -1,5 +1,5 @@
-Python dballe package
-=====================
+Python reference
+================
 
 .. toctree::
     :maxdepth: 2
@@ -8,3 +8,4 @@ Python dballe package
     dballe_messages
     dballe_cursors
     dballe_db
+    dballe.volnd
