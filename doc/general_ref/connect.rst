@@ -31,7 +31,7 @@ provami::
 
 python::
 
-    db = dballe.DB.connect_from_url("dbtype://info")
+    db = dballe.DB.connect("dbtype://info")
 
 
 .. highlight:: sh
@@ -61,7 +61,7 @@ provami::
 
 python::
 
-    db = dballe.DB.connect_from_url(os.environ["DBA_DB"])
+    db = dballe.DB.connect(os.environ["DBA_DB"])
 
 
 URL syntax
