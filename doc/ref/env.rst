@@ -1,5 +1,5 @@
-DB-All.e environment variables
-==============================
+Environment variables
+=====================
 
 .. toctree::
    :maxdepth: 2

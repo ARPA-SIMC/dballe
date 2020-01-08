@@ -33,38 +33,48 @@ EXTRA_DIST += $(fapisources)
 # Sphinx sources
 
 sphinx_packaged_sources =  \
-    src/conf.py \
-    src/index.rst \
-    src/parms.rst \
-    src/parms/input.rst \
-    src/parms/output.rst \
-    src/parms/query.rst \
-    src/parms/attrs.rst \
-    src/env.rst \
-    src/connect.rst \
-    src/reference.rst \
-    src/cpp/dballe.rst \
-    src/cpp/messages.rst \
-    src/cpp/cursors.rst \
-    src/cpp/db.rst \
-    src/fortran/dballe.rst \
-    src/fortran/walkthrough.rst \
-    src/fortran/concepts.rst \
-    src/fortran/transactions.rst \
-    src/fortran/reference.rst \
-    src/fortran/faq.rst \
-    src/python/reference.rst \
-    src/python/dballe_types.rst \
-    src/python/dballe_messages.rst \
-    src/python/dballe_cursors.rst \
-    src/python/dballe_db.rst \
-    src/python/dballe.volnd.rst
+    conf.py \
+    index.rst \
+    howtos.rst \
+    reference.rst \
+    ref/parms.rst \
+    ref/parms/input.rst \
+    ref/parms/output.rst \
+    ref/parms/query.rst \
+    ref/parms/attrs.rst \
+    ref/env.rst \
+    ref/connect.rst \
+    cpp_ref/index.rst \
+    cpp_ref/messages.rst \
+    cpp_ref/cursors.rst \
+    cpp_ref/db.rst \
+    fortran_how/index.rst \
+    fortran_how/errors.rst \
+    fortran_how/start.rst \
+    fortran_how/iorecords.rst \
+    fortran_how/query.rst \
+    fortran_how/insert.rst \
+    fortran_how/delete.rst \
+    fortran_how/attributes.rst \
+    fortran_how/describe.rst \
+    fortran_how/files.rst \
+    fortran_how/faq.rst \
+    fortran_ref/index.rst \
+    fortran_ref/concepts.rst \
+    fortran_ref/functions.rst \
+    fortran_ref/transactions.rst \
+    python_ref/index.rst \
+    python_ref/types.rst \
+    python_ref/messages.rst \
+    python_ref/cursors.rst \
+    python_ref/db.rst \
+    python_ref/volnd.rst
 
 sphinx_generated_sources =  \
-    src/aliases.rst \
-    src/ltypes.rst \
-    src/tranges.rst \
-    src/btable.rst
+    ref/aliases.rst \
+    ref/ltypes.rst \
+    ref/tranges.rst \
+    ref/btable.rst
 
 sphinx_sources = $(sphinx_packaged_sources) $(sphinx_generated_sources)
 
@@ -78,7 +88,7 @@ build-docs: $(cppdeps) $(sphinx_sources) ../dballe/libdballe.la ../python/_dball
 	rm -rf html
 	mkdir html
 	$(DOXYGEN) libdballe.dox
-	$(top_srcdir)/run-local $(SPHINX_BUILD) -b html src html/
+	$(top_srcdir)/run-local $(SPHINX_BUILD) -b html . html/
 
 libdballe.doxytags: build-docs
 html/index.html: build-docs
@@ -92,16 +102,16 @@ ltypes.dox: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
 tranges.dox: mksnippet
 	$(top_srcdir)/doc/mksnippet tranges dox > $@ || rm $@
 
-src/btable.rst: ../tables/dballe.txt mksnippet
+ref/btable.rst: ../tables/dballe.txt mksnippet
 	$(top_srcdir)/doc/mksnippet btable rst < $< > $@ || rm $@
 
-src/ltypes.rst: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
+ref/ltypes.rst: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
 	$(top_srcdir)/doc/mksnippet levels rst < $< > $@ || rm $@
 
-src/tranges.rst: mksnippet
+ref/tranges.rst: mksnippet
 	$(top_srcdir)/doc/mksnippet tranges rst > $@ || rm $@
 
-src/aliases.rst: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
+ref/aliases.rst: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
 	$(top_srcdir)/doc/mksnippet alias rst < $< > $@ || rm $@
 
 

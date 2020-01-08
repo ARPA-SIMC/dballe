@@ -1,7 +1,7 @@
 .. _connect:
 
-Connecting to DB-All.e
-======================
+Connect URLs
+============
 
 DB-All.e can work with several storage backends, identified via a URL.
 

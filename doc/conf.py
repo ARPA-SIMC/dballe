@@ -74,7 +74,7 @@ pygments_style = None
 
 
 breathe_projects = {
-    "dballe": "../c_xml/",
+    "dballe": "c_xml/",
 }
 
 breathe_default_project = "dballe"
