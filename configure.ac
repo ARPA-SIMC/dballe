@@ -58,6 +58,7 @@ if test x$WREPORT_DOXYGEN_DIR = x
 then
     WREPORT_DOXYGEN_DIR=/usr/share/doc/wreport/html/doxygen
     test -e "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR="/usr/share/doc/libwreport-doc/apidocs/"
+    test -e "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR="/usr/share/doc/libwreport-doc/html/doxygen/"
 fi
 AC_ARG_VAR([WREPORT_DOXYGEN_TAGFILE], [path of libwreport.doxytags])
 if test x$WREPORT_DOXYGEN_TAGFILE = x
