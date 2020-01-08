@@ -38,6 +38,7 @@ sphinx_packaged_sources =  \
     howtos.rst \
     reference.rst \
     general_ref/index.rst \
+    general_ref/concepts.rst \
     general_ref/parms.rst \
     general_ref/parms/input.rst \
     general_ref/parms/output.rst \

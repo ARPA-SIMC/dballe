@@ -5,6 +5,7 @@ General reference
    :maxdepth: 2
    :caption: Contents:
 
+   concepts
    connect
    parms
    btable
