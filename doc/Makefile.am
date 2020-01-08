@@ -75,7 +75,8 @@ sphinx_generated_sources =  \
     general_ref/aliases.rst \
     general_ref/ltypes.rst \
     general_ref/tranges.rst \
-    general_ref/btable.rst
+    general_ref/btable.rst \
+    general_ref/msg_vars.rst
 
 sphinx_sources = $(sphinx_packaged_sources) $(sphinx_generated_sources)
 
@@ -114,6 +115,9 @@ general_ref/tranges.rst: mksnippet
 
 general_ref/aliases.rst: $(top_srcdir)/dballe/core/aliases.gperf mksnippet
 	$(top_srcdir)/doc/mksnippet alias rst < $< > $@ || rm $@
+
+general_ref/msg_vars.rst: $(top_srcdir)/dballe/vars.csv mksnippet
+	$(top_srcdir)/doc/mksnippet msg_vars rst < $< > $@ || rm $@
 
 
 libwreport.doxytags:

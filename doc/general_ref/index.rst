@@ -12,3 +12,4 @@ General reference
    tranges
    aliases
    env
+   msg_vars

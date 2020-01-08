@@ -461,6 +461,67 @@ digits and description.
             print("     - {}".format(fmt))
 
 
+class MsgVars:
+    def format_level(self, ltype1, l1, ltype2, l2):
+        if ltype1 == "-" and l1 == "-" and ltype2 == "-" and l2 == "-":
+            return "station"
+        return ",".join((ltype1, l1, ltype2, l2))
+
+    def format_trange(self, pind, p1, p2):
+        if pind == "-" and p1 == "-" and p2 == "-":
+            return "station"
+        return ",".join((pind, p1, p2))
+
+    def read(self):
+        import csv
+
+        self.data = []
+        for row in csv.reader(sys.stdin):
+            if not row or row[0].startswith("#"):
+                continue
+            name, type, bcode, ltype1, l1, ltype2, l2, pind, p1, p2, desc = row
+            self.data.append((
+                name.strip(),
+                type.strip(),
+                bcode.strip(),
+                self.format_level(ltype1.strip(), l1.strip(), ltype2.strip(), l2.strip()),
+                self.format_trange(pind.strip(), p1.strip(), p2.strip()),
+                desc.strip()))
+
+    def print_rst(self):
+        print(""".. _msg_vars:
+
+Message shortcuts
+=================
+
+This table lists all the shortcuts that can be used to access well-know values
+in a message.
+
+Every entry is listed together with its B code, level, time range, and description.
+
+.. list-table::
+   :widths: auto
+   :header-rows: 1
+
+   * - Name
+     - Type
+     - B code
+     - Level
+     - Time range
+     - Description
+""")
+
+        for name, type, bcode, level, trange, desc in self.data:
+            print("   * - .. _msg_{}:".format(name.lower()))
+            print("")
+            print("       ``{}``".format(name.lower()))
+            print("     - {}".format(type))
+            print("     - ``{}``".format(bcode))
+            print("     - {}".format(level))
+            print("     - {}".format(trange))
+            print("     - {}".format(desc))
+
+
 def main():
     parser = argparse.ArgumentParser(description="Format dballe data snippets for documentation.")
     parser.add_argument("intype", help="input type")
@@ -483,6 +544,7 @@ def main():
         "levels": Levels,
         "tranges": Tranges,
         "btable": Btable,
+        "msg_vars": MsgVars,
     }
 
     Proc = inputs.get(args.intype, None)

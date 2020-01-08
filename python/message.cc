@@ -136,6 +136,7 @@ struct get_named : MethKwargs<get_named, dpy_Message>
     constexpr static const char* signature = "name: str";
     constexpr static const char* returns = "Union[dballe.Var, None]";
     constexpr static const char* summary = "Get a Var given its shortcut name; returns None if not found";
+    constexpr static const char* doc = "See :ref:`msg_vars` for the list of available shortcuts.";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "name", nullptr };
@@ -181,7 +182,8 @@ struct set_named : MethKwargs<set_named, dpy_Message>
 {
     constexpr static const char* name = "set_named";
     constexpr static const char* signature = "name: str, value: Union[dballe.Var, int, str, double]";
-    constexpr static const char* summary = "Set a Var given its shortcut name";
+    constexpr static const char* summary = "Set a Var given its shortcut name.";
+    constexpr static const char* doc = "See :ref:`msg_vars` for the list of available shortcuts.";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "name", "value", nullptr };
