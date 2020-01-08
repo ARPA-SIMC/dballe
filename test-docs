@@ -1,0 +1,157 @@
+#!/usr/bin/python3
+
+import argparse
+import multiprocessing
+from collections import defaultdict
+import sys
+import warnings
+import logging
+import textwrap
+import traceback
+import ast
+from termcolor import cprint
+import importlib
+import json
+
+log = logging.getLogger()
+
+
+class RunEnv:
+    def __init__(self):
+        self.globals = dict(globals())
+        self.locals = dict(locals())
+        self.assigned = set()
+        self.wanted = set()
+
+        for modname in ("dballe", "wreport", "os"):
+            self.globals[modname] = importlib.__import__(modname)
+
+    def check_reqs(self, entry):
+        tree = ast.parse(entry["code"], entry["src"], "exec")
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign):
+                if len(node.targets) != 1:
+                    continue
+                if not isinstance(node.targets[0], ast.Name):
+                    continue
+                self.assigned.add(node.targets[0].id)
+            elif isinstance(node, ast.Attribute):
+                if not isinstance(node.value, ast.Name):
+                    continue
+                if node.value.id in self.assigned:
+                    continue
+                self.wanted.add(node.value.id)
+
+    def run(self, code):
+        import dballe
+        print("WANTED", self.wanted)
+        if "db" in self.wanted or "tr" in self.wanted:
+            self.locals["db"] = dballe.DB.connect("mem:")
+            self.locals["db"].reset()
+        if "tr" in self.wanted:
+            self.locals["tr"] = self.locals["db"].transaction()
+        if "msg" in self.wanted:
+            importer = dballe.Importer("BUFR")
+            with importer.from_file("extra/bufr/synop-sunshine.bufr") as f:
+                for msg in f:
+                    self.locals["msg"] = msg
+
+        with open("/dev/null", "wt") as null:
+            orig = sys.stdout
+            sys.stdout = null
+            try:
+                exec(code, self.globals, self.locals)
+            finally:
+                sys.stdout = orig
+
+
+def run_python_test(entry):
+    with warnings.catch_warnings(record=True) as w:
+        env = RunEnv()
+
+        warnings.simplefilter("always")
+        entry["warnings"] = w
+
+        try:
+            code = compile(entry["code"], entry["src"], "exec")
+        except Exception:
+            entry["result"] = "fail-compile"
+            entry["exception"] = traceback.format_exc()
+            return entry
+
+        env.check_reqs(entry)
+
+        try:
+            env.run(code)
+        except Exception:
+            entry["result"] = "fail-run"
+            entry["exception"] = traceback.format_exc()
+            return entry
+
+    entry["result"] = "ok"
+    return entry
+
+
+def run_tests(entries):
+    by_lang = defaultdict(list)
+    for e in entries:
+        lang = e["lang"]
+        if lang == "default":
+            lang = "python"
+        by_lang[lang].append(e)
+
+    entries = by_lang["python"]
+    if entries:
+        with multiprocessing.Pool(1) as p:
+            entries = p.map(run_python_test, entries)
+
+        for entry in entries:
+            if "exception" in entry:
+                color = "red"
+                ok = False
+            elif entry["warnings"]:
+                color = "yellow"
+                ok = False
+            else:
+                color = "green"
+                ok = True
+
+            cprint(f"{entry['src']}: {entry['result']}", color, attrs=["bold"])
+
+            if "exception" in entry:
+                cprint(textwrap.indent(entry["code"], " | ", lambda line: True), "grey", attrs=["bold"])
+                cprint(textwrap.indent(entry["exception"].rstrip(), " E ", lambda line: True), "red")
+
+            if entry["warnings"]:
+                for w in entry["warnings"]:
+                    cprint(f" W line {w.lineno}: {w.category}, {w.message}", "yellow")
+
+            if not ok:
+                print()
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Run code found in documentation code blocks")
+    parser.add_argument("--verbose", "-v", action="store_true", help="verbose output")
+    parser.add_argument("--debug", action="store_true", help="debug output")
+    parser.add_argument("code", action="store", nargs="?", default="doc/test_code.json",
+                        help="JSON file with the collected test code")
+    args = parser.parse_args()
+
+    # Setup logging
+    FORMAT = "%(asctime)-15s %(levelname)s %(message)s"
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG, stream=sys.stderr, format=FORMAT)
+    elif args.verbose:
+        logging.basicConfig(level=logging.INFO, stream=sys.stderr, format=FORMAT)
+    else:
+        logging.basicConfig(level=logging.WARN, stream=sys.stderr, format=FORMAT)
+
+    with open(args.code, "rt") as fd:
+        entries = json.load(fd)
+
+    run_tests(entries)
+
+
+if __name__ == "__main__":
+    main()
