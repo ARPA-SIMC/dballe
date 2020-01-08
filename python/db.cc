@@ -1284,7 +1284,7 @@ Transactions can also be used as context managers, which calls
 
     with db.transaction() as t:
         for i in range(10):
-            t.insert({
+            t.insert_data({
                 "lat": 44.5 + i, "lon": 11.4 + i, "level": (1,),
                 "trange": (254,), "date": datetime.datetime(2013, 4, 25, 12, 0, 0),
                 "B11101": 22.4 + i, "B12103": 17.2
