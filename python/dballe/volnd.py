@@ -18,7 +18,7 @@ This example code extracts temperatures in a station by datetime matrix::
         query["level"] = (105, 2)
         query["trange"] = (0,)
         with db.transaction() as tr:
-            vars = read(tr.query(query), (AnaIndex(), DateTimeIndex()))
+            vars = read(tr.query_data(query), (AnaIndex(), DateTimeIndex()))
         data = vars["B12001"]
         # Data is now a 2-dimensional Masked Array with the data
         #
