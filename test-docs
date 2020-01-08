@@ -19,6 +19,9 @@ log = logging.getLogger()
 
 
 class RunEnv:
+    """
+    Test environment for python tests
+    """
     TEST_BUFR = "extra/bufr/synop-sunshine.bufr"
 
     def __init__(self):
@@ -27,10 +30,14 @@ class RunEnv:
         self.assigned = set()
         self.wanted = set()
 
+        # Import modules expected by the snippets
         for modname in ("dballe", "wreport", "os", "datetime"):
             self.globals[modname] = importlib.__import__(modname)
 
     def check_reqs(self, entry):
+        """
+        Check if the snippet expects some well-known variables to be defined
+        """
         tree = ast.parse(entry["code"], entry["src"], "exec")
         for node in ast.walk(tree):
             if isinstance(node, ast.Assign):
@@ -50,16 +57,23 @@ class RunEnv:
                     continue
                 self.assigned.add(node.items[0].optional_vars.id)
 
+    # Provide some assertion methods the snippets can use
+
     def assertEqual(self, a, b):
         if a != b:
             raise AssertionError(f"{a!r} != {b!r}")
 
     def run(self, code):
+        """
+        Run a compiled test snippet
+        """
         import dballe
 
+        # Build a test environment in a temporary directory
         with tempfile.TemporaryDirectory() as root:
             shutil.copy(self.TEST_BUFR, os.path.join(root, "test.bufr"))
 
+            # Create well-known variables if needed
             if "db" in self.wanted or "tr" in self.wanted or "explorer" in self.wanted:
                 self.locals["db"] = dballe.DB.connect("mem:")
                 self.locals["db"].reset()
@@ -76,8 +90,10 @@ class RunEnv:
                     for msg in f:
                         self.locals["msg"] = msg[0]
 
+            # Set env variables the snippets may use
             os.environ["DBA_DB"] = "mem:"
 
+            # Run the code, in the temp directory, discarding stdout
             with open("/dev/null", "wt") as null:
                 orig = sys.stdout
                 curdir = os.getcwd()
@@ -91,6 +107,10 @@ class RunEnv:
 
 
 def run_python_test(entry):
+    """
+    Run a collected python code snippet, annotating its information with run
+    results
+    """
     with warnings.catch_warnings(record=True) as w:
         env = RunEnv()
 
@@ -123,7 +143,41 @@ def run_python_test(entry):
     return entry
 
 
+def format_python_result(entry):
+    """
+    Colorful formatting of a code snippet annotated with run results
+    """
+    if "exception" in entry:
+        color = "red"
+        ok = False
+    elif entry["warnings"]:
+        color = "yellow"
+        ok = False
+    else:
+        color = "green"
+        ok = True
+
+    cprint(f"{entry['src']}: {entry['result']}", color, attrs=["bold"])
+
+    if "exception" in entry:
+        lineno, msg = entry["exception"]
+        for idx, line in enumerate(entry["code"].splitlines(), start=1):
+            cprint(f" {idx:2d} {line}", "red" if idx == lineno else "grey", attrs=["bold"])
+            if idx == lineno:
+                cprint(f"  ↪ {msg}", "red")
+
+    if entry["warnings"]:
+        for w in entry["warnings"]:
+            cprint(f" W line {w.lineno}: {w.category}, {w.message}", "yellow")
+
+    if not ok:
+        print()
+
+
 def run_tests(entries):
+    """
+    Run a list of collected test snippets
+    """
     by_lang = defaultdict(list)
     for e in entries:
         lang = e["lang"]
@@ -137,31 +191,9 @@ def run_tests(entries):
             entries = p.map(run_python_test, entries)
 
         for entry in entries:
-            if "exception" in entry:
-                color = "red"
-                ok = False
-            elif entry["warnings"]:
-                color = "yellow"
-                ok = False
-            else:
-                color = "green"
-                ok = True
+            format_python_result(entry)
 
-            cprint(f"{entry['src']}: {entry['result']}", color, attrs=["bold"])
-
-            if "exception" in entry:
-                lineno, msg = entry["exception"]
-                for idx, line in enumerate(entry["code"].splitlines(), start=1):
-                    cprint(f" {idx:2d} {line}", "red" if idx == lineno else "grey", attrs=["bold"])
-                    if idx == lineno:
-                        cprint(f"  ↪ {msg}", "red")
-
-            if entry["warnings"]:
-                for w in entry["warnings"]:
-                    cprint(f" W line {w.lineno}: {w.category}, {w.message}", "yellow")
-
-            if not ok:
-                print()
+    # Only python supported so far
 
 
 def main():
