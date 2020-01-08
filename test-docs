@@ -46,6 +46,14 @@ class RunEnv:
                 if node.value.id in self.assigned:
                     continue
                 self.wanted.add(node.value.id)
+            elif isinstance(node, ast.With):
+                if len(node.items) != 1:
+                    continue
+                self.assigned.add(node.items[0].optional_vars.id)
+
+    def assertEqual(self, a, b):
+        if a != b:
+            raise AssertionError(f"{a!r} != {b!r}")
 
     def run(self, code):
         import dballe
@@ -88,7 +96,10 @@ def run_python_test(entry):
             code = compile(entry["code"], entry["src"], "exec")
         except Exception:
             entry["result"] = "fail-compile"
-            entry["exception"] = traceback.format_exc()
+            type, value, tb = sys.exc_info()
+            for frame, lineno in traceback.walk_tb(tb):
+                pass
+            entry["exception"] = (lineno, str(value))
             return entry
 
         env.check_reqs(entry)
@@ -97,7 +108,10 @@ def run_python_test(entry):
             env.run(code)
         except Exception:
             entry["result"] = "fail-run"
-            entry["exception"] = traceback.format_exc()
+            type, value, tb = sys.exc_info()
+            for frame, lineno in traceback.walk_tb(tb):
+                pass
+            entry["exception"] = (lineno, str(value))
             return entry
 
     entry["result"] = "ok"
@@ -131,8 +145,11 @@ def run_tests(entries):
             cprint(f"{entry['src']}: {entry['result']}", color, attrs=["bold"])
 
             if "exception" in entry:
-                cprint(textwrap.indent(entry["code"], " | ", lambda line: True), "grey", attrs=["bold"])
-                cprint(textwrap.indent(entry["exception"].rstrip(), " E ", lambda line: True), "red")
+                lineno, msg = entry["exception"]
+                for idx, line in enumerate(entry["code"].splitlines(), start=1):
+                    cprint(f" {idx:2d} {line}", "red" if idx == lineno else "grey", attrs=["bold"])
+                    if idx == lineno:
+                        cprint(f"  ↪ {msg}", "red")
 
             if entry["warnings"]:
                 for w in entry["warnings"]:
