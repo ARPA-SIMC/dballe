@@ -1276,7 +1276,9 @@ are not visible to other database connections until the transaction is
 committed. If a transaction is rolled back, all changes done with it are
 undone.
 
-Transactions can also be used as context managers, like this:
+Transactions can also be used as context managers, which calls
+:py:meth:`dballe.Transaction.commit` automatically, or
+:py:meth:`dballe.Transaction.rollback` if the code raised an exception:
 
 ::
 
