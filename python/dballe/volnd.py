@@ -17,7 +17,8 @@ This example code extracts temperatures in a station by datetime matrix::
         query["rep_memo"] = "synop"
         query["level"] = (105, 2)
         query["trange"] = (0,)
-        vars = read(self.db.query(query), (AnaIndex(), DateTimeIndex()))
+        with db.transaction() as tr:
+            vars = read(tr.query(query), (AnaIndex(), DateTimeIndex()))
         data = vars["B12001"]
         # Data is now a 2-dimensional Masked Array with the data
         #
