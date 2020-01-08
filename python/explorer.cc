@@ -442,7 +442,20 @@ struct Definition : Type<Definition<Station>, typename ImplTraits<Station>::Impl
     typedef typename ImplTraits<Station>::Impl Impl;
     static const char* name;
     static const char* qual_name;
-    constexpr static const char* doc = "Browser for a summary of DB-All-e database of message contents";
+    constexpr static const char* doc = R"(
+Browser for a summary of DB-All-e database of message contents.
+
+The constructor has no arguments: use :meth:`rebuild` or :meth:`update` to
+populate it.
+
+::
+
+# Populate an explorer with the contents of a database
+explorer = dballe.Explorer()
+with explorer.rebuild() as update:
+    with db.transaction() as tr:
+        update.add_db(tr)
+)";
     GetSetters<
         GetAllStations<Station>, GetStations<Station>,
         GetAllReports<Station>, GetReports<Station>,

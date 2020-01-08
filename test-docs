@@ -8,7 +8,6 @@ import sys
 import warnings
 import shutil
 import logging
-import textwrap
 import traceback
 import tempfile
 import ast
@@ -61,9 +60,14 @@ class RunEnv:
         with tempfile.TemporaryDirectory() as root:
             shutil.copy(self.TEST_BUFR, os.path.join(root, "test.bufr"))
 
-            if "db" in self.wanted or "tr" in self.wanted:
+            if "db" in self.wanted or "tr" in self.wanted or "explorer" in self.wanted:
                 self.locals["db"] = dballe.DB.connect("mem:")
                 self.locals["db"].reset()
+            if "explorer" in self.wanted:
+                self.locals["explorer"] = dballe.Explorer()
+                with self.locals["explorer"].rebuild() as update:
+                    with self.locals["db"].transaction() as tr:
+                        update.add_db(tr)
             if "tr" in self.wanted:
                 self.locals["tr"] = self.locals["db"].transaction()
             if "msg" in self.wanted:
@@ -71,6 +75,7 @@ class RunEnv:
                 with importer.from_file("extra/bufr/synop-sunshine.bufr") as f:
                     for msg in f:
                         self.locals["msg"] = msg[0]
+
             os.environ["DBA_DB"] = "mem:"
 
             with open("/dev/null", "wt") as null:
