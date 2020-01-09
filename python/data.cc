@@ -38,15 +38,15 @@ varcode performs automatic unit conversion if possible.
 
 For example::
 
-    # Select B12001 values and convert them to B12101
-    with tr.query_data({"var": "B12001"}) as cur:
-        self.assertEqual(cur.remaining, 1)
+    # Select B12101 values and convert them to B22049
+    with tr.query_data({"var": "B12101"}) as cur:
+        self.assertEqual(cur.remaining, 26)
         for rec in cur:
             data = rec.data
             rec.remove()
             # This converts units automatically
-            data["B12101"] = data["12001"]
-            del data["B12001"]
+            data["B22049"] = data["B12101"]
+            del data["B12101"]
             tr.insert_data(data)
 )";
     GetSetters<> getsetters;
