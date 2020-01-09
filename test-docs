@@ -168,7 +168,7 @@ def format_python_result(entry):
         color = "green"
         ok = True
 
-    cprint(f"{entry['src']}: {entry['result']}", color, attrs=["bold"])
+    cprint(f"{entry['src']}: {entry['source']}:{entry['line']}: {entry['result']}", color, attrs=["bold"])
 
     if "exception" in entry:
         lineno, msg = entry["exception"]

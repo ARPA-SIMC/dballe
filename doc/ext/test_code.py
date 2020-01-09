@@ -13,6 +13,8 @@ def find_code(app, doctree, fromdocname):
                 "src": fromdocname,
                 "lang": lang,
                 "code": subnode,
+                "source": node.source,
+                "line": node.line,
             })
 
 
