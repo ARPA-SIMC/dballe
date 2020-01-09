@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Welcome to dballe’s documentation! &#8212; dballe 3.23 documentation</title>
+    <title>Welcome to DB-All-e’s documentation! &#8212; dballe 3.23 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -16,7 +16,7 @@
     <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Input/output/query parameters" href="parms.html" />
+    <link rel="next" title="How-to guides" href="howtos.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -33,66 +33,21 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="welcome-to-dballe-s-documentation">
-<h1>Welcome to dballe’s documentation!<a class="headerlink" href="#welcome-to-dballe-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p>The DB-All.e Python bindings provide 2 levels of access to a DB-All.e database:
-a complete API similar to the Fortran and C++ API, and a high-level API called
-volnd that allows to automatically export matrices of data out of the database.</p>
+  <div class="section" id="welcome-to-db-all-e-s-documentation">
+<h1>Welcome to DB-All-e’s documentation!<a class="headerlink" href="#welcome-to-db-all-e-s-documentation" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="parms.html">Input/output/query parameters</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="parms/query.html">Parameters used when setting up a query</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parms/input.html">Parameters used when inserting values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parms/output.html">Parameters used when reading query results</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parms/attrs.html">Input parameters for attribute-related action routines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="howtos.html">How-to guides</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="python_how/index.html">Python HOWTOs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fortran_how/index.html">Fortran HOWTOs</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="btable.html">Local B table codes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ltypes.html">Level type values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tranges.html">Time range values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="aliases.html">Varcode aliases</a></li>
-<li class="toctree-l1"><a class="reference internal" href="env.html">DB-All.e environment variables</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="env.html#dba-db"><code class="docutils literal notranslate"><span class="pre">DBA_DB</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="env.html#tmpdir"><code class="docutils literal notranslate"><span class="pre">TMPDIR</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="env.html#dba-repinfo"><code class="docutils literal notranslate"><span class="pre">DBA_REPINFO</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="env.html#wreport-tables"><code class="docutils literal notranslate"><span class="pre">WREPORT_TABLES</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="env.html#dba-db-format"><code class="docutils literal notranslate"><span class="pre">DBA_DB_FORMAT</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="env.html#dba-explain"><code class="docutils literal notranslate"><span class="pre">DBA_EXPLAIN</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="env.html#dba-profile"><code class="docutils literal notranslate"><span class="pre">DBA_PROFILE</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="env.html#dba-insecure-sqlite"><code class="docutils literal notranslate"><span class="pre">DBA_INSECURE_SQLITE</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="env.html#dba-fortran-trace"><code class="docutils literal notranslate"><span class="pre">DBA_FORTRAN_TRACE</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="env.html#dba-fortran-transaction"><code class="docutils literal notranslate"><span class="pre">DBA_FORTRAN_TRANSACTION</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="connect.html">Connecting to DB-All.e</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="connect.html#url-syntax">URL syntax</a></li>
-<li class="toctree-l2"><a class="reference internal" href="connect.html#url-actions">URL actions</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="python/dballe.html">Python dballe package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="python/dballe_types.html">dballe types</a></li>
-<li class="toctree-l2"><a class="reference internal" href="python/dballe_messages.html">dballe messages I/O</a></li>
-<li class="toctree-l2"><a class="reference internal" href="python/dballe_cursors.html">dballe cursors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="python/dballe_db.html">dballe database functions</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="python/dballe.volnd.html">Python dballe.volnd package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="python/dballe.volnd.html#module-dballe.volnd">The volnd API</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="cpp/dballe.html">C++ dballe namespace</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="cpp/messages.html">Messages</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cpp/cursors.html">Cursors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cpp/db.html">Database</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="fortran/dballe.html">Fortran dballe functions</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="fortran/concepts.html">Fortran API concepts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fortran/walkthrough.html">A walk through the Fortran API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fortran/transactions.html">Transactional behaviour</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fortran/reference.html">Fortran dballe functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fortran/faq.html">FAQ and Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="general_ref/index.html">General reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_ref/index.html">Python reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_ref/index.html">C++ reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fortran_ref/index.html">Fortran reference</a></li>
 </ul>
 </li>
 </ul>
@@ -125,24 +80,15 @@ volnd that allows to automatically export matrices of data out of the database.<
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="parms.html">Input/output/query parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="btable.html">Local B table codes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ltypes.html">Level type values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tranges.html">Time range values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="aliases.html">Varcode aliases</a></li>
-<li class="toctree-l1"><a class="reference internal" href="env.html">DB-All.e environment variables</a></li>
-<li class="toctree-l1"><a class="reference internal" href="connect.html">Connecting to DB-All.e</a></li>
-<li class="toctree-l1"><a class="reference internal" href="python/dballe.html">Python dballe package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="python/dballe.volnd.html">Python dballe.volnd package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cpp/dballe.html">C++ dballe namespace</a></li>
-<li class="toctree-l1"><a class="reference internal" href="fortran/dballe.html">Fortran dballe functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="howtos.html">How-to guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference documentation</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="#">Documentation overview</a><ul>
-      <li>Next: <a href="parms.html" title="next chapter">Input/output/query parameters</a></li>
+      <li>Next: <a href="howtos.html" title="next chapter">How-to guides</a></li>
   </ul></li>
 </ul>
 </div>

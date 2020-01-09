@@ -1,0 +1,262 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Input/output records &#8212; dballe 3.23 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Querying the database" href="query.html" />
+    <link rel="prev" title="Starting the work" href="start.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="input-output-records">
+<h1>Input/output records<a class="headerlink" href="#input-output-records" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="setting-input-and-reading-output">
+<h2>Setting input and reading output<a class="headerlink" href="#setting-input-and-reading-output" title="Permalink to this headline">¶</a></h2>
+<p>Input to action routines is done using the functions <code class="docutils literal notranslate"><span class="pre">idba_set*</span></code>, and output
+is read with the functions <code class="docutils literal notranslate"><span class="pre">idba_enq*</span></code> (see <a class="reference internal" href="../fortran_ref/concepts.html#routines"><span class="std std-ref">Input, output, actions</span></a>):</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">! Set the extremes of an area and retrieve all the stations in it</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_setd</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;latmin&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="mf">0.D0</span><span class="p">)</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_setd</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;latmax&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="mf">0.D0</span><span class="p">)</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_setd</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;lonmin&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="mf">0.D0</span><span class="p">)</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_setd</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;lonmax&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="mf">0.D0</span><span class="p">)</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_query_stations</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="nb">count</span><span class="p">)</span>
+
+<span class="c">! Get the informations about a station</span>
+<span class="k">do while</span> <span class="p">(</span><span class="nb">count</span><span class="p">.</span><span class="n">gt</span><span class="p">.</span><span class="mi">0</span><span class="p">)</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_next_station</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_enqc</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="n">cname</span><span class="p">)</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_enqi</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;ana_id&quot;</span><span class="p">,</span> <span class="n">id</span><span class="p">)</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_enqd</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_enqd</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">,</span> <span class="n">lon</span><span class="p">)</span>
+  <span class="c">! ....</span>
+  <span class="nb">count</span> <span class="o">=</span> <span class="nb">count</span> <span class="o">-</span> <span class="mi">1</span>
+<span class="n">enddo</span>
+</pre></div>
+</div>
+<p>Note that, when one uses <a class="reference internal" href="../fortran_ref/functions.html#c.idba_setc" title="idba_setc"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_setc()</span></code></a>, <a class="reference internal" href="../fortran_ref/functions.html#c.idba_seti" title="idba_seti"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_seti()</span></code></a>, <a class="reference internal" href="../fortran_ref/functions.html#c.idba_enqc" title="idba_enqc"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_enqc()</span></code></a>,
+<a class="reference internal" href="../fortran_ref/functions.html#c.idba_enqi" title="idba_enqi"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_enqi()</span></code></a> with parameters that have some decimal digits, DB-All.e will
+work with values as if they did not have a decimal point.  That is, if latitude
+<cite>10.124323</cite> is read with <a class="reference internal" href="../fortran_ref/functions.html#c.idba_enqi" title="idba_enqi"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_enqi()</span></code></a>, then the result will be <cite>10124323</cite>.</p>
+<p>The following example shows what happens:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">! Set the latitude to 30.0 degrees</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_setr</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="mf">0.0</span><span class="p">)</span>
+<span class="c">! Set the latitude to 30.0 degrees</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_setd</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="mf">0.0D0</span><span class="p">)</span>
+
+<span class="c">! Set the latitude to 0.00030 degrees</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_seti</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+<span class="c">! Set !the latitude to 30.0 degrees</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_seti</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="mi">3000000</span><span class="p">)</span>
+
+<span class="c">! Set the latitude to 0.00030 degrees</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_setc</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;30&quot;</span><span class="p">)</span>
+<span class="c">! Set the latitude to 30.0 degrees</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_setc</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;3000000&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="input-output-shortcuts">
+<h2>Input/output shortcuts<a class="headerlink" href="#input-output-shortcuts" title="Permalink to this headline">¶</a></h2>
+<p>There are a few functions that are shortcuts to other input and output
+functions:</p>
+<p><a class="reference internal" href="../fortran_ref/functions.html#c.idba_enqdate" title="idba_enqdate"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_enqdate()</span></code></a> is a shortcut to:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">idba_enqi</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;year&quot;</span><span class="p">,</span> <span class="n">year</span><span class="p">)</span>
+<span class="n">idba_enqi</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;month&quot;</span><span class="p">,</span> <span class="n">month</span><span class="p">)</span>
+<span class="n">idba_enqi</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;day&quot;</span><span class="p">,</span> <span class="n">day</span><span class="p">)</span>
+<span class="n">idba_enqi</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;hour&quot;</span><span class="p">,</span> <span class="n">hour</span><span class="p">)</span>
+<span class="n">idba_enqi</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;min&quot;</span><span class="p">,</span> <span class="n">minute</span><span class="p">)</span>
+<span class="n">idba_enqi</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;sec&quot;</span><span class="p">,</span> <span class="nb">second</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="../fortran_ref/functions.html#c.idba_setdate" title="idba_setdate"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_setdate()</span></code></a> is a shortcut to:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">idba_seti</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;year&quot;</span><span class="p">,</span> <span class="n">year</span><span class="p">)</span>
+<span class="n">idba_seti</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;month&quot;</span><span class="p">,</span> <span class="n">month</span><span class="p">)</span>
+<span class="n">idba_seti</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;day&quot;</span><span class="p">,</span> <span class="n">day</span><span class="p">)</span>
+<span class="n">idba_seti</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;hour&quot;</span><span class="p">,</span> <span class="n">hour</span><span class="p">)</span>
+<span class="n">idba_seti</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;min&quot;</span><span class="p">,</span> <span class="n">minute</span><span class="p">)</span>
+<span class="n">idba_seti</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;sec&quot;</span><span class="p">,</span> <span class="nb">second</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="../fortran_ref/functions.html#c.idba_enqlevel" title="idba_enqlevel"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_enqlevel()</span></code></a> is a shortcut to:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">idba_enqi</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;leveltype1&quot;</span><span class="p">,</span> <span class="n">type1</span><span class="p">)</span>
+<span class="n">idba_enqi</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;l1&quot;</span><span class="p">,</span> <span class="n">l1</span><span class="p">)</span>
+<span class="n">idba_enqi</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;leveltype2&quot;</span><span class="p">,</span> <span class="n">type2</span><span class="p">)</span>
+<span class="n">idba_enqi</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;l2&quot;</span><span class="p">,</span> <span class="n">l2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="../fortran_ref/functions.html#c.idba_setlevel" title="idba_setlevel"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_setlevel()</span></code></a> is a shortcut to:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">idba_seti</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;leveltype1&quot;</span><span class="p">,</span> <span class="n">type1</span><span class="p">)</span>
+<span class="n">idba_seti</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;l1&quot;</span><span class="p">,</span> <span class="n">l1</span><span class="p">)</span>
+<span class="n">idba_seti</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;leveltype2&quot;</span><span class="p">,</span> <span class="n">type2</span><span class="p">)</span>
+<span class="n">idba_seti</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;l2&quot;</span><span class="p">,</span> <span class="n">l2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="../fortran_ref/functions.html#c.idba_enqtimerange" title="idba_enqtimerange"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_enqtimerange()</span></code></a> is a shortcut to:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">idba_enqi</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;pindicator&quot;</span><span class="p">,</span> <span class="k">type</span><span class="p">)</span>
+<span class="n">idba_enqi</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;p1&quot;</span><span class="p">,</span> <span class="n">p1</span><span class="p">)</span>
+<span class="n">idba_enqi</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;p2&quot;</span><span class="p">,</span> <span class="n">p2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="../fortran_ref/functions.html#c.idba_settimerange" title="idba_settimerange"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_settimerange()</span></code></a> is a shortcut to:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">idba_seti</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;pindicator&quot;</span><span class="p">,</span> <span class="k">type</span><span class="p">)</span>
+<span class="n">idba_seti</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;p1&quot;</span><span class="p">,</span> <span class="n">p1</span><span class="p">)</span>
+<span class="n">idba_seti</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;p2&quot;</span><span class="p">,</span> <span class="n">p2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="parameter-names">
+<h2>Parameter names<a class="headerlink" href="#parameter-names" title="Permalink to this headline">¶</a></h2>
+<p>There are three different kinds of parameter names one can use:</p>
+<ul class="simple">
+<li>DB-All.e parameters (see <a class="reference internal" href="../general_ref/parms.html#parms"><span class="std std-ref">Input/output/query parameters</span></a>), that have a special meaning to
+DB-All.e: for example they can be part of the coordinate system, or
+space/time extremes to use to query the database.  They are indicated simply
+with their name (for example, <cite>“lat”</cite> or <cite>“yearmin”</cite>).</li>
+<li><a class="reference internal" href="../general_ref/btable.html#btable"><span class="std std-ref">Local B table codes</span></a>, represent all possible sorts of
+observed data, and are indicated in the form <cite>Bxxyyy</cite>, where <cite>xxyyy</cite> are the
+X and Y values from the WMO table B.</li>
+<li><a class="reference internal" href="../general_ref/aliases.html#aliases"><span class="std std-ref">Varcode aliases</span></a> that are short, easy to remember names which
+can be used instead of frequently used WMO B variables.</li>
+</ul>
+</div>
+<div class="section" id="queries-and-observed-data">
+<h2>Queries and observed data<a class="headerlink" href="#queries-and-observed-data" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">idba_set*</span></code> and <code class="docutils literal notranslate"><span class="pre">idba_enq*</span></code> functions can also be used to set and get
+observation data.  To do so, use as parameter the string <code class="docutils literal notranslate"><span class="pre">&quot;Bxxyyy&quot;</span></code>, where
+<code class="docutils literal notranslate"><span class="pre">xx</span></code> and <code class="docutils literal notranslate"><span class="pre">yyy</span></code> are the X and Y values of the BUFR/CREX table B describing
+the observed data.</p>
+<p>For example:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">! Set the speed of the wind (very useful in summer)</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_setr</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;B11002&quot;</span><span class="p">,</span> <span class="mf">1.8</span><span class="p">)</span>
+<span class="c">! Also set the temperature</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_setr</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;B12001&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="mf">1.8</span><span class="p">)</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_insert_data</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">idba_set*</span></code> and <code class="docutils literal notranslate"><span class="pre">idba_enq</span></code> groups of functions can also be used to
+set and get attributes on data.  To do so, use as parameter the string
+<code class="docutils literal notranslate"><span class="pre">&quot;*Bxxyyy&quot;</span></code>, where <code class="docutils literal notranslate"><span class="pre">xx</span></code> and <code class="docutils literal notranslate"><span class="pre">yyy</span></code> are the X and Y values of the
+BUFR/CREX table B describing the attribute.</p>
+<p>For example:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">! Set the confidence of the wind speed value we inserted</span>
+<span class="c">! in the last &#39;idba_insert_data&#39;</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_setr</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;*B33007&quot;</span><span class="p">,</span> <span class="mi">7</span><span class="mf">5.0</span><span class="p">)</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_setc</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;*var_related&quot;</span><span class="p">,</span> <span class="s2">&quot;B11002&quot;</span><span class="p">)</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_insert_attributes</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">dballe</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../howtos.html">How-to guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../python_how/index.html">Python HOWTOs</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Fortran HOWTOs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference.html">Reference documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../howtos.html">How-to guides</a><ul>
+  <li><a href="index.html">Fortran HOWTOs</a><ul>
+      <li>Previous: <a href="start.html" title="previous chapter">Starting the work</a></li>
+      <li>Next: <a href="query.html" title="next chapter">Querying the database</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Enrico Zini.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/fortran_how/iorecords.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

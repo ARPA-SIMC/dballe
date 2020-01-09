@@ -1,0 +1,667 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Parameters used when reading query results &#8212; dballe 3.23 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Input parameters for attribute-related action routines" href="attrs.html" />
+    <link rel="prev" title="Parameters used when inserting values" href="input.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="parameters-used-when-reading-query-results">
+<h1>Parameters used when reading query results<a class="headerlink" href="#parameters-used-when-reading-query-results" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="parameters-used-when-reading-station-query-results">
+<span id="parms-read-station"></span><h2>Parameters used when reading station query results<a class="headerlink" href="#parameters-used-when-reading-station-query-results" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="16%" />
+<col width="21%" />
+<col width="53%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Unit</th>
+<th class="head">Description</th>
+<th class="head">Comment</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">priority</span></code></td>
+<td>Integer</td>
+<td>Priority of this type of report</td>
+<td>Every type of report has an associated priority that controls
+which data are first returned when there is more than one in the
+same physical space.  It can be changed by editing <code class="docutils literal notranslate"><span class="pre">/etc/dballe/repinfo.csv</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">rep_memo</span></code></td>
+<td>String</td>
+<td>Type of report</td>
+<td>Alias for <code class="docutils literal notranslate"><span class="pre">report</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">report</span></code></td>
+<td>String</td>
+<td>Type of report</td>
+<td>Alias for <code class="docutils literal notranslate"><span class="pre">rep_memo</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ana_id</span></code></td>
+<td>Integer</td>
+<td>Station database ID</td>
+<td>Internal DB-ALLe ID referring to an existing station, usable as a shortcut</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">mobile</span></code></td>
+<td>Integer</td>
+<td>Station is mobile</td>
+<td>Set to <code class="docutils literal notranslate"><span class="pre">1</span></code> if the station is mobile, such as a ship or a flight; else <code class="docutils literal notranslate"><span class="pre">0</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ident</span></code></td>
+<td>String</td>
+<td>Station identifier</td>
+<td>present if <code class="docutils literal notranslate"><span class="pre">mobile=1</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">lat</span></code></td>
+<td>Float</td>
+<td>Latitude</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">lon</span></code></td>
+<td>Float</td>
+<td>Longitude</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">coords</span></code></td>
+<td>Coords</td>
+<td>Station coordinates</td>
+<td>Only available in Python</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">station</span></code></td>
+<td><a class="reference internal" href="../../python_ref/types.html#dballe.Station" title="dballe.Station"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Station</span></code></a></td>
+<td>Station</td>
+<td>Only available in Python</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="parameters-used-when-reading-query-results-for-station-values">
+<span id="parms-read-stationdata"></span><h2>Parameters used when reading query results for station values<a class="headerlink" href="#parameters-used-when-reading-query-results-for-station-values" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="14%" />
+<col width="19%" />
+<col width="58%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Unit</th>
+<th class="head">Description</th>
+<th class="head">Comment</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">priority</span></code></td>
+<td>Integer</td>
+<td>Priority of this type of report</td>
+<td>Every type of report has an associated priority that controls
+which data are first returned when there is more than one in the
+same physical space.  It can be changed by editing <code class="docutils literal notranslate"><span class="pre">/etc/dballe/repinfo.csv</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">rep_memo</span></code></td>
+<td>String</td>
+<td>Type of report</td>
+<td>Alias for <code class="docutils literal notranslate"><span class="pre">report</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">report</span></code></td>
+<td>String</td>
+<td>Type of report</td>
+<td>Alias for <code class="docutils literal notranslate"><span class="pre">rep_memo</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ana_id</span></code></td>
+<td>Integer</td>
+<td>Station database ID</td>
+<td>Internal DB-ALLe ID referring to an existing station, usable as a shortcut</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">mobile</span></code></td>
+<td>Integer</td>
+<td>Station is mobile</td>
+<td>Set to <code class="docutils literal notranslate"><span class="pre">1</span></code> if the station is mobile, such as a ship or a flight; else <code class="docutils literal notranslate"><span class="pre">0</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ident</span></code></td>
+<td>String</td>
+<td>Station identifier</td>
+<td>present if <code class="docutils literal notranslate"><span class="pre">mobile=1</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">lat</span></code></td>
+<td>Float</td>
+<td>Latitude</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">lon</span></code></td>
+<td>Float</td>
+<td>Longitude</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">coords</span></code></td>
+<td><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Coords</span></code></td>
+<td>Station coordinates</td>
+<td>Only available in Python</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">station</span></code></td>
+<td><a class="reference internal" href="../../python_ref/types.html#dballe.Station" title="dballe.Station"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Station</span></code></a></td>
+<td>Station</td>
+<td>Only available in Python</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">var</span></code></td>
+<td>String</td>
+<td>Variable code</td>
+<td>Set to the current variable code when iterating results</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">variable</span></code></td>
+<td><a class="reference internal" href="../../python_ref/types.html#dballe.Var" title="dballe.Var"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Var</span></code></a></td>
+<td>Variable</td>
+<td>Only available in Python</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">attrs</span></code></td>
+<td>List</td>
+<td>Attributes</td>
+<td>Set to the current variable code when iterating results</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">context_id</span></code></td>
+<td>Integer</td>
+<td>ID of the variable</td>
+<td>ID identifying a variable in the database, can be used as a shortcut to access its attributes</td>
+</tr>
+</tbody>
+</table>
+<p>The variable value can be queried using the code in <code class="docutils literal notranslate"><span class="pre">var</span></code>.</p>
+</div>
+<div class="section" id="parameters-used-when-reading-query-results-for-data-values">
+<span id="parms-read-data"></span><h2>Parameters used when reading query results for data values<a class="headerlink" href="#parameters-used-when-reading-query-results-for-data-values" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="15%" />
+<col width="19%" />
+<col width="57%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Unit</th>
+<th class="head">Description</th>
+<th class="head">Comment</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">priority</span></code></td>
+<td>Integer</td>
+<td>Priority of this type of report</td>
+<td>Every type of report has an associated priority that controls
+which data are first returned when there is more than one in the
+same physical space.  It can be changed by editing <code class="docutils literal notranslate"><span class="pre">/etc/dballe/repinfo.csv</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">rep_memo</span></code></td>
+<td>String</td>
+<td>Type of report</td>
+<td>Alias for <code class="docutils literal notranslate"><span class="pre">report</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">report</span></code></td>
+<td>String</td>
+<td>Type of report</td>
+<td>Alias for <code class="docutils literal notranslate"><span class="pre">rep_memo</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ana_id</span></code></td>
+<td>Integer</td>
+<td>Station database ID</td>
+<td>Internal DB-ALLe ID referring to an existing station, usable as a shortcut</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">mobile</span></code></td>
+<td>Integer</td>
+<td>Station is mobile</td>
+<td>Set to <code class="docutils literal notranslate"><span class="pre">1</span></code> if the station is mobile, such as a ship or a flight; else <code class="docutils literal notranslate"><span class="pre">0</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ident</span></code></td>
+<td>String</td>
+<td>Station identifier</td>
+<td>present if <code class="docutils literal notranslate"><span class="pre">mobile=1</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">lat</span></code></td>
+<td>Float</td>
+<td>Latitude</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">lon</span></code></td>
+<td>Float</td>
+<td>Longitude</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">coords</span></code></td>
+<td><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Coords</span></code></td>
+<td>Station coordinates</td>
+<td>Only available in Python</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">station</span></code></td>
+<td><a class="reference internal" href="../../python_ref/types.html#dballe.Station" title="dballe.Station"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Station</span></code></a></td>
+<td>Station</td>
+<td>Only available in Python</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">datetime</span></code></td>
+<td>datetime</td>
+<td>Datetime</td>
+<td>Only available in Python</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">year</span></code></td>
+<td>Integer</td>
+<td>Year</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">month</span></code></td>
+<td>Integer</td>
+<td>Month</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">day</span></code></td>
+<td>Integer</td>
+<td>Day</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">hour</span></code></td>
+<td>Integer</td>
+<td>Hour</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">min</span></code></td>
+<td>Integer</td>
+<td>Minutes</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">sec</span></code></td>
+<td>Integer</td>
+<td>Seconds</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">level</span></code></td>
+<td><a class="reference internal" href="../../python_ref/types.html#dballe.Level" title="dballe.Level"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Level</span></code></a></td>
+<td>Level</td>
+<td>Only available in Python</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">leveltype1</span></code></td>
+<td>Integer</td>
+<td>Type of first level</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">l1</span></code></td>
+<td>Integer</td>
+<td>Level layer L1</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">leveltype2</span></code></td>
+<td>Integer</td>
+<td>Type of second level</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">l2</span></code></td>
+<td>Integer</td>
+<td>Level layer L2</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">trange</span></code></td>
+<td><a class="reference internal" href="../../python_ref/types.html#dballe.Trange" title="dballe.Trange"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Trange</span></code></a></td>
+<td>Time range</td>
+<td>Only available in Python</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">pindicator</span></code></td>
+<td>Integer</td>
+<td>P indicator for time range</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">p1</span></code></td>
+<td>Integer</td>
+<td>Time range P1</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">p2</span></code></td>
+<td>Integer</td>
+<td>Time range P2</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">var</span></code></td>
+<td>String</td>
+<td>Variable code</td>
+<td>Set to the current variable code when iterating results</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">variable</span></code></td>
+<td><a class="reference internal" href="../../python_ref/types.html#dballe.Var" title="dballe.Var"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Var</span></code></a></td>
+<td>Variable</td>
+<td>Only available in Python</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">attrs</span></code></td>
+<td>List</td>
+<td>Attributes</td>
+<td>Set to the current variable code when iterating results</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">context_id</span></code></td>
+<td>Integer</td>
+<td>ID of the variable</td>
+<td>ID identifying a variable in the database, can be used as a shortcut to access its attributes</td>
+</tr>
+</tbody>
+</table>
+<p>The variable value can be queried using the code in <code class="docutils literal notranslate"><span class="pre">var</span></code>.</p>
+</div>
+<div class="section" id="parameters-used-when-reading-query-results-for-summary-values">
+<span id="parms-read-summary"></span><h2>Parameters used when reading query results for summary values<a class="headerlink" href="#parameters-used-when-reading-query-results-for-summary-values" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="16%" />
+<col width="23%" />
+<col width="52%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Unit</th>
+<th class="head">Description</th>
+<th class="head">Comment</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">priority</span></code></td>
+<td>Integer</td>
+<td>Priority of this type of report</td>
+<td>Every type of report has an associated priority that controls
+which data are first returned when there is more than one in the
+same physical space.  It can be changed by editing <code class="docutils literal notranslate"><span class="pre">/etc/dballe/repinfo.csv</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">rep_memo</span></code></td>
+<td>String</td>
+<td>Type of report</td>
+<td>Alias for <code class="docutils literal notranslate"><span class="pre">report</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">report</span></code></td>
+<td>String</td>
+<td>Type of report</td>
+<td>Alias for <code class="docutils literal notranslate"><span class="pre">rep_memo</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ana_id</span></code></td>
+<td>Integer</td>
+<td>Station database ID</td>
+<td>Internal DB-ALLe ID referring to an existing station, usable as a shortcut</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">mobile</span></code></td>
+<td>Integer</td>
+<td>Station is mobile</td>
+<td>Set to <code class="docutils literal notranslate"><span class="pre">1</span></code> if the station is mobile, such as a ship or a flight; else <code class="docutils literal notranslate"><span class="pre">0</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ident</span></code></td>
+<td>String</td>
+<td>Station identifier</td>
+<td>present if <code class="docutils literal notranslate"><span class="pre">mobile=1</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">lat</span></code></td>
+<td>Float</td>
+<td>Latitude</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">lon</span></code></td>
+<td>Float</td>
+<td>Longitude</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">coords</span></code></td>
+<td><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Coords</span></code></td>
+<td>Station coordinates</td>
+<td>Only available in Python</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">station</span></code></td>
+<td><a class="reference internal" href="../../python_ref/types.html#dballe.Station" title="dballe.Station"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Station</span></code></a></td>
+<td>Station</td>
+<td>Only available in Python</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">level</span></code></td>
+<td><a class="reference internal" href="../../python_ref/types.html#dballe.Level" title="dballe.Level"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Level</span></code></a></td>
+<td>Level</td>
+<td>Only available in Python</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">leveltype1</span></code></td>
+<td>Integer</td>
+<td>Type of first level</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">l1</span></code></td>
+<td>Integer</td>
+<td>Level layer L1</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">leveltype2</span></code></td>
+<td>Integer</td>
+<td>Type of second level</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">l2</span></code></td>
+<td>Integer</td>
+<td>Level layer L2</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">trange</span></code></td>
+<td><a class="reference internal" href="../../python_ref/types.html#dballe.Trange" title="dballe.Trange"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Trange</span></code></a></td>
+<td>Time range</td>
+<td>Only available in Python</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">pindicator</span></code></td>
+<td>Integer</td>
+<td>P indicator for time range</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">p1</span></code></td>
+<td>Integer</td>
+<td>Time range P1</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">p2</span></code></td>
+<td>Integer</td>
+<td>Time range P2</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">datetimemax</span></code></td>
+<td>datetime</td>
+<td>Maximum datetime for this variable</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>. Only available in Python</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">datetimemin</span></code></td>
+<td>datetime</td>
+<td>Minimum datetime for this variable</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>. Only available in Python</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">yearmax</span></code></td>
+<td>Integer</td>
+<td>Maximum year for this variable</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">yearmin</span></code></td>
+<td>Integer</td>
+<td>Minimum year for this variable</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">monthmax</span></code></td>
+<td>Integer</td>
+<td>Maximum month for this variable</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">monthmin</span></code></td>
+<td>Integer</td>
+<td>Minimum month for this variable</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">daymax</span></code></td>
+<td>Integer</td>
+<td>Maximum day for this variable</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">daymin</span></code></td>
+<td>Integer</td>
+<td>Minimum day for this variable</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">hourmax</span></code></td>
+<td>Integer</td>
+<td>Maximum hour for this variable</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">hourmin</span></code></td>
+<td>Integer</td>
+<td>Minumum hour for this variable</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">minumax</span></code></td>
+<td>Integer</td>
+<td>Maximum minutes for this variable</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">minumin</span></code></td>
+<td>Integer</td>
+<td>Minimum minutes for this variable</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">secmax</span></code></td>
+<td>Integer</td>
+<td>Maximum seconds for this variable</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">secmin</span></code></td>
+<td>Integer</td>
+<td>Minimum seconds for this variable</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">var</span></code></td>
+<td>String</td>
+<td>Variable code</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">count</span></code></td>
+<td>Integer</td>
+<td>Number of values for this variable</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">context_id</span></code></td>
+<td>Integer</td>
+<td>Number of values for this variable</td>
+<td>Only available with <code class="docutils literal notranslate"><span class="pre">query=details</span></code>. Deprecated: use <code class="docutils literal notranslate"><span class="pre">count</span></code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">dballe</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../howtos.html">How-to guides</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../reference.html">Reference documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">General reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../python_ref/index.html">Python reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../cpp_ref/index.html">C++ reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../fortran_ref/index.html">Fortran reference</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../reference.html">Reference documentation</a><ul>
+  <li><a href="../index.html">General reference</a><ul>
+  <li><a href="../parms.html">Input/output/query parameters</a><ul>
+      <li>Previous: <a href="input.html" title="previous chapter">Parameters used when inserting values</a></li>
+      <li>Next: <a href="attrs.html" title="next chapter">Input parameters for attribute-related action routines</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Enrico Zini.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/general_ref/parms/output.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,773 @@
+.. _msg_vars:
+
+Message shortcuts
+=================
+
+This table lists all the shortcuts that can be used to access well-know values
+in a message.
+
+Every entry is listed together with its B code, level, time range, and description.
+
+.. list-table::
+   :widths: auto
+   :header-rows: 1
+
+   * - Name
+     - Type
+     - B code
+     - Level
+     - Time range
+     - Description
+
+   * - .. _msg_st_type:
+
+       ``st_type``
+     - int
+     - ``B02001``
+     - station
+     - station
+     - Type of station
+   * - .. _msg_st_dir:
+
+       ``st_dir``
+     - int
+     - ``B01012``
+     - 1,-,-,-
+     - 254,0,0
+     - Direction of motion of moving observing platform
+   * - .. _msg_st_speed:
+
+       ``st_speed``
+     - int
+     - ``B01013``
+     - 1,-,-,-
+     - 254,0,0
+     - Speed of motion of moving observing platform
+   * - .. _msg_st_name:
+
+       ``st_name``
+     - str
+     - ``B01019``
+     - station
+     - station
+     - Station or site name
+   * - .. _msg_st_name_icao:
+
+       ``st_name_icao``
+     - str
+     - ``B01063``
+     - station
+     - station
+     - ICAO location indicator
+   * - .. _msg_rep_memo:
+
+       ``rep_memo``
+     - str
+     - ``B01194``
+     - station
+     - station
+     - Report mnemonic
+   * - .. _msg_report:
+
+       ``report``
+     - str
+     - ``B01194``
+     - station
+     - station
+     - Report mnemonic
+   * - .. _msg_network:
+
+       ``network``
+     - str
+     - ``B01194``
+     - station
+     - station
+     - Report mnemonic
+   * - .. _msg_poll_lcode:
+
+       ``poll_lcode``
+     - int
+     - ``B01212``
+     - station
+     - station
+     - Air quality observing station local code
+   * - .. _msg_poll_scode:
+
+       ``poll_scode``
+     - int
+     - ``B01213``
+     - station
+     - station
+     - Airbase air quality observing station code
+   * - .. _msg_poll_gemscode:
+
+       ``poll_gemscode``
+     - int
+     - ``B01214``
+     - station
+     - station
+     - GEMS air quality observing station code
+   * - .. _msg_poll_source:
+
+       ``poll_source``
+     - int
+     - ``B01215``
+     - station
+     - station
+     - Air quality observing station dominant emission source
+   * - .. _msg_poll_atype:
+
+       ``poll_atype``
+     - int
+     - ``B01216``
+     - station
+     - station
+     - Air quality observing station area type
+   * - .. _msg_poll_ttype:
+
+       ``poll_ttype``
+     - int
+     - ``B01217``
+     - station
+     - station
+     - Air quality observing station terrain type
+   * - .. _msg_flight_reg_no:
+
+       ``flight_reg_no``
+     - str
+     - ``B01008``
+     - station
+     - station
+     - Aircraft registration number or other identification
+   * - .. _msg_flight_phase:
+
+       ``flight_phase``
+     - int
+     - ``B08004``
+     - station
+     - station
+     - Phase of aircraft flight
+   * - .. _msg_flight_roll:
+
+       ``flight_roll``
+     - num
+     - ``B02063``
+     - station
+     - station
+     - Aircraft roll angle
+   * - .. _msg_navsys:
+
+       ``navsys``
+     - int
+     - ``B02061``
+     - station
+     - station
+     - Aircraft navigational system
+   * - .. _msg_data_relay:
+
+       ``data_relay``
+     - int
+     - ``B02062``
+     - station
+     - station
+     - Aircraft data relay system
+   * - .. _msg_wind_inst:
+
+       ``wind_inst``
+     - int
+     - ``B02002``
+     - station
+     - station
+     - Type of instrumentation for wind measurement
+   * - .. _msg_temp_precision:
+
+       ``temp_precision``
+     - num
+     - ``B02005``
+     - station
+     - station
+     - Precision of temperature observation
+   * - .. _msg_latlon_spec:
+
+       ``latlon_spec``
+     - int
+     - ``B02070``
+     - station
+     - station
+     - Original specification of latitude/longitude
+   * - .. _msg_timesig:
+
+       ``timesig``
+     - int
+     - ``B08021``
+     - station
+     - station
+     - Time significance
+   * - .. _msg_meas_equip_type:
+
+       ``meas_equip_type``
+     - int
+     - ``B02003``
+     - 1,-,-,-
+     - 254,0,0
+     - Type of measuring equipment used
+   * - .. _msg_sonde_type:
+
+       ``sonde_type``
+     - int
+     - ``B02011``
+     - 1,-,-,-
+     - 254,0,0
+     - Radiosonde type
+   * - .. _msg_sonde_method:
+
+       ``sonde_method``
+     - int
+     - ``B02012``
+     - 1,-,-,-
+     - 254,0,0
+     - Radiosonde computational method
+   * - .. _msg_sonde_correction:
+
+       ``sonde_correction``
+     - int
+     - ``B02013``
+     - 1,-,-,-
+     - 254,0,0
+     - Solar and infrared radiation correction
+   * - .. _msg_sonde_tracking:
+
+       ``sonde_tracking``
+     - int
+     - ``B02014``
+     - 1,-,-,-
+     - 254,0,0
+     - Tracking technique/status of system used
+   * - .. _msg_block:
+
+       ``block``
+     - int
+     - ``B01001``
+     - station
+     - station
+     - WMO block number
+   * - .. _msg_station:
+
+       ``station``
+     - int
+     - ``B01002``
+     - station
+     - station
+     - WMO station number
+   * - .. _msg_ident:
+
+       ``ident``
+     - str
+     - ``B01011``
+     - station
+     - station
+     - Mobile station identifier
+   * - .. _msg_year:
+
+       ``year``
+     - int
+     - ``B04001``
+     - station
+     - station
+     - Year of the observation
+   * - .. _msg_month:
+
+       ``month``
+     - int
+     - ``B04002``
+     - station
+     - station
+     - Month of the observation
+   * - .. _msg_day:
+
+       ``day``
+     - int
+     - ``B04003``
+     - station
+     - station
+     - Day of the observation
+   * - .. _msg_hour:
+
+       ``hour``
+     - int
+     - ``B04004``
+     - station
+     - station
+     - Hour of the observation
+   * - .. _msg_minute:
+
+       ``minute``
+     - int
+     - ``B04005``
+     - station
+     - station
+     - Minute of the observation
+   * - .. _msg_second:
+
+       ``second``
+     - int
+     - ``B04006``
+     - station
+     - station
+     - Second of the observation
+   * - .. _msg_latitude:
+
+       ``latitude``
+     - num
+     - ``B05001``
+     - station
+     - station
+     - Latitude of the station
+   * - .. _msg_longitude:
+
+       ``longitude``
+     - num
+     - ``B06001``
+     - station
+     - station
+     - Longiture of the station
+   * - .. _msg_height_station:
+
+       ``height_station``
+     - num
+     - ``B07030``
+     - station
+     - station
+     - Height of station
+   * - .. _msg_height_baro:
+
+       ``height_baro``
+     - num
+     - ``B07031``
+     - station
+     - station
+     - Height of barometer above mean sea level
+   * - .. _msg_height_release:
+
+       ``height_release``
+     - num
+     - ``B07007``
+     - station
+     - station
+     - Height of release of sonde above msl
+   * - .. _msg_station_height_quality:
+
+       ``station_height_quality``
+     - int
+     - ``B33024``
+     - station
+     - station
+     - Station elevation quality mark (for mobile stations)
+   * - .. _msg_isobaric_surface:
+
+       ``isobaric_surface``
+     - num
+     - ``B07004``
+     - station
+     - station
+     - Isobaric surface
+   * - .. _msg_press:
+
+       ``press``
+     - num
+     - ``B10004``
+     - 1,-,-,-
+     - 254,0,0
+     - Pressure at ground level
+   * - .. _msg_press_3h:
+
+       ``press_3h``
+     - num
+     - ``B10060``
+     - 1,-,-,-
+     - 4,0,10800
+     - 3 hour pressure change at ground level
+   * - .. _msg_press_24h:
+
+       ``press_24h``
+     - num
+     - ``B10060``
+     - 1,-,-,-
+     - 4,0,86400
+     - 24 hour pressure change at ground level
+   * - .. _msg_press_msl:
+
+       ``press_msl``
+     - num
+     - ``B10051``
+     - 101,-,-,-
+     - 254,0,0
+     - Pressure reduced to mean sea level
+   * - .. _msg_qnh:
+
+       ``qnh``
+     - num
+     - ``B10052``
+     - 103,2000,-,-
+     - 254,0,0
+     - Altimeter setting (QNH)
+   * - .. _msg_wind_dir:
+
+       ``wind_dir``
+     - num
+     - ``B11001``
+     - 103,10000,-,-
+     - 254,0,0
+     - Wind direction at 10 metres above ground
+   * - .. _msg_wind_speed:
+
+       ``wind_speed``
+     - num
+     - ``B11002``
+     - 103,10000,-,-
+     - 254,0,0
+     - Wind speed at 10 metres above ground
+   * - .. _msg_wind_gust_max_speed:
+
+       ``wind_gust_max_speed``
+     - num
+     - ``B11041``
+     - 103,10000,-,-
+     - 254,0,0
+     - Maximum wind gust speed at 10 metres above ground
+   * - .. _msg_wind_gust_max_dir:
+
+       ``wind_gust_max_dir``
+     - num
+     - ``B11043``
+     - 103,10000,-,-
+     - 254,0,0
+     - Maximum wind gust direction at 10 metres above ground
+   * - .. _msg_ex_ccw_wind:
+
+       ``ex_ccw_wind``
+     - num
+     - ``B11016``
+     - 103,10000,-,-
+     - 254,0,0
+     - Extreme counterclockwise wind direction of a variable wind at 10 metres above ground
+   * - .. _msg_ex_cw_wind:
+
+       ``ex_cw_wind``
+     - num
+     - ``B11017``
+     - 103,10000,-,-
+     - 254,0,0
+     - Extreme clockwise wind direction of a variable wind at 10 metres above ground
+   * - .. _msg_temp_2m:
+
+       ``temp_2m``
+     - num
+     - ``B12101``
+     - 103,2000,-,-
+     - 254,0,0
+     - Temperature at 2 metres above ground
+   * - .. _msg_wet_temp_2m:
+
+       ``wet_temp_2m``
+     - num
+     - ``B12102``
+     - 103,2000,-,-
+     - 254,0,0
+     - Wet bulb temperature at 2 metres above ground
+   * - .. _msg_dewpoint_2m:
+
+       ``dewpoint_2m``
+     - num
+     - ``B12103``
+     - 103,2000,-,-
+     - 254,0,0
+     - Dew point at 2 metres above ground
+   * - .. _msg_humidity:
+
+       ``humidity``
+     - num
+     - ``B13003``
+     - 103,2000,-,-
+     - 254,0,0
+     - Humidity at 2 metres above ground
+   * - .. _msg_water_temp:
+
+       ``water_temp``
+     - num
+     - ``B22043``
+     - 1,-,-,-
+     - 254,0,0
+     - Sea/water surface temperature
+   * - .. _msg_height_anem:
+
+       ``height_anem``
+     - num
+     - ``B10197``
+     - 1,-,-,-
+     - 254,0,0
+     - Anemometer height
+   * - .. _msg_press_tend:
+
+       ``press_tend``
+     - num
+     - ``B10063``
+     - 1,-,-,-
+     - 205,0,10800
+     - Characteristic of pressure tendency
+   * - .. _msg_visibility:
+
+       ``visibility``
+     - num
+     - ``B20001``
+     - 1,-,-,-
+     - 254,0,0
+     - Visibility
+   * - .. _msg_pres_wtr:
+
+       ``pres_wtr``
+     - int
+     - ``B20003``
+     - 1,-,-,-
+     - 254,0,0
+     - Present weather
+   * - .. _msg_past_wtr1_3h:
+
+       ``past_wtr1_3h``
+     - int
+     - ``B20004``
+     - 1,-,-,-
+     - 205,0,10800
+     - Past weather (1 - 3h)
+   * - .. _msg_past_wtr1_6h:
+
+       ``past_wtr1_6h``
+     - int
+     - ``B20004``
+     - 1,-,-,-
+     - 205,0,21600
+     - Past weather (1 - 6h)
+   * - .. _msg_past_wtr2_3h:
+
+       ``past_wtr2_3h``
+     - int
+     - ``B20005``
+     - 1,-,-,-
+     - 205,0,10800
+     - Past weather (2 - 3h)
+   * - .. _msg_past_wtr2_6h:
+
+       ``past_wtr2_6h``
+     - int
+     - ``B20005``
+     - 1,-,-,-
+     - 205,0,21600
+     - Past weather (2 - 6h)
+   * - .. _msg_metar_wtr:
+
+       ``metar_wtr``
+     - int
+     - ``B20009``
+     - 1,-,-,-
+     - 254,0,0
+     - General weather indicator (TAF/METAR)
+   * - .. _msg_cloud_n:
+
+       ``cloud_n``
+     - int
+     - ``B20010``
+     - 256,-,-,-
+     - 254,0,0
+     - Total cloud cover (N)
+   * - .. _msg_cloud_nh:
+
+       ``cloud_nh``
+     - int
+     - ``B20011``
+     - 256,-,258,0
+     - 254,0,0
+     - Cloud amount (NH)
+   * - .. _msg_cloud_hh:
+
+       ``cloud_hh``
+     - num
+     - ``B20013``
+     - 256,-,258,0
+     - 254,0,0
+     - Height of base of cloud (HH)
+   * - .. _msg_cloud_cl:
+
+       ``cloud_cl``
+     - int
+     - ``B20012``
+     - 256,-,258,1
+     - 254,0,0
+     - Cloud type (CL)
+   * - .. _msg_cloud_cm:
+
+       ``cloud_cm``
+     - int
+     - ``B20012``
+     - 256,-,258,2
+     - 254,0,0
+     - Cloud type (CM)
+   * - .. _msg_cloud_ch:
+
+       ``cloud_ch``
+     - int
+     - ``B20012``
+     - 256,-,258,3
+     - 254,0,0
+     - Cloud type (CH)
+   * - .. _msg_cloud_n1:
+
+       ``cloud_n1``
+     - int
+     - ``B20011``
+     - 256,-,259,1
+     - 254,0,0
+     - Cloud amount (N1)
+   * - .. _msg_cloud_c1:
+
+       ``cloud_c1``
+     - int
+     - ``B20012``
+     - 256,-,259,1
+     - 254,0,0
+     - Cloud amount (C1)
+   * - .. _msg_cloud_h1:
+
+       ``cloud_h1``
+     - num
+     - ``B20013``
+     - 256,-,259,1
+     - 254,0,0
+     - Height of base of cloud (H1)
+   * - .. _msg_cloud_n2:
+
+       ``cloud_n2``
+     - int
+     - ``B20011``
+     - 256,-,259,2
+     - 254,0,0
+     - Cloud amount (N2)
+   * - .. _msg_cloud_c2:
+
+       ``cloud_c2``
+     - int
+     - ``B20012``
+     - 256,-,259,2
+     - 254,0,0
+     - Cloud amount (C2)
+   * - .. _msg_cloud_h2:
+
+       ``cloud_h2``
+     - num
+     - ``B20013``
+     - 256,-,259,2
+     - 254,0,0
+     - Height of base of cloud (H2)
+   * - .. _msg_cloud_n3:
+
+       ``cloud_n3``
+     - int
+     - ``B20011``
+     - 256,-,259,3
+     - 254,0,0
+     - Cloud amount (N3)
+   * - .. _msg_cloud_c3:
+
+       ``cloud_c3``
+     - int
+     - ``B20012``
+     - 256,-,259,3
+     - 254,0,0
+     - Cloud amount (C3)
+   * - .. _msg_cloud_h3:
+
+       ``cloud_h3``
+     - num
+     - ``B20013``
+     - 256,-,259,3
+     - 254,0,0
+     - Height of base of cloud (H3)
+   * - .. _msg_cloud_n4:
+
+       ``cloud_n4``
+     - int
+     - ``B20011``
+     - 256,-,259,4
+     - 254,0,0
+     - Cloud amount (N4)
+   * - .. _msg_cloud_c4:
+
+       ``cloud_c4``
+     - int
+     - ``B20012``
+     - 256,-,259,4
+     - 254,0,0
+     - Cloud amount (C4)
+   * - .. _msg_cloud_h4:
+
+       ``cloud_h4``
+     - num
+     - ``B20013``
+     - 256,-,259,4
+     - 254,0,0
+     - Height of base of cloud (H4)
+   * - .. _msg_tot_prec1:
+
+       ``tot_prec1``
+     - num
+     - ``B13011``
+     - 1,-,-,-
+     - 1,0,3600
+     - Total precipitation in the last hour
+   * - .. _msg_tot_prec3:
+
+       ``tot_prec3``
+     - num
+     - ``B13011``
+     - 1,-,-,-
+     - 1,0,10800
+     - Total precipitation in the last 3 hours
+   * - .. _msg_tot_prec6:
+
+       ``tot_prec6``
+     - num
+     - ``B13011``
+     - 1,-,-,-
+     - 1,0,21600
+     - Total precipitation in the last 6 hours
+   * - .. _msg_tot_prec12:
+
+       ``tot_prec12``
+     - num
+     - ``B13011``
+     - 1,-,-,-
+     - 1,0,43200
+     - Total precipitation in the last 12 hours
+   * - .. _msg_tot_prec24:
+
+       ``tot_prec24``
+     - num
+     - ``B13011``
+     - 1,-,-,-
+     - 1,0,86400
+     - Total precipitation in the last 24 hours
+   * - .. _msg_tot_snow:
+
+       ``tot_snow``
+     - num
+     - ``B13013``
+     - 1,-,-,-
+     - 254,0,0
+     - Total show depth
+   * - .. _msg_state_ground:
+
+       ``state_ground``
+     - num
+     - ``B20062``
+     - 1,-,-,-
+     - 254,0,0
+     - State of ground (with or without snow)

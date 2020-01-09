@@ -1,0 +1,209 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>General concepts &#8212; dballe 3.23 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Connect URLs" href="connect.html" />
+    <link rel="prev" title="General reference" href="index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="general-concepts">
+<span id="concepts"></span><h1>General concepts<a class="headerlink" href="#general-concepts" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="report">
+<span id="id1"></span><h2>Report<a class="headerlink" href="#report" title="Permalink to this headline">¶</a></h2>
+<p>A homogeneous group of stations with the same kind of measures and management
+(for example: <code class="docutils literal notranslate"><span class="pre">synop</span></code>, <code class="docutils literal notranslate"><span class="pre">metar</span></code>, a specific kind of forecast…).</p>
+<p>The type of report implicitly defines a priority of the measured value over
+other equivalent values.  This can be used to select a “best value” from a
+specific set of coordinates, where for example, values measured by synoptic
+stations are preferred over values measured by a satellite, which in turn is
+preferred over a value computed by a forecast model (see <a class="reference internal" href="parms/query.html#parms-query-modifiers"><span class="std std-ref">Possible values for query modifiers</span></a>).</p>
+<p>Priorities associated to the report type can be customized when creating the
+database.</p>
+</div>
+<div class="section" id="station">
+<span id="id2"></span><h2>Station<a class="headerlink" href="#station" title="Permalink to this headline">¶</a></h2>
+<p>Stations are uniquely identified by:</p>
+<ul class="simple">
+<li><em>latitude</em>.</li>
+<li><em>longitude</em>.</li>
+<li><em>station identifier</em> (if the station is mobile).</li>
+<li><em>rep_memo</em></li>
+</ul>
+</div>
+<div class="section" id="station-values">
+<h2>Station values<a class="headerlink" href="#station-values" title="Permalink to this headline">¶</a></h2>
+<p>Each station entry can have zero or more values associated to it. They are just
+like measured variables, but lack date, time, level, and time range
+information. They can be used to store station attributes, like the height
+above sea level, or the center operating it.</p>
+</div>
+<div class="section" id="level-or-layer">
+<h2>Level or layer<a class="headerlink" href="#level-or-layer" title="Permalink to this headline">¶</a></h2>
+<p>The vertical coordinate of a value in DB-All.e is described using a level
+description or a layer description.</p>
+<p>A level is defined univocally by a code table (<code class="docutils literal notranslate"><span class="pre">leveltype1</span></code>) and a
+numerical value (<code class="docutils literal notranslate"><span class="pre">l1</span></code>).</p>
+<p>A layer is defined univocally by its two bounding levels (<code class="docutils literal notranslate"><span class="pre">leveltype1</span></code>,
+<code class="docutils literal notranslate"><span class="pre">l1</span></code>, <code class="docutils literal notranslate"><span class="pre">leveltype2</span></code>, <code class="docutils literal notranslate"><span class="pre">l2</span></code>).</p>
+<p>See <a class="reference internal" href="ltypes.html#levels"><span class="std std-ref">Level type values</span></a> for a description of the level types and
+associated level values.</p>
+</div>
+<div class="section" id="time-range">
+<h2>Time range<a class="headerlink" href="#time-range" title="Permalink to this headline">¶</a></h2>
+<p>A value in DB-All.e is also defined by the time period to which the datum
+refers: it can be, for example, a value measured in a specific instant, or a
+cumulated or averaged value over an interval of time.</p>
+<p>The time range is defined by a table code (<code class="docutils literal notranslate"><span class="pre">pindicator</span></code>) and two
+numerical values (<code class="docutils literal notranslate"><span class="pre">p1</span></code> and <code class="docutils literal notranslate"><span class="pre">p2</span></code>). For their meaning, see <a class="reference internal" href="tranges.html#tranges"><span class="std std-ref">Time range values</span></a>.</p>
+</div>
+<div class="section" id="variable-code-varcode">
+<span id="varcode"></span><h2>Variable code (varcode)<a class="headerlink" href="#variable-code-varcode" title="Permalink to this headline">¶</a></h2>
+<p>A code from a local variation of BUFR/CREX Table B that describes the nature of
+the variable, such as what it measures and the units used for measuring. It is
+identified by a <em>local B table descriptor</em> (see <a class="reference internal" href="btable.html#btable"><span class="std std-ref">Local B table codes</span></a>).</p>
+</div>
+<div class="section" id="value">
+<h2>Value<a class="headerlink" href="#value" title="Permalink to this headline">¶</a></h2>
+<p>A measured value is a datum that can be expressed as a floating point (single
+or double precision), integer, character or byte, depending on what value it
+measures.</p>
+<p>Every datum is univocally defined by a system of coordinates with 7 dimensions:</p>
+<ol class="arabic simple">
+<li>A report type (see <a class="reference internal" href="#report"><span class="std std-ref">Report</span></a>).</li>
+<li>The variable code (see <a class="reference internal" href="#varcode"><span class="std std-ref">Variable code (varcode)</span></a>).</li>
+<li>The <em>date and time</em> of validity of the datum, be it observed, forecast or
+estimated.</li>
+<li><em>station</em> information about what generated the value (also defining its x
+and y coordinates).</li>
+<li>The vertical coordinates in space, as a description of the <em>level</em>.</li>
+<li>The <em>time range</em> of the measurement.</li>
+</ol>
+</div>
+<div class="section" id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Permalink to this headline">¶</a></h2>
+<p>Values in DB-All.e are also associated to zero or more <em>attributes</em>.  An
+attribute is a value that describes an aspect of a variable, like for example a
+confidence interval.</p>
+<p>Attributes in DB-All.e consist on a value and a local B table descriptor,
+which describes the nature of the variable, such as what it represents and the
+units in which it is represented.</p>
+<p>Attributes are uniquely identified by the variable they refer to and the B
+table descriptor of the attribute.  As a consequence, you can only have one
+attribute per value with a specific B table descriptor.  This means that, for
+example, a variable can have at most one confidence interval attribute.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">dballe</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../howtos.html">How-to guides</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../reference.html">Reference documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">General reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../python_ref/index.html">Python reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cpp_ref/index.html">C++ reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fortran_ref/index.html">Fortran reference</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../reference.html">Reference documentation</a><ul>
+  <li><a href="index.html">General reference</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">General reference</a></li>
+      <li>Next: <a href="connect.html" title="next chapter">Connect URLs</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Enrico Zini.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/general_ref/concepts.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

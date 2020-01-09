@@ -1,0 +1,143 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Helpers for pretty-printing &#8212; dballe 3.23 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Working with files" href="files.html" />
+    <link rel="prev" title="Working with attributes" href="attributes.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="helpers-for-pretty-printing">
+<h1>Helpers for pretty-printing<a class="headerlink" href="#helpers-for-pretty-printing" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>There are a number of functions in DB-All.e, the <code class="docutils literal notranslate"><span class="pre">idba_describe_\*</span></code> group of
+functions, that are not needed for normal processing but can be useful to
+improve the presentation of data to users.</p>
+<p>All these function take a number of parameters and a string, and they store a
+proper description of the values into the string.</p>
+<p>The functions are:</p>
+<ul class="simple">
+<li><a class="reference internal" href="../fortran_ref/functions.html#c.idba_describe_level" title="idba_describe_level"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_describe_level()</span></code></a>:
+Describes a level.  For example, <code class="docutils literal notranslate"><span class="pre">idba_describe_level(handle,106,10,106,20,string)</span></code>
+will store in <code class="docutils literal notranslate"><span class="pre">string</span></code> something like: <em>“Layer between 10hm and
+20hm above ground”</em>.</li>
+<li><a class="reference internal" href="../fortran_ref/functions.html#c.idba_describe_timerange" title="idba_describe_timerange"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_describe_timerange()</span></code></a>:
+Describes a time range.  For example, <code class="docutils literal notranslate"><span class="pre">idba_describe_timerange(handle,3,0,600,string)</span></code>
+will store in <code class="docutils literal notranslate"><span class="pre">string</span></code> something like: <em>“Average between reference
+time+0s to reference time+600s”</em>.</li>
+<li><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_describe_var(handle,varcode,value,string)()</span></code>:
+Describe a value.  For example, <code class="docutils literal notranslate"><span class="pre">idba_describe_var(handle,&quot;B12001&quot;,&quot;280&quot;,string)</span></code>
+will store in <code class="docutils literal notranslate"><span class="pre">string</span></code> something like: <em>“280 (K) TEMPERATURE/DRY-BULB
+TEMPERATURE”</em>.</li>
+</ul>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">dballe</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../howtos.html">How-to guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../python_how/index.html">Python HOWTOs</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Fortran HOWTOs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference.html">Reference documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../howtos.html">How-to guides</a><ul>
+  <li><a href="index.html">Fortran HOWTOs</a><ul>
+      <li>Previous: <a href="attributes.html" title="previous chapter">Working with attributes</a></li>
+      <li>Next: <a href="files.html" title="next chapter">Working with files</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Enrico Zini.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/fortran_how/describe.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

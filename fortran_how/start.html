@@ -1,0 +1,235 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Starting the work &#8212; dballe 3.23 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Input/output records" href="iorecords.html" />
+    <link rel="prev" title="Error management" href="errors.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="starting-the-work">
+<h1>Starting the work<a class="headerlink" href="#starting-the-work" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="including-the-db-all-e-interface-file">
+<h2>Including the DB-All.e interface file<a class="headerlink" href="#including-the-db-all-e-interface-file" title="Permalink to this headline">¶</a></h2>
+<p>If you work using Fortran 90, DB-All.e comes with an interface file that you
+can use to enable type checking on all the DB-All.e API.</p>
+<p>To make use of the interface file, just include it at the beginning of your
+program:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">include</span> <span class="s2">&quot;dballe/dballeff.h&quot;</span>
+</pre></div>
+</div>
+<p>The Fortran 90 interface also allows to replace all the functions
+<a class="reference internal" href="../fortran_ref/functions.html#c.idba_enqi" title="idba_enqi"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_enqi()</span></code></a>, <a class="reference internal" href="../fortran_ref/functions.html#c.idba_enqr" title="idba_enqr"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_enqr()</span></code></a>, <a class="reference internal" href="../fortran_ref/functions.html#c.idba_enqd" title="idba_enqd"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_enqd()</span></code></a> and
+<a class="reference internal" href="../fortran_ref/functions.html#c.idba_enqc" title="idba_enqc"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_enqc()</span></code></a> with <code class="docutils literal notranslate"><span class="pre">idba_enq</span></code> and to replace all the functions
+<a class="reference internal" href="../fortran_ref/functions.html#c.idba_seti" title="idba_seti"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_seti()</span></code></a>, <a class="reference internal" href="../fortran_ref/functions.html#c.idba_setr" title="idba_setr"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_setr()</span></code></a>, <a class="reference internal" href="../fortran_ref/functions.html#c.idba_setd" title="idba_setd"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_setd()</span></code></a> and
+<a class="reference internal" href="../fortran_ref/functions.html#c.idba_setc" title="idba_setc"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_setc()</span></code></a> with <code class="docutils literal notranslate"><span class="pre">idba_set</span></code>.</p>
+</div>
+<div class="section" id="id1">
+<span id="id2"></span><h2>Starting the work<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>Before any action routine, you need to connect to the database.  Connecting to
+the database will give you a <em>handle</em> that you can use to open sessions.</p>
+<p>This code will open a connection with DB-All.e, then it will start a session:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">! Connect to the database and get a handle to work with it</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_connect</span><span class="p">(</span><span class="n">dbhandle</span><span class="p">,</span> <span class="s2">&quot;url&quot;</span><span class="p">)</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_begin</span><span class="p">(</span><span class="n">dbhandle</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;read&quot;</span><span class="p">,</span> <span class="s2">&quot;read&quot;</span><span class="p">,</span> <span class="s2">&quot;read&quot;</span><span class="p">)</span>
+
+<span class="c">! ...do your work...</span>
+
+<span class="c">! End of the work</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_commit</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_disconnect</span><span class="p">(</span><span class="n">dbhandle</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You call <a class="reference internal" href="../fortran_ref/functions.html#c.idba_connect" title="idba_connect"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_connect()</span></code></a> to connect to the databse. The parameters are
+the database connection URL (see <a class="reference internal" href="../general_ref/connect.html#connect"><span class="std std-ref">Connect URLs</span></a>), and two parameters that were
+used in the past and are now ignored.</p>
+<p>You can call <a class="reference internal" href="../fortran_ref/functions.html#c.idba_begin" title="idba_begin"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_begin()</span></code></a> many times and get more handles.  This allows
+to perform many operations on the database at the same time.</p>
+<p><a class="reference internal" href="../fortran_ref/functions.html#c.idba_begin" title="idba_begin"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_begin()</span></code></a> has three extra parameters that can be used to limit
+write operations on the database, as a limited protection against programming
+errors.</p>
+<p>The first extra parameter controls access to station values and can have
+these values:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">&quot;read&quot;</span></code>: station values cannot be modified.</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;write&quot;</span></code>: station values can be added and removed.</li>
+</ul>
+<p>The second extra parameter control access to observed data and can have
+these values:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">&quot;read&quot;</span></code>: data cannot be modified in any way.</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;add&quot;</span></code>: data can be added to the database, but existing data cannot be
+modified.  Deletions are disabled.  This is used to insert new data in the
+database while preserving the data that was already present in it.</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;write&quot;</span></code>: data can freely be added, overwritten and deleted.</li>
+</ul>
+<p>The third extra parameter controls access to data attributes and can have
+these values:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">&quot;read&quot;</span></code>: attributes cannot be modified in any way.</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;write&quot;</span></code>: attributes can freely be added, overwritten and deleted.</li>
+</ul>
+<p>Note that some combinations are illegal. For example, you cannot have “read” on
+station values and “add” on data, because  when adding a new data, it is
+sometimes necessary to insert new station records). You also cannot have
+“rewrite” on data and “read` on attributes, because when deleting data, their
+attributes are deleted as well.</p>
+<div class="section" id="starting-the-work-on-a-message">
+<h3>Starting the work on a message<a class="headerlink" href="#starting-the-work-on-a-message" title="Permalink to this headline">¶</a></h3>
+<p>Instead of connecting to a database, you can use the DB-All.e API to read and
+write message reports in BUFR and CREX format.</p>
+<p>To do that, use <a class="reference internal" href="../fortran_ref/functions.html#c.idba_begin_messages" title="idba_begin_messages"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_begin_messages()</span></code></a> instead of both <a class="reference internal" href="../fortran_ref/functions.html#c.idba_connect" title="idba_connect"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_connect()</span></code></a> and
+<a class="reference internal" href="../fortran_ref/functions.html#c.idba_begin" title="idba_begin"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_begin()</span></code></a>.  To write a message, your code will look like:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">! Connect to the database and get a handle to work with it</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_begin_messages</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;file.bufr&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;auto&quot;</span><span class="p">)</span>
+
+<span class="c">! ...do your work...</span>
+
+<span class="c">! End of the work</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_commit</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="../fortran_ref/functions.html#c.idba_begin_messages" title="idba_begin_messages"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_begin_messages()</span></code></a> has three parameters:</p>
+<ol class="arabic simple">
+<li>the name of the file to open</li>
+<li>the open mode (<code class="docutils literal notranslate"><span class="pre">&quot;r&quot;</span></code> for read, <code class="docutils literal notranslate"><span class="pre">&quot;w&quot;</span></code> for write or create, <code class="docutils literal notranslate"><span class="pre">&quot;a&quot;</span></code> for append).
+See the documentation of libc’s <code class="docutils literal notranslate"><span class="pre">fopen</span></code> for more details.</li>
+<li>the file format.  It can be <code class="docutils literal notranslate"><span class="pre">&quot;BUFR&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;CREX&quot;`,</span> <span class="pre">or</span> <span class="pre">``&quot;AUTO&quot;</span></code>.  <code class="docutils literal notranslate"><span class="pre">&quot;AUTO&quot;</span></code> tells
+DB-All.e to autodetect the file format, but it only works when reading
+files, not when writing new one.</li>
+</ol>
+<p>You can call <a class="reference internal" href="../fortran_ref/functions.html#c.idba_begin_messages" title="idba_begin_messages"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_begin_messages()</span></code></a> many times and read or write many files.  You
+can even call <a class="reference internal" href="../fortran_ref/functions.html#c.idba_begin_messages" title="idba_begin_messages"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_begin_messages()</span></code></a> many time on the same file as long as you
+open it read only.</p>
+<p>Once you open a file, you can use the other DB-All.e functions on it.  There
+are slight differences between working on a database and working on a file, and
+they are explained later in the section <a class="reference internal" href="files.html#working-with-files"><span class="std std-ref">Working with files</span></a>.</p>
+</div>
+</div>
+<div class="section" id="ending-the-work">
+<h2>Ending the work<a class="headerlink" href="#ending-the-work" title="Permalink to this headline">¶</a></h2>
+<p>When you are finished working with a handle, you release it with
+<a class="reference internal" href="../fortran_ref/functions.html#c.idba_commit" title="idba_commit"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_commit()</span></code></a>:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">! We are finished with this handle</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_commit</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When you are finished working with DB-ALLe, you use <a class="reference internal" href="../fortran_ref/functions.html#c.idba_disconnect" title="idba_disconnect"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_disconnect()</span></code></a> to
+close all connections and release all resources:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">! We do not need to work with dballe anymore</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_disconnect</span><span class="p">(</span><span class="n">dbh</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">dballe</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../howtos.html">How-to guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../python_how/index.html">Python HOWTOs</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Fortran HOWTOs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference.html">Reference documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../howtos.html">How-to guides</a><ul>
+  <li><a href="index.html">Fortran HOWTOs</a><ul>
+      <li>Previous: <a href="errors.html" title="previous chapter">Error management</a></li>
+      <li>Next: <a href="iorecords.html" title="next chapter">Input/output records</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Enrico Zini.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/fortran_how/start.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

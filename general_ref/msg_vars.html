@@ -1,0 +1,891 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Message shortcuts &#8212; dballe 3.23 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Python reference" href="../python_ref/index.html" />
+    <link rel="prev" title="Environment variables" href="env.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="message-shortcuts">
+<span id="msg-vars"></span><h1>Message shortcuts<a class="headerlink" href="#message-shortcuts" title="Permalink to this headline">¶</a></h1>
+<p>This table lists all the shortcuts that can be used to access well-know values
+in a message.</p>
+<p>Every entry is listed together with its B code, level, time range, and description.</p>
+<table border="1" class="colwidths-auto docutils">
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Type</th>
+<th class="head">B code</th>
+<th class="head">Level</th>
+<th class="head">Time range</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><p class="first last" id="msg-st-type"><code class="docutils literal notranslate"><span class="pre">st_type</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B02001</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Type of station</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-st-dir"><code class="docutils literal notranslate"><span class="pre">st_dir</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B01012</span></code></td>
+<td>1,-,-,-</td>
+<td>254,0,0</td>
+<td>Direction of motion of moving observing platform</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-st-speed"><code class="docutils literal notranslate"><span class="pre">st_speed</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B01013</span></code></td>
+<td>1,-,-,-</td>
+<td>254,0,0</td>
+<td>Speed of motion of moving observing platform</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-st-name"><code class="docutils literal notranslate"><span class="pre">st_name</span></code></p>
+</td>
+<td>str</td>
+<td><code class="docutils literal notranslate"><span class="pre">B01019</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Station or site name</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-st-name-icao"><code class="docutils literal notranslate"><span class="pre">st_name_icao</span></code></p>
+</td>
+<td>str</td>
+<td><code class="docutils literal notranslate"><span class="pre">B01063</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>ICAO location indicator</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-rep-memo"><code class="docutils literal notranslate"><span class="pre">rep_memo</span></code></p>
+</td>
+<td>str</td>
+<td><code class="docutils literal notranslate"><span class="pre">B01194</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Report mnemonic</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-report"><code class="docutils literal notranslate"><span class="pre">report</span></code></p>
+</td>
+<td>str</td>
+<td><code class="docutils literal notranslate"><span class="pre">B01194</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Report mnemonic</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-network"><code class="docutils literal notranslate"><span class="pre">network</span></code></p>
+</td>
+<td>str</td>
+<td><code class="docutils literal notranslate"><span class="pre">B01194</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Report mnemonic</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-poll-lcode"><code class="docutils literal notranslate"><span class="pre">poll_lcode</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B01212</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Air quality observing station local code</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-poll-scode"><code class="docutils literal notranslate"><span class="pre">poll_scode</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B01213</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Airbase air quality observing station code</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-poll-gemscode"><code class="docutils literal notranslate"><span class="pre">poll_gemscode</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B01214</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>GEMS air quality observing station code</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-poll-source"><code class="docutils literal notranslate"><span class="pre">poll_source</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B01215</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Air quality observing station dominant emission source</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-poll-atype"><code class="docutils literal notranslate"><span class="pre">poll_atype</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B01216</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Air quality observing station area type</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-poll-ttype"><code class="docutils literal notranslate"><span class="pre">poll_ttype</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B01217</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Air quality observing station terrain type</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-flight-reg-no"><code class="docutils literal notranslate"><span class="pre">flight_reg_no</span></code></p>
+</td>
+<td>str</td>
+<td><code class="docutils literal notranslate"><span class="pre">B01008</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Aircraft registration number or other identification</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-flight-phase"><code class="docutils literal notranslate"><span class="pre">flight_phase</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B08004</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Phase of aircraft flight</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-flight-roll"><code class="docutils literal notranslate"><span class="pre">flight_roll</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B02063</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Aircraft roll angle</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-navsys"><code class="docutils literal notranslate"><span class="pre">navsys</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B02061</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Aircraft navigational system</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-data-relay"><code class="docutils literal notranslate"><span class="pre">data_relay</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B02062</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Aircraft data relay system</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-wind-inst"><code class="docutils literal notranslate"><span class="pre">wind_inst</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B02002</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Type of instrumentation for wind measurement</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-temp-precision"><code class="docutils literal notranslate"><span class="pre">temp_precision</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B02005</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Precision of temperature observation</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-latlon-spec"><code class="docutils literal notranslate"><span class="pre">latlon_spec</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B02070</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Original specification of latitude/longitude</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-timesig"><code class="docutils literal notranslate"><span class="pre">timesig</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B08021</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Time significance</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-meas-equip-type"><code class="docutils literal notranslate"><span class="pre">meas_equip_type</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B02003</span></code></td>
+<td>1,-,-,-</td>
+<td>254,0,0</td>
+<td>Type of measuring equipment used</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-sonde-type"><code class="docutils literal notranslate"><span class="pre">sonde_type</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B02011</span></code></td>
+<td>1,-,-,-</td>
+<td>254,0,0</td>
+<td>Radiosonde type</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-sonde-method"><code class="docutils literal notranslate"><span class="pre">sonde_method</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B02012</span></code></td>
+<td>1,-,-,-</td>
+<td>254,0,0</td>
+<td>Radiosonde computational method</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-sonde-correction"><code class="docutils literal notranslate"><span class="pre">sonde_correction</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B02013</span></code></td>
+<td>1,-,-,-</td>
+<td>254,0,0</td>
+<td>Solar and infrared radiation correction</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-sonde-tracking"><code class="docutils literal notranslate"><span class="pre">sonde_tracking</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B02014</span></code></td>
+<td>1,-,-,-</td>
+<td>254,0,0</td>
+<td>Tracking technique/status of system used</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-block"><code class="docutils literal notranslate"><span class="pre">block</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B01001</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>WMO block number</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-station"><code class="docutils literal notranslate"><span class="pre">station</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B01002</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>WMO station number</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-ident"><code class="docutils literal notranslate"><span class="pre">ident</span></code></p>
+</td>
+<td>str</td>
+<td><code class="docutils literal notranslate"><span class="pre">B01011</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Mobile station identifier</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-year"><code class="docutils literal notranslate"><span class="pre">year</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B04001</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Year of the observation</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-month"><code class="docutils literal notranslate"><span class="pre">month</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B04002</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Month of the observation</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-day"><code class="docutils literal notranslate"><span class="pre">day</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B04003</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Day of the observation</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-hour"><code class="docutils literal notranslate"><span class="pre">hour</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B04004</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Hour of the observation</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-minute"><code class="docutils literal notranslate"><span class="pre">minute</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B04005</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Minute of the observation</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-second"><code class="docutils literal notranslate"><span class="pre">second</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B04006</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Second of the observation</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-latitude"><code class="docutils literal notranslate"><span class="pre">latitude</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B05001</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Latitude of the station</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-longitude"><code class="docutils literal notranslate"><span class="pre">longitude</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B06001</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Longiture of the station</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-height-station"><code class="docutils literal notranslate"><span class="pre">height_station</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B07030</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Height of station</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-height-baro"><code class="docutils literal notranslate"><span class="pre">height_baro</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B07031</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Height of barometer above mean sea level</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-height-release"><code class="docutils literal notranslate"><span class="pre">height_release</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B07007</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Height of release of sonde above msl</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-station-height-quality"><code class="docutils literal notranslate"><span class="pre">station_height_quality</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B33024</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Station elevation quality mark (for mobile stations)</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-isobaric-surface"><code class="docutils literal notranslate"><span class="pre">isobaric_surface</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B07004</span></code></td>
+<td>station</td>
+<td>station</td>
+<td>Isobaric surface</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-press"><code class="docutils literal notranslate"><span class="pre">press</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B10004</span></code></td>
+<td>1,-,-,-</td>
+<td>254,0,0</td>
+<td>Pressure at ground level</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-press-3h"><code class="docutils literal notranslate"><span class="pre">press_3h</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B10060</span></code></td>
+<td>1,-,-,-</td>
+<td>4,0,10800</td>
+<td>3 hour pressure change at ground level</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-press-24h"><code class="docutils literal notranslate"><span class="pre">press_24h</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B10060</span></code></td>
+<td>1,-,-,-</td>
+<td>4,0,86400</td>
+<td>24 hour pressure change at ground level</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-press-msl"><code class="docutils literal notranslate"><span class="pre">press_msl</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B10051</span></code></td>
+<td>101,-,-,-</td>
+<td>254,0,0</td>
+<td>Pressure reduced to mean sea level</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-qnh"><code class="docutils literal notranslate"><span class="pre">qnh</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B10052</span></code></td>
+<td>103,2000,-,-</td>
+<td>254,0,0</td>
+<td>Altimeter setting (QNH)</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-wind-dir"><code class="docutils literal notranslate"><span class="pre">wind_dir</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B11001</span></code></td>
+<td>103,10000,-,-</td>
+<td>254,0,0</td>
+<td>Wind direction at 10 metres above ground</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-wind-speed"><code class="docutils literal notranslate"><span class="pre">wind_speed</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B11002</span></code></td>
+<td>103,10000,-,-</td>
+<td>254,0,0</td>
+<td>Wind speed at 10 metres above ground</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-wind-gust-max-speed"><code class="docutils literal notranslate"><span class="pre">wind_gust_max_speed</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B11041</span></code></td>
+<td>103,10000,-,-</td>
+<td>254,0,0</td>
+<td>Maximum wind gust speed at 10 metres above ground</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-wind-gust-max-dir"><code class="docutils literal notranslate"><span class="pre">wind_gust_max_dir</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B11043</span></code></td>
+<td>103,10000,-,-</td>
+<td>254,0,0</td>
+<td>Maximum wind gust direction at 10 metres above ground</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-ex-ccw-wind"><code class="docutils literal notranslate"><span class="pre">ex_ccw_wind</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B11016</span></code></td>
+<td>103,10000,-,-</td>
+<td>254,0,0</td>
+<td>Extreme counterclockwise wind direction of a variable wind at 10 metres above ground</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-ex-cw-wind"><code class="docutils literal notranslate"><span class="pre">ex_cw_wind</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B11017</span></code></td>
+<td>103,10000,-,-</td>
+<td>254,0,0</td>
+<td>Extreme clockwise wind direction of a variable wind at 10 metres above ground</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-temp-2m"><code class="docutils literal notranslate"><span class="pre">temp_2m</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B12101</span></code></td>
+<td>103,2000,-,-</td>
+<td>254,0,0</td>
+<td>Temperature at 2 metres above ground</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-wet-temp-2m"><code class="docutils literal notranslate"><span class="pre">wet_temp_2m</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B12102</span></code></td>
+<td>103,2000,-,-</td>
+<td>254,0,0</td>
+<td>Wet bulb temperature at 2 metres above ground</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-dewpoint-2m"><code class="docutils literal notranslate"><span class="pre">dewpoint_2m</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B12103</span></code></td>
+<td>103,2000,-,-</td>
+<td>254,0,0</td>
+<td>Dew point at 2 metres above ground</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-humidity"><code class="docutils literal notranslate"><span class="pre">humidity</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B13003</span></code></td>
+<td>103,2000,-,-</td>
+<td>254,0,0</td>
+<td>Humidity at 2 metres above ground</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-water-temp"><code class="docutils literal notranslate"><span class="pre">water_temp</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B22043</span></code></td>
+<td>1,-,-,-</td>
+<td>254,0,0</td>
+<td>Sea/water surface temperature</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-height-anem"><code class="docutils literal notranslate"><span class="pre">height_anem</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B10197</span></code></td>
+<td>1,-,-,-</td>
+<td>254,0,0</td>
+<td>Anemometer height</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-press-tend"><code class="docutils literal notranslate"><span class="pre">press_tend</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B10063</span></code></td>
+<td>1,-,-,-</td>
+<td>205,0,10800</td>
+<td>Characteristic of pressure tendency</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-visibility"><code class="docutils literal notranslate"><span class="pre">visibility</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20001</span></code></td>
+<td>1,-,-,-</td>
+<td>254,0,0</td>
+<td>Visibility</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-pres-wtr"><code class="docutils literal notranslate"><span class="pre">pres_wtr</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20003</span></code></td>
+<td>1,-,-,-</td>
+<td>254,0,0</td>
+<td>Present weather</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-past-wtr1-3h"><code class="docutils literal notranslate"><span class="pre">past_wtr1_3h</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20004</span></code></td>
+<td>1,-,-,-</td>
+<td>205,0,10800</td>
+<td>Past weather (1 - 3h)</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-past-wtr1-6h"><code class="docutils literal notranslate"><span class="pre">past_wtr1_6h</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20004</span></code></td>
+<td>1,-,-,-</td>
+<td>205,0,21600</td>
+<td>Past weather (1 - 6h)</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-past-wtr2-3h"><code class="docutils literal notranslate"><span class="pre">past_wtr2_3h</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20005</span></code></td>
+<td>1,-,-,-</td>
+<td>205,0,10800</td>
+<td>Past weather (2 - 3h)</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-past-wtr2-6h"><code class="docutils literal notranslate"><span class="pre">past_wtr2_6h</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20005</span></code></td>
+<td>1,-,-,-</td>
+<td>205,0,21600</td>
+<td>Past weather (2 - 6h)</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-metar-wtr"><code class="docutils literal notranslate"><span class="pre">metar_wtr</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20009</span></code></td>
+<td>1,-,-,-</td>
+<td>254,0,0</td>
+<td>General weather indicator (TAF/METAR)</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-cloud-n"><code class="docutils literal notranslate"><span class="pre">cloud_n</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20010</span></code></td>
+<td>256,-,-,-</td>
+<td>254,0,0</td>
+<td>Total cloud cover (N)</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-cloud-nh"><code class="docutils literal notranslate"><span class="pre">cloud_nh</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20011</span></code></td>
+<td>256,-,258,0</td>
+<td>254,0,0</td>
+<td>Cloud amount (NH)</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-cloud-hh"><code class="docutils literal notranslate"><span class="pre">cloud_hh</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20013</span></code></td>
+<td>256,-,258,0</td>
+<td>254,0,0</td>
+<td>Height of base of cloud (HH)</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-cloud-cl"><code class="docutils literal notranslate"><span class="pre">cloud_cl</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20012</span></code></td>
+<td>256,-,258,1</td>
+<td>254,0,0</td>
+<td>Cloud type (CL)</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-cloud-cm"><code class="docutils literal notranslate"><span class="pre">cloud_cm</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20012</span></code></td>
+<td>256,-,258,2</td>
+<td>254,0,0</td>
+<td>Cloud type (CM)</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-cloud-ch"><code class="docutils literal notranslate"><span class="pre">cloud_ch</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20012</span></code></td>
+<td>256,-,258,3</td>
+<td>254,0,0</td>
+<td>Cloud type (CH)</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-cloud-n1"><code class="docutils literal notranslate"><span class="pre">cloud_n1</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20011</span></code></td>
+<td>256,-,259,1</td>
+<td>254,0,0</td>
+<td>Cloud amount (N1)</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-cloud-c1"><code class="docutils literal notranslate"><span class="pre">cloud_c1</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20012</span></code></td>
+<td>256,-,259,1</td>
+<td>254,0,0</td>
+<td>Cloud amount (C1)</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-cloud-h1"><code class="docutils literal notranslate"><span class="pre">cloud_h1</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20013</span></code></td>
+<td>256,-,259,1</td>
+<td>254,0,0</td>
+<td>Height of base of cloud (H1)</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-cloud-n2"><code class="docutils literal notranslate"><span class="pre">cloud_n2</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20011</span></code></td>
+<td>256,-,259,2</td>
+<td>254,0,0</td>
+<td>Cloud amount (N2)</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-cloud-c2"><code class="docutils literal notranslate"><span class="pre">cloud_c2</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20012</span></code></td>
+<td>256,-,259,2</td>
+<td>254,0,0</td>
+<td>Cloud amount (C2)</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-cloud-h2"><code class="docutils literal notranslate"><span class="pre">cloud_h2</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20013</span></code></td>
+<td>256,-,259,2</td>
+<td>254,0,0</td>
+<td>Height of base of cloud (H2)</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-cloud-n3"><code class="docutils literal notranslate"><span class="pre">cloud_n3</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20011</span></code></td>
+<td>256,-,259,3</td>
+<td>254,0,0</td>
+<td>Cloud amount (N3)</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-cloud-c3"><code class="docutils literal notranslate"><span class="pre">cloud_c3</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20012</span></code></td>
+<td>256,-,259,3</td>
+<td>254,0,0</td>
+<td>Cloud amount (C3)</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-cloud-h3"><code class="docutils literal notranslate"><span class="pre">cloud_h3</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20013</span></code></td>
+<td>256,-,259,3</td>
+<td>254,0,0</td>
+<td>Height of base of cloud (H3)</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-cloud-n4"><code class="docutils literal notranslate"><span class="pre">cloud_n4</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20011</span></code></td>
+<td>256,-,259,4</td>
+<td>254,0,0</td>
+<td>Cloud amount (N4)</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-cloud-c4"><code class="docutils literal notranslate"><span class="pre">cloud_c4</span></code></p>
+</td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20012</span></code></td>
+<td>256,-,259,4</td>
+<td>254,0,0</td>
+<td>Cloud amount (C4)</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-cloud-h4"><code class="docutils literal notranslate"><span class="pre">cloud_h4</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20013</span></code></td>
+<td>256,-,259,4</td>
+<td>254,0,0</td>
+<td>Height of base of cloud (H4)</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-tot-prec1"><code class="docutils literal notranslate"><span class="pre">tot_prec1</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B13011</span></code></td>
+<td>1,-,-,-</td>
+<td>1,0,3600</td>
+<td>Total precipitation in the last hour</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-tot-prec3"><code class="docutils literal notranslate"><span class="pre">tot_prec3</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B13011</span></code></td>
+<td>1,-,-,-</td>
+<td>1,0,10800</td>
+<td>Total precipitation in the last 3 hours</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-tot-prec6"><code class="docutils literal notranslate"><span class="pre">tot_prec6</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B13011</span></code></td>
+<td>1,-,-,-</td>
+<td>1,0,21600</td>
+<td>Total precipitation in the last 6 hours</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-tot-prec12"><code class="docutils literal notranslate"><span class="pre">tot_prec12</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B13011</span></code></td>
+<td>1,-,-,-</td>
+<td>1,0,43200</td>
+<td>Total precipitation in the last 12 hours</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-tot-prec24"><code class="docutils literal notranslate"><span class="pre">tot_prec24</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B13011</span></code></td>
+<td>1,-,-,-</td>
+<td>1,0,86400</td>
+<td>Total precipitation in the last 24 hours</td>
+</tr>
+<tr class="row-even"><td><p class="first last" id="msg-tot-snow"><code class="docutils literal notranslate"><span class="pre">tot_snow</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B13013</span></code></td>
+<td>1,-,-,-</td>
+<td>254,0,0</td>
+<td>Total show depth</td>
+</tr>
+<tr class="row-odd"><td><p class="first last" id="msg-state-ground"><code class="docutils literal notranslate"><span class="pre">state_ground</span></code></p>
+</td>
+<td>num</td>
+<td><code class="docutils literal notranslate"><span class="pre">B20062</span></code></td>
+<td>1,-,-,-</td>
+<td>254,0,0</td>
+<td>State of ground (with or without snow)</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">dballe</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../howtos.html">How-to guides</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../reference.html">Reference documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">General reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../python_ref/index.html">Python reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cpp_ref/index.html">C++ reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fortran_ref/index.html">Fortran reference</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../reference.html">Reference documentation</a><ul>
+  <li><a href="index.html">General reference</a><ul>
+      <li>Previous: <a href="env.html" title="previous chapter">Environment variables</a></li>
+      <li>Next: <a href="../python_ref/index.html" title="next chapter">Python reference</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Enrico Zini.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/general_ref/msg_vars.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,717 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Parameters used when setting up a query &#8212; dballe 3.23 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Parameters used when inserting values" href="input.html" />
+    <link rel="prev" title="Input/output/query parameters" href="../parms.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="parameters-used-when-setting-up-a-query">
+<h1>Parameters used when setting up a query<a class="headerlink" href="#parameters-used-when-setting-up-a-query" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="query-stations">
+<span id="parms-query"></span><h2>query_stations<a class="headerlink" href="#query-stations" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="6%" />
+<col width="26%" />
+<col width="57%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+<th class="head">Comment</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">priority</span></code></td>
+<td>Integer</td>
+<td>Priority of the type of report</td>
+<td>Every type of report has an associated priority that controls which data
+are first returned when there is more than one in the same physical space.
+It can be changed by editing /etc/dballe/repinfo.csv</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">priomax</span></code></td>
+<td>Integer</td>
+<td>Maximum priority of reports queed</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">priomin</span></code></td>
+<td>Integer</td>
+<td>Minimum priority of reports queed</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">report</span></code></td>
+<td>String</td>
+<td>Type of report</td>
+<td>Alias for <code class="docutils literal notranslate"><span class="pre">rep_memo</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">rep_memo</span></code></td>
+<td>String</td>
+<td>Type of report</td>
+<td>Alias for <code class="docutils literal notranslate"><span class="pre">report</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ana_id</span></code></td>
+<td>Integer</td>
+<td>Station database ID</td>
+<td>internal DB-ALLe ID referring to an existing station, usable as a shortcut reference
+instead of specifying the full data</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">mobile</span></code></td>
+<td>Integer</td>
+<td>Station is mobile</td>
+<td>Set to 1 to query mobile station, such as a ship or a flight; to 0 to query only
+fixed stations, such as synop or metar</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ident</span></code></td>
+<td>String</td>
+<td>Station identifier</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">lat</span></code></td>
+<td>Float</td>
+<td>Latitude</td>
+<td>Setting as integer requires the value * 10^5; equivalent to setting latmin and latmax</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">lon</span></code></td>
+<td>Float</td>
+<td>Longitude</td>
+<td>Setting as integer requires the value * 10^5; equivalent to setting lonmin and lonmax</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">latmax</span></code></td>
+<td>Float</td>
+<td>Maximum latitude queried</td>
+<td>Setting as integer requires the value * 10^5</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">latmin</span></code></td>
+<td>Float</td>
+<td>Minimum latitude queried</td>
+<td>Setting as integer requires the value * 10^5</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">lonmax</span></code></td>
+<td>Float</td>
+<td>Maximum longitude queried</td>
+<td>Setting as integer requires the value * 10^5</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">lonmin</span></code></td>
+<td>Float</td>
+<td>Minimum longitude queried</td>
+<td>Setting as integer requires the value * 10^5</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">var</span></code></td>
+<td>String</td>
+<td>Station measures this variable</td>
+<td>When setting var, varlist is cleared</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">varlist</span></code></td>
+<td>String</td>
+<td>Station measures one of these variables</td>
+<td>Comma-separated list of variable codes to query; when setting varlist, var is cleared</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">query</span></code></td>
+<td>String</td>
+<td>Query behaviour modifier</td>
+<td>Comma-separated list of query modifiers.  See <a class="reference internal" href="#parms-query-modifiers"><span class="std std-ref">Possible values for query modifiers</span></a>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ana_filter</span></code></td>
+<td>String</td>
+<td>Filter on anagraphical data</td>
+<td>Restricts the results to only those stations which have a pseudoana value that matches
+the filter. Examples: ‘height&gt;=1000’, ‘B02001=1’, ‘1000&lt;=height&lt;=2000</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">limit</span></code></td>
+<td>Integer</td>
+<td>Maximum number of results to return</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">block</span></code></td>
+<td>Integer</td>
+<td>WMO block number of the station</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">station</span></code></td>
+<td>Integer</td>
+<td>WMO station number of the station</td>
+<td>&#160;</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="query-station-data-remove-station-data">
+<h2>query_station_data, remove_station_data<a class="headerlink" href="#query-station-data-remove-station-data" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="8%" />
+<col width="4%" />
+<col width="16%" />
+<col width="72%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+<th class="head">Comment</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">priority</span></code></td>
+<td>Integer</td>
+<td>Priority of the type of report</td>
+<td>Every type of report has an associated priority that controls which data
+are first returned when there is more than one in the same physical space.
+It can be changed by editing /etc/dballe/repinfo.csv</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">priomax</span></code></td>
+<td>Integer</td>
+<td>Maximum priority of reports queed</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">priomin</span></code></td>
+<td>Integer</td>
+<td>Minimum priority of reports queed</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">report</span></code></td>
+<td>String</td>
+<td>Type of report</td>
+<td>Alias for <code class="docutils literal notranslate"><span class="pre">rep_memo</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">rep_memo</span></code></td>
+<td>String</td>
+<td>Type of report</td>
+<td>Alias for <code class="docutils literal notranslate"><span class="pre">report</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ana_id</span></code></td>
+<td>Integer</td>
+<td>Station database ID</td>
+<td>internal DB-ALLe ID referring to an existing station, usable as a shortcut reference instead of specifying the full data</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">mobile</span></code></td>
+<td>Integer</td>
+<td>Station is mobile</td>
+<td>Set to 1 to query mobile station, such as a ship or a flight; to 0 to query only fixed stations, such as synop or metar</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ident</span></code></td>
+<td>String</td>
+<td>Station identifier</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">lat</span></code></td>
+<td>Float</td>
+<td>Latitude</td>
+<td>Setting as integer requires the value * 10^5; equivalent to setting latmin and latmax</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">lon</span></code></td>
+<td>Float</td>
+<td>Longitude</td>
+<td>Setting as integer requires the value * 10^5; equivalent to setting lonmin and lonmax</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">latmax</span></code></td>
+<td>Float</td>
+<td>Maximum latitude queried</td>
+<td>Setting as integer requires the value * 10^5</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">latmin</span></code></td>
+<td>Float</td>
+<td>Minimum latitude queried</td>
+<td>Setting as integer requires the value * 10^5</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">lonmax</span></code></td>
+<td>Float</td>
+<td>Maximum longitude queried</td>
+<td>Setting as integer requires the value * 10^5</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">lonmin</span></code></td>
+<td>Float</td>
+<td>Minimum longitude queried</td>
+<td>Setting as integer requires the value * 10^5</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">var</span></code></td>
+<td>String</td>
+<td>Variable queried</td>
+<td>When setting var, varlist is cleared</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">varlist</span></code></td>
+<td>String</td>
+<td>List of variables to query</td>
+<td>Comma-separated list of variable codes to query; when setting varlist, var is cleared</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">query</span></code></td>
+<td>String</td>
+<td>Query behaviour modifier</td>
+<td>Comma-separated list of query modifiers.  See <a class="reference internal" href="#parms-query-modifiers"><span class="std std-ref">Possible values for query modifiers</span></a>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ana_filter</span></code></td>
+<td>String</td>
+<td>Filter on anagraphical data</td>
+<td>Restricts the results to only those stations which have a pseudoana value that matches the filter. Examples: ‘height&gt;=1000’, ‘B02001=1’, ‘1000&lt;=height&lt;=2000</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">data_filter</span></code></td>
+<td>String</td>
+<td>Filter on data</td>
+<td>Restricts the results to only the variables of the given type, which have a value that matches the filter. Examples: ‘t&lt;260’, ‘B22021&gt;2’, ‘10&lt;=B22021&lt;=20’</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">attr_filter</span></code></td>
+<td>String</td>
+<td>Filter on data attributes</td>
+<td>Restricts the results to only those data which have an attribute that matches the filter. Examples: ‘conf&gt;70’, ‘B33197=0’, ‘25&lt;=conf&lt;=50’</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">limit</span></code></td>
+<td>Integer</td>
+<td>Maximum number of results to return</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">block</span></code></td>
+<td>Integer</td>
+<td>WMO block number of the station</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">station</span></code></td>
+<td>Integer</td>
+<td>WMO station number of the station</td>
+<td>&#160;</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="query-data-remove-data-query-summary-query-messages">
+<h2>query_data, remove_data, query_summary, query_messages<a class="headerlink" href="#query-data-remove-data-query-summary-query-messages" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="7%" />
+<col width="10%" />
+<col width="15%" />
+<col width="68%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+<th class="head">Comment</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">priority</span></code></td>
+<td>Integer</td>
+<td>Priority of the type of report</td>
+<td>Every type of report has an associated priority that controls which data
+are first returned when there is more than one in the same physical space.
+It can be changed by editing /etc/dballe/repinfo.csv</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">priomax</span></code></td>
+<td>Integer</td>
+<td>Maximum priority of reports queed</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">priomin</span></code></td>
+<td>Integer</td>
+<td>Minimum priority of reports queed</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">report</span></code></td>
+<td>String</td>
+<td>Type of report</td>
+<td>Alias for <code class="docutils literal notranslate"><span class="pre">rep_memo</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">rep_memo</span></code></td>
+<td>String</td>
+<td>Type of report</td>
+<td>Alias for <code class="docutils literal notranslate"><span class="pre">report</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ana_id</span></code></td>
+<td>Integer</td>
+<td>Station database ID</td>
+<td>internal DB-ALLe ID referring to an existing station, usable as a shortcut reference instead of specifying the full data</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">mobile</span></code></td>
+<td>Integer</td>
+<td>Station is mobile</td>
+<td>Set to 1 to query mobile station, such as a ship or a flight; to 0 to query only fixed stations, such as synop or metar</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ident</span></code></td>
+<td>String</td>
+<td>Station identifier</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">lat</span></code></td>
+<td>Float</td>
+<td>Latitude</td>
+<td>Setting as integer requires the value * 10^5; equivalent to setting latmin and latmax</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">lon</span></code></td>
+<td>Float</td>
+<td>Longitude</td>
+<td>Setting as integer requires the value * 10^5; equivalent to setting lonmin and lonmax</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">latmax</span></code></td>
+<td>Float</td>
+<td>Maximum latitude queried</td>
+<td>Setting as integer requires the value * 10^5</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">latmin</span></code></td>
+<td>Float</td>
+<td>Minimum latitude queried</td>
+<td>Setting as integer requires the value * 10^5</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">lonmax</span></code></td>
+<td>Float</td>
+<td>Maximum longitude queried</td>
+<td>Setting as integer requires the value * 10^5</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">lonmin</span></code></td>
+<td>Float</td>
+<td>Minimum longitude queried</td>
+<td>Setting as integer requires the value * 10^5</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">year</span></code></td>
+<td>Integer</td>
+<td>Year</td>
+<td>Equivalent to setting yearmin and yearmax</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">month</span></code></td>
+<td>Integer</td>
+<td>Month</td>
+<td>Equivalent to setting monthmin and monthmax</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">day</span></code></td>
+<td>Integer</td>
+<td>Day</td>
+<td>Equivalent to setting daymin and daymax</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">hour</span></code></td>
+<td>Integer</td>
+<td>Hour</td>
+<td>Equivalent to setting hourmin and hourmax</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">min</span></code></td>
+<td>Integer</td>
+<td>Minutes</td>
+<td>Equivalent to setting minumin and minumax</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">sec</span></code></td>
+<td>Integer</td>
+<td>Seconds</td>
+<td>Equivalent to setting secmin and secmax</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">yearmax</span></code></td>
+<td>Integer</td>
+<td>Maximum year queried</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">yearmin</span></code></td>
+<td>Integer</td>
+<td>Year or minimum year queried</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">monthmax</span></code></td>
+<td>Integer</td>
+<td>Maximum month queried</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">monthmin</span></code></td>
+<td>Integer</td>
+<td>Minimum month queried</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">daymax</span></code></td>
+<td>Integer</td>
+<td>Maximum day queried</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">daymin</span></code></td>
+<td>Integer</td>
+<td>Minimum day queried</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">hourmax</span></code></td>
+<td>Integer</td>
+<td>Maximum hour queried</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">hourmin</span></code></td>
+<td>Integer</td>
+<td>Minumum hour queried</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">minumax</span></code></td>
+<td>Integer</td>
+<td>Maxminum minutes queried</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">minumin</span></code></td>
+<td>Integer</td>
+<td>Minimum minutes queried</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">secmax</span></code></td>
+<td>Integer</td>
+<td>Maxminum seconds queried</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">secmin</span></code></td>
+<td>Integer</td>
+<td>Minimum seconds queried</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">datetime</span></code></td>
+<td>datetime</td>
+<td>Sets <code class="docutils literal notranslate"><span class="pre">year</span></code>…<code class="docutils literal notranslate"><span class="pre">sec</span></code> values</td>
+<td>Only available in Python</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">datetimemin</span></code></td>
+<td>datetime</td>
+<td>Sets <code class="docutils literal notranslate"><span class="pre">yearmin</span></code>…<code class="docutils literal notranslate"><span class="pre">secmin</span></code> values</td>
+<td>Only available in Python</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">datetimemax</span></code></td>
+<td>datetime</td>
+<td>Sets <code class="docutils literal notranslate"><span class="pre">yearmax</span></code>…<code class="docutils literal notranslate"><span class="pre">secmax</span></code> values</td>
+<td>Only available in Python</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">level</span></code></td>
+<td><a class="reference internal" href="../../python_ref/types.html#dballe.Level" title="dballe.Level"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Level</span></code></a></td>
+<td>Sets <code class="docutils literal notranslate"><span class="pre">leveltype1</span></code>…<code class="docutils literal notranslate"><span class="pre">l2</span></code> values</td>
+<td>Only available in Python</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">trange</span></code></td>
+<td><a class="reference internal" href="../../python_ref/types.html#dballe.Trange" title="dballe.Trange"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Trange</span></code></a></td>
+<td>Sets <code class="docutils literal notranslate"><span class="pre">pindicator</span></code>…<code class="docutils literal notranslate"><span class="pre">p2</span></code> values</td>
+<td>Only available in Python</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">leveltype1</span></code></td>
+<td>Integer</td>
+<td>Type of first level</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">l1</span></code></td>
+<td>Integer</td>
+<td>Level layer L1</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">leveltype2</span></code></td>
+<td>Integer</td>
+<td>Type of second level</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">l2</span></code></td>
+<td>Integer</td>
+<td>Level layer L2</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">pindicator</span></code></td>
+<td>Integer</td>
+<td>P indicator for time range</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">p1</span></code></td>
+<td>Integer</td>
+<td>Time range P1</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">p2</span></code></td>
+<td>Integer</td>
+<td>Time range P2</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">var</span></code></td>
+<td>String</td>
+<td>Variable queried</td>
+<td>When setting var, varlist is cleared</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">varlist</span></code></td>
+<td>String</td>
+<td>List of variables to query</td>
+<td>Comma-separated list of variable codes to query; when setting varlist, var is cleared</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">query</span></code></td>
+<td>String</td>
+<td>Query behaviour modifier</td>
+<td>Comma-separated list of query modifiers.  See <a class="reference internal" href="#parms-query-modifiers"><span class="std std-ref">Possible values for query modifiers</span></a>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ana_filter</span></code></td>
+<td>String</td>
+<td>Filter on anagraphical data</td>
+<td>Restricts the results to only those stations which have a pseudoana value that matches the filter. Examples: ‘height&gt;=1000’, ‘B02001=1’, ‘1000&lt;=height&lt;=2000</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">data_filter</span></code></td>
+<td>String</td>
+<td>Filter on data</td>
+<td>Restricts the results to only the variables of the given type, which have a value that matches the filter. Examples: ‘t&lt;260’, ‘B22021&gt;2’, ‘10&lt;=B22021&lt;=20’</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">attr_filter</span></code></td>
+<td>String</td>
+<td>Filter on data attributes</td>
+<td>Restricts the results to only those data which have an attribute that matches the filter. Examples: ‘conf&gt;70’, ‘B33197=0’, ‘25&lt;=conf&lt;=50’</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">limit</span></code></td>
+<td>Integer</td>
+<td>Maximum number of results to return</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">block</span></code></td>
+<td>Integer</td>
+<td>WMO block number of the station</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">station</span></code></td>
+<td>Integer</td>
+<td>WMO station number of the station</td>
+<td>&#160;</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="possible-values-for-query-modifiers">
+<span id="parms-query-modifiers"></span><h2>Possible values for query modifiers<a class="headerlink" href="#possible-values-for-query-modifiers" title="Permalink to this headline">¶</a></h2>
+<p>When setting <code class="docutils literal notranslate"><span class="pre">query=…</span></code> to alter behaviour of a query, one can use a
+comma-separated list of these values:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="91%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">best</span></code></td>
+<td>When the same datum exists in multiple networks, return only the one with the highest priority.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">attrs</span></code></td>
+<td>Optimize for when data attributes will be read on the query result. See <a class="reference external" href="https://github.com/ARPA-SIMC/dballe/issues/114">issue114</a>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">bigana</span></code></td>
+<td>Not used anymore.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">nosort</span></code></td>
+<td>Run the query faster, but give no guarantees on the ordering of the results.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">stream</span></code></td>
+<td>Not used anymore.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">details</span></code></td>
+<td>Populate <code class="docutils literal notranslate"><span class="pre">count</span></code> and minimum/maximum datetime information in summary query results. See: <a class="reference internal" href="output.html#parms-read-summary"><span class="std std-ref">Parameters used when reading query results for summary values</span></a>.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">dballe</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../howtos.html">How-to guides</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../reference.html">Reference documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">General reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../python_ref/index.html">Python reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../cpp_ref/index.html">C++ reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../fortran_ref/index.html">Fortran reference</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../reference.html">Reference documentation</a><ul>
+  <li><a href="../index.html">General reference</a><ul>
+  <li><a href="../parms.html">Input/output/query parameters</a><ul>
+      <li>Previous: <a href="../parms.html" title="previous chapter">Input/output/query parameters</a></li>
+      <li>Next: <a href="input.html" title="next chapter">Parameters used when inserting values</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Enrico Zini.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/general_ref/parms/query.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -47,13 +47,15 @@
 
 <span class="sd">This example code extracts temperatures in a station by datetime matrix::</span>
 
+<span class="sd">        from dballe import volnd</span>
 <span class="sd">        query = dict()</span>
-<span class="sd">        query[&quot;var&quot;] = &quot;B12001&quot;</span>
+<span class="sd">        query[&quot;var&quot;] = &quot;B12101&quot;</span>
 <span class="sd">        query[&quot;rep_memo&quot;] = &quot;synop&quot;</span>
-<span class="sd">        query[&quot;level&quot;] = (105, 2)</span>
-<span class="sd">        query[&quot;trange&quot;] = (0,)</span>
-<span class="sd">        vars = read(self.db.query(query), (AnaIndex(), DateTimeIndex()))</span>
-<span class="sd">        data = vars[&quot;B12001&quot;]</span>
+<span class="sd">        query[&quot;level&quot;] = (103, 2000)</span>
+<span class="sd">        query[&quot;trange&quot;] = (254, 0, 0)</span>
+<span class="sd">        with db.transaction() as tr:</span>
+<span class="sd">            vars = volnd.read(tr.query_data(query), (volnd.AnaIndex(), volnd.DateTimeIndex()))</span>
+<span class="sd">        data = vars[&quot;B12101&quot;]</span>
 <span class="sd">        # Data is now a 2-dimensional Masked Array with the data</span>
 <span class="sd">        #</span>
 <span class="sd">        # Information about what values correspond to an index in the various</span>
@@ -112,9 +114,9 @@
 <span class="c1">#    def array(cls, a, *args, **kw):</span>
 <span class="c1">#        return a</span>
 
-<div class="viewcode-block" id="SkipDatum"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.SkipDatum">[docs]</a><span class="k">class</span> <span class="nc">SkipDatum</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span> <span class="k">pass</span></div>
+<div class="viewcode-block" id="SkipDatum"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.SkipDatum">[docs]</a><span class="k">class</span> <span class="nc">SkipDatum</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span> <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="Index"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.Index">[docs]</a><span class="k">class</span> <span class="nc">Index</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Index"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.Index">[docs]</a><span class="k">class</span> <span class="nc">Index</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for all volnd indices.</span>
 
@@ -128,14 +130,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span> <span class="o">=</span> <span class="n">shared</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_frozen</span> <span class="o">=</span> <span class="n">frozen</span>
 
-<div class="viewcode-block" id="Index.freeze"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.Index.freeze">[docs]</a>    <span class="k">def</span> <span class="nf">freeze</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Index.freeze"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.Index.freeze">[docs]</a>    <span class="k">def</span> <span class="nf">freeze</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the index as frozen: indexing elements not already in the</span>
 <span class="sd">        index will raise a SkipDatum exception</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_frozen</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="Index.copy"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.Index.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Index.copy"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.Index.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return another version of this index: it can be a reference to</span>
 <span class="sd">        the exact same index if shared=True; otherwise it&#39;s a new,</span>
@@ -146,7 +148,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">()</span></div></div>
 
-<div class="viewcode-block" id="ListIndex"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.ListIndex">[docs]</a><span class="k">class</span> <span class="nc">ListIndex</span><span class="p">(</span><span class="n">Index</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+<div class="viewcode-block" id="ListIndex"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.ListIndex">[docs]</a><span class="k">class</span> <span class="nc">ListIndex</span><span class="p">(</span><span class="n">Index</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Indexes records along an axis.</span>
 
@@ -168,11 +170,11 @@
     <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">short_name</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span> <span class="o">+</span> <span class="nb">list</span><span class="o">.</span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-<div class="viewcode-block" id="ListIndex.key_from_record"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.ListIndex.key_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">key_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
+<div class="viewcode-block" id="ListIndex.key_from_record"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.ListIndex.key_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">key_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
         <span class="s2">&quot;Extract the indexing key from the record&quot;</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
-<div class="viewcode-block" id="ListIndex.details_from_record"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.ListIndex.details_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">details_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
+<div class="viewcode-block" id="ListIndex.details_from_record"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.ListIndex.details_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">details_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
         <span class="s2">&quot;Extract the full data information from the record&quot;</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
@@ -184,14 +186,14 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">el</span><span class="p">,</span> <span class="n">el</span>
 
-<div class="viewcode-block" id="ListIndex.approve"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.ListIndex.approve">[docs]</a>    <span class="k">def</span> <span class="nf">approve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
+<div class="viewcode-block" id="ListIndex.approve"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.ListIndex.approve">[docs]</a>    <span class="k">def</span> <span class="nf">approve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return true if the record can be placed along this index</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frozen</span><span class="p">:</span> <span class="k">return</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">key_from_record</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_map</span></div>
 
-<div class="viewcode-block" id="ListIndex.index_record"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.ListIndex.index_record">[docs]</a>    <span class="k">def</span> <span class="nf">index_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
+<div class="viewcode-block" id="ListIndex.index_record"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.ListIndex.index_record">[docs]</a>    <span class="k">def</span> <span class="nf">index_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return an integer index along this axis for the given record</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -203,7 +205,7 @@
         <span class="k">return</span> <span class="n">pos</span></div></div>
 
 
-<div class="viewcode-block" id="AnaIndexEntry"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.AnaIndexEntry">[docs]</a><span class="k">class</span> <span class="nc">AnaIndexEntry</span><span class="p">(</span><span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;AnaIndexEntry&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">,</span> <span class="s2">&quot;ident&quot;</span><span class="p">))):</span>
+<div class="viewcode-block" id="AnaIndexEntry"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.AnaIndexEntry">[docs]</a><span class="k">class</span> <span class="nc">AnaIndexEntry</span><span class="p">(</span><span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;AnaIndexEntry&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">,</span> <span class="s2">&quot;ident&quot;</span><span class="p">))):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    AnaIndex entry, with various data about a single station.</span>
 
@@ -213,7 +215,7 @@
 <span class="sd">        * lon: longitude</span>
 <span class="sd">        * ident: mobile station identifier, or None</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="AnaIndexEntry.from_record"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.AnaIndexEntry.from_record">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="AnaIndexEntry.from_record"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.AnaIndexEntry.from_record">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_record</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create an index entry from the contents of a Dict[str, Any]</span>
@@ -230,7 +232,7 @@
         <span class="k">return</span> <span class="s2">&quot;AnaIndexEntry&quot;</span> <span class="o">+</span> <span class="nb">tuple</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="AnaIndex"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.AnaIndex">[docs]</a><span class="k">class</span> <span class="nc">AnaIndex</span><span class="p">(</span><span class="n">ListIndex</span><span class="p">):</span>
+<div class="viewcode-block" id="AnaIndex"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.AnaIndex">[docs]</a><span class="k">class</span> <span class="nc">AnaIndex</span><span class="p">(</span><span class="n">ListIndex</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Index for stations, as they come out of the database.</span>
 
@@ -239,20 +241,20 @@
 <span class="sd">    The index saves all stations as AnaIndexEntry tuples, in the same order</span>
 <span class="sd">    as they come out of the database.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="AnaIndex.key_from_record"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.AnaIndex.key_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">key_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
+<div class="viewcode-block" id="AnaIndex.key_from_record"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.AnaIndex.key_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">key_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">rec</span><span class="p">[</span><span class="s2">&quot;ana_id&quot;</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="AnaIndex.details_from_record"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.AnaIndex.details_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">details_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
+<div class="viewcode-block" id="AnaIndex.details_from_record"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.AnaIndex.details_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">details_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">AnaIndexEntry</span><span class="o">.</span><span class="n">from_record</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_splitInit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">el</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">el</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">el</span>
 
-<div class="viewcode-block" id="AnaIndex.short_name"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.AnaIndex.short_name">[docs]</a>    <span class="k">def</span> <span class="nf">short_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="AnaIndex.short_name"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.AnaIndex.short_name">[docs]</a>    <span class="k">def</span> <span class="nf">short_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;AnaIndex[&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span><span class="o">+</span><span class="s2">&quot;]&quot;</span></div></div>
 
 
-<div class="viewcode-block" id="NetworkIndex"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.NetworkIndex">[docs]</a><span class="k">class</span> <span class="nc">NetworkIndex</span><span class="p">(</span><span class="n">ListIndex</span><span class="p">):</span>
+<div class="viewcode-block" id="NetworkIndex"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.NetworkIndex">[docs]</a><span class="k">class</span> <span class="nc">NetworkIndex</span><span class="p">(</span><span class="n">ListIndex</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Index for networks, as they come out of the database.</span>
 
@@ -261,19 +263,19 @@
 <span class="sd">    The index saves all networks as NetworkIndexEntry tuples, in the same</span>
 <span class="sd">    order as they come out of the database.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="NetworkIndex.key_from_record"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.NetworkIndex.key_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">key_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
+<div class="viewcode-block" id="NetworkIndex.key_from_record"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.NetworkIndex.key_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">key_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">rec</span><span class="p">[</span><span class="s2">&quot;rep_memo&quot;</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="NetworkIndex.details_from_record"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.NetworkIndex.details_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">details_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
+<div class="viewcode-block" id="NetworkIndex.details_from_record"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.NetworkIndex.details_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">details_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">rec</span><span class="p">[</span><span class="s2">&quot;rep_memo&quot;</span><span class="p">]</span></div>
 
     <span class="k">def</span> <span class="nf">_splitInit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">el</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">el</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">el</span>
 
-<div class="viewcode-block" id="NetworkIndex.short_name"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.NetworkIndex.short_name">[docs]</a>    <span class="k">def</span> <span class="nf">short_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="NetworkIndex.short_name"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.NetworkIndex.short_name">[docs]</a>    <span class="k">def</span> <span class="nf">short_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;NetworkIndex[&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span><span class="o">+</span><span class="s2">&quot;]&quot;</span></div></div>
 
-<div class="viewcode-block" id="LevelIndex"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.LevelIndex">[docs]</a><span class="k">class</span> <span class="nc">LevelIndex</span><span class="p">(</span><span class="n">ListIndex</span><span class="p">):</span>
+<div class="viewcode-block" id="LevelIndex"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.LevelIndex">[docs]</a><span class="k">class</span> <span class="nc">LevelIndex</span><span class="p">(</span><span class="n">ListIndex</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Index for levels, as they come out of the database</span>
 
@@ -282,19 +284,19 @@
 <span class="sd">    The index saves all levels as dballe.Level tuples, in the same order</span>
 <span class="sd">    as they come out of the database.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="LevelIndex.key_from_record"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.LevelIndex.key_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">key_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
+<div class="viewcode-block" id="LevelIndex.key_from_record"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.LevelIndex.key_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">key_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
         <span class="c1"># Suppress deprecation warnings until we have something better</span>
         <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">rec</span><span class="p">[</span><span class="s2">&quot;level&quot;</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="LevelIndex.details_from_record"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.LevelIndex.details_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">details_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
+<div class="viewcode-block" id="LevelIndex.details_from_record"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.LevelIndex.details_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">details_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">key_from_record</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="LevelIndex.short_name"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.LevelIndex.short_name">[docs]</a>    <span class="k">def</span> <span class="nf">short_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="LevelIndex.short_name"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.LevelIndex.short_name">[docs]</a>    <span class="k">def</span> <span class="nf">short_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;LevelIndex[&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span><span class="o">+</span><span class="s2">&quot;]&quot;</span></div></div>
 
-<div class="viewcode-block" id="TimeRangeIndex"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.TimeRangeIndex">[docs]</a><span class="k">class</span> <span class="nc">TimeRangeIndex</span><span class="p">(</span><span class="n">ListIndex</span><span class="p">):</span>
+<div class="viewcode-block" id="TimeRangeIndex"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.TimeRangeIndex">[docs]</a><span class="k">class</span> <span class="nc">TimeRangeIndex</span><span class="p">(</span><span class="n">ListIndex</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Index for time ranges, as they come out of the database.</span>
 
@@ -303,20 +305,20 @@
 <span class="sd">    The index saves all time ranges as dballe.TimeRange tuples, in the same</span>
 <span class="sd">    order as they come out of the database.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="TimeRangeIndex.key_from_record"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.TimeRangeIndex.key_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">key_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
+<div class="viewcode-block" id="TimeRangeIndex.key_from_record"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.TimeRangeIndex.key_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">key_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
         <span class="c1"># Suppress deprecation warnings until we have something better</span>
         <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">rec</span><span class="p">[</span><span class="s2">&quot;trange&quot;</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="TimeRangeIndex.details_from_record"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.TimeRangeIndex.details_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">details_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
+<div class="viewcode-block" id="TimeRangeIndex.details_from_record"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.TimeRangeIndex.details_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">details_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">key_from_record</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TimeRangeIndex.short_name"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.TimeRangeIndex.short_name">[docs]</a>    <span class="k">def</span> <span class="nf">short_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TimeRangeIndex.short_name"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.TimeRangeIndex.short_name">[docs]</a>    <span class="k">def</span> <span class="nf">short_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;TimeRangeIndex[&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span><span class="o">+</span><span class="s2">&quot;]&quot;</span></div></div>
 
 
-<div class="viewcode-block" id="DateTimeIndex"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.DateTimeIndex">[docs]</a><span class="k">class</span> <span class="nc">DateTimeIndex</span><span class="p">(</span><span class="n">ListIndex</span><span class="p">):</span>
+<div class="viewcode-block" id="DateTimeIndex"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.DateTimeIndex">[docs]</a><span class="k">class</span> <span class="nc">DateTimeIndex</span><span class="p">(</span><span class="n">ListIndex</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Index for datetimes, as they come out of the database.</span>
 
@@ -325,20 +327,20 @@
 <span class="sd">    The index saves all datetime values as datetime.datetime objects, in</span>
 <span class="sd">    the same order as they come out of the database.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="DateTimeIndex.key_from_record"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.DateTimeIndex.key_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">key_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
+<div class="viewcode-block" id="DateTimeIndex.key_from_record"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.DateTimeIndex.key_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">key_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
         <span class="c1"># Suppress deprecation warnings until we have something better</span>
         <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">rec</span><span class="p">[</span><span class="s2">&quot;datetime&quot;</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="DateTimeIndex.details_from_record"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.DateTimeIndex.details_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">details_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
+<div class="viewcode-block" id="DateTimeIndex.details_from_record"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.DateTimeIndex.details_from_record">[docs]</a>    <span class="k">def</span> <span class="nf">details_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">key_from_record</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DateTimeIndex.short_name"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.DateTimeIndex.short_name">[docs]</a>    <span class="k">def</span> <span class="nf">short_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DateTimeIndex.short_name"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.DateTimeIndex.short_name">[docs]</a>    <span class="k">def</span> <span class="nf">short_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;DateTimeIndex[&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span><span class="o">+</span><span class="s2">&quot;]&quot;</span></div></div>
 
 
-<div class="viewcode-block" id="tddivmod1"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.tddivmod1">[docs]</a><span class="k">def</span> <span class="nf">tddivmod1</span><span class="p">(</span><span class="n">td1</span><span class="p">,</span> <span class="n">td2</span><span class="p">):</span>
+<div class="viewcode-block" id="tddivmod1"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.tddivmod1">[docs]</a><span class="k">def</span> <span class="nf">tddivmod1</span><span class="p">(</span><span class="n">td1</span><span class="p">,</span> <span class="n">td2</span><span class="p">):</span>
     <span class="s2">&quot;Division and quotient between time deltas&quot;</span>
     <span class="k">if</span> <span class="n">td2</span> <span class="o">&gt;</span> <span class="n">td1</span><span class="p">:</span>
         <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="n">td1</span>
@@ -369,7 +371,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">q</span><span class="p">,</span> <span class="n">td1</span> <span class="o">-</span> <span class="n">t</span></div>
 
-<div class="viewcode-block" id="tddivmod2"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.tddivmod2">[docs]</a><span class="k">def</span> <span class="nf">tddivmod2</span><span class="p">(</span><span class="n">td1</span><span class="p">,</span> <span class="n">td2</span><span class="p">):</span>
+<div class="viewcode-block" id="tddivmod2"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.tddivmod2">[docs]</a><span class="k">def</span> <span class="nf">tddivmod2</span><span class="p">(</span><span class="n">td1</span><span class="p">,</span> <span class="n">td2</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Division and quotient between time deltas</span>
 <span class="sd">    (alternate implementation using longs)</span>
@@ -381,7 +383,7 @@
 
 <span class="c1"># Choose which implementation to use</span>
 <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
-<div class="viewcode-block" id="tddivmod3"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.tddivmod3">[docs]</a>    <span class="k">def</span> <span class="nf">tddivmod3</span><span class="p">(</span><span class="n">td1</span><span class="p">,</span> <span class="n">td2</span><span class="p">):</span>
+<div class="viewcode-block" id="tddivmod3"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.tddivmod3">[docs]</a>    <span class="k">def</span> <span class="nf">tddivmod3</span><span class="p">(</span><span class="n">td1</span><span class="p">,</span> <span class="n">td2</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">td1</span> <span class="o">//</span> <span class="n">td2</span><span class="p">,</span> <span class="n">td1</span> <span class="o">%</span> <span class="n">td2</span></div>
     <span class="n">tddivmod</span> <span class="o">=</span> <span class="n">tddivmod3</span>
 <span class="k">else</span><span class="p">:</span>
@@ -389,7 +391,7 @@
     <span class="n">tddivmod</span> <span class="o">=</span> <span class="n">tddivmod2</span>
 
 
-<div class="viewcode-block" id="IntervalIndex"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.IntervalIndex">[docs]</a><span class="k">class</span> <span class="nc">IntervalIndex</span><span class="p">(</span><span class="n">Index</span><span class="p">):</span>
+<div class="viewcode-block" id="IntervalIndex"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.IntervalIndex">[docs]</a><span class="k">class</span> <span class="nc">IntervalIndex</span><span class="p">(</span><span class="n">Index</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Index into equally spaced points in time, starting at ``start``, with a</span>
 <span class="sd">    point every ``step`` time.</span>
@@ -430,7 +432,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_size</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tolerance</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-<div class="viewcode-block" id="IntervalIndex.approve"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.IntervalIndex.approve">[docs]</a>    <span class="k">def</span> <span class="nf">approve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
+<div class="viewcode-block" id="IntervalIndex.approve"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.IntervalIndex.approve">[docs]</a>    <span class="k">def</span> <span class="nf">approve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
         <span class="n">t</span> <span class="o">=</span> <span class="n">rec</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span>
         <span class="c1"># Skip all entries before the start</span>
         <span class="k">if</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span><span class="p">:</span>
@@ -448,7 +450,7 @@
             <span class="k">return</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="IntervalIndex.index_record"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.IntervalIndex.index_record">[docs]</a>    <span class="k">def</span> <span class="nf">index_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
+<div class="viewcode-block" id="IntervalIndex.index_record"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.IntervalIndex.index_record">[docs]</a>    <span class="k">def</span> <span class="nf">index_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
         <span class="n">t</span> <span class="o">=</span> <span class="n">rec</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span>
         <span class="c1"># With integer division we get both the position and the skew</span>
         <span class="n">pos</span><span class="p">,</span> <span class="n">skew</span> <span class="o">=</span> <span class="n">tddivmod</span><span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step</span><span class="p">)</span>
@@ -468,17 +470,17 @@
     <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">short_name</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-<div class="viewcode-block" id="IntervalIndex.short_name"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.IntervalIndex.short_name">[docs]</a>    <span class="k">def</span> <span class="nf">short_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="IntervalIndex.short_name"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.IntervalIndex.short_name">[docs]</a>    <span class="k">def</span> <span class="nf">short_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;IntervalIndex[&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_size</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;]&quot;</span></div>
 
-<div class="viewcode-block" id="IntervalIndex.copy"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.IntervalIndex.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="IntervalIndex.copy"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.IntervalIndex.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">IntervalIndex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tolerance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="Data"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.Data">[docs]</a><span class="k">class</span> <span class="nc">Data</span><span class="p">:</span>
+<div class="viewcode-block" id="Data"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.Data">[docs]</a><span class="k">class</span> <span class="nc">Data</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Container for collecting variable data.  It contains the variable data</span>
 <span class="sd">    array and the dimension indexes.</span>
@@ -516,7 +518,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_lastPos</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="Data.append"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.Data.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+<div class="viewcode-block" id="Data.append"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.Data.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Collect a new value from the given dballe record.</span>
 
@@ -540,7 +542,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_lastPos</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">return</span> <span class="kc">False</span></div>
 
-<div class="viewcode-block" id="Data.appendAttrs"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.Data.appendAttrs">[docs]</a>    <span class="k">def</span> <span class="nf">appendAttrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">,</span> <span class="n">codes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Data.appendAttrs"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.Data.appendAttrs">[docs]</a>    <span class="k">def</span> <span class="nf">appendAttrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">,</span> <span class="n">codes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Collect attributes to append to the record.</span>
 
@@ -602,7 +604,7 @@
                 <span class="n">a</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">a</span>
 
-<div class="viewcode-block" id="Data.finalise"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.Data.finalise">[docs]</a>    <span class="k">def</span> <span class="nf">finalise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Data.finalise"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.Data.finalise">[docs]</a>    <span class="k">def</span> <span class="nf">finalise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Stop collecting values and create a masked array with all the</span>
 <span class="sd">        values collected so far.</span>
@@ -659,7 +661,7 @@
         <span class="k">return</span> <span class="s2">&quot;Data(&quot;</span><span class="o">+</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">short_name</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;):&quot;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="read"><a class="viewcode-back" href="../../python/dballe.volnd.html#dballe.volnd.read">[docs]</a><span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">dims</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">checkConflicts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="read"><a class="viewcode-back" href="../../python_ref/volnd.html#dballe.volnd.read">[docs]</a><span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">dims</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">checkConflicts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    *cursor* is a dballe.Cursor resulting from a dballe query</span>
 
@@ -740,17 +742,8 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../parms.html">Input/output/query parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../btable.html">Local B table codes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../ltypes.html">Level type values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tranges.html">Time range values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../aliases.html">Varcode aliases</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../env.html">DB-All.e environment variables</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../connect.html">Connecting to DB-All.e</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../python/dballe.html">Python dballe package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../python/dballe.volnd.html">Python dballe.volnd package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../cpp/dballe.html">C++ dballe namespace</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../fortran/dballe.html">Fortran dballe functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../howtos.html">How-to guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference.html">Reference documentation</a></li>
 </ul>
 
 <div class="relations">

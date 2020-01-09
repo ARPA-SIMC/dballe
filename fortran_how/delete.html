@@ -1,0 +1,176 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Deleting data &#8212; dballe 3.23 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Working with attributes" href="attributes.html" />
+    <link rel="prev" title="Inserting data" href="insert.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="deleting-data">
+<h1>Deleting data<a class="headerlink" href="#deleting-data" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="clearing-the-database">
+<h2>Clearing the database<a class="headerlink" href="#clearing-the-database" title="Permalink to this headline">¶</a></h2>
+<p>You can initialise or reinitialise the database using <a class="reference internal" href="../fortran_ref/functions.html#c.idba_reinit_db" title="idba_reinit_db"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_reinit_db()</span></code></a>:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">! Start the work with a clean database</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_reinit_db</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;repinfo.csv&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="../fortran_ref/functions.html#c.idba_reinit_db" title="idba_reinit_db"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_reinit_db()</span></code></a> clears the database if it exists, then recreates all the
+needed tables.  Finally, it populates the informations about the reports (such
+as the available report types, their mnemonics and their priority) using the
+data in the file given as argument.</p>
+<p>The file is in CSV format, with 6 columns:</p>
+<ol class="arabic simple">
+<li>Report code (corresponding to parameter <code class="docutils literal notranslate"><span class="pre">rep_cod</span></code>)</li>
+<li>Mnemonic name (corresponding to parameter <code class="docutils literal notranslate"><span class="pre">rep_memo</span></code>)</li>
+<li>Report description</li>
+<li>Report priority (corresponding to parameter <code class="docutils literal notranslate"><span class="pre">priority</span></code>)</li>
+<li>Ignored</li>
+<li>Ignored</li>
+</ol>
+<p>If <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> is given instead of the file name, <a class="reference internal" href="../fortran_ref/functions.html#c.idba_reinit_db" title="idba_reinit_db"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_reinit_db()</span></code></a> will read the
+data from <code class="docutils literal notranslate"><span class="pre">/etc/repinfo.csv</span></code>.</p>
+<p>This is an example of the contents of the file:</p>
+<div class="highlight-csv notranslate"><div class="highlight"><pre><span></span>01,synop,report synottico,100,oss,0
+02,metar,metar,80,oss,0
+03,temp,radiosondaggio,100,oss,2
+04,ana_lm,valori analizzati LM,-1,ana,255
+05,ana,analisi,-10,pre,255
+06,pre_cleps_box1.5maxel001,previsti cosmo leps box 1.5 gradi valore max elemento 1,-1,pre,255
+07,pre_lmn_box1.5med,previzione Lokal Model nudging box 1.5 gradi valore medio,-1,pre,255
+08,pre_lmp_spnp0,previsione Lkal Model prognostica interpolato punto piu&#39; vicino,-1,pre,255
+09,boe,dati omdametrici,100,oss,31
+</pre></div>
+</div>
+<p><a class="reference internal" href="../fortran_ref/functions.html#c.idba_reinit_db" title="idba_reinit_db"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_reinit_db()</span></code></a> will not work unless <code class="docutils literal notranslate"><span class="pre">rewrite</span></code> has been enabled for the
+data when opening the database.</p>
+</div>
+<div class="section" id="id1">
+<h2>Deleting data<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>Data is deleted using <a class="reference internal" href="../fortran_ref/functions.html#c.idba_remove_data" title="idba_remove_data"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_remove_data()</span></code></a>:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">! Delete all data from the station with id 4 in year 2002</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_seti</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;ana_id&quot;</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_seti</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;year&quot;</span><span class="p">,</span> <span class="mi">2002</span><span class="p">)</span>
+<span class="n">ierr</span> <span class="o">=</span> <span class="n">idba_remove_data</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This code introduces a new function:</p>
+<ul class="simple">
+<li><a class="reference internal" href="../fortran_ref/functions.html#c.idba_remove_data" title="idba_remove_data"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_remove_data()</span></code></a>: deletes all the data found in the extremes specified in input.</li>
+</ul>
+<p><a class="reference internal" href="../fortran_ref/functions.html#c.idba_remove_data" title="idba_remove_data"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_remove_data()</span></code></a> will not work unless <code class="docutils literal notranslate"><span class="pre">rewrite</span></code> has been enabled for
+the data when opening the database.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">dballe</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../howtos.html">How-to guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../python_how/index.html">Python HOWTOs</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Fortran HOWTOs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference.html">Reference documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../howtos.html">How-to guides</a><ul>
+  <li><a href="index.html">Fortran HOWTOs</a><ul>
+      <li>Previous: <a href="insert.html" title="previous chapter">Inserting data</a></li>
+      <li>Next: <a href="attributes.html" title="next chapter">Working with attributes</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Enrico Zini.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/fortran_how/delete.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
