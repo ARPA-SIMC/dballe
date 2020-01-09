@@ -5,6 +5,7 @@ import multiprocessing
 import contextlib
 from collections import defaultdict
 import os
+import io
 import sys
 import warnings
 import shutil
@@ -25,21 +26,24 @@ class RunEnv:
     """
     TEST_BUFR = "extra/bufr/synop-sunshine.bufr"
 
-    def __init__(self):
+    def __init__(self, entry):
+        self.entry = entry
         self.globals = dict(globals())
         self.locals = dict(locals())
         self.assigned = set()
         self.wanted = set()
+        self.stdout = io.StringIO()
+        self.stderr = io.StringIO()
 
         # Import modules expected by the snippets
         for modname in ("dballe", "wreport", "os", "datetime"):
             self.globals[modname] = importlib.__import__(modname)
 
-    def check_reqs(self, entry):
+    def check_reqs(self):
         """
         Check if the snippet expects some well-known variables to be defined
         """
-        tree = ast.parse(entry["code"], entry["src"], "exec")
+        tree = ast.parse(self.entry["code"], self.entry["src"], "exec")
         for node in ast.walk(tree):
             if isinstance(node, ast.Assign):
                 if len(node.targets) != 1:
@@ -96,16 +100,18 @@ class RunEnv:
             os.environ["DBA_DB"] = "mem:"
 
             # Run the code, in the temp directory, discarding stdout
-            with open("/dev/null", "wt") as null:
-                orig = sys.stdout
-                curdir = os.getcwd()
-                sys.stdout = null
-                os.chdir(root)
-                try:
-                    yield
-                finally:
-                    sys.stdout = orig
-                    os.chdir(curdir)
+            curdir = os.getcwd()
+            orig_stdout = sys.stdout
+            orig_stderr = sys.stderr
+            sys.stdout = self.stdout
+            sys.stderr = self.stderr
+            os.chdir(root)
+            try:
+                yield
+            finally:
+                sys.stderr = orig_stderr
+                sys.stdout = orig_stdout
+                os.chdir(curdir)
 
     def run(self, code):
         """
@@ -128,7 +134,7 @@ def run_python_test(entry):
             entry["exception"] = None, traceback.format_exc()
 
     with warnings.catch_warnings(record=True) as w:
-        env = RunEnv()
+        env = RunEnv(entry)
 
         warnings.simplefilter("always")
         entry["warnings"] = w
@@ -140,7 +146,7 @@ def run_python_test(entry):
             store_exc(entry)
             return entry
 
-        env.check_reqs(entry)
+        env.check_reqs()
 
         with env.setup():
             try:
@@ -149,12 +155,15 @@ def run_python_test(entry):
                 entry["result"] = "fail-run"
                 store_exc(entry)
                 return entry
+            finally:
+                entry["stdout"] = env.stdout.getvalue()
+                entry["stderr"] = env.stderr.getvalue()
 
     entry["result"] = "ok"
     return entry
 
 
-def format_python_result(entry):
+def format_python_result(entry, verbose=False):
     """
     Colorful formatting of a code snippet annotated with run results
     """
@@ -170,28 +179,45 @@ def format_python_result(entry):
 
     cprint(f"{entry['src']}: {entry['source']}:{entry['line']}: {entry['result']}", color, attrs=["bold"])
 
+    # Turn warnings and exceptions into line annotations
+    line_annotations = defaultdict(list)
     if "exception" in entry:
         lineno, msg = entry["exception"]
-        for idx, line in enumerate(entry["code"].splitlines(), start=1):
-            cprint(f" {idx:2d} {line}", "red" if idx == lineno else "grey", attrs=["bold"])
-            if idx == lineno:
-                cprint(f"  ↪ {msg}", "red")
-
-        if lineno is None:
-            for line in msg.splitlines():
-                cprint(f"  ↪ {line}", "red")
-        elif lineno > idx:
-            cprint(f"  ↪ {msg}", "red")
-
+        line_annotations[lineno].append((msg, "red"))
     if entry["warnings"]:
         for w in entry["warnings"]:
-            cprint(f" W line {w.lineno}: {w.category}, {w.message}", "yellow")
+            line_annotations[w.lineno].append((f"{w.category}, {w.message}", "yellow"))
+
+    show_code = line_annotations or entry.get("stderr")
+    if verbose and entry.get("stdout"):
+        show_code = True
+
+    if show_code:
+        for idx, line in enumerate(entry["code"].splitlines(), start=1):
+            annotations = line_annotations.pop(idx, None)
+            cprint(f" {idx:2d} {line}", "red" if annotations else "grey", attrs=["bold"])
+            if annotations is not None:
+                for msg, color in annotations:
+                    cprint(f"  ↪ {msg}", color)
+
+        for lineno, annotations in line_annotations.items():
+            for msg, color in annotations:
+                for line in msg.splitlines():
+                    cprint(f"  ↪ {line}", color)
+
+    if verbose and entry.get("stdout"):
+        for line in entry["stdout"].splitlines():
+            cprint(f"  O {line}", "blue")
+
+    if entry.get("stderr"):
+        for line in entry["stderr"].splitlines():
+            cprint(f"  E {line}", "blue")
 
     if not ok:
         print()
 
 
-def run_tests(entries):
+def run_tests(entries, verbose=False):
     """
     Run a list of collected test snippets
     """
@@ -208,7 +234,7 @@ def run_tests(entries):
             entries = p.map(run_python_test, entries)
 
         for entry in entries:
-            format_python_result(entry)
+            format_python_result(entry, verbose)
 
     # Only python supported so far
 
@@ -233,7 +259,7 @@ def main():
     with open(args.code, "rt") as fd:
         entries = json.load(fd)
 
-    run_tests(entries)
+    run_tests(entries, verbose=args.debug or args.verbose)
 
 
 if __name__ == "__main__":
