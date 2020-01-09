@@ -92,6 +92,18 @@ struct l2 : Getter<l2, dpy_Level>
     }
 };
 
+struct describe : MethNoargs<describe, dpy_Level>
+{
+    constexpr static const char* name = "describe";
+    constexpr static const char* doc = "Return a string description for this level";
+    static PyObject* run(Impl* self)
+    {
+        try {
+            return to_python(self->val.describe());
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
 struct Definition : public Type<Definition, dpy_Level>
 {
     constexpr static const char* name = "Level";
@@ -103,7 +115,7 @@ Constructor: Level(ltype1: int=None, l1: int=None, ltype2: int=None, l2: int=Non
 )";
 
     GetSetters<ltype1, l1, ltype2, l2> getsetters;
-    Methods<> methods;
+    Methods<describe> methods;
 
     static PyObject* _str(Impl* self)
     {
@@ -224,6 +236,18 @@ struct p2 : Getter<p2, dpy_Trange>
     }
 };
 
+struct describe : MethNoargs<describe, dpy_Trange>
+{
+    constexpr static const char* name = "describe";
+    constexpr static const char* doc = "Return a string description for this time range";
+    static PyObject* run(Impl* self)
+    {
+        try {
+            return to_python(self->val.describe());
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
 struct Definition : public Type<Definition, dpy_Trange>
 {
     constexpr static const char* name = "Trange";
@@ -235,7 +259,7 @@ Constructor: Trange(pind: int=None, p1: int=None, p2: int=None)
 )";
 
     GetSetters<pind, p1, p2> getsetters;
-    Methods<> methods;
+    Methods<describe> methods;
 
     static PyObject* _str(Impl* self)
     {
