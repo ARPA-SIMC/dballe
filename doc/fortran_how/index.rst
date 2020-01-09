@@ -1,5 +1,5 @@
-A walk through the Fortran API
-==============================
+Fortran HOWTOs
+==============
 
 .. toctree::
    :maxdepth: 2
