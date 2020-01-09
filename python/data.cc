@@ -36,18 +36,7 @@ Indexing by variable code also works. Assignment can take None, int, str,
 float, or a wreport.Var object. Assigning a wreport.Var object with a different
 varcode performs automatic unit conversion if possible.
 
-For example::
-
-    # Select B12101 values and convert them to B22049
-    with tr.query_data({"var": "B12101"}) as cur:
-        self.assertEqual(cur.remaining, 26)
-        for rec in cur:
-            data = rec.data
-            rec.remove()
-            # This converts units automatically
-            data["B22049"] = data["B12101"]
-            del data["B12101"]
-            tr.insert_data(data)
+See :ref:`python_how_convertvars` for an example.
 )";
     GetSetters<> getsetters;
     Methods<> methods;
