@@ -100,5 +100,39 @@ void CrexFile::write(const std::string& msg)
     CrexBulletin::write(msg, fd, m_name.c_str());
 }
 
+BinaryMessage JsonFile::read()
+{
+    if (fd == nullptr)
+        throw error_consistency("cannot read from a closed file");
+
+    BinaryMessage res(Encoding::JSON);
+    long offset = ftell(fd);
+    int c;
+    while ((c = getc(fd)) != EOF)
+    {
+        if (c == '\n')
+            break;
+        res.data += c;
+    }
+    if (res.data.empty())
+        return res;
+
+    res.pathname = m_name;
+    res.index = idx++;
+    res.offset = offset;
+    return res;
+}
+
+void JsonFile::write(const std::string& msg)
+{
+    if (fd == nullptr)
+        throw error_consistency("cannot write to a closed file");
+    fwrite(msg.data(), msg.size(), 1, fd);
+    if (ferror(fd))
+        error_system::throwf("cannot write JSON line to %s", m_name.c_str());
+    if (putc('\n', fd) == EOF)
+        error_system::throwf("cannot write JSON line terminator to %s", m_name.c_str());
+}
+
 }
 }

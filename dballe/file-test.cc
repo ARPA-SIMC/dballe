@@ -48,6 +48,42 @@ add_method("crex", []() {
     wassert(file->close());
     wassert_throws(wreport::error_consistency, file->read());
 });
+add_method("json", []() {
+    // CREX Read test
+    auto file = File::create(Encoding::JSON, tests::datafile("json/issue134.json"), "r");
+    BinaryMessage msg = wcallchecked(file->read());
+    wassert(actual(msg).istrue());
+    wassert(actual(msg.data.size()) == 344u);
+    wassert(actual(msg.index) == 0);
+    wassert(actual(msg.offset) == 0);
+
+    msg = wcallchecked(file->read());
+    wassert(actual(msg).istrue());
+    wassert(actual(msg.data.size()) == 327u);
+    wassert(actual(msg.index) == 1);
+    wassert(actual(msg.offset) == 345);
+
+    msg = wcallchecked(file->read());
+    wassert(actual(msg).istrue());
+    wassert(actual(msg.data.size()) == 349u);
+    wassert(actual(msg.index) == 2);
+    wassert(actual(msg.offset) == 673);
+
+    msg = wcallchecked(file->read());
+    wassert(actual(msg).istrue());
+    wassert(actual(msg.data.size()) == 346u);
+    wassert(actual(msg.index) == 3);
+    wassert(actual(msg.offset) == 1023);
+
+    msg = wcallchecked(file->read());
+    wassert(actual(msg).istrue());
+    wassert(actual(msg.data.size()) == 363u);
+    wassert(actual(msg.index) == 4);
+    wassert(actual(msg.offset) == 1370);
+
+    wassert(file->close());
+    wassert_throws(wreport::error_consistency, file->read());
+});
 add_method("parse_encoding", []() {
     // Parse encoding test
     wassert(actual(File::parse_encoding("BUFR")) == Encoding::BUFR);
@@ -56,6 +92,9 @@ add_method("parse_encoding", []() {
     wassert(actual(File::parse_encoding("CREX")) == Encoding::CREX);
     wassert(actual(File::parse_encoding("crex")) == Encoding::CREX);
     wassert(actual(File::parse_encoding("CreX")) == Encoding::CREX);
+    wassert(actual(File::parse_encoding("JSON")) == Encoding::JSON);
+    wassert(actual(File::parse_encoding("json")) == Encoding::JSON);
+    wassert(actual(File::parse_encoding("JsoN")) == Encoding::JSON);
 });
 
 }

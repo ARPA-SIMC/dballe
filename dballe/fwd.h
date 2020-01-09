@@ -9,6 +9,7 @@ namespace dballe {
 enum class Encoding {
     BUFR = 0,
     CREX = 1,
+    JSON = 2,
 };
 
 /// Type of the data in a message

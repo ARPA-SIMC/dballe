@@ -69,6 +69,17 @@ public:
     void write(const std::string& msg) override;
 };
 
+class JsonFile : public dballe::core::File
+{
+public:
+    JsonFile(const std::string& name, FILE* fd, bool close_on_exit=true)
+        : File(name, fd, close_on_exit) {}
+
+    Encoding encoding() const override { return Encoding::JSON; }
+    BinaryMessage read() override;
+    void write(const std::string& msg) override;
+};
+
 }
 }
 #endif

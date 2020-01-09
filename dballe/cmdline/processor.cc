@@ -94,6 +94,8 @@ void Item::decode(Importer& imp, bool print_errors)
                 bulletin = 0;
             }
             break;
+        case Encoding::JSON:
+            throw error_unimplemented("decode json");
     }
 
     // Second step: decode to msgs
@@ -113,6 +115,8 @@ void Item::decode(Importer& imp, bool print_errors)
                 }
             }
             break;
+        case Encoding::JSON:
+            throw error_unimplemented("decode json");
     }
 }
 

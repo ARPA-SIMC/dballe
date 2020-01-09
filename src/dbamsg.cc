@@ -186,6 +186,8 @@ static void print_item_header(const Item& item)
                 if (item.bulletin != NULL)
                     print_crex_header(*dynamic_cast<const CrexBulletin*>(item.bulletin));
                 break;
+            case Encoding::JSON:
+                throw error_unimplemented("print_item_header json");
         }
     } else if (item.msgs) {
         printf(" message: %zd subsets:", item.msgs->size());
@@ -235,6 +237,8 @@ struct Head : public cmdline::Action
                 if (item.bulletin == NULL) return true;
                 dump_crex_header(*item.rmsg, *dynamic_cast<const CrexBulletin*>(item.bulletin)); puts(".");
                 break;
+            case Encoding::JSON:
+                throw error_unimplemented("Head json");
         }
         return true;
     }
@@ -383,6 +387,8 @@ struct DumpMessage : public cmdline::Action
                     print_subsets(*item.bulletin);
                     break;
                 }
+            case Encoding::JSON:
+                throw error_unimplemented("DumpMessage json");
         }
         return true;
     }
