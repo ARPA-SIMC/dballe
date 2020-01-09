@@ -337,8 +337,9 @@ Example usage::
 
     importer = dballe.Importer("BUFR")
     with importer.from_file("test.bufr") as f:
-        for msg in f:
-            print("{m.report},{m.coords},{m.ident},{m.datetime},{m.type}".format(m=msg))
+        for msgs in f:
+            for msg in msgs:
+                print("{m.report},{m.coords},{m.ident},{m.datetime},{m.type}".format(m=msg))
 )";
     GetSetters<GetType, GetDatetime, GetCoords, GetIdent, GetReport> getsetters;
     Methods<get, get_named, set, set_named, query_stations, query_station_data, query_data/*, query_station_and_data*/> methods;

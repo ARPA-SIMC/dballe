@@ -203,11 +203,12 @@ Example usage::
 
     importer = dballe.Importer("BUFR")
     with importer.from_file("test.bufr") as f:
-        for msg in f:
-            print("{m.report},{m.coords},{m.ident},{m.datetime},{m.type}".format(m=msg))
+        for msgs in f:
+            for msg in msgs:
+                print("{m.report},{m.coords},{m.ident},{m.datetime},{m.type}".format(m=msg))
 
     importer = dballe.Importer("BUFR")
-    with dbale.File("test.bufr") as f:
+    with dballe.File("test.bufr", "BUFR") as f:
         for binmsg in f:
             msgs = importer.from_binary(binmsg)
             for msg in msgs:
