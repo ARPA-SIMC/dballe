@@ -821,6 +821,20 @@ class CommonDBTestMixin(DballeDBMixin):
 
         self.assertEqual(reports, ["test1", "test2"])
 
+    def test_insert_new(self):
+        with self.transaction() as tr:
+            with self.assertRaises(KeyError) as e:
+                tr.insert_data({
+                    "report": "synop",
+                    "lat": 44.5, "lon": 11.4,
+                    "level": dballe.Level(1),
+                    "trange": dballe.Trange(254),
+                    "datetime": datetime.datetime(2013, 4, 25, 12, 0, 0),
+                    "B12101": 22.4,
+                    "B12103": 17.2,
+                })
+            self.assertEqual(str(e.exception), "'station not found in the database'")
+
     def test_cursor_delete(self):
         # See: #140
         with self.transaction() as tr:

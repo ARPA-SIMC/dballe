@@ -5,4 +5,5 @@ Python HOWTOs
    :maxdepth: 2
 
    dumpdb
+   insert
    convertvars

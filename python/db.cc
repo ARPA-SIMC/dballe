@@ -1144,21 +1144,7 @@ by automatically creating a temporary transaction and running the equivalent
 :class:`dballe.DB` objects are not constructed explicitly, but via one of the
 :func:`DB.connect` or :func:`DB.connect_test` class methods.
 
-See :ref:`python_how_dumpdb` for an example.
-
-Examples:
-
-::
-
-    # Insert 2 new variables in the database
-    db.insert_data({
-        "lat": 44.5, "lon": 11.4,
-        "level": dballe.Level(1),
-        "trange": dballe.Trange(254),
-        "date": datetime.datetime(2013, 4, 25, 12, 0, 0),
-        "B11101": 22.4,
-        "B12103": 17.2,
-    })
+See :ref:`python_how_dumpdb` and :ref:`python_how_insert` examples.
 )";
 
     GetSetters<> getsetters;
@@ -1272,19 +1258,11 @@ Transactions can also be used as context managers, which calls
 :py:meth:`dballe.Transaction.commit` automatically, or
 :py:meth:`dballe.Transaction.rollback` if the code raised an exception:
 
-::
-
-    with db.transaction() as t:
-        for i in range(10):
-            t.insert_data({
-                "lat": 44.5 + i, "lon": 11.4 + i, "level": (1,),
-                "trange": (254,), "date": datetime.datetime(2013, 4, 25, 12, 0, 0),
-                "B11101": 22.4 + i, "B12103": 17.2
-            })
-
 The dballe.Transaction methods are the same as those in dballe.DB. The version
 in dballe.DB is implemented by automatically creating a temporary transaction
 and running the dballe.Transaction method inside it.
+
+See :ref:`python_how_dumpdb` and :ref:`python_how_insert` examples.
 )";
 
     GetSetters<> getsetters;
