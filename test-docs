@@ -16,6 +16,9 @@ import ast
 from termcolor import cprint
 import importlib
 import json
+import docutils
+import docutils.core
+import docutils.nodes
 
 log = logging.getLogger()
 
@@ -69,13 +72,14 @@ class RunEnv:
             raise AssertionError(f"{a!r} != {b!r}")
 
     @contextlib.contextmanager
-    def setup(self):
+    def setup(self, capture_output=True):
         import dballe
 
         # Build a test environment in a temporary directory
         with tempfile.TemporaryDirectory() as root:
             shutil.copy(self.TEST_BUFR, os.path.join(root, "test.bufr"))
-            db = dballe.DB.connect("sqlite:" + os.path.join(root, "db.sqlite?wipe=yes"))
+            db_url = "sqlite:" + os.path.join(root, "db.sqlite")
+            db = dballe.DB.connect(db_url + "?wipe=yes")
             importer = dballe.Importer("BUFR")
             with importer.from_file(os.path.join(root, "test.bufr")) as f:
                 db.import_messages(f)
@@ -97,27 +101,61 @@ class RunEnv:
                         self.locals["msg"] = msg[0]
 
             # Set env variables the snippets may use
-            os.environ["DBA_DB"] = "mem:"
+            os.environ["DBA_DB"] = db_url
 
             # Run the code, in the temp directory, discarding stdout
             curdir = os.getcwd()
-            orig_stdout = sys.stdout
-            orig_stderr = sys.stderr
-            sys.stdout = self.stdout
-            sys.stderr = self.stderr
+            if capture_output:
+                orig_stdout = sys.stdout
+                orig_stderr = sys.stderr
+                sys.stdout = self.stdout
+                sys.stderr = self.stderr
             os.chdir(root)
             try:
                 yield
             finally:
-                sys.stderr = orig_stderr
-                sys.stdout = orig_stdout
+                if capture_output:
+                    sys.stderr = orig_stderr
+                    sys.stdout = orig_stdout
                 os.chdir(curdir)
 
-    def run(self, code):
+    def store_exc(self):
+        type, value, tb = sys.exc_info()
+        for frame, lineno in traceback.walk_tb(tb):
+            if frame.f_code.co_filename == self.entry["src"]:
+                self.entry["exception"] = (lineno, repr(value))
+        if "exception" not in self.entry:
+            self.entry["exception"] = None, traceback.format_exc()
+
+    def run(self):
         """
         Run a compiled test snippet
         """
-        exec(code, self.globals, self.locals)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            self.entry["warnings"] = w
+
+            try:
+                code = compile(self.entry["code"], self.entry["src"], "exec")
+            except Exception:
+                self.entry["result"] = "fail-compile"
+                self.store_exc()
+                return
+
+            self.check_reqs()
+
+            with self.setup():
+                try:
+                    exec(code, self.globals, self.locals)
+                except Exception:
+                    self.entry["result"] = "fail-run"
+                    self.store_exc()
+                    return
+                finally:
+                    self.entry["stdout"] = self.stdout.getvalue()
+                    self.entry["stderr"] = self.stderr.getvalue()
+
+        self.entry["result"] = "ok"
 
 
 def run_python_test(entry):
@@ -125,42 +163,8 @@ def run_python_test(entry):
     Run a collected python code snippet, annotating its information with run
     results
     """
-    def store_exc(entry):
-        type, value, tb = sys.exc_info()
-        for frame, lineno in traceback.walk_tb(tb):
-            if frame.f_code.co_filename == entry["src"]:
-                entry["exception"] = (lineno, repr(value))
-        if "exception" not in entry:
-            entry["exception"] = None, traceback.format_exc()
-
-    with warnings.catch_warnings(record=True) as w:
-        env = RunEnv(entry)
-
-        warnings.simplefilter("always")
-        entry["warnings"] = w
-
-        try:
-            code = compile(entry["code"], entry["src"], "exec")
-        except Exception:
-            entry["result"] = "fail-compile"
-            store_exc(entry)
-            return entry
-
-        env.check_reqs()
-
-        with env.setup():
-            try:
-                env.run(code)
-            except Exception:
-                entry["result"] = "fail-run"
-                store_exc(entry)
-                return entry
-            finally:
-                entry["stdout"] = env.stdout.getvalue()
-                entry["stderr"] = env.stderr.getvalue()
-
-    entry["result"] = "ok"
-    return entry
+    env = RunEnv(entry)
+    env.run()
 
 
 def format_python_result(entry, verbose=False):
@@ -239,10 +243,31 @@ def run_tests(entries, verbose=False):
     # Only python supported so far
 
 
+def get_code_from_rst(fname):
+    """
+    Return the code in the first code block in the given rst
+    """
+    with open(fname, "rt") as fd:
+        doctree = docutils.core.publish_doctree(
+                fd, source_class=docutils.io.FileInput, settings_overrides={"input_encoding": "unicode"})
+
+        for node in doctree.traverse(docutils.nodes.literal_block):
+            # if "dballe.DB.connect" in str(node):
+            for subnode in node.traverse(docutils.nodes.Text):
+                return {
+                    "src": fname,
+                    "lang": "python",
+                    "code": subnode,
+                    "source": node.source,
+                    "line": node.line,
+                }
+
+
 def main():
     parser = argparse.ArgumentParser(description="Run code found in documentation code blocks")
     parser.add_argument("--verbose", "-v", action="store_true", help="verbose output")
     parser.add_argument("--debug", action="store_true", help="debug output")
+    parser.add_argument("-r", "--run", action="store_true", help="run the first code snippet found in a .rst file")
     parser.add_argument("code", action="store", nargs="?", default="doc/test_code.json",
                         help="JSON file with the collected test code")
     args = parser.parse_args()
@@ -256,10 +281,16 @@ def main():
     else:
         logging.basicConfig(level=logging.WARN, stream=sys.stderr, format=FORMAT)
 
-    with open(args.code, "rt") as fd:
-        entries = json.load(fd)
+    if args.run:
+        entry = get_code_from_rst(args.code)
+        env = RunEnv(entry)
+        env.run()
+        format_python_result(entry, verbose=args.debug or args.verbose)
+    else:
+        with open(args.code, "rt") as fd:
+            entries = json.load(fd)
 
-    run_tests(entries, verbose=args.debug or args.verbose)
+        run_tests(entries, verbose=args.debug or args.verbose)
 
 
 if __name__ == "__main__":
