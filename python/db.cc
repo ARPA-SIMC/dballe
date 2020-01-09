@@ -1144,19 +1144,11 @@ by automatically creating a temporary transaction and running the equivalent
 :class:`dballe.DB` objects are not constructed explicitly, but via one of the
 :func:`DB.connect` or :func:`DB.connect_test` class methods.
 
+See :ref:`python_how_dumpdb` for an example.
+
 Examples:
 
 ::
-
-    # Connect to a database and run a query
-    db = dballe.DB.connect_from_file("db.sqlite")
-    query = {"latmin": 44.0, "latmax": 45.0, "lonmin": 11.0, "lonmax": 12.0}
-
-    # The result is a dballe.Cursor (dballe.CursorData in this case), which can
-    # be iterated to get results as dict objects.
-    with db.transaction() as tr:
-        for row in tr.query_data(query):
-            print(row["lat"], row["lon"], row["var"], row["variable"].format("undefined"))
 
     # Insert 2 new variables in the database
     db.insert_data({
