@@ -49,7 +49,7 @@ add_method("crex", []() {
     wassert_throws(wreport::error_consistency, file->read());
 });
 add_method("json", []() {
-    // CREX Read test
+    // JSON Read test
     auto file = File::create(Encoding::JSON, tests::datafile("json/issue134.json"), "r");
     BinaryMessage msg = wcallchecked(file->read());
     wassert(actual(msg).istrue());

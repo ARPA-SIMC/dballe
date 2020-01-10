@@ -120,6 +120,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	msg/msg.h \
 	msg/msg-extravars.h \
 	msg/cursor.h \
+	msg/json_codec.h \
 	msg/wr_codec.h \
 	msg/wr_exporters/common.h \
 	sql/fwd.h \
@@ -221,6 +222,7 @@ libdballe_la_SOURCES = \
 	msg/msg.cc \
 	msg/cursor.cc \
 	msg/cursor-access.cc \
+	msg/json_codec.cc \
 	msg/wr_codec.cc \
 	msg/wr_importers/base.cc \
 	msg/wr_importers/synop.cc \
@@ -360,6 +362,7 @@ test_dballe_SOURCES = \
 	msg/context-test.cc \
 	msg/msg-test.cc \
 	msg/cursor-test.cc \
+	msg/json_codec-test.cc \
 	msg/wr_codec_generic-test.cc \
 	msg/wr_codec-test.cc \
 	msg/wr_import-test.cc \
