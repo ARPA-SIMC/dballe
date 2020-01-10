@@ -10,6 +10,8 @@
 
 namespace dballe {
 
+static constexpr int REQUIRED_MISSING_INT = MISSING_INT - 1;
+
 /// Query used to filter DB-All.e data
 class Query
 {
