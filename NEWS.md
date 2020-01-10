@@ -1,6 +1,7 @@
 # New in version 8.7
 
 * Fixed the command line documentation of possible input types (#202)
+* Restructured and tested documentation (#204, #205, #206)
 
 # New in version 8.6
 
