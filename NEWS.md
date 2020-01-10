@@ -2,6 +2,7 @@
 
 * Fixed the command line documentation of possible input types (#202)
 * Restructured and tested documentation (#204, #205, #206)
+* JSON is now supported for encoding/decoding wherever BUFR and CREX are (#202)
 
 # New in version 8.6
 
