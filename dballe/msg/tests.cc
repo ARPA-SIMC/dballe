@@ -120,7 +120,7 @@ unique_ptr<Bulletin> export_msgs(Encoding enctype, const impl::Messages& in, con
 {
     try {
         std::unique_ptr<Exporter> exporter(Exporter::create(enctype, opts));
-        return exporter->to_bulletin(in);
+        return dynamic_cast<const BulletinExporter*>(exporter.get())->to_bulletin(in);
     } catch (std::exception& e) {
         dballe::tests::dump("bul-" + tag, in);
         //dballe::tests::dump("msg-" + tag, out);
@@ -577,7 +577,7 @@ void TestMessage::read_from_msgs(const impl::Messages& _msgs, const ExporterOpti
     std::unique_ptr<Exporter> exporter(Exporter::create(type, export_opts));
     msgs = _msgs;
     delete bulletin;
-    bulletin = exporter->to_bulletin(msgs).release();
+    bulletin = dynamic_cast<const BulletinExporter*>(exporter.get())->to_bulletin(msgs).release();
     raw.data = bulletin->encode();
 }
 

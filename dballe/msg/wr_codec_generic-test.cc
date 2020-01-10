@@ -207,7 +207,7 @@ class Tests : public TestCase
 
             // Export it
             unique_ptr<Exporter> exporter = Exporter::create(Encoding::BUFR);
-            unique_ptr<Bulletin> bulletin = exporter->to_bulletin(msgs);
+            unique_ptr<Bulletin> bulletin = dynamic_cast<const BulletinExporter*>(exporter.get())->to_bulletin(msgs);
 
             // Ensure that B01194 only appears once
             wassert(actual(bulletin->subsets.size()) == 1u);

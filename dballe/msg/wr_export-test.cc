@@ -19,6 +19,30 @@ namespace {
 
 using dballe::tests::TestCodec;
 
+static std::unique_ptr<BulletinImporter> get_importer(dballe::Encoding encoding=Encoding::BUFR)
+{
+    auto res = Importer::create(encoding);
+    return std::unique_ptr<BulletinImporter>(dynamic_cast<BulletinImporter*>(res.release()));
+}
+
+static std::unique_ptr<BulletinImporter> get_importer(dballe::Encoding encoding, const ImporterOptions& opts)
+{
+    auto res = Importer::create(encoding, opts);
+    return std::unique_ptr<BulletinImporter>(dynamic_cast<BulletinImporter*>(res.release()));
+}
+
+static std::unique_ptr<BulletinExporter> get_exporter(dballe::Encoding encoding=Encoding::BUFR)
+{
+    auto res = Exporter::create(encoding);
+    return std::unique_ptr<BulletinExporter>(dynamic_cast<BulletinExporter*>(res.release()));
+}
+
+static std::unique_ptr<BulletinExporter> get_exporter(dballe::Encoding encoding, const ExporterOptions& opts)
+{
+    auto res = Exporter::create(encoding, opts);
+    return std::unique_ptr<BulletinExporter>(dynamic_cast<BulletinExporter*>(res.release()));
+}
+
 class Tests : public TestCase
 {
     using TestCase::TestCase;
@@ -56,14 +80,12 @@ class Tests : public TestCase
                     impl::Messages msgs = read_msgs(files[i], Encoding::BUFR);
                     wassert(actual(msgs.size()) > 0);
 
-                    std::unique_ptr<Exporter> exporter;
-
-                    exporter = Exporter::create(Encoding::BUFR/*, const Options& opts=Options()*/);
+                    auto exporter = get_exporter();
                     unique_ptr<Bulletin> bbulletin = exporter->to_bulletin(msgs);
 
                     if (bl_crex.find(files[i]) == bl_crex.end())
                     {
-                        exporter = Exporter::create(Encoding::CREX/*, const Options& opts=Options()*/);
+                        auto exporter = get_exporter(Encoding::CREX);
                         unique_ptr<Bulletin> cbulletin = exporter->to_bulletin(msgs);
                     }
                 } catch (std::exception& e) {
@@ -90,10 +112,10 @@ class Tests : public TestCase
                     impl::Messages msgs = read_msgs(files[i], Encoding::CREX);
                     wassert(actual(msgs.size()) > 0);
 
-                    std::unique_ptr<Exporter> exporter = Exporter::create(Encoding::BUFR/*, const Options& opts=Options()*/);
+                    auto exporter = get_exporter();
                     unique_ptr<Bulletin> bbulletin = exporter->to_bulletin(msgs);
 
-                    exporter = Exporter::create(Encoding::CREX/*, const Options& opts=Options()*/);
+                    exporter = get_exporter(Encoding::CREX);
                     unique_ptr<Bulletin> cbulletin = exporter->to_bulletin(msgs);
                 } catch (std::exception& e) {
                     fails.push_back(string(files[i]) + ": " + e.what());
@@ -132,12 +154,12 @@ class Tests : public TestCase
             // Export to BUFR
             auto export_opts = ExporterOptions::create();
             export_opts->template_name = "temp-wmo";
-            std::unique_ptr<Exporter> bufr_exporter(Exporter::create(Encoding::BUFR, *export_opts));
+            auto bufr_exporter = get_exporter(Encoding::BUFR, *export_opts);
             unique_ptr<Bulletin> bbulletin = bufr_exporter->to_bulletin(msgs);
 
             // Import and check the differences
             {
-                std::unique_ptr<Importer> bufr_importer(Importer::create(Encoding::BUFR/*, const Options& opts=Options()*/));
+                auto bufr_importer = get_importer();
                 impl::Messages msgs1 = wcallchecked(bufr_importer->from_bulletin(*bbulletin));
                 tweak_second.apply(msgs1);
                 notes::Collect c(cerr);
@@ -468,9 +490,8 @@ class Tests : public TestCase
 
             vector<string> fails;
             int i;
-            std::unique_ptr<Exporter> exporter;
-            exporter = Exporter::create(Encoding::BUFR/*, const Options& opts=Options()*/);
-            std::unique_ptr<Importer> importer = Importer::create(Encoding::BUFR/*, opts*/);
+            auto exporter = get_exporter();
+            auto importer = get_importer();
 
             for (i = 0; files[i] != NULL; i++)
             {
@@ -530,11 +551,10 @@ class Tests : public TestCase
 
             vector<string> fails;
             int i;
-            std::unique_ptr<Exporter> exporter;
-            exporter = Exporter::create(Encoding::BUFR/*, const Options& opts=Options()*/);
+            auto exporter = get_exporter();
             impl::ImporterOptions import_opts;
             import_opts.simplified = false;
-            std::unique_ptr<Importer> importer = Importer::create(Encoding::BUFR, import_opts);
+            auto importer = get_importer(Encoding::BUFR, import_opts);
 
             for (i = 0; files[i] != NULL; i++)
             {
@@ -633,7 +653,7 @@ class Tests : public TestCase
             std::unique_ptr<Bulletin> bulletin = test_export_msgs(Encoding::BUFR, msgs1, "towmo", output_opts);
 
             // Import again
-            std::unique_ptr<Importer> imp = Importer::create(Encoding::BUFR);
+            auto imp = get_importer();
             impl::Messages msgs2 = imp->from_bulletin(*bulletin);
             wassert(actual(msgs2.size()) == 1);
             impl::Message& msg2 = impl::Message::downcast(*msgs2[0]);
@@ -652,7 +672,7 @@ class Tests : public TestCase
             std::unique_ptr<Bulletin> bulletin = test_export_msgs(Encoding::CREX, msgs1, "tocrex", output_opts);
 
             // Import again
-            std::unique_ptr<Importer> imp = Importer::create(Encoding::BUFR);
+            auto imp = get_importer();
             impl::Messages msgs2 = wcallchecked(imp->from_bulletin(*bulletin));
             wassert(actual(msgs2.size()) == 1);
         });
