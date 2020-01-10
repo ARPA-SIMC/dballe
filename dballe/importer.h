@@ -90,11 +90,6 @@ public:
     std::vector<std::shared_ptr<Message>> from_binary(const BinaryMessage& msg) const;
 
     /**
-     * Import a decoded BUFR/CREX message
-     */
-    virtual std::vector<std::shared_ptr<Message>> from_bulletin(const wreport::Bulletin& msg) const = 0;
-
-    /**
      * Decode a message from its raw encoded representation, calling \a dest on
      * each resulting Message.
      *
@@ -127,6 +122,18 @@ public:
      *   Options controlling import behaviour
      */
     static std::unique_ptr<Importer> create(Encoding type, const std::string& opts);
+};
+
+
+class BulletinImporter : public Importer
+{
+public:
+    using Importer::Importer;
+
+    /**
+     * Import a decoded BUFR/CREX message
+     */
+    virtual std::vector<std::shared_ptr<Message>> from_bulletin(const wreport::Bulletin& msg) const = 0;
 };
 
 }

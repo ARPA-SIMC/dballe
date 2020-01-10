@@ -26,6 +26,7 @@ add_method("binarymessage", []() {
     wassert(actual(bm.data.size()) == 0);
     wassert(actual(bm.data.empty()).istrue());
 });
+
 add_method("bufr", []() {
     // BUFR Read test
     auto file = File::create(Encoding::BUFR, tests::datafile("bufr/bufr1"), "r");
@@ -37,6 +38,7 @@ add_method("bufr", []() {
     wassert(file->close());
     wassert_throws(wreport::error_consistency, file->read());
 });
+
 add_method("crex", []() {
     // CREX Read test
     auto file = File::create(Encoding::CREX, tests::datafile("crex/test-synop0.crex"), "r");
@@ -48,6 +50,7 @@ add_method("crex", []() {
     wassert(file->close());
     wassert_throws(wreport::error_consistency, file->read());
 });
+
 add_method("json", []() {
     // JSON Read test
     auto file = File::create(Encoding::JSON, tests::datafile("json/issue134.json"), "r");
@@ -84,6 +87,7 @@ add_method("json", []() {
     wassert(file->close());
     wassert_throws(wreport::error_consistency, file->read());
 });
+
 add_method("parse_encoding", []() {
     // Parse encoding test
     wassert(actual(File::parse_encoding("BUFR")) == Encoding::BUFR);

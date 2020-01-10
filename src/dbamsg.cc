@@ -187,7 +187,7 @@ static void print_item_header(const Item& item)
                     print_crex_header(*dynamic_cast<const CrexBulletin*>(item.bulletin));
                 break;
             case Encoding::JSON:
-                throw error_unimplemented("print_item_header json");
+                break;
         }
     } else if (item.msgs) {
         printf(" message: %zd subsets:", item.msgs->size());
@@ -388,7 +388,8 @@ struct DumpMessage : public cmdline::Action
                     break;
                 }
             case Encoding::JSON:
-                throw error_unimplemented("DumpMessage json");
+                printf("contents only available with --interpreted\n");
+                break;
         }
         return true;
     }
@@ -885,7 +886,7 @@ struct Convert : public cmdline::Subcommand
         opts.push_back({ "type", 't', POPT_ARG_STRING, &readeropts.input_type, 0,
             "format of the input data ('bufr', 'crex', 'json', 'csv')", "type" });
         opts.push_back({ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
-            "format of the data in output ('bufr', 'crex')", "type" });
+            "format of the data in output ('bufr', 'crex', 'json')", "type" });
         opts.push_back({ "rejected", 0, POPT_ARG_STRING, &readeropts.fail_file_name, 0,
             "write unprocessed data to this file", "fname" });
         opts.push_back({ "template", 0, POPT_ARG_STRING, &op_output_template, 0,
@@ -949,7 +950,7 @@ struct Convert : public cmdline::Subcommand
                 conv.file = File::create(string_to_encoding(op_output_type), op_output_file, "w").release();
         }
 
-        conv.exporter = Exporter::create(conv.file->encoding(), opts).release();
+        conv.set_exporter(conv.file->encoding(), opts);
 
         reader.read(get_filenames(optCon), conv);
 

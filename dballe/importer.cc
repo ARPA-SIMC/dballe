@@ -1,6 +1,7 @@
 #include "importer.h"
 #include "file.h"
 #include "dballe/msg/wr_codec.h"
+#include "dballe/msg/json_codec.h"
 #include <wreport/error.h>
 #include <wreport/bulletin.h>
 
@@ -76,6 +77,8 @@ std::unique_ptr<Importer> Importer::create(Encoding type, const ImporterOptions&
             return unique_ptr<Importer>(new impl::msg::BufrImporter(opts));
         case Encoding::CREX:
             return unique_ptr<Importer>(new impl::msg::CrexImporter(opts));
+        case Encoding::JSON:
+            return unique_ptr<Importer>(new impl::msg::JsonImporter(opts));
         default:
             error_unimplemented::throwf("%s importer is not implemented yet", File::encoding_name(type));
     }

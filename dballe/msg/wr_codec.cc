@@ -15,7 +15,7 @@ namespace impl {
 namespace msg {
 
 WRImporter::WRImporter(const dballe::ImporterOptions& opts)
-    : Importer(opts) {}
+    : BulletinImporter(opts) {}
 
 BufrImporter::BufrImporter(const dballe::ImporterOptions& opts)
     : WRImporter(opts) {}
@@ -102,7 +102,7 @@ bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::fun
 
 
 WRExporter::WRExporter(const dballe::ExporterOptions& opts)
-    : Exporter(opts) {}
+    : BulletinExporter(opts) {}
 
 BufrExporter::BufrExporter(const dballe::ExporterOptions& opts)
     : WRExporter(opts) {}

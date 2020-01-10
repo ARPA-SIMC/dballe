@@ -432,11 +432,6 @@ JsonImporter::JsonImporter(const dballe::ImporterOptions& opts)
 
 JsonImporter::~JsonImporter() {}
 
-std::vector<std::shared_ptr<dballe::Message>> JsonImporter::from_bulletin(const wreport::Bulletin& msg) const
-{
-    throw wreport::error_unimplemented("Json codec cannot import from wreport bulletins");
-}
-
 bool JsonImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<dballe::Message>)> dest) const
 {
     JSONMsgReader jsonreader;
@@ -448,11 +443,6 @@ JsonExporter::JsonExporter(const dballe::ExporterOptions& opts)
     : Exporter(opts) {}
 
 JsonExporter::~JsonExporter() {}
-
-std::unique_ptr<wreport::Bulletin> JsonExporter::to_bulletin(const std::vector<std::shared_ptr<dballe::Message>>& msgs) const
-{
-    throw wreport::error_unimplemented("Json codec cannot export to wreport bulletins");
-}
 
 std::string JsonExporter::to_binary(const std::vector<std::shared_ptr<dballe::Message>>& msgs) const
 {
