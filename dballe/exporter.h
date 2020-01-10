@@ -89,11 +89,6 @@ public:
     virtual std::string to_binary(const std::vector<std::shared_ptr<Message>>& messages) const = 0;
 
     /**
-     * Export to a Bulletin
-     */
-    virtual std::unique_ptr<wreport::Bulletin> to_bulletin(const std::vector<std::shared_ptr<Message>>& msgs) const = 0;
-
-    /**
      * Create a bulletin that works with this exporter.
      *
      * @returns the bulletin, or NULL of this is an exporter for a format not
@@ -104,6 +99,17 @@ public:
 
     /// Instantiate the right importer for the given type
     static std::unique_ptr<Exporter> create(Encoding type, const ExporterOptions& opts=ExporterOptions::defaults);
+};
+
+class BulletinExporter : public Exporter
+{
+public:
+    using Exporter::Exporter;
+
+    /**
+     * Export to a Bulletin
+     */
+    virtual std::unique_ptr<wreport::Bulletin> to_bulletin(const std::vector<std::shared_ptr<Message>>& msgs) const = 0;
 };
 
 }

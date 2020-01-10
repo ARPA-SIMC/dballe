@@ -24,6 +24,7 @@ const char* File::encoding_name(Encoding enc)
     {
         case Encoding::BUFR: return "BUFR";
         case Encoding::CREX: return "CREX";
+        case Encoding::JSON: return "JSON";
         default: error_notfound::throwf("unsupported encoding value %d", static_cast<int>(enc));
     }
 }
@@ -39,6 +40,7 @@ Encoding File::parse_encoding(const std::string& s)
     std::string str = wreport::str::upper(s);
     if (str == "BUFR") return Encoding::BUFR;
     if (str == "CREX") return Encoding::CREX;
+    if (str == "JSON") return Encoding::JSON;
     error_notfound::throwf("unsupported encoding '%s'", s.c_str());
 }
 
@@ -107,6 +109,7 @@ unique_ptr<File> File::create(Encoding type, FILE* stream, bool close_on_exit, c
     {
         case Encoding::BUFR: return unique_ptr<File>(new core::BufrFile(name, stream, close_on_exit));
         case Encoding::CREX: return unique_ptr<File>(new core::CrexFile(name, stream, close_on_exit));
+        case Encoding::JSON: return unique_ptr<File>(new core::JsonFile(name, stream, close_on_exit));
         default: error_consistency::throwf("cannot handle unknown file type %d", (int)type);
     }
 }

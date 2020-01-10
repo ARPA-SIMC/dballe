@@ -14,15 +14,15 @@ namespace cmdline {
 
 struct Converter : public Action
 {
-    File* file;
-    const char* dest_rep_memo;
-    const char* dest_template;
-    bool bufr2netcdf_categories;
+    File* file = nullptr;
+    const char* dest_rep_memo = nullptr;
+    const char* dest_template = nullptr;
+    bool bufr2netcdf_categories = false;
 
-    Exporter* exporter;
-
-    Converter() : file(0), dest_rep_memo(0), dest_template(0), bufr2netcdf_categories(false), exporter(0) {}
+    Converter() {}
     ~Converter();
+
+    void set_exporter(dballe::Encoding encoding, const impl::ExporterOptions& opts);
 
     /**
      * Convert the item as configured in the Converter, and write it to the
@@ -31,6 +31,9 @@ struct Converter : public Action
     virtual bool operator()(const cmdline::Item& item);
 
 protected:
+    Exporter* exporter = nullptr;
+    const BulletinExporter* bexporter = nullptr;
+
     /**
      * Perform conversion at the encoding level only (e.g. BUFR->CREX)
      *

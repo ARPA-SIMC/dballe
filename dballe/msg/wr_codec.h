@@ -20,7 +20,7 @@ namespace dballe {
 namespace impl {
 namespace msg {
 
-class WRImporter : public Importer
+class WRImporter : public BulletinImporter
 {
 public:
     WRImporter(const dballe::ImporterOptions& opts);
@@ -71,7 +71,7 @@ namespace wr {
 class Template;
 }
 
-class WRExporter : public Exporter
+class WRExporter : public BulletinExporter
 {
 public:
     WRExporter(const dballe::ExporterOptions& opts);

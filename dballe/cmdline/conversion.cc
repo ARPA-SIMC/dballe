@@ -20,6 +20,12 @@ Converter::~Converter()
     if (exporter) delete exporter;
 }
 
+void Converter::set_exporter(dballe::Encoding encoding, const impl::ExporterOptions& opts)
+{
+    exporter = Exporter::create(encoding, opts).release();
+    bexporter = dynamic_cast<const BulletinExporter*>(exporter);
+}
+
 void Converter::process_bufrex_msg(const BinaryMessage& orig, const Bulletin& msg)
 {
     string raw;
@@ -172,9 +178,11 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
 
 void Converter::process_dba_msg_from_bulletin(const BinaryMessage& orig, const Bulletin& bulletin, const std::vector<std::shared_ptr<dballe::Message>>& msgs)
 {
+    if (!bexporter)
+        throw error_consistency("process_dba_msg_from_bulletin called with a non-bulleting exporter");
     string raw;
     try {
-        unique_ptr<Bulletin> b1 = exporter->to_bulletin(msgs);
+        unique_ptr<Bulletin> b1 = bexporter->to_bulletin(msgs);
         if (bufr2netcdf_categories)
         {
             compute_wmo_categories(*b1, bulletin, msgs);
@@ -242,7 +250,7 @@ bool Converter::operator()(const cmdline::Item& item)
             impl::Message::downcast(msg)->type = type;
     }
 
-    if (item.bulletin and dest_rep_memo == NULL)
+    if (bexporter and item.bulletin and dest_rep_memo == NULL)
         process_dba_msg_from_bulletin(*item.rmsg, *item.bulletin, *item.msgs);
     else
         process_dba_msg(*item.rmsg, *item.msgs);

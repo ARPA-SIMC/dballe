@@ -1,6 +1,7 @@
 #include "exporter.h"
 #include "file.h"
 #include "dballe/msg/wr_codec.h"
+#include "dballe/msg/json_codec.h"
 #include <wreport/error.h>
 #include <wreport/bulletin.h>
 
@@ -90,6 +91,8 @@ std::unique_ptr<Exporter> Exporter::create(Encoding type, const ExporterOptions&
             return unique_ptr<Exporter>(new impl::msg::BufrExporter(opts));
         case Encoding::CREX:
             return unique_ptr<Exporter>(new impl::msg::CrexExporter(opts));
+        case Encoding::JSON:
+            return unique_ptr<Exporter>(new impl::msg::JsonExporter(opts));
         default:
             error_unimplemented::throwf("%s exporter is not implemented yet", File::encoding_name(type));
     }
