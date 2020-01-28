@@ -85,6 +85,9 @@ make
 make install
 ```
 
+If you're familiar with .rpm and .deb packaging you'll find the packaging 
+files in the `debian` and `fedora` directories.
+
 Getting started
 ---------------
 
