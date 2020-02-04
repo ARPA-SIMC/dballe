@@ -4,7 +4,7 @@
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 8.6
+Version: 8.7
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -316,6 +316,11 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Tue Feb  4 2020 Daniele Branchini <dbranchini@arpae.it> - 8.7-1
+- Fixed the command line documentation of possible input types (#202)
+- Restructured and tested documentation (#204, #205, #206)
+- JSON is now supported for encoding/decoding wherever BUFR and CREX are (#202)
+
 * Mon Dec  9 2019 Daniele Branchini <dbranchini@arpae.it> - 8.6-1
 - Turned a segfault into a proper exception (#197)
 - Parse again '-' as missing (#200)
