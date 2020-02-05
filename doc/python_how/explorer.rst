@@ -30,3 +30,18 @@ files, and saves is back to JSON::
    # Write out
    with open("xpl.json", "wt") as fd:
        fd.write(e.to_json())
+
+
+Work with a subset of an Explorer
+=================================
+
+This an example that creates a new :class:`dballe.Explorer` with a selection of
+the data of an existing one::
+
+   e = dballe.Explorer()
+   # …fill e…
+   e.set_filter(...)
+
+   e1 = dballe.Explorer()
+   with e1.update() as updater:
+       updater.add_explorer(e)
