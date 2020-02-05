@@ -627,7 +627,7 @@ struct add_messages : public MethKwargs<add_messages<Station>, typename ImplTrai
     constexpr static const char* doc = R"(
 Add dballe.Message objects to the explorer.
 
-It takes the same messages argument of dballe.DB.import_messages
+It takes the same messages argument of :func:`dballe.DB.import_messages`.
 )";
     [[noreturn]] static void throw_typeerror()
     {
