@@ -164,21 +164,21 @@ void BaseExplorer<Station>::Update::add_json(core::json::Stream& in)
 template<typename Station> template<typename OStation>
 void BaseExplorer<Station>::Update::add_explorer(const BaseExplorer<OStation>& explorer)
 {
-    this->explorer->_global_summary->add_summary(explorer.global_summary());
+    this->explorer->_global_summary->add_summary(explorer.active_summary());
 }
 template<> template<>
 void BaseExplorer<Station>::Update::add_explorer(const BaseExplorer<Station>& explorer)
 {
     if (this->explorer == &explorer)
         wreport::error_consistency::throwf("Adding an Explorer to itself is not supported");
-    this->explorer->_global_summary->add_summary(explorer.global_summary());
+    this->explorer->_global_summary->add_summary(explorer.active_summary());
 }
 template<> template<>
 void BaseExplorer<DBStation>::Update::add_explorer(const BaseExplorer<DBStation>& explorer)
 {
     if (this->explorer == &explorer)
         wreport::error_consistency::throwf("Adding an Explorer to itself is not supported");
-    this->explorer->_global_summary->add_summary(explorer.global_summary());
+    this->explorer->_global_summary->add_summary(explorer.active_summary());
 }
 
 template<typename Station>
