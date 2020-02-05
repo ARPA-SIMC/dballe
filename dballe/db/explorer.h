@@ -53,7 +53,7 @@ public:
         /// Load the explorer contents from JSON
         void add_json(core::json::Stream& in);
 
-        /// Merge the contents of another explorer into this one
+        /// Merge the currently selected contents of another explorer into this one
         template<typename OStation>
         void add_explorer(const BaseExplorer<OStation>& explorer);
 
