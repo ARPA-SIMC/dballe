@@ -23,7 +23,7 @@
 109	Potential Vorticity Surface		10-9 K m2 kg-1 s-1
 110	Reserved
 111	Eta (NAM) Level (see note below)	1/10000
-112	116 Reserved
+112-116 Reserved
 117	Mixed Layer Depth			mm
 118-159 Reserved
 160	Depth Below Mean Sea Level			mm
