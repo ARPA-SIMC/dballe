@@ -59,6 +59,15 @@ std::string to_term(const wreport::Varcode& varcode)
     return wreport::varcode_format(varcode);
 }
 
+template<typename Station>
+Station station_from_term(const std::string& term)
+{
+    std::stringstream in(term);
+    in.get();
+    core::json::Stream json(in);
+    return json.parse<Station>();
+}
+
 Level level_from_term(const std::string& term)
 {
     std::stringstream in(term);
@@ -169,10 +178,7 @@ static summary::StationEntries<Station> FIXMEentries;
     auto end = db.allterms_end("S");
     for (auto ti = db.allterms_begin("S"); ti != end; ++ti)
     {
-        std::stringstream in(*ti);
-        in.get();
-        core::json::Stream json(in);
-        Station station = json.parse<Station>();
+        Station station = station_from_term<Station>(*ti);
         FIXMEentries.add(station, summary::VarDesc(Level(), Trange(), 0), DatetimeRange(), 0);
     }
 
@@ -187,14 +193,7 @@ static core::SortedSmallUniqueValueSet<std::string> FIXMEentries;
     FIXMEentries.clear();
     auto end = db.allterms_end("S");
     for (auto ti = db.allterms_begin("S"); ti != end; ++ti)
-    {
-        std::stringstream in(*ti);
-        in.get();
-        core::json::Stream json(in);
-        Station station = json.parse<Station>();
-        FIXMEentries.add(station.report);
-    }
-
+        FIXMEentries.add(station_from_term<Station>(*ti).report);
     return FIXMEentries;
 }
 
@@ -353,7 +352,7 @@ bool BaseSummaryXapian<Station>::iter(std::function<bool(const Station&, const s
             DatetimeRange dtrange(
                     Datetime::from_iso8601(doc.get_value(0).c_str()),
                     Datetime::from_iso8601(doc.get_value(1).c_str()));
-            int count = Xapian::sortable_unserialise(doc.get_value(2));
+            size_t count = Xapian::sortable_unserialise(doc.get_value(2));
 
             if (!dest(station, var, dtrange, count))
                 return false;
@@ -370,56 +369,94 @@ bool BaseSummaryXapian<Station>::iter_filtered(const dballe::Query& query, std::
     const core::Query& q = core::Query::downcast(query);
     DatetimeRange wanted_dtrange = q.get_datetimerange();
 
-    // Iterate stations
-    auto send = db.allterms_end("S");
-    for (auto si = db.allterms_begin("S"); si != send; ++si)
-    {
-        std::stringstream in(*si);
-        in.get();
-        core::json::Stream json(in);
-        Station station = json.parse<Station>();
+    Xapian::Query xquery("");
+    bool has_query = false;
 
-        if (!filter.matches_station(station))
+    if (filter.has_flt_station)
+    {
+        // Iterate stations to build the station term list
+        bool all_stations = true;
+        std::vector<std::string> terms;
+        auto send = db.allterms_end("S");
+        for (auto si = db.allterms_begin("S"); si != send; ++si)
+        {
+            Station station = station_from_term<Station>(*si);
+            if (filter.matches_station(station))
+                terms.push_back(*si);
+            else
+                all_stations = false;
+        }
+
+        // No stations match: we are done
+        if (terms.empty())
+            return true;
+
+        // Skip filtering if we just matched all stations
+        if (!all_stations)
+        {
+            xquery &= Xapian::Query(Xapian::Query::OP_AND, terms.begin(), terms.end());
+            has_query = true;
+        }
+    }
+
+    if (!q.level.is_missing())
+    {
+        xquery &= Xapian::Query(to_term(q.level));
+        has_query = true;
+    }
+
+    if (!q.trange.is_missing())
+    {
+        xquery &= Xapian::Query(to_term(q.trange));
+        has_query = true;
+    }
+
+    for (const auto& varcode: q.varcodes)
+    {
+        xquery &= Xapian::Query(to_term(varcode));
+        has_query = true;
+    }
+
+    if (!has_query)
+    {
+        return iter([&](const Station& station, const summary::VarDesc& var, const DatetimeRange& dtrange, size_t count) {
+            if (!wanted_dtrange.contains(dtrange))
+                return true;
+            return dest(station, var, dtrange, count);
+        });
+    }
+
+    Xapian::Enquire enq(db);
+    enq.set_query(xquery);
+
+    Xapian::MSet mset = enq.get_mset(0, db.get_doccount());
+    for (auto mi = mset.begin(); mi != mset.end(); ++mi)
+    {
+        Xapian::Document doc = mi.get_document();
+        Station station;
+        summary::VarDesc var;
+
+        for (auto ti = doc.termlist_begin(); ti != doc.termlist_end(); ++ti)
+        {
+            std::string term = *ti;
+            switch (term[0])
+            {
+                case 'S': station = station_from_term<Station>(term); break;
+                case 'L': var.level = level_from_term(term); break;
+                case 'T': var.trange = trange_from_term(term); break;
+                case 'B': var.varcode = varcode_from_term(term); break;
+            }
+        }
+
+        DatetimeRange dtrange(
+                Datetime::from_iso8601(doc.get_value(0).c_str()),
+                Datetime::from_iso8601(doc.get_value(1).c_str()));
+        if (!wanted_dtrange.contains(dtrange))
             continue;
 
-        // Iterate all documents for this station
-        auto end = db.postlist_end(*si);
-        for (auto idoc = db.postlist_begin(*si); idoc != end; ++idoc)
-        {
-            Xapian::Document doc = db.get_document(*idoc);
-            summary::VarDesc var;
-
-            for (auto ti = doc.termlist_begin(); ti != doc.termlist_end(); ++ti)
-            {
-                std::string term = *ti;
-                switch (term[0])
-                {
-                    case 'L': var.level = level_from_term(term); break;
-                    case 'T': var.trange = trange_from_term(term); break;
-                    case 'B': var.varcode = varcode_from_term(term); break;
-                }
-            }
-
-            if (!q.level.is_missing() && q.level != var.level)
-                continue;
-
-            if (!q.trange.is_missing() && q.trange != var.trange)
-                continue;
-
-            if (!q.varcodes.empty() && q.varcodes.find(var.varcode) == q.varcodes.end())
-                continue;
-
-            DatetimeRange dtrange(
-                    Datetime::from_iso8601(doc.get_value(0).c_str()),
-                    Datetime::from_iso8601(doc.get_value(1).c_str()));
-            if (!wanted_dtrange.contains(dtrange))
-                continue;
-
-            int count = Xapian::sortable_unserialise(doc.get_value(2));
-
-            if (!dest(station, var, dtrange, count))
-                return false;
-        }
+        size_t count = Xapian::sortable_unserialise(doc.get_value(2));
+        if (!dest(station, var, dtrange, count))
+            return false;
     }
 
     return true;

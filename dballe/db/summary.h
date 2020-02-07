@@ -263,10 +263,10 @@ public:
     /// Merge the copy of another summary into this one
     virtual void add_filtered(const BaseSummary<Station>& summary, const dballe::Query& query);
 
-    /// Iterate the contents of this summary
+    /// Iterate the contents of this summary. There is no guarantee on sorting order.
     virtual bool iter(std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange&, size_t)>) const = 0;
 
-    /// Iterate the contents of this summary
+    /// Iterate the contents of this summary. There is no guarantee on sorting order.
     virtual bool iter_filtered(const dballe::Query& query, std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange&, size_t)>) const = 0;
 
     /// Serialize to JSON

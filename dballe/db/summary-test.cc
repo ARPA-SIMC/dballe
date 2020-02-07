@@ -116,7 +116,6 @@ this->add_method("summary", [](Fixture& f) {
     wassert(actual(s.datetime_min()) == Datetime(1945, 4, 25, 8));
     wassert(actual(s.datetime_max()) == Datetime(1945, 4, 25, 8, 30));
     wassert(actual(s.data_count()) == 4);
-fprintf(stderr, "**********\n");
     set_query_station(query, s.stations().begin()->station);
     BACKEND s1;
     s1.add_filtered(s, query);
