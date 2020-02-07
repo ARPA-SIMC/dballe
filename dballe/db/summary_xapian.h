@@ -44,14 +44,8 @@ public:
     /// Add an entry to the summary
     void add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count) override;
 
-    /// Merge the copy of another summary into this one
-    void add_summary(const BaseSummary<dballe::Station>& summary) override;
-
-    /// Merge the copy of another summary into this one
-    void add_summary(const BaseSummary<dballe::DBStation>& summary) override;
-
-    /// Merge the copy of another summary into this one
-    void add_filtered(const BaseSummary<Station>& summary, const dballe::Query& query) override;
+    bool iter(std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange&, size_t)>) const override;
+    bool iter_filtered(const dballe::Query& query, std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange&, size_t)>) const override;
 
     /// Serialize to JSON
     void to_json(core::JSONWriter& writer) const override;

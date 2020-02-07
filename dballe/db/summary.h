@@ -127,6 +127,7 @@ struct StationEntry : protected core::SmallSet<VarEntry, VarDesc, station_entry_
     template<typename OStation>
     void add(const StationEntry<OStation>& entries);
     void add_filtered(const StationEntry& entries, const dballe::Query& query);
+    bool iter_filtered(const dballe::Query& query, std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange& dtrange, size_t count)> dest) const;
 
     void to_json(core::JSONWriter& writer) const;
     static StationEntry from_json(core::json::Stream& in);
@@ -178,6 +179,8 @@ struct StationEntries : protected core::SmallSet<StationEntry<Station>, Station,
     bool has(const Station& station) const { return this->find(station) != this->end(); }
 
     const StationEntries& sorted() const { if (this->dirty) this->rearrange_dirty(); return *this; }
+
+    bool iter_filtered(const dballe::Query& query, std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange& dtrange, size_t count)> dest) const;
 };
 
 
@@ -345,13 +348,19 @@ public:
     virtual void add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages);
 
     /// Merge the copy of another summary into this one
-    virtual void add_summary(const BaseSummary<dballe::Station>& summary) = 0;
+    virtual void add_summary(const BaseSummary<dballe::Station>& summary);
 
     /// Merge the copy of another summary into this one
-    virtual void add_summary(const BaseSummary<dballe::DBStation>& summary) = 0;
+    virtual void add_summary(const BaseSummary<dballe::DBStation>& summary);
 
     /// Merge the copy of another summary into this one
-    virtual void add_filtered(const BaseSummary<Station>& summary, const dballe::Query& query) = 0;
+    virtual void add_filtered(const BaseSummary<Station>& summary, const dballe::Query& query);
+
+    /// Iterate the contents of this summary
+    virtual bool iter(std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange&, size_t)>) const = 0;
+
+    /// Iterate the contents of this summary
+    virtual bool iter_filtered(const dballe::Query& query, std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange&, size_t)>) const = 0;
 
     /// Serialize to JSON
     virtual void to_json(core::JSONWriter& writer) const = 0;

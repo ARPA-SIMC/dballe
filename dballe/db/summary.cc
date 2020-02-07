@@ -116,6 +116,33 @@ void StationEntry<Station>::add_filtered(const StationEntry& entries, const dbal
 }
 
 template<typename Station>
+bool StationEntry<Station>::iter_filtered(const dballe::Query& query, std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange& dtrange, size_t count)> dest) const
+{
+    const core::Query& q = core::Query::downcast(query);
+
+    DatetimeRange wanted_dtrange = q.get_datetimerange();
+
+    for (const auto& entry: *this)
+    {
+        if (!q.level.is_missing() && q.level != entry.var.level)
+            continue;
+
+        if (!q.trange.is_missing() && q.trange != entry.var.trange)
+            continue;
+
+        if (!q.varcodes.empty() && q.varcodes.find(entry.var.varcode) == q.varcodes.end())
+            continue;
+
+        if (!wanted_dtrange.contains(entry.dtrange))
+            continue;
+
+        if (!dest(station, entry.var, entry.dtrange, entry.count))
+            return false;
+    }
+    return true;
+}
+
+template<typename Station>
 void StationEntry<Station>::to_json(core::JSONWriter& writer) const
 {
     writer.start_mapping();
@@ -186,12 +213,25 @@ void StationEntries<Station>::add(const StationEntry<Station>& entry)
 
 
 namespace {
-Station convert_station(const DBStation& station)
+
+template<typename S1, typename S2>
+S1 convert_station(const S2& s)
+{
+    throw wreport::error_unimplemented("unsupported station conversion");
+}
+
+template<> Station convert_station<Station, Station>(const Station& s) { return s; }
+template<> DBStation convert_station<DBStation, DBStation>(const DBStation& s) { return s; }
+
+template<>
+Station convert_station<Station, DBStation>(const DBStation& station)
 {
     Station res(station);
     return res;
 }
-DBStation convert_station(const Station& station)
+
+template<>
+DBStation convert_station<DBStation, Station>(const Station& station)
 {
     DBStation res;
     res.report = station.report;
@@ -199,6 +239,7 @@ DBStation convert_station(const Station& station)
     res.ident = station.ident;
     return res;
 }
+
 }
 
 template<typename Station> template<typename OStation>
@@ -206,7 +247,7 @@ void StationEntries<Station>::add(const StationEntries<OStation>& entries)
 {
     for (const auto& entry: entries)
     {
-        Station station = convert_station(entry.station);
+        Station station = convert_station<Station, OStation>(entry.station);
         iterator cur = this->find(station);
         if (cur != end())
             cur->add(entry);
@@ -311,6 +352,29 @@ void StationEntries<Station>::add_filtered(const StationEntries& entries, const 
         for (auto entry: entries)
             Parent::add(StationEntry<Station>(entry, query));
     }
+}
+
+template<typename Station>
+bool StationEntries<Station>::iter_filtered(const dballe::Query& query, std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange& dtrange, size_t count)> dest) const
+{
+    StationFilter<Station> filter(query);
+
+    if (filter.has_flt_station)
+    {
+        for (auto entry: *this)
+        {
+            if (!filter.matches_station(entry.station))
+                continue;
+
+            if (!entry.iter_filtered(query, dest))
+                return false;
+        }
+    } else {
+        for (auto entry: *this)
+            if (!entry.iter_filtered(query, dest))
+                return false;
+    }
+    return true;
 }
 
 
@@ -429,6 +493,34 @@ void BaseSummary<Station>::add_messages(const std::vector<std::shared_ptr<dballe
     for (const auto& message: messages)
         add_message(*message);
 }
+
+template<typename Station>
+void BaseSummary<Station>::add_filtered(const BaseSummary<Station>& summary, const dballe::Query& query)
+{
+    summary.iter_filtered(query, [&](const Station& station, const summary::VarDesc& var, const DatetimeRange& dtrange, size_t count) {
+        add(station, var, dtrange, count);
+        return true;
+    });
+}
+
+template<typename Station>
+void BaseSummary<Station>::add_summary(const BaseSummary<dballe::Station>& summary)
+{
+    summary.iter([&](const dballe::Station& station, const summary::VarDesc& var, const DatetimeRange& dtrange, size_t count) {
+        add(summary::convert_station<Station, dballe::Station>(station), var, dtrange, count);
+        return true;
+    });
+}
+
+template<typename Station>
+void BaseSummary<Station>::add_summary(const BaseSummary<dballe::DBStation>& summary)
+{
+    summary.iter([&](const dballe::DBStation& station, const summary::VarDesc& var, const DatetimeRange& dtrange, size_t count) {
+        add(summary::convert_station<Station, dballe::DBStation>(station), var, dtrange, count);
+        return true;
+    });
+}
+
 
 template class BaseSummary<dballe::Station>;
 template class BaseSummary<dballe::DBStation>;

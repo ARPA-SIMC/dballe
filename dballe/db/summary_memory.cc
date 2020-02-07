@@ -27,6 +27,22 @@ std::unique_ptr<dballe::CursorSummary> BaseSummaryMemory<Station>::query_summary
 }
 
 template<typename Station>
+bool BaseSummaryMemory<Station>::iter(std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange& dtrange, size_t count)> dest) const
+{
+    for (const auto& se: entries)
+        for (const auto& ve: se)
+            if (!dest(se.station, ve.var, ve.dtrange, ve.count))
+                return false;
+    return true;
+}
+
+template<typename Station>
+bool BaseSummaryMemory<Station>::iter_filtered(const dballe::Query& query, std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange& dtrange, size_t count)> dest) const
+{
+    return entries.iter_filtered(query, dest);
+}
+
+template<typename Station>
 void BaseSummaryMemory<Station>::recompute_summaries() const
 {
     bool first = true;
@@ -72,22 +88,32 @@ void BaseSummaryMemory<Station>::add_filtered(const BaseSummary<Station>& summar
         entries.add_filtered(s->entries, query);
         dirty = true;
     } else {
-        throw wreport::error_unimplemented("add_filtered from a different summary type");
+        BaseSummary<Station>::add_filtered(summary, query);
     }
 }
 
 template<typename Station>
 void BaseSummaryMemory<Station>::add_summary(const BaseSummary<dballe::Station>& summary)
 {
-    entries.add(summary.stations());
-    dirty = true;
+    if (const BaseSummaryMemory<dballe::Station>* s = dynamic_cast<const BaseSummaryMemory<dballe::Station>*>(&summary))
+    {
+        entries.add(s->_entries());
+        dirty = true;
+    } else {
+        BaseSummary<Station>::add_summary(summary);
+    }
 }
 
 template<typename Station>
 void BaseSummaryMemory<Station>::add_summary(const BaseSummary<dballe::DBStation>& summary)
 {
-    entries.add(summary.stations());
-    dirty = true;
+    if (const BaseSummaryMemory<DBStation>* s = dynamic_cast<const BaseSummaryMemory<dballe::DBStation>*>(&summary))
+    {
+        entries.add(s->_entries());
+        dirty = true;
+    } else {
+        BaseSummary<Station>::add_summary(summary);
+    }
 }
 
 template<typename Station>

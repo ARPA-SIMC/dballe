@@ -31,6 +31,8 @@ protected:
 public:
     BaseSummaryMemory();
 
+    const summary::StationEntries<Station>& _entries() const { if (dirty) recompute_summaries(); return entries.sorted(); }
+
     // bool operator==(const BaseSummary<Station>& o) const
     // {
     //     return entries == o.entries;
@@ -57,6 +59,9 @@ public:
      *   same as DB::query_summary.
      */
     std::unique_ptr<dballe::CursorSummary> query_summary(const Query& query) const override;
+
+    bool iter(std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange&, size_t)>) const override;
+    bool iter_filtered(const dballe::Query& query, std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange&, size_t)>) const override;
 
     /// Add an entry to the summary
     void add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count) override;
