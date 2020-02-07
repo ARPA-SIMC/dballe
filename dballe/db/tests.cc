@@ -4,6 +4,7 @@
 #include "v7/driver.h"
 #include "dballe/sql/sql.h"
 #include "dballe/sql/sqlite.h"
+#include "dballe/db/summary_memory.h"
 #include <wreport/error.h>
 #include <algorithm>
 #include <unistd.h>
@@ -123,7 +124,7 @@ void ActualDB<DB>::try_summary_query(const std::string& query, unsigned expected
     if (cur->remaining() != 0)
         wassert(actual(cur->remaining()) == expected);
 
-    db::DBSummary summary;
+    db::DBSummaryMemory summary;
     unsigned found = 0;
     while (cur->next())
     {

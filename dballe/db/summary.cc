@@ -346,6 +346,12 @@ Cursor<Station>::Cursor(const summary::StationEntries<Station>& entries, const Q
     }
 }
 
+template class StationEntry<dballe::Station>;
+template class StationEntry<dballe::DBStation>;
+template class StationEntries<dballe::Station>;
+template void StationEntries<dballe::Station>::add(const StationEntries<dballe::DBStation>&);
+template class StationEntries<dballe::DBStation>;
+template void StationEntries<dballe::DBStation>::add(const StationEntries<dballe::Station>&);
 template class Cursor<dballe::Station>;
 template class Cursor<dballe::DBStation>;
 
@@ -358,217 +364,12 @@ BaseSummary<Station>::BaseSummary()
 }
 
 template<typename Station>
-std::unique_ptr<dballe::CursorSummary> BaseSummary<Station>::query_summary(const Query& query) const
+BaseSummary<Station>::~BaseSummary()
 {
-    return std::unique_ptr<dballe::CursorSummary>(new summary::Cursor<Station>(entries, query));
-}
-
-template<typename Station>
-void BaseSummary<Station>::recompute_summaries() const
-{
-    bool first = true;
-    for (const auto& station_entry: entries)
-    {
-        m_reports.add(station_entry.station.report);
-        for (const auto& var_entry: station_entry)
-        {
-            m_levels.add(var_entry.var.level);
-            m_tranges.add(var_entry.var.trange);
-            m_varcodes.add(var_entry.var.varcode);
-            if (first)
-            {
-                first = false;
-                dtrange = var_entry.dtrange;
-                count = var_entry.count;
-            } else {
-                dtrange.merge(var_entry.dtrange);
-                count += var_entry.count;
-            }
-        }
-    }
-    if (first)
-    {
-        dtrange = DatetimeRange();
-        count = 0;
-    }
-    dirty = false;
-}
-
-template<typename Station>
-void BaseSummary<Station>::add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count)
-{
-    entries.add(station, vd, dtrange, count);
-    dirty = true;
-}
-
-template<typename Station>
-void BaseSummary<Station>::add_cursor(const dballe::CursorSummary& cur)
-{
-    add(cur.get_station(), summary::VarDesc(cur.get_level(), cur.get_trange(), cur.get_varcode()), cur.get_datetimerange(), cur.get_count());
-}
-
-template<typename Station>
-void BaseSummary<Station>::add_message(const dballe::Message& message)
-{
-    const impl::Message& msg = impl::Message::downcast(message);
-
-    Station station;
-
-    // Coordinates
-    station.coords = msg.get_coords();
-    if (station.coords.is_missing())
-        throw wreport::error_notfound("coordinates not found in message to summarise");
-
-    // Report code
-    station.report = msg.get_report();
-
-    // Station identifier
-    station.ident = msg.get_ident();
-
-    // Datetime
-    Datetime dt = msg.get_datetime();
-    DatetimeRange dtrange(dt, dt);
-
-    // TODO: obtain the StationEntry only once, and add the rest to it, to
-    // avoid looking it up for each variable
-
-    // Station variables
-    summary::VarDesc vd_ana;
-    vd_ana.level = Level();
-    vd_ana.trange = Trange();
-    for (const auto& val: msg.station_data)
-    {
-        vd_ana.varcode = val->code();
-        add(station, vd_ana, dtrange, 1);
-    }
-
-    // Variables
-    for (const auto& ctx: msg.data)
-    {
-        summary::VarDesc vd(ctx.level, ctx.trange, 0);
-
-        for (const auto& val: ctx.values)
-        {
-            if (not val->isset()) continue;
-            vd.varcode = val->code();
-            add(station, vd, dtrange, 1);
-        }
-    }
-}
-
-template<typename Station>
-void BaseSummary<Station>::add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages)
-{
-    for (const auto& message: messages)
-        add_message(*message);
-}
-
-template<typename Station>
-void BaseSummary<Station>::add_filtered(const BaseSummary<Station>& summary, const dballe::Query& query)
-{
-    entries.add_filtered(summary.entries, query);
-    dirty = true;
-}
-
-template<typename Station> template<typename OStation>
-void BaseSummary<Station>::add_summary(const BaseSummary<OStation>& summary)
-{
-    entries.add(summary.stations());
-    dirty = true;
-}
-
-#if 0
-void Summary::merge_entries()
-{
-    if (entries.size() < 2) return;
-
-    std::sort(entries.begin(), entries.end());
-
-    auto first = entries.begin();
-    auto last = entries.end();
-    auto tail = first;
-    while (++first != last) {
-        if (tail->same_metadata(*first))
-            tail->merge(*first);
-        else if (++tail != first)
-            *tail = std::move(*first);
-    }
-
-    ++tail;
-
-    if (tail != last)
-        entries.erase(tail, last);
-}
-#endif
-
-template<typename Station>
-void BaseSummary<Station>::to_json(core::JSONWriter& writer) const
-{
-    writer.start_mapping();
-    writer.add("e");
-    writer.start_list();
-    for (const auto& e: entries)
-        e.to_json(writer);
-    writer.end_list();
-    writer.end_mapping();
-}
-
-template<typename Station>
-void BaseSummary<Station>::load_json(core::json::Stream& in)
-{
-    in.parse_object([&](const std::string& key) {
-        if (key == "e")
-            in.parse_array([&]{
-                entries.add(summary::StationEntry<Station>::from_json(in));
-            });
-        else
-            throw core::JSONParseException("unsupported key \"" + key + "\" for summary::Entry");
-    });
-    dirty = true;
-}
-
-template<typename Station>
-void BaseSummary<Station>::dump(FILE* out) const
-{
-    fprintf(out, "Summary:\n");
-    fprintf(out, "Stations:\n");
-    for (const auto& entry: entries)
-        entry.dump(out);
-    fprintf(out, "Reports:\n");
-    for (const auto& val: m_reports)
-        fprintf(out, " - %s\n", val.c_str());
-    fprintf(out, "Levels:\n");
-    for (const auto& val: m_levels)
-    {
-        fprintf(out, " - ");
-        val.print(out);
-    }
-    fprintf(out, "Tranges:\n");
-    for (const auto& val: m_tranges)
-    {
-        fprintf(out, " - ");
-        val.print(out);
-    }
-    fprintf(out, "Varcodes:\n");
-    for (const auto& val: m_varcodes)
-    {
-        char buf[7];
-        format_code(val, buf);
-        fprintf(out, " - %s\n", buf);
-    }
-    fprintf(out, "Datetime range: ");
-    dtrange.min.print_iso8601(out, 'T', " to ");
-    dtrange.max.print_iso8601(out);
-    fprintf(out, "Count: %zd\n", count);
-    fprintf(out, "Dirty: %s\n", dirty ? "true" : "false");
 }
 
 template class BaseSummary<dballe::Station>;
-template void BaseSummary<dballe::Station>::add_summary(const BaseSummary<dballe::Station>&);
-template void BaseSummary<dballe::Station>::add_summary(const BaseSummary<dballe::DBStation>&);
 template class BaseSummary<dballe::DBStation>;
-template void BaseSummary<dballe::DBStation>::add_summary(const BaseSummary<dballe::Station>&);
-template void BaseSummary<dballe::DBStation>::add_summary(const BaseSummary<dballe::DBStation>&);
 
 }
 }

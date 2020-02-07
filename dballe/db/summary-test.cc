@@ -2,6 +2,7 @@
 #include "dballe/db/tests.h"
 #include "dballe/db/v7/db.h"
 #include "dballe/db/v7/transaction.h"
+#include "dballe/db/summary_memory.h"
 #include "summary.h"
 #include "config.h"
 
@@ -36,8 +37,8 @@ Tests<V7DB, DBStation> tg6("db_summary_v7_mysql_dbsummary", "MYSQL");
 void station_id_isset(const Station& station) {}
 void station_id_isset(const DBStation& station) { wassert(actual(station.id) != MISSING_INT); }
 
-std::unique_ptr<Summary> other_summary(const BaseSummary<DBStation>&) { return std::unique_ptr<Summary>(new Summary); }
-std::unique_ptr<DBSummary> other_summary(const BaseSummary<Station>&) { return std::unique_ptr<DBSummary>(new DBSummary); }
+std::unique_ptr<Summary> other_summary(const BaseSummary<DBStation>&) { return std::unique_ptr<Summary>(new SummaryMemory); }
+std::unique_ptr<DBSummary> other_summary(const BaseSummary<Station>&) { return std::unique_ptr<DBSummary>(new DBSummaryMemory); }
 Station other_station(const DBStation& station)
 {
     Station res(station);
@@ -73,7 +74,7 @@ this->add_method("summary", [](Fixture& f) {
     OldDballeTestDataSet test_data;
     wassert(f.populate(test_data));
 
-    BaseSummary<STATION> s;
+    BaseSummaryMemory<STATION> s;
     wassert_true(s.datetime_min().is_missing());
     wassert_true(s.datetime_max().is_missing());
     wassert(actual(s.data_count()) == 0u);
@@ -96,12 +97,12 @@ this->add_method("summary", [](Fixture& f) {
     wassert(actual(s.data_count()) == 4);
 
     set_query_station(query, s.stations().begin()->station);
-    BaseSummary<STATION> s1;
+    BaseSummaryMemory<STATION> s1;
     s1.add_filtered(s, query);
     wassert(actual(s1.stations().size()) == 1);
     // wassert(actual(s1.stations().begin()->station.id) == query.ana_id);
 
-    BaseSummary<STATION> s2;
+    BaseSummaryMemory<STATION> s2;
     cur = s.query_summary(query);
     while (cur->next())
         s2.add_cursor(*cur);
@@ -109,7 +110,7 @@ this->add_method("summary", [](Fixture& f) {
 });
 
 this->add_method("summary_msg", [](Fixture& f) {
-    BaseSummary<STATION> s;
+    BaseSummaryMemory<STATION> s;
 
     // Summarise a message
     impl::Messages msgs = dballe::tests::read_msgs("bufr/synop-rad1.bufr", Encoding::BUFR, "accurate");
@@ -132,7 +133,7 @@ this->add_method("merge_entries", [](Fixture& f) {
     summary::VarDesc vd(Level(1), Trange::instant(), WR_VAR(0, 1, 112));
     DatetimeRange dtrange(Datetime(2018, 1, 1), Datetime(2018, 7, 1));
 
-    BaseSummary<STATION> summary;
+    BaseSummaryMemory<STATION> summary;
     wassert(actual(summary.data_count()) == 0u);
 
     summary.add(station, vd, dtrange, 12u);
@@ -155,7 +156,7 @@ this->add_method("merge_entries", [](Fixture& f) {
 });
 
 this->add_method("merge_summaries", [](Fixture& f) {
-    BaseSummary<STATION> summary;
+    BaseSummaryMemory<STATION> summary;
 
     STATION station;
     station.report = "test";
@@ -165,7 +166,7 @@ this->add_method("merge_summaries", [](Fixture& f) {
 
     summary.add(station, vd, dtrange, 12u);
 
-    BaseSummary<STATION> summary1;
+    BaseSummaryMemory<STATION> summary1;
     summary1.add(station, vd, dtrange, 3u);
 
     auto summary2 = other_summary(summary);
@@ -186,7 +187,7 @@ this->add_method("json_summary", [](Fixture& f) {
 
     core::Query query;
     query.report = "synop";
-    BaseSummary<STATION> summary;
+    BaseSummaryMemory<STATION> summary;
     summary.add(station, vd, dtrange, 12);
     vd.varcode = WR_VAR(0, 1, 113);
     summary.add(station, vd, dtrange, 12);
@@ -199,9 +200,9 @@ this->add_method("json_summary", [](Fixture& f) {
 
     json.seekg(0);
     core::json::Stream in(json);
-    BaseSummary<STATION> summary1;
+    BaseSummaryMemory<STATION> summary1;
     wassert(summary1.load_json(in));
-    wassert_true(summary == summary1);
+    wassert_true(summary.stations() == summary1.stations());
     wassert(actual(summary.stations().size()) == summary1.stations().size());
     wassert_true(summary.stations() == summary1.stations());
     wassert_true(summary.reports() == summary1.reports());

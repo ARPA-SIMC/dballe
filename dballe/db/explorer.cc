@@ -1,5 +1,6 @@
 #define _DBALLE_LIBRARY_CODE
 #include "explorer.h"
+#include "summary_memory.h"
 #include "dballe/core/query.h"
 #include "dballe/core/json.h"
 #include <cstring>
@@ -65,7 +66,7 @@ template<typename Station>
 typename BaseExplorer<Station>::Update BaseExplorer<Station>::rebuild()
 {
     delete _global_summary;
-    _global_summary = new db::BaseSummary<Station>;
+    _global_summary = new db::BaseSummaryMemory<Station>;
     delete _active_summary;
     _active_summary = nullptr;
     return Update(this);
@@ -75,7 +76,7 @@ template<typename Station>
 typename BaseExplorer<Station>::Update BaseExplorer<Station>::update()
 {
     if (!_global_summary)
-        _global_summary = new db::BaseSummary<Station>;
+        _global_summary = new db::BaseSummaryMemory<Station>;
     delete _active_summary;
     _active_summary = nullptr;
     return Update(this);
@@ -84,7 +85,7 @@ typename BaseExplorer<Station>::Update BaseExplorer<Station>::update()
 template<typename Station>
 void BaseExplorer<Station>::update_active_summary()
 {
-    unique_ptr<db::BaseSummary<Station>> new_active_summary(new db::BaseSummary<Station>);
+    unique_ptr<db::BaseSummary<Station>> new_active_summary(new db::BaseSummaryMemory<Station>);
     new_active_summary->add_filtered(*_global_summary, filter);
     _active_summary = new_active_summary.release();
 }

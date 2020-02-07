@@ -271,6 +271,14 @@ struct Cursor : public impl::CursorSummary
     void enq(impl::Enq& enq) const;
 };
 
+extern template class StationEntry<dballe::Station>;
+extern template class StationEntry<dballe::DBStation>;
+
+extern template class StationEntries<dballe::Station>;
+extern template void StationEntries<dballe::Station>::add(const StationEntries<dballe::DBStation>&);
+
+extern template class StationEntries<dballe::DBStation>;
+extern template void StationEntries<dballe::DBStation>::add(const StationEntries<dballe::Station>&);
 
 extern template class Cursor<dballe::Station>;
 extern template class Cursor<dballe::DBStation>;
@@ -284,38 +292,21 @@ extern template class Cursor<dballe::DBStation>;
 template<typename Station>
 class BaseSummary
 {
-protected:
-    // Summary of items for the currently active filter
-    summary::StationEntries<Station> entries;
-
-    mutable core::SortedSmallUniqueValueSet<std::string> m_reports;
-    mutable core::SortedSmallUniqueValueSet<dballe::Level> m_levels;
-    mutable core::SortedSmallUniqueValueSet<dballe::Trange> m_tranges;
-    mutable core::SortedSmallUniqueValueSet<wreport::Varcode> m_varcodes;
-    mutable dballe::DatetimeRange dtrange;
-    mutable size_t count = 0;
-
-    mutable bool dirty = false;
-
-    void recompute_summaries() const;
-
 public:
     BaseSummary();
     BaseSummary(const BaseSummary&) = delete;
     BaseSummary(BaseSummary&&) = delete;
     BaseSummary& operator=(const BaseSummary&) = delete;
     BaseSummary& operator=(BaseSummary&&) = delete;
+    virtual ~BaseSummary();
 
-    bool operator==(const BaseSummary& o) const
-    {
-        return entries == o.entries;
-    }
+    // virtual bool operator==(const BaseSummary<Station>& o) const = 0;
 
-    const summary::StationEntries<Station>& stations() const { if (dirty) recompute_summaries(); return entries.sorted(); }
-    const core::SortedSmallUniqueValueSet<std::string>& reports() const { if (dirty) recompute_summaries(); return m_reports; }
-    const core::SortedSmallUniqueValueSet<dballe::Level>& levels() const { if (dirty) recompute_summaries(); return m_levels; }
-    const core::SortedSmallUniqueValueSet<dballe::Trange>& tranges() const { if (dirty) recompute_summaries(); return m_tranges; }
-    const core::SortedSmallUniqueValueSet<wreport::Varcode>& varcodes() const { if (dirty) recompute_summaries(); return m_varcodes; }
+    virtual const summary::StationEntries<Station>& stations() const = 0;
+    virtual const core::SortedSmallUniqueValueSet<std::string>& reports() const = 0;
+    virtual const core::SortedSmallUniqueValueSet<dballe::Level>& levels() const = 0;
+    virtual const core::SortedSmallUniqueValueSet<dballe::Trange>& tranges() const = 0;
+    virtual const core::SortedSmallUniqueValueSet<wreport::Varcode>& varcodes() const = 0;
 
     /**
      * Recompute reports, levels, tranges, and varcodes.
@@ -323,9 +314,9 @@ public:
      * Call this after performing changes to the summary, to make those sets
      * valid before reading them.
      */
-    const Datetime& datetime_min() const { if (dirty) recompute_summaries(); return dtrange.min; }
-    const Datetime& datetime_max() const { if (dirty) recompute_summaries(); return dtrange.max; }
-    unsigned data_count() const { if (dirty) recompute_summaries(); return count; }
+    virtual const Datetime& datetime_min() const = 0;
+    virtual const Datetime& datetime_max() const = 0;
+    virtual unsigned data_count() const = 0;
 
     /**
      * Query the contents of the summary
@@ -337,45 +328,38 @@ public:
      *   The cursor to use to iterate over the results. The results are the
      *   same as DB::query_summary.
      */
-    std::unique_ptr<dballe::CursorSummary> query_summary(const Query& query) const;
+    virtual std::unique_ptr<dballe::CursorSummary> query_summary(const Query& query) const = 0;
 
     /// Add an entry to the summary
-    void add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count);
+    virtual void add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count) = 0;
 
     /// Add an entry to the summary taken from the current status of \a cur
-    void add_cursor(const dballe::CursorSummary& cur);
+    virtual void add_cursor(const dballe::CursorSummary& cur) = 0;
 
     /// Add the contents of a Message
-    void add_message(const dballe::Message& message);
+    virtual void add_message(const dballe::Message& message) = 0;
 
     /// Add the contents of a Messages
-    void add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages);
+    virtual void add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages) = 0;
 
     /// Merge the copy of another summary into this one
-    template<typename OSummary>
-    void add_summary(const BaseSummary<OSummary>& summary);
+    virtual void add_summary(const BaseSummary<dballe::Station>& summary) = 0;
 
     /// Merge the copy of another summary into this one
-    void add_filtered(const BaseSummary& summary, const dballe::Query& query);
+    virtual void add_summary(const BaseSummary<dballe::DBStation>& summary) = 0;
 
-#if 0
-    /**
-     * Merge entries with duplicate metadata
-     *
-     * Call this function if you call add_entry with entries that may already
-     * exist in the summary
-     */
-    void merge_entries();
-#endif
+    /// Merge the copy of another summary into this one
+    virtual void add_filtered(const BaseSummary<Station>& summary, const dballe::Query& query) = 0;
 
     /// Serialize to JSON
-    void to_json(core::JSONWriter& writer) const;
+    virtual void to_json(core::JSONWriter& writer) const = 0;
 
     /// Load contents from JSON, merging with the current contents
-    void load_json(core::json::Stream& in);
+    virtual void load_json(core::json::Stream& in) = 0;
 
-    DBALLE_TEST_ONLY void dump(FILE* out) const;
+    DBALLE_TEST_ONLY virtual void dump(FILE* out) const = 0;
 };
+
 
 /**
  * Summary without database station IDs
@@ -388,11 +372,7 @@ typedef BaseSummary<dballe::Station> Summary;
 typedef BaseSummary<dballe::DBStation> DBSummary;
 
 extern template class BaseSummary<dballe::Station>;
-extern template void BaseSummary<dballe::Station>::add_summary(const BaseSummary<dballe::Station>&);
-extern template void BaseSummary<dballe::Station>::add_summary(const BaseSummary<dballe::DBStation>&);
 extern template class BaseSummary<dballe::DBStation>;
-extern template void BaseSummary<dballe::DBStation>::add_summary(const BaseSummary<dballe::Station>&);
-extern template void BaseSummary<dballe::DBStation>::add_summary(const BaseSummary<dballe::DBStation>&);
 
 }
 }
