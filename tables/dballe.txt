@@ -271,6 +271,7 @@
  015239 Concentration of anthropogenic aerosol in PM2.5                  KG/M**3                   10            0  20 KG/M**3                  10          6
  015240 Concentration of biogenic aerosol in PM2.5                       KG/M**3                   10            0  20 KG/M**3                  10          6
  015241 Aerosol Optical Thickness                                        NUMERIC                    4            0  15 NUMERIC                   4          5
+ 015242 CO2 Concentration                                                KG/M**3                    6            0  16 KG/M**3                   6          5
  020001 HORIZONTAL VISIBILITY                                            M                         -1            0  13 M                        -1          4
  020003 PRESENT WEATHER (SEE NOTE 1)                                     CODE TABLE 20003           0            0   9 CODE TABLE 20003          0          3
  020004 PAST WEATHER (1) (SEE NOTE 2)                                    CODE TABLE 20004           0            0   5 CODE TABLE 20004          0          2
@@ -556,12 +557,12 @@
  048205 Conta Vitacee                                                    NUMERIC                    0            0  20 NUMERIC                   0          7
  048206 Conta Corilacee_Carpino                                          NUMERIC                    0            0  20 NUMERIC                   0          7
  048207 Conta Corilacee_Ostria                                           NUMERIC                    0            0  20 NUMERIC                   0          7
- 049192 Number of particles with diameter <= 0.3 um                      NUMERIC                   -1            0  16 NUMERIC                  -1          5
- 049193 Number of particles with diameter > 0.3 <= 0.5 um                NUMERIC                   -1            0  16 NUMERIC                  -1          5
- 049194 Number of particles with diameter > 0.5 <= 1.0 um                NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049192 Number of particles with diameter <= 0.3 um                      NUMERIC                   -3            0  16 NUMERIC                  -1          5
+ 049193 Number of particles with diameter > 0.3 <= 0.5 um                NUMERIC                   -3            0  16 NUMERIC                  -1          5
+ 049194 Number of particles with diameter > 0.5 <= 1.0 um                NUMERIC                   -2            0  16 NUMERIC                  -1          5
  049195 Number of particles with diameter > 1.0 <= 2.5 um                NUMERIC                   -1            0  16 NUMERIC                  -1          5
- 049196 Number of particles with diameter > 2.5 <= 5.0 um                NUMERIC                   -1            0  16 NUMERIC                  -1          5
- 049197 Number of particles with diameter > 5.0 <= 10.0 um               NUMERIC                   -1            0  16 NUMERIC                  -1          5
+ 049196 Number of particles with diameter > 2.5 <= 5.0 um                NUMERIC                    0            0  16 NUMERIC                  -1          5
+ 049197 Number of particles with diameter > 5.0 <= 10.0 um               NUMERIC                    0            0  16 NUMERIC                  -1          5
  049198 Density of particles with diameter > 0.35 <= 0.46 um             NUMERIC/M**3              -5            0  16 NUMERIC/M**3             -5          5
  049199 Density of particles with diameter > 0.46 <= 0.66 um             NUMERIC/M**3              -5            0  16 NUMERIC/M**3             -5          5
  049200 Density of particles with diameter > 0.66 <= 1.0 um              NUMERIC/M**3              -4            0  16 NUMERIC/M**3             -4          5
