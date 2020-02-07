@@ -120,13 +120,6 @@ void BaseSummaryMemory<Station>::add_message(const dballe::Message& message)
 }
 
 template<typename Station>
-void BaseSummaryMemory<Station>::add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages)
-{
-    for (const auto& message: messages)
-        add_message(*message);
-}
-
-template<typename Station>
 void BaseSummaryMemory<Station>::add_filtered(const BaseSummary<Station>& summary, const dballe::Query& query)
 {
     if (const BaseSummaryMemory<Station>* s = dynamic_cast<const BaseSummaryMemory<Station>*>(&summary))
@@ -215,11 +208,7 @@ void BaseSummaryMemory<Station>::dump(FILE* out) const
 }
 
 template class BaseSummaryMemory<dballe::Station>;
-// template void BaseSummaryMemory<dballe::Station>::add_summary(const BaseSummary<dballe::Station>&);
-// template void BaseSummaryMemory<dballe::Station>::add_summary(const BaseSummary<dballe::DBStation>&);
 template class BaseSummaryMemory<dballe::DBStation>;
-// template void BaseSummaryMemory<dballe::DBStation>::add_summary(const BaseSummary<dballe::Station>&);
-// template void BaseSummaryMemory<dballe::DBStation>::add_summary(const BaseSummary<dballe::DBStation>&);
 
 }
 }

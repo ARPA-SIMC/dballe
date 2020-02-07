@@ -42,12 +42,6 @@ public:
     const core::SortedSmallUniqueValueSet<dballe::Trange>& tranges() const override { if (dirty) recompute_summaries(); return m_tranges; }
     const core::SortedSmallUniqueValueSet<wreport::Varcode>& varcodes() const override { if (dirty) recompute_summaries(); return m_varcodes; }
 
-    /**
-     * Recompute reports, levels, tranges, and varcodes.
-     *
-     * Call this after performing changes to the summary, to make those sets
-     * valid before reading them.
-     */
     const Datetime& datetime_min() const override { if (dirty) recompute_summaries(); return dtrange.min; }
     const Datetime& datetime_max() const override { if (dirty) recompute_summaries(); return dtrange.max; }
     unsigned data_count() const override { if (dirty) recompute_summaries(); return count; }
@@ -72,9 +66,6 @@ public:
 
     /// Add the contents of a Message
     void add_message(const dballe::Message& message) override;
-
-    /// Add the contents of a Messages
-    void add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages) override;
 
     /// Merge the copy of another summary into this one
     void add_summary(const BaseSummary<dballe::Station>& summary) override;
@@ -105,11 +96,7 @@ typedef BaseSummaryMemory<dballe::Station> SummaryMemory;
 typedef BaseSummaryMemory<dballe::DBStation> DBSummaryMemory;
 
 extern template class BaseSummaryMemory<dballe::Station>;
-// extern template void BaseSummary<dballe::Station>::add_summary(const BaseSummary<dballe::Station>&);
-// extern template void BaseSummary<dballe::Station>::add_summary(const BaseSummary<dballe::DBStation>&);
 extern template class BaseSummaryMemory<dballe::DBStation>;
-// extern template void BaseSummary<dballe::DBStation>::add_summary(const BaseSummary<dballe::Station>&);
-// extern template void BaseSummary<dballe::DBStation>::add_summary(const BaseSummary<dballe::DBStation>&);
 
 }
 }

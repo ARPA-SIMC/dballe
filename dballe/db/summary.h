@@ -293,6 +293,8 @@ template<typename Station>
 class BaseSummary
 {
 public:
+    typedef Station station_type;
+
     BaseSummary();
     BaseSummary(const BaseSummary&) = delete;
     BaseSummary(BaseSummary&&) = delete;
@@ -340,7 +342,7 @@ public:
     virtual void add_message(const dballe::Message& message) = 0;
 
     /// Add the contents of a Messages
-    virtual void add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages) = 0;
+    virtual void add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages);
 
     /// Merge the copy of another summary into this one
     virtual void add_summary(const BaseSummary<dballe::Station>& summary) = 0;

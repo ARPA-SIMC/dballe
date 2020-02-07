@@ -5,6 +5,9 @@
 #include "dballe/db/summary_memory.h"
 #include "summary.h"
 #include "config.h"
+#ifdef HAVE_XAPIAN
+#include "dballe/db/summary_xapian.h"
+#endif
 
 using namespace dballe;
 using namespace dballe::db;
@@ -14,7 +17,7 @@ using namespace std;
 
 namespace {
 
-template<typename DB, typename STATION>
+template<typename DB, typename BACKEND>
 class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
 {
     typedef EmptyTransactionFixture<DB> Fixture;
@@ -23,22 +26,40 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
     void register_tests() override;
 };
 
-Tests<V7DB, Station> tg1("db_summary_v7_sqlite_summary", "SQLITE");
-Tests<V7DB, DBStation> tg2("db_summary_v7_sqlite_dbsummary", "SQLITE");
+Tests<V7DB, SummaryMemory> tg1("db_summary_memory_v7_sqlite_summary", "SQLITE");
+Tests<V7DB, DBSummaryMemory> tg2("db_summary_memory_v7_sqlite_dbsummary", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests<V7DB, Station> tg3("db_summary_v7_postgresql_summary", "POSTGRESQL");
-Tests<V7DB, DBStation> tg4("db_summary_v7_postgresql_dbsummary", "POSTGRESQL");
+Tests<V7DB, SummaryMemory> tg3("db_summary_memory_v7_postgresql_summary", "POSTGRESQL");
+Tests<V7DB, DBSummaryMemory> tg4("db_summary_memory_v7_postgresql_dbsummary", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests<V7DB, Station> tg5("db_summary_v7_mysql_summary", "MYSQL");
-Tests<V7DB, DBStation> tg6("db_summary_v7_mysql_dbsummary", "MYSQL");
+Tests<V7DB, SummaryMemory> tg5("db_summary_memory_v7_mysql_summary", "MYSQL");
+Tests<V7DB, DBSummaryMemory> tg6("db_summary_memory_v7_mysql_dbsummary", "MYSQL");
 #endif
+
+std::unique_ptr<Summary> other_summary(const DBSummaryMemory&) { return std::unique_ptr<Summary>(new SummaryMemory); }
+std::unique_ptr<DBSummary> other_summary(const SummaryMemory&) { return std::unique_ptr<DBSummary>(new DBSummaryMemory); }
+
+#ifdef HAVE_XAPIAN
+Tests<V7DB, SummaryXapian> tg7("db_summary_xapian_v7_sqlite_summary", "SQLITE");
+Tests<V7DB, DBSummaryXapian> tg8("db_summary_xapian_v7_sqlite_dbsummary", "SQLITE");
+#ifdef HAVE_LIBPQ
+Tests<V7DB, SummaryXapian> tg9("db_summary_xapian_v7_postgresql_summary", "POSTGRESQL");
+Tests<V7DB, DBSummaryXapian> tg10("db_summary_xapian_v7_postgresql_dbsummary", "POSTGRESQL");
+#endif
+#ifdef HAVE_MYSQL
+Tests<V7DB, SummaryXapian> tg11("db_summary_xapian_v7_mysql_summary", "MYSQL");
+Tests<V7DB, DBSummaryXapian> tg12("db_summary_xapian_v7_mysql_dbsummary", "MYSQL");
+#endif
+
+std::unique_ptr<Summary> other_summary(const DBSummaryXapian&) { return std::unique_ptr<Summary>(new SummaryXapian); }
+std::unique_ptr<DBSummary> other_summary(const SummaryXapian&) { return std::unique_ptr<DBSummary>(new DBSummaryXapian); }
+#endif
+
 
 void station_id_isset(const Station& station) {}
 void station_id_isset(const DBStation& station) { wassert(actual(station.id) != MISSING_INT); }
 
-std::unique_ptr<Summary> other_summary(const BaseSummary<DBStation>&) { return std::unique_ptr<Summary>(new SummaryMemory); }
-std::unique_ptr<DBSummary> other_summary(const BaseSummary<Station>&) { return std::unique_ptr<DBSummary>(new DBSummaryMemory); }
 Station other_station(const DBStation& station)
 {
     Station res(station);
@@ -65,8 +86,8 @@ void set_query_station(core::Query& query, const DBStation& station)
     query.ana_id = station.id;
 }
 
-template<typename DB, typename STATION>
-void Tests<DB, STATION>::register_tests()
+template<typename DB, typename BACKEND>
+void Tests<DB, BACKEND>::register_tests()
 {
 
 this->add_method("summary", [](Fixture& f) {
@@ -74,7 +95,7 @@ this->add_method("summary", [](Fixture& f) {
     OldDballeTestDataSet test_data;
     wassert(f.populate(test_data));
 
-    BaseSummaryMemory<STATION> s;
+    BACKEND s;
     wassert_true(s.datetime_min().is_missing());
     wassert_true(s.datetime_max().is_missing());
     wassert(actual(s.data_count()) == 0u);
@@ -97,12 +118,12 @@ this->add_method("summary", [](Fixture& f) {
     wassert(actual(s.data_count()) == 4);
 
     set_query_station(query, s.stations().begin()->station);
-    BaseSummaryMemory<STATION> s1;
+    BACKEND s1;
     s1.add_filtered(s, query);
     wassert(actual(s1.stations().size()) == 1);
     // wassert(actual(s1.stations().begin()->station.id) == query.ana_id);
 
-    BaseSummaryMemory<STATION> s2;
+    BACKEND s2;
     cur = s.query_summary(query);
     while (cur->next())
         s2.add_cursor(*cur);
@@ -110,7 +131,7 @@ this->add_method("summary", [](Fixture& f) {
 });
 
 this->add_method("summary_msg", [](Fixture& f) {
-    BaseSummaryMemory<STATION> s;
+    BACKEND s;
 
     // Summarise a message
     impl::Messages msgs = dballe::tests::read_msgs("bufr/synop-rad1.bufr", Encoding::BUFR, "accurate");
@@ -127,13 +148,13 @@ this->add_method("summary_msg", [](Fixture& f) {
 });
 
 this->add_method("merge_entries", [](Fixture& f) {
-    STATION station;
+    typename BACKEND::station_type station;
     station.report = "test";
     station.coords = Coords(44.5, 11.5);
     summary::VarDesc vd(Level(1), Trange::instant(), WR_VAR(0, 1, 112));
     DatetimeRange dtrange(Datetime(2018, 1, 1), Datetime(2018, 7, 1));
 
-    BaseSummaryMemory<STATION> summary;
+    BACKEND summary;
     wassert(actual(summary.data_count()) == 0u);
 
     summary.add(station, vd, dtrange, 12u);
@@ -156,9 +177,9 @@ this->add_method("merge_entries", [](Fixture& f) {
 });
 
 this->add_method("merge_summaries", [](Fixture& f) {
-    BaseSummaryMemory<STATION> summary;
+    BACKEND summary;
 
-    STATION station;
+    typename BACKEND::station_type station;
     station.report = "test";
     station.coords = Coords(44.5, 11.5);
     summary::VarDesc vd(Level(1), Trange::instant(), WR_VAR(0, 1, 112));
@@ -166,7 +187,7 @@ this->add_method("merge_summaries", [](Fixture& f) {
 
     summary.add(station, vd, dtrange, 12u);
 
-    BaseSummaryMemory<STATION> summary1;
+    BACKEND summary1;
     summary1.add(station, vd, dtrange, 3u);
 
     auto summary2 = other_summary(summary);
@@ -179,7 +200,7 @@ this->add_method("merge_summaries", [](Fixture& f) {
 });
 
 this->add_method("json_summary", [](Fixture& f) {
-    STATION station;
+    typename BACKEND::station_type station;
     station.report = "test";
     station.coords = Coords(44.5, 11.5);
     summary::VarDesc vd(Level(1), Trange::instant(), WR_VAR(0, 1, 112));
@@ -187,7 +208,7 @@ this->add_method("json_summary", [](Fixture& f) {
 
     core::Query query;
     query.report = "synop";
-    BaseSummaryMemory<STATION> summary;
+    BACKEND summary;
     summary.add(station, vd, dtrange, 12);
     vd.varcode = WR_VAR(0, 1, 113);
     summary.add(station, vd, dtrange, 12);
@@ -200,7 +221,7 @@ this->add_method("json_summary", [](Fixture& f) {
 
     json.seekg(0);
     core::json::Stream in(json);
-    BaseSummaryMemory<STATION> summary1;
+    BACKEND summary1;
     wassert(summary1.load_json(in));
     wassert_true(summary.stations() == summary1.stations());
     wassert(actual(summary.stations().size()) == summary1.stations().size());

@@ -258,6 +258,17 @@ fi
 AM_CONDITIONAL([HAVE_MYSQL], [test x"$have_mysql" = x"yes"])
 
 
+dnl Check for Xapian
+PKG_CHECK_EXISTS(xapian-core, [have_xapian=yes], [have_xapian=no])
+if test x$have_libpq = xyes
+then
+    PKG_CHECK_MODULES(XAPIAN, xapian-core)
+    AC_DEFINE([HAVE_XAPIAN], 1, [Xapian is available])
+    PKGCONFIG_REQUIRES="$PKGCONFIG_REQUIRES xapian-core"
+fi
+AM_CONDITIONAL([HAVE_XAPIAN], [test x"$have_libpq" = x"yes"])
+
+
 dnl Check for popt
 PKG_CHECK_EXISTS([popt], [have_popt=yes], [have_popt=no])
 if test x$have_popt = xyes
@@ -367,6 +378,7 @@ AC_MSG_NOTICE([
 $PACKAGE_NAME-$PACKAGE_VERSION configuration:
 AS_HELP_STRING([PostgreSQL:], [$have_libpq])
 AS_HELP_STRING([MySQL:], [$have_mysql])
+AS_HELP_STRING([Xapian:], [$have_xapian])
 AS_HELP_STRING([Fortran:], [$enable_dballef])
 AS_HELP_STRING([Python:], [$enable_dballe_python])
 AS_HELP_STRING([documentation:], [$enable_docs])

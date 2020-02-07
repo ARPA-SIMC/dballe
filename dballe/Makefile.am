@@ -4,12 +4,12 @@ EXTRA_DIST =
 CLEANFILES =
 noinst_DATA =
 
-AM_CPPFLAGS = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) -I$(top_builddir) $(WREPORT_CFLAGS) $(LIBPQ_CFLAGS) $(SQLITE3_CFLAGS) $(MYSQL_CFLAGS)
+AM_CPPFLAGS = -DTABLE_DIR=\"$(tabledir)\" -I$(top_srcdir) -I$(top_builddir) $(WREPORT_CFLAGS) $(LIBPQ_CFLAGS) $(SQLITE3_CFLAGS) $(MYSQL_CFLAGS) $(XAPIAN_CFLAGS)
 if FILE_OFFSET_BITS_64
 AM_CPPFLAGS += -D_FILE_OFFSET_BITS=64
 endif
 
-common_libs = $(WREPORT_LIBS) $(LIBPQ_LIBS) $(SQLITE3_LIBS) $(MYSQL_LIBS) $(POPT_LIBS)
+common_libs = $(WREPORT_LIBS) $(LIBPQ_LIBS) $(SQLITE3_LIBS) $(MYSQL_LIBS) $(POPT_LIBS) $(XAPIAN_LIBS)
 
 #
 # Autobuilt files
@@ -181,6 +181,10 @@ nobase_dist_dballeinclude_HEADERS += \
 	db/v7/mysql/data.h \
 	db/v7/mysql/driver.h
 endif
+if HAVE_XAPIAN
+nobase_dist_dballeinclude_HEADERS += \
+	db/summary_xapian.h
+endif
 
 lib_LTLIBRARIES = libdballe.la
 libdballe_la_SOURCES = \
@@ -298,6 +302,10 @@ libdballe_la_SOURCES += \
 	db/v7/mysql/levtr.cc \
 	db/v7/mysql/data.cc \
 	db/v7/mysql/driver.cc
+endif
+if HAVE_XAPIAN
+libdballe_la_SOURCES += \
+	db/summary_xapian.cc
 endif
 
 libdballe_la_CPPFLAGS = $(AM_CPPFLAGS) -Werror

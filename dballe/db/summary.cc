@@ -368,6 +368,13 @@ BaseSummary<Station>::~BaseSummary()
 {
 }
 
+template<typename Station>
+void BaseSummary<Station>::add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages)
+{
+    for (const auto& message: messages)
+        add_message(*message);
+}
+
 template class BaseSummary<dballe::Station>;
 template class BaseSummary<dballe::DBStation>;
 
