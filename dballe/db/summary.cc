@@ -378,46 +378,12 @@ bool StationEntries<Station>::iter_filtered(const dballe::Query& query, std::fun
 }
 
 
-template<typename Station>
-Cursor<Station>::Cursor(const summary::StationEntries<Station>& entries, const Query& query)
-{
-    const core::Query& q = core::Query::downcast(query);
-
-    summary::StationFilter<Station> filter(query);
-    DatetimeRange wanted_dtrange = q.get_datetimerange();
-
-    for (const auto& station_entry: entries)
-    {
-        if (filter.has_flt_station && !filter.matches_station(station_entry.station))
-            continue;
-
-        for (const auto& var_entry: station_entry)
-        {
-            if (!q.level.is_missing() && q.level != var_entry.var.level)
-                continue;
-
-            if (!q.trange.is_missing() && q.trange != var_entry.var.trange)
-                continue;
-
-            if (!q.varcodes.empty() && q.varcodes.find(var_entry.var.varcode) == q.varcodes.end())
-                continue;
-
-            if (!wanted_dtrange.contains(var_entry.dtrange))
-                continue;
-
-            results.emplace_back(station_entry, var_entry);
-        }
-    }
-}
-
 template class StationEntry<dballe::Station>;
 template class StationEntry<dballe::DBStation>;
 template class StationEntries<dballe::Station>;
 template void StationEntries<dballe::Station>::add(const StationEntries<dballe::DBStation>&);
 template class StationEntries<dballe::DBStation>;
 template void StationEntries<dballe::DBStation>::add(const StationEntries<dballe::Station>&);
-template class Cursor<dballe::Station>;
-template class Cursor<dballe::DBStation>;
 
 }
 
