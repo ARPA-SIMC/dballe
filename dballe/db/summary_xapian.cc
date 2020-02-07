@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <unordered_set>
 #include <cstring>
+#include <sstream>
 
 using namespace std;
 using namespace dballe;
@@ -52,21 +53,30 @@ const core::SortedSmallUniqueValueSet<wreport::Varcode>& BaseSummaryXapian<Stati
 }
 
 template<typename Station>
-const Datetime& BaseSummaryXapian<Station>::datetime_min() const
+Datetime BaseSummaryXapian<Station>::datetime_min() const
 {
-    throw wreport::error_unimplemented("SummaryXapian::datetime_min()");
+    std::string lb = db.get_value_lower_bound(0);
+    if (lb.empty())
+        return Datetime();
+    return Datetime::from_iso8601(lb.c_str());
 }
 
 template<typename Station>
-const Datetime& BaseSummaryXapian<Station>::datetime_max() const
+Datetime BaseSummaryXapian<Station>::datetime_max() const
 {
-    throw wreport::error_unimplemented("SummaryXapian::datetime_max()");
+    std::string lb = db.get_value_upper_bound(1);
+    if (lb.empty())
+        return Datetime();
+    return Datetime::from_iso8601(lb.c_str());
 }
 
 template<typename Station>
 unsigned BaseSummaryXapian<Station>::data_count() const
 {
-    throw wreport::error_unimplemented("SummaryXapian::data_count()");
+    unsigned res = 0;
+    for (auto ival = db.valuestream_begin(2); ival != db.valuestream_end(2); ++ival)
+        res += Xapian::sortable_unserialise(*ival);
+    return res;
 }
 
 template<typename Station>
@@ -75,22 +85,102 @@ std::unique_ptr<dballe::CursorSummary> BaseSummaryXapian<Station>::query_summary
     throw wreport::error_unimplemented("SummaryXapian::query_summary()");
 }
 
+namespace {
+
+std::string to_term(const dballe::Station& station)
+{
+    std::stringstream res;
+    res << "S";
+    core::JSONWriter writer(res);
+    writer.add(station);
+    return res.str();
+}
+
+std::string to_term(const dballe::DBStation& station)
+{
+    std::stringstream res;
+    res << "S";
+    core::JSONWriter writer(res);
+    writer.add(station);
+    return res.str();
+}
+
+std::string to_term(const dballe::Level& level)
+{
+    std::stringstream res;
+    res << "L";
+    core::JSONWriter writer(res);
+    writer.add(level);
+    return res.str();
+}
+
+std::string to_term(const dballe::Trange& trange)
+{
+    std::stringstream res;
+    res << "T";
+    core::JSONWriter writer(res);
+    writer.add(trange);
+    return res.str();
+}
+
+std::string to_term(const wreport::Varcode& varcode)
+{
+    return wreport::varcode_format(varcode);
+}
+
+}
+
 template<typename Station>
 void BaseSummaryXapian<Station>::add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count)
 {
-    throw wreport::error_unimplemented("SummaryXapian::add(station, vardesc, dtrange, count)");
-}
+    try {
+        std::array<std::string, 4> terms;
+        terms[0] = to_term(station);
+        terms[1] = to_term(vd.level);
+        terms[2] = to_term(vd.trange);
+        terms[3] = to_term(vd.varcode);
 
-template<typename Station>
-void BaseSummaryXapian<Station>::add_cursor(const dballe::CursorSummary& cur)
-{
-    throw wreport::error_unimplemented("SummaryXapian::add_cursor()");
-}
+        Xapian::Query query(Xapian::Query::OP_AND, terms.begin(), terms.end());
 
-template<typename Station>
-void BaseSummaryXapian<Station>::add_message(const dballe::Message& message)
-{
-    throw wreport::error_unimplemented("SummaryXapian::add_message()");
+        Xapian::Enquire enq(db);
+        enq.set_query(query);
+
+        Xapian::MSet mset = enq.get_mset(0, 1);
+        if (mset.empty())
+        {
+            // Insert
+            Xapian::Document doc;
+            for (const auto& term: terms)
+                doc.add_term(term);
+
+            doc.add_value(0, dtrange.min.to_string());
+            doc.add_value(1, dtrange.max.to_string());
+            doc.add_value(2, Xapian::sortable_serialise(count));
+
+            // TODO: move transaction in explorer updater
+            db.add_document(doc);
+        } else {
+            // Update
+            Xapian::Document doc = mset[0].get_document();
+            // TODO: merge dtrange, count
+
+            DatetimeRange range(
+                    Datetime::from_iso8601(doc.get_value(0).c_str()),
+                    Datetime::from_iso8601(doc.get_value(1).c_str()));
+            range.merge(dtrange);
+
+            doc.add_value(0, range.min.to_string());
+            doc.add_value(1, range.max.to_string());
+
+            int old_count = Xapian::sortable_unserialise(doc.get_value(2));
+            doc.add_value(2, Xapian::sortable_serialise(old_count + count));
+
+            // TODO: move transaction in explorer updater
+            db.replace_document(doc.get_docid(), doc);
+        }
+    } catch (Xapian::Error& e) {
+        wreport::error_consistency::throwf("Xapian error %s: %s [%s]", e.get_type(), e.get_msg().c_str(), e.get_context().c_str());
+    }
 }
 
 template<typename Station>

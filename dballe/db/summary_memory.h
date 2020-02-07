@@ -42,8 +42,8 @@ public:
     const core::SortedSmallUniqueValueSet<dballe::Trange>& tranges() const override { if (dirty) recompute_summaries(); return m_tranges; }
     const core::SortedSmallUniqueValueSet<wreport::Varcode>& varcodes() const override { if (dirty) recompute_summaries(); return m_varcodes; }
 
-    const Datetime& datetime_min() const override { if (dirty) recompute_summaries(); return dtrange.min; }
-    const Datetime& datetime_max() const override { if (dirty) recompute_summaries(); return dtrange.max; }
+    Datetime datetime_min() const override { if (dirty) recompute_summaries(); return dtrange.min; }
+    Datetime datetime_max() const override { if (dirty) recompute_summaries(); return dtrange.max; }
     unsigned data_count() const override { if (dirty) recompute_summaries(); return count; }
 
     /**
@@ -60,12 +60,6 @@ public:
 
     /// Add an entry to the summary
     void add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count) override;
-
-    /// Add an entry to the summary taken from the current status of \a cur
-    void add_cursor(const dballe::CursorSummary& cur) override;
-
-    /// Add the contents of a Message
-    void add_message(const dballe::Message& message) override;
 
     /// Merge the copy of another summary into this one
     void add_summary(const BaseSummary<dballe::Station>& summary) override;

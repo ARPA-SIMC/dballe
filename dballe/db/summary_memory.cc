@@ -65,61 +65,6 @@ void BaseSummaryMemory<Station>::add(const Station& station, const summary::VarD
 }
 
 template<typename Station>
-void BaseSummaryMemory<Station>::add_cursor(const dballe::CursorSummary& cur)
-{
-    add(cur.get_station(), summary::VarDesc(cur.get_level(), cur.get_trange(), cur.get_varcode()), cur.get_datetimerange(), cur.get_count());
-}
-
-template<typename Station>
-void BaseSummaryMemory<Station>::add_message(const dballe::Message& message)
-{
-    const impl::Message& msg = impl::Message::downcast(message);
-
-    Station station;
-
-    // Coordinates
-    station.coords = msg.get_coords();
-    if (station.coords.is_missing())
-        throw wreport::error_notfound("coordinates not found in message to summarise");
-
-    // Report code
-    station.report = msg.get_report();
-
-    // Station identifier
-    station.ident = msg.get_ident();
-
-    // Datetime
-    Datetime dt = msg.get_datetime();
-    DatetimeRange dtrange(dt, dt);
-
-    // TODO: obtain the StationEntry only once, and add the rest to it, to
-    // avoid looking it up for each variable
-
-    // Station variables
-    summary::VarDesc vd_ana;
-    vd_ana.level = Level();
-    vd_ana.trange = Trange();
-    for (const auto& val: msg.station_data)
-    {
-        vd_ana.varcode = val->code();
-        add(station, vd_ana, dtrange, 1);
-    }
-
-    // Variables
-    for (const auto& ctx: msg.data)
-    {
-        summary::VarDesc vd(ctx.level, ctx.trange, 0);
-
-        for (const auto& val: ctx.values)
-        {
-            if (not val->isset()) continue;
-            vd.varcode = val->code();
-            add(station, vd, dtrange, 1);
-        }
-    }
-}
-
-template<typename Station>
 void BaseSummaryMemory<Station>::add_filtered(const BaseSummary<Station>& summary, const dballe::Query& query)
 {
     if (const BaseSummaryMemory<Station>* s = dynamic_cast<const BaseSummaryMemory<Station>*>(&summary))

@@ -316,8 +316,8 @@ public:
      * Call this after performing changes to the summary, to make those sets
      * valid before reading them.
      */
-    virtual const Datetime& datetime_min() const = 0;
-    virtual const Datetime& datetime_max() const = 0;
+    virtual Datetime datetime_min() const = 0;
+    virtual Datetime datetime_max() const = 0;
     virtual unsigned data_count() const = 0;
 
     /**
@@ -336,10 +336,10 @@ public:
     virtual void add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count) = 0;
 
     /// Add an entry to the summary taken from the current status of \a cur
-    virtual void add_cursor(const dballe::CursorSummary& cur) = 0;
+    virtual void add_cursor(const dballe::CursorSummary& cur);
 
     /// Add the contents of a Message
-    virtual void add_message(const dballe::Message& message) = 0;
+    virtual void add_message(const dballe::Message& message);
 
     /// Add the contents of a Messages
     virtual void add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages);
