@@ -477,6 +477,10 @@
  048078 Vitacee                                                          POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
  048079 Corilacee_Carpino                                                POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
  048080 Corilacee_Ostria                                                 POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048081 Moracee - Broussonetia                                           POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048082 Moracee - Morus                                                  POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048083 Leguminose                                                       POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
+ 048084 Arecacee                                                         POLLEN/M**3                1            0  24 POLLEN/M**3               1          8
  048128 Conta Graminacee_Graminacee indistinte                           NUMERIC                    0            0  20 NUMERIC                   0          7
  048129 Conta Betulacee_Ontano nero                                      NUMERIC                    0            0  20 NUMERIC                   0          7
  048130 Conta Betulacee_Betulla                                          NUMERIC                    0            0  20 NUMERIC                   0          7
@@ -557,6 +561,10 @@
  048205 Conta Vitacee                                                    NUMERIC                    0            0  20 NUMERIC                   0          7
  048206 Conta Corilacee_Carpino                                          NUMERIC                    0            0  20 NUMERIC                   0          7
  048207 Conta Corilacee_Ostria                                           NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048208 Conta Moracee - Broussonetia                                     NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048209 Conta Moracee - Morus                                            NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048210 Conta Leguminose                                                 NUMERIC                    0            0  20 NUMERIC                   0          7
+ 048211 Conta Arecacee                                                   NUMERIC                    0            0  20 NUMERIC                   0          7
  049192 Number of particles with diameter <= 0.3 um                      NUMERIC                   -3            0  16 NUMERIC                  -1          5
  049193 Number of particles with diameter > 0.3 <= 0.5 um                NUMERIC                   -3            0  16 NUMERIC                  -1          5
  049194 Number of particles with diameter > 0.5 <= 1.0 um                NUMERIC                   -2            0  16 NUMERIC                  -1          5

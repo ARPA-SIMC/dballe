@@ -590,7 +590,7 @@ struct add_explorer : public MethKwargs<add_explorer<Station>, typename ImplTrai
     typedef typename ImplTraits<Station>::UpdateImpl Impl;
     constexpr static const char* name = "add_explorer";
     constexpr static const char* doc = R"(
-Add the contents of the given Explorer or DBExplorer to the Explorer.
+Add the currently selected contents of the given Explorer or DBExplorer to the Explorer.
 )";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
@@ -627,7 +627,7 @@ struct add_messages : public MethKwargs<add_messages<Station>, typename ImplTrai
     constexpr static const char* doc = R"(
 Add dballe.Message objects to the explorer.
 
-It takes the same messages argument of dballe.DB.import_messages
+It takes the same messages argument of :func:`dballe.DB.import_messages`.
 )";
     [[noreturn]] static void throw_typeerror()
     {

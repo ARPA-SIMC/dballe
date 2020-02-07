@@ -53,34 +53,54 @@ The main characteristics of DB-ALL.e are:
  * Does not need backup, since it only contains replicated or derived data.
  * Write access is enabled for its users.
 
-[DB-All.e documentation](https://arpa-simc.github.io/dballe/).
+DB-All.e documentation: https://arpa-simc.github.io/dballe/
 
-Building DB-All.e
------------------
+Installing DB-All.e
+-------------------
 
 DB-All.e is already packaged in both .rpm and .deb formats, and that provides
 easy installation for most Linux distributions.
+
+For CentOS and Fedora, rpm files are hosted in a copr repo:
+https://copr.fedorainfracloud.org/coprs/simc/stable/
+
+For Debian, DB-All.e is available in the testing distribution:
+https://packages.debian.org/testing/dballe
+
+Using docker images with DB-All.e preinstalled is also possible:
+
+```
+docker run -it arpaesimc/fedora:31 /bin/bash
+docker run -it arpaesimc/centos:8 /bin/bash
+```
 
 If you want to build and install DB-All.e yourself, you'll need to install the
 automake/autoconf/libtool packages then you can proceed as in most other Unix 
 software:
 
-  autoreconf -if
-  ./configure
-  make
-  make install
+```
+autoreconf -if
+./configure
+make
+make install
+```
 
+If you're familiar with .rpm and .deb packaging you'll find the packaging 
+files in the `debian` and `fedora` directories.
 
 Getting started
 ---------------
 
 DB-All.e requires a database to run. It can create a SQLite database, or access
-a PostgreSQL or MySQL database. See doc/fapi_connect.md for details about
-connecting to a database.
+a PostgreSQL or MySQL database.
+For details about connecting to a database see:
+https://arpa-simc.github.io/dballe/general_ref/connect.html
 
 Once this is set up, you can initialise the DB-All.e database using the command::
 
-  dbadb wipe --url=sqlite:dballe.sqlite3
+```
+dbadb wipe --url=sqlite:dballe.sqlite3
+```
 
 If you do not already have access to datasets to import, some are available
 from http://www.ncar.ucar.edu/tools/datasets/ after registering (for free) on
@@ -90,22 +110,20 @@ the website.
 Documentation
 -------------
 
+DB-All.e documentation:
+https://arpa-simc.github.io/dballe/
+
 Documentation for all commandline tools can be found in their manpages.  All
 commandline tools also have extensive commandline help that can be accessed
-using the "--help" option.
+using the `--help` option.
 
-The Fortran API is documented in the fapi.pdf document.
-
-The C API and all the C internals are documented through Doxygen.
-
-Administration and maintanance of DB-All.e are covered in the guide.pdf
-document.
+The C API and all the C internals are also documented through Doxygen.
 
 
 Testing DB-All.e
 ----------------
 
-Unit testing can be run using "make check", but it requires an existing DSN
+Unit testing can be run using `make check`, but it requires an existing DSN
 connection to a MySQL database, which should be called 'test'.  Please note
 that unit testing functions will wipe existing DB-All.e tables on the test DSN
 database.
@@ -128,7 +146,7 @@ Contact and copyright information
 
 The author of DB-ALLe is Enrico Zini <enrico@enricozini.com>
 
-DB-ALLe is Copyright (C) 2005-2018 ARPAE-SIMC <urpsim@arpae.it>
+DB-ALLe is Copyright (C) 2005-2020 ARPAE-SIMC <urpsim@arpae.it>
 
 DB-ALLe is licensed under the terms of the GNU General Public License version
 2.  Please see the file COPYING for details.
