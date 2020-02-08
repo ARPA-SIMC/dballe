@@ -16,13 +16,13 @@ class BaseExplorer
 {
 protected:
     /// Summary of the whole database
-    dballe::db::BaseSummary<Station>* _global_summary = nullptr;
+    std::shared_ptr<dballe::db::BaseSummary<Station>> _global_summary;
 
     /// Currently active filter
     dballe::core::Query filter;
 
     /// Summary of active_filter
-    dballe::db::BaseSummary<Station>* _active_summary = nullptr;
+    std::shared_ptr<dballe::db::BaseSummary<Station>> _active_summary;
 
     /// Regenerate _active_summary based on filter
     void update_active_summary();

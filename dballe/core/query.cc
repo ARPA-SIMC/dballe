@@ -67,6 +67,31 @@ void Query::clear()
     station = MISSING_INT;
 }
 
+bool Query::empty() const
+{
+    return (
+        ana_id == MISSING_INT
+        && priomin == MISSING_INT
+        && priomax == MISSING_INT
+        && report.empty()
+        && mobile == MISSING_INT
+        && ident.is_missing()
+        && latrange.is_missing()
+        && lonrange.is_missing()
+        && dtrange.is_missing()
+        && level.is_missing()
+        && trange.is_missing()
+        && varcodes.empty()
+        && query.empty()
+        && ana_filter.empty()
+        && data_filter.empty()
+        && attr_filter.empty()
+        && limit == MISSING_INT
+        && block == MISSING_INT
+        && station == MISSING_INT
+    );
+}
+
 void Query::set_from_string(const char* str)
 {
     // Split the input as name=val

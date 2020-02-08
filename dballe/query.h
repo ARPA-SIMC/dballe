@@ -73,6 +73,9 @@ public:
 
     /// Create a new Query
     static std::unique_ptr<Query> create();
+
+    /// Check if the query is empty, that is, it queries everything
+    virtual bool empty() const = 0;
 };
 
 }

@@ -98,6 +98,7 @@ struct Query : public dballe::Query
     void set_trange(const Trange& trange) override { this->trange = trange; }
 
     void clear() override;
+    bool empty() const override;
 
     /**
      * Set a value in the record according to an assignment encoded in a string.
