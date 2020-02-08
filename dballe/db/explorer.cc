@@ -29,6 +29,8 @@ bool has_db<dballe::DBStation>() { return true; }
 template<typename Station>
 BaseExplorer<Station>::BaseExplorer()
 {
+    _global_summary = make_shared<db::BaseSummaryMemory<Station>>();
+    _active_summary = _global_summary;
 }
 
 template<typename Station>
@@ -45,6 +47,7 @@ BaseExplorer<Station>::BaseExplorer(const std::string& pathname)
         _global_summary = make_shared<db::BaseSummaryMemory<Station>>(pathname);
 #endif
     }
+    _active_summary = _global_summary;
 }
 
 template<typename Station>

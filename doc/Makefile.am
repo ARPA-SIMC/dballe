@@ -65,6 +65,11 @@ sphinx_packaged_sources =  \
     fortran_ref/concepts.rst \
     fortran_ref/functions.rst \
     fortran_ref/transactions.rst \
+    python_how/index.rst \
+    python_how/convertvars.rst \
+    python_how/dumpdb.rst \
+    python_how/explorer.rst \
+    python_how/insert.rst \
     python_ref/index.rst \
     python_ref/types.rst \
     python_ref/messages.rst \
