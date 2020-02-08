@@ -1,6 +1,8 @@
 import dballe
 import datetime
 import unittest
+import shutil
+import os
 from testlib import DballeDBMixin, test_pathname
 
 
@@ -36,7 +38,7 @@ class BaseExplorerTestMixin(DballeDBMixin):
         self.assertCountEqual(explorer.stations, [
             self._station("amdar", 2, 12.34560, 76.54320, "foo"),
         ])
-        self.assertEqual(explorer.all_reports, ["amdar", "synop"])
+        self.assertCountEqual(explorer.all_reports, ["amdar", "synop"])
         self.assertEqual(explorer.reports, ["amdar"])
         self.assertEqual(explorer.all_levels, [(10, 11, 15, 22)])
         self.assertEqual(explorer.levels, [(10, 11, 15, 22)])
@@ -134,10 +136,40 @@ class BaseExplorerTestMixin(DballeDBMixin):
         self.assertEqual(explorer.stats, dballe.ExplorerStats((
             datetime.datetime(2009, 2, 24, 11, 31), datetime.datetime(2009, 2, 24, 11, 31), 10)))
 
+    def test_persistence_json(self):
+        if os.path.exists("test-explorer.json"):
+            os.unlink("test-explorer.json")
+
+        explorer = self._explorer("test-explorer.json")
+        with explorer.rebuild() as update:
+            with self.db.transaction() as tr:
+                update.add_db(tr)
+
+        explorer = self._explorer("test-explorer.json")
+        explorer.set_filter({"rep_memo": "amdar"})
+        self.assertStrRepr(explorer)
+        self.assertExplorerContents(explorer)
+
+    def test_persistence(self):
+        if os.path.isdir("test-explorer"):
+            shutil.rmtree("test-explorer")
+        elif os.path.exists("test-explorer"):
+            os.unlink("test-explorer")
+
+        with self._explorer("test-explorer") as explorer:
+            with explorer.rebuild() as update:
+                with self.db.transaction() as tr:
+                    update.add_db(tr)
+
+        with self._explorer("test-explorer") as explorer:
+            explorer.set_filter({"rep_memo": "amdar"})
+            self.assertStrRepr(explorer)
+            self.assertExplorerContents(explorer)
+
 
 class ExplorerTestMixin(BaseExplorerTestMixin):
-    def _explorer(self):
-        return dballe.Explorer()
+    def _explorer(self, *args, **kw):
+        return dballe.Explorer(*args, **kw)
 
     def _station(self, rep, id, lat, lon, ident):
         return dballe.Station(rep, lat, lon, ident)
@@ -148,8 +180,8 @@ class ExplorerTestMixin(BaseExplorerTestMixin):
 
 
 class DBExplorerTestMixin(BaseExplorerTestMixin):
-    def _explorer(self):
-        return dballe.DBExplorer()
+    def _explorer(self, *args, **kw):
+        return dballe.DBExplorer(*args, **kw)
 
     def _station(self, rep, id, lat, lon, ident):
         return dballe.DBStation(rep, id, lat, lon, ident)

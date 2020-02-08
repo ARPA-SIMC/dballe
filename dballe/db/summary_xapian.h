@@ -14,11 +14,13 @@ namespace db {
 template<typename Station>
 class BaseSummaryXapian: public BaseSummary<Station>
 {
+    std::string pathname;
     Xapian::WritableDatabase db;
 
 public:
     BaseSummaryXapian();
     BaseSummaryXapian(const std::string& pathname);
+    ~BaseSummaryXapian();
 
     bool stations(std::function<bool(const Station&)>) const override;
     bool reports(std::function<bool(const std::string&)>) const override;

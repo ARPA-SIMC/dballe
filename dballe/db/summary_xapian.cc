@@ -101,7 +101,12 @@ BaseSummaryXapian<Station>::BaseSummaryXapian()
 
 template<typename Station>
 BaseSummaryXapian<Station>::BaseSummaryXapian(const std::string& pathname)
-    : db(pathname, Xapian::DB_CREATE_OR_OPEN)
+    : pathname(pathname), db(pathname, Xapian::DB_CREATE_OR_OPEN)
+{
+}
+
+template<typename Station>
+BaseSummaryXapian<Station>::~BaseSummaryXapian()
 {
 }
 
@@ -186,7 +191,11 @@ unsigned BaseSummaryXapian<Station>::data_count() const
 template<typename Station>
 void BaseSummaryXapian<Station>::clear()
 {
-    db = Xapian::WritableDatabase("/dev/null", Xapian::DB_BACKEND_INMEMORY | Xapian::DB_CREATE_OR_OVERWRITE);
+    db.close();
+    if (pathname.empty())
+        db = Xapian::WritableDatabase("/dev/null", Xapian::DB_BACKEND_INMEMORY | Xapian::DB_CREATE_OR_OVERWRITE);
+    else
+        db = Xapian::WritableDatabase(pathname, Xapian::DB_CREATE_OR_OVERWRITE);
 }
 
 template<typename Station>
@@ -216,7 +225,6 @@ void BaseSummaryXapian<Station>::add(const Station& station, const summary::VarD
             doc.add_value(1, dtrange.max.to_string());
             doc.add_value(2, Xapian::sortable_serialise(count));
 
-            // TODO: move transaction in explorer updater
             db.add_document(doc);
         } else {
             // Update
@@ -234,7 +242,6 @@ void BaseSummaryXapian<Station>::add(const Station& station, const summary::VarD
             int old_count = Xapian::sortable_unserialise(doc.get_value(2));
             doc.add_value(2, Xapian::sortable_serialise(old_count + count));
 
-            // TODO: move transaction in explorer updater
             db.replace_document(doc.get_docid(), doc);
         }
     } catch (Xapian::Error& e) {
@@ -245,7 +252,11 @@ void BaseSummaryXapian<Station>::add(const Station& station, const summary::VarD
 template<typename Station>
 void BaseSummaryXapian<Station>::commit()
 {
-    db.commit();
+    try {
+        db.commit();
+    } catch (Xapian::Error& e) {
+        wreport::error_consistency::throwf("Xapian error %s: %s [%s]", e.get_type(), e.get_msg().c_str(), e.get_context().c_str());
+    }
 }
 
 template<typename Station>

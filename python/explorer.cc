@@ -438,6 +438,30 @@ struct query_summary : public BaseQuerySummary<query_summary<Station>, Station, 
     constexpr static const char* doc = query_summary_doc_traits<Station>::doc;
 };
 
+template<typename Station>
+struct __exit__ : public MethVarargs<__exit__<Station>, typename ImplTraits<Station>::Impl>
+{
+    typedef typename ImplTraits<Station>::Impl Impl;
+    constexpr static const char* name = "__exit__";
+    constexpr static const char* doc = "Context manager __exit__";
+    static PyObject* run(Impl* self, PyObject* args)
+    {
+        PyObject* exc_type;
+        PyObject* exc_val;
+        PyObject* exc_tb;
+        if (!PyArg_ParseTuple(args, "OOO", &exc_type, &exc_val, &exc_tb))
+            return nullptr;
+
+        try {
+            ReleaseGIL gil;
+            delete self->explorer;
+            self->explorer = nullptr;
+        } DBALLE_CATCH_RETURN_PYO
+
+        Py_RETURN_NONE;
+    }
+};
+
 
 template<class Station>
 struct Definition : Type<Definition<Station>, typename ImplTraits<Station>::Impl>
@@ -466,7 +490,10 @@ populate it.
         GetAllTranges<Station>, GetTranges<Station>,
         GetAllVarcodes<Station>, GetVarcodes<Station>,
         GetAllStats<Station>, GetStats<Station>> getsetters;
-    Methods<set_filter<Station>, rebuild<Station>, update<Station>, to_json<Station>, query_summary_all<Station>, query_summary<Station>> methods;
+    Methods<MethGenericEnter<typename ImplTraits<Station>::Impl>,
+           __exit__<Station>, set_filter<Station>, rebuild<Station>,
+           update<Station>, to_json<Station>, query_summary_all<Station>,
+           query_summary<Station>> methods;
 
     static void _dealloc(Impl* self)
     {
