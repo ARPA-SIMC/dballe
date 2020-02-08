@@ -34,7 +34,7 @@ bool BaseSummaryMemory<Station>::stations(std::function<bool(const Station&)> de
 template<typename Station>
 std::unique_ptr<dballe::CursorSummary> BaseSummaryMemory<Station>::query_summary(const Query& query) const
 {
-    return std::unique_ptr<dballe::CursorSummary>(new summary::CursorMemory<Station>(entries, query));
+    return std::unique_ptr<dballe::CursorSummary>(new summary::Cursor<Station>(entries, query));
 }
 
 template<typename Station>

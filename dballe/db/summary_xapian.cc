@@ -185,12 +185,6 @@ unsigned BaseSummaryXapian<Station>::data_count() const
 }
 
 template<typename Station>
-std::unique_ptr<dballe::CursorSummary> BaseSummaryXapian<Station>::query_summary(const Query& query) const
-{
-    throw wreport::error_unimplemented("SummaryXapian::query_summary()");
-}
-
-template<typename Station>
 void BaseSummaryXapian<Station>::add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count)
 {
     try {

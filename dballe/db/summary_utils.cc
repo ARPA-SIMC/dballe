@@ -258,17 +258,26 @@ template void StationEntries<dballe::Station>::add(const StationEntries<dballe::
 template class StationEntries<dballe::DBStation>;
 template void StationEntries<dballe::DBStation>::add(const StationEntries<dballe::Station>&);
 
+template<typename Station>
+Cursor<Station>::Cursor(const BaseSummary<Station>& summary, const Query& query)
+{
+    summary.iter_filtered(query, [&](const Station& station, const summary::VarDesc& var, const DatetimeRange& dtrange, size_t count) {
+        results.add(station, var, dtrange, count);
+        ++_remaining;
+        return true;
+    });
+}
 
 template<typename Station>
-CursorMemory<Station>::CursorMemory(const summary::StationEntries<Station>& entries, const Query& query)
+Cursor<Station>::Cursor(const summary::StationEntries<Station>& entries, const Query& query)
 {
     results.add_filtered(entries, query);
     for (const auto& s: results)
         _remaining += s.size();
 }
 
-template class CursorMemory<dballe::Station>;
-template class CursorMemory<dballe::DBStation>;
+template class Cursor<dballe::Station>;
+template class Cursor<dballe::DBStation>;
 
 }
 }

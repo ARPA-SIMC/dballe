@@ -29,18 +29,6 @@ public:
     Datetime datetime_max() const override;
     unsigned data_count() const override;
 
-    /**
-     * Query the contents of the summary
-     *
-     * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input")
-     * @return
-     *   The cursor to use to iterate over the results. The results are the
-     *   same as DB::query_summary.
-     */
-    std::unique_ptr<dballe::CursorSummary> query_summary(const Query& query) const override;
-
     /// Add an entry to the summary
     void add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count) override;
 

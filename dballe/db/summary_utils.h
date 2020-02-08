@@ -262,7 +262,7 @@ struct StationFilter<dballe::DBStation> : public StationFilterBase
 };
 
 template<typename Station>
-struct CursorMemory : public impl::CursorSummary
+struct Cursor : public impl::CursorSummary
 {
     summary::StationEntries<Station> results;
     typename summary::StationEntries<Station>::const_iterator station_entry;
@@ -270,7 +270,8 @@ struct CursorMemory : public impl::CursorSummary
     bool at_start = true;
     int _remaining = 0;
 
-    CursorMemory(const summary::StationEntries<Station>& entries, const Query& query);
+    Cursor(const BaseSummary<Station>& summary, const Query& query);
+    Cursor(const summary::StationEntries<Station>& entries, const Query& query);
 
     bool has_value() const { return !at_start && station_entry != results.end(); }
 
@@ -336,8 +337,8 @@ struct CursorMemory : public impl::CursorSummary
     void enq(impl::Enq& enq) const;
 };
 
-extern template class CursorMemory<dballe::Station>;
-extern template class CursorMemory<dballe::DBStation>;
+extern template class Cursor<dballe::Station>;
+extern template class Cursor<dballe::DBStation>;
 
 }
 }

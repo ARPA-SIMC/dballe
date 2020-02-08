@@ -17,7 +17,7 @@ inline int get_station_id(const DBStation& station) { return station.id; }
  */
 
 template<typename Station>
-void CursorMemory<Station>::enq(impl::Enq& enq) const
+void Cursor<Station>::enq(impl::Enq& enq) const
 {
     const auto key = enq.key;
     const auto len = enq.len;
@@ -62,8 +62,8 @@ void CursorMemory<Station>::enq(impl::Enq& enq) const
     }
 }
 
-template void CursorMemory<dballe::Station>::enq(impl::Enq& enq) const;
-template void CursorMemory<dballe::DBStation>::enq(impl::Enq& enq) const;
+template void Cursor<dballe::Station>::enq(impl::Enq& enq) const;
+template void Cursor<dballe::DBStation>::enq(impl::Enq& enq) const;
 
 }
 }

@@ -27,6 +27,12 @@ BaseSummary<Station>::~BaseSummary()
 }
 
 template<typename Station>
+std::unique_ptr<dballe::CursorSummary> BaseSummary<Station>::query_summary(const Query& query) const
+{
+    return std::unique_ptr<dballe::CursorSummary>(new summary::Cursor<Station>(*this, query));
+}
+
+template<typename Station>
 void BaseSummary<Station>::add_cursor(const dballe::CursorSummary& cur)
 {
     add(cur.get_station(), summary::VarDesc(cur.get_level(), cur.get_trange(), cur.get_varcode()), cur.get_datetimerange(), cur.get_count());
