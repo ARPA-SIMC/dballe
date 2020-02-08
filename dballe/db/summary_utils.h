@@ -261,6 +261,84 @@ struct StationFilter<dballe::DBStation> : public StationFilterBase
     }
 };
 
+template<typename Station>
+struct CursorMemory : public impl::CursorSummary
+{
+    summary::StationEntries<Station> results;
+    typename summary::StationEntries<Station>::const_iterator station_entry;
+    typename summary::StationEntry<Station>::const_iterator var_entry;
+    bool at_start = true;
+    int _remaining = 0;
+
+    CursorMemory(const summary::StationEntries<Station>& entries, const Query& query);
+
+    bool has_value() const { return !at_start && station_entry != results.end(); }
+
+    int remaining() const override
+    {
+        return _remaining;
+    }
+
+    bool next() override
+    {
+        if (at_start)
+        {
+            station_entry = results.begin();
+            if (station_entry != results.end())
+                var_entry = station_entry->begin();
+            at_start = false;
+        } else if (station_entry == results.end())
+            return false;
+        else {
+            if (var_entry != station_entry->end())
+                ++var_entry;
+            if (var_entry == station_entry->end())
+            {
+                ++station_entry;
+                if (station_entry != results.end())
+                {
+                    var_entry = station_entry->begin();
+                    --_remaining;
+                }
+            }
+        }
+        return station_entry != results.end();
+    }
+
+    void discard() override
+    {
+        station_entry = results.end();
+    }
+
+    static DBStation _get_dbstation(const DBStation& s) { return s; }
+    static DBStation _get_dbstation(const dballe::Station& station)
+    {
+        DBStation res;
+        res.report = station.report;
+        res.coords = station.coords;
+        res.ident = station.ident;
+        return res;
+    }
+    static int _get_station_id(const DBStation& s) { return s.id; }
+    static int _get_station_id(const dballe::Station& s) { return MISSING_INT; }
+
+    DBStation get_station() const override
+    {
+        return _get_dbstation(station_entry->station);
+    }
+
+    Level get_level() const override { return var_entry->var.level; }
+    Trange get_trange() const override { return var_entry->var.trange; }
+    wreport::Varcode get_varcode() const override { return var_entry->var.varcode; }
+    DatetimeRange get_datetimerange() const override { return var_entry->dtrange; }
+    size_t get_count() const override { return var_entry->count; }
+
+    void enq(impl::Enq& enq) const;
+};
+
+extern template class CursorMemory<dballe::Station>;
+extern template class CursorMemory<dballe::DBStation>;
+
 }
 }
 }

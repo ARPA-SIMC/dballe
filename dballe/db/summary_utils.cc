@@ -259,6 +259,16 @@ template class StationEntries<dballe::DBStation>;
 template void StationEntries<dballe::DBStation>::add(const StationEntries<dballe::Station>&);
 
 
+template<typename Station>
+CursorMemory<Station>::CursorMemory(const summary::StationEntries<Station>& entries, const Query& query)
+{
+    results.add_filtered(entries, query);
+    for (const auto& s: results)
+        _remaining += s.size();
+}
+
+template class CursorMemory<dballe::Station>;
+template class CursorMemory<dballe::DBStation>;
 
 }
 }

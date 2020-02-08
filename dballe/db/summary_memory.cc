@@ -15,21 +15,6 @@ using namespace dballe;
 namespace dballe {
 namespace db {
 
-namespace summary {
-
-template<typename Station>
-CursorMemory<Station>::CursorMemory(const summary::StationEntries<Station>& entries, const Query& query)
-{
-    results.add_filtered(entries, query);
-    for (const auto& s: results)
-        _remaining += s.size();
-}
-
-template class CursorMemory<dballe::Station>;
-template class CursorMemory<dballe::DBStation>;
-
-}
-
 template<typename Station>
 BaseSummaryMemory<Station>::BaseSummaryMemory()
 {

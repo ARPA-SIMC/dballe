@@ -1,4 +1,4 @@
-#include "summary_memory.h"
+#include "summary_utils.h"
 #include <cstring>
 
 using namespace wreport;
