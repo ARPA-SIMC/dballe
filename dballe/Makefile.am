@@ -151,6 +151,7 @@ nobase_dist_dballeinclude_HEADERS = \
 	db/v7/cursor.h \
 	db/v7/qbuilder.h \
 	db/summary.h \
+	db/summary_utils.h \
 	db/summary_memory.h \
 	db/explorer.h \
 	cmdline/cmdline.h \
@@ -272,6 +273,7 @@ libdballe_la_SOURCES = \
 	db/v7/import.cc \
 	db/v7/export.cc \
 	db/summary.cc \
+	db/summary_utils.cc \
 	db/summary_memory.cc \
 	db/summary-access.cc \
 	db/explorer.cc \

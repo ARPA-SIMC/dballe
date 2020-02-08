@@ -39,15 +39,13 @@ void test_explorer_contents(const BaseExplorer<Station>& explorer)
     vector<Station> stations;
 
     stations.clear();
-    for (const auto& s: explorer.global_summary().stations())
-        stations.push_back(s.station);
+    explorer.global_summary().stations([&](const Station& s) { stations.push_back(s); return true; });
     wassert(actual(stations.size()) == 2);
     wassert(actual(stations[0].report) == "metar");
     wassert(actual(stations[1].report) == "synop");
 
     stations.clear();
-    for (const auto& s: explorer.active_summary().stations())
-        stations.push_back(s.station);
+    explorer.active_summary().stations([&](const Station& s) { stations.push_back(s); return true; });
     wassert(actual(stations.size()) == 1);
     wassert(actual(stations[0].report) == "metar");
 

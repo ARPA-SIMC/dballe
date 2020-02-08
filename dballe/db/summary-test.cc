@@ -86,6 +86,31 @@ void set_query_station(core::Query& query, const DBStation& station)
     query.ana_id = station.id;
 }
 
+template<typename BACKEND>
+std::vector<typename BACKEND::station_type> get_stations(const BACKEND& summary)
+{
+    std::vector<typename BACKEND::station_type> res;
+    summary.stations([&](const typename BACKEND::station_type& s) { res.emplace_back(s); return true; });
+    return res;
+}
+
+template<typename T>
+std::ostream& operator<<(std::ostream& o, const std::vector<T>& vec)
+{
+    bool first = true;
+    o << "[";
+    for (const auto& v: vec)
+    {
+        if (first)
+            first = false;
+        else
+            o << ", ";
+        o << v;
+    }
+    o << "]";
+    return o;
+}
+
 template<typename DB, typename BACKEND>
 void Tests<DB, BACKEND>::register_tests()
 {
@@ -104,29 +129,35 @@ this->add_method("summary", [](Fixture& f) {
     core::Query query;
     query.query = "details";
     auto cur = f.tr->query_summary(query);
+    unsigned expected_remaining = 4;
+    wassert(actual(cur->remaining()) == expected_remaining);
     while (cur->next())
+    {
+        --expected_remaining;
+        wassert(actual(cur->remaining()) == expected_remaining);
         s.add_cursor(*cur);
+    }
 
     // Check its contents
-    wassert(actual(s.stations().size()) == 2);
-    wassert(station_id_isset(s.stations().begin()->station));
+    wassert(actual(get_stations(s).size()) == 2);
+    wassert(station_id_isset(get_stations(s).front()));
     wassert(actual(s.levels().size()) == 1);
     wassert(actual(s.tranges().size()) == 2);
     wassert(actual(s.varcodes().size()) == 2);
     wassert(actual(s.datetime_min()) == Datetime(1945, 4, 25, 8));
     wassert(actual(s.datetime_max()) == Datetime(1945, 4, 25, 8, 30));
     wassert(actual(s.data_count()) == 4);
-    set_query_station(query, s.stations().begin()->station);
+    set_query_station(query, get_stations(s).front());
     BACKEND s1;
     s1.add_filtered(s, query);
-    wassert(actual(s1.stations().size()) == 1);
+    wassert(actual(get_stations(s1).size()) == 1);
     // wassert(actual(s1.stations().begin()->station.id) == query.ana_id);
 
     BACKEND s2;
     cur = s.query_summary(query);
     while (cur->next())
         s2.add_cursor(*cur);
-    wassert(actual(s2.stations().size()) == 1);
+    wassert(actual(get_stations(s2).size()) == 1);
 });
 
 this->add_method("summary_msg", [](Fixture& f) {
@@ -137,7 +168,7 @@ this->add_method("summary_msg", [](Fixture& f) {
     s.add_messages(msgs);
 
     // Check its contents
-    wassert(actual(s.stations().size()) == 25);
+    wassert(actual(get_stations(s).size()) == 25);
     wassert(actual(s.levels().size()) == 37);
     wassert(actual(s.tranges().size()) == 9);
     wassert(actual(s.varcodes().size()) == 39);
@@ -162,16 +193,16 @@ this->add_method("merge_entries", [](Fixture& f) {
     summary.add(station, vd, dtrange, 12u);
     wassert(actual(summary.data_count()) == 24u);
 
-    wassert(actual(summary.stations().size()) == 1);
-    wassert(actual(summary.stations().begin()->size()) == 1);
+    wassert(actual(get_stations(summary).size()) == 1);
+    //wassert(actual(summary.stations().begin()->size()) == 1);
 
     summary.add(station, vd, dtrange, 12u);
     station.report = "test1";
     summary.add(station, vd, dtrange, 12u);
     summary.add(station, vd, dtrange, 12u);
-    wassert(actual(summary.stations().size()) == 2);
-    wassert(actual(summary.stations().begin()->size()) == 1);
-    wassert(actual(summary.stations().rbegin()->size()) == 1);
+    wassert(actual(get_stations(summary).size()) == 2);
+    //wassert(actual(summary.stations().begin()->size()) == 1);
+    //wassert(actual(summary.stations().rbegin()->size()) == 1);
     wassert(actual(summary.data_count()) == 36u + 24u);
 });
 
@@ -222,9 +253,7 @@ this->add_method("json_summary", [](Fixture& f) {
     core::json::Stream in(json);
     BACKEND summary1;
     wassert(summary1.load_json(in));
-    wassert_true(summary.stations() == summary1.stations());
-    wassert(actual(summary.stations().size()) == summary1.stations().size());
-    wassert_true(summary.stations() == summary1.stations());
+    wassert(actual(get_stations(summary1)) == get_stations(summary));
     wassert_true(summary.reports() == summary1.reports());
     wassert_true(summary.levels() == summary1.levels());
     wassert_true(summary.tranges() == summary1.tranges());
@@ -237,7 +266,7 @@ this->add_method("json_summary", [](Fixture& f) {
     json.seekg(0);
     core::json::Stream in1(json);
     wassert(summary1.load_json(in1));
-    wassert(actual(summary.stations().size()) == summary1.stations().size());
+    wassert(actual(get_stations(summary).size()) == get_stations(summary1).size());
     wassert_true(summary.reports() == summary1.reports());
     wassert_true(summary.levels() == summary1.levels());
     wassert_true(summary.tranges() == summary1.tranges());

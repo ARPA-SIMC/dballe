@@ -1,5 +1,6 @@
 #define _DBALLE_LIBRARY_CODE
 #include "summary_xapian.h"
+#include "summary_utils.h"
 #include "dballe/core/var.h"
 #include "dballe/core/query.h"
 #include "dballe/core/json.h"
@@ -89,77 +90,6 @@ wreport::Varcode varcode_from_term(const std::string& term)
     return WR_STRING_TO_VAR(term.c_str() + 1);
 }
 
-
-struct StationFilterBase
-{
-    const core::Query& q;
-    bool has_flt_rep_memo;
-    bool has_flt_ident;
-    bool has_flt_area;
-    bool has_flt_station;
-
-    StationFilterBase(const dballe::Query& query)
-        : q(core::Query::downcast(query))
-    {
-        // Scan the filter building a todo list of things to match
-
-        // If there is any filtering on the station, build a whitelist of matching stations
-        has_flt_rep_memo = !q.report.empty();
-        has_flt_ident = !q.ident.is_missing();
-        has_flt_area = !q.latrange.is_missing() || !q.lonrange.is_missing();
-        has_flt_station = has_flt_rep_memo || has_flt_area || has_flt_ident;
-    }
-
-    template<typename Station>
-    bool matches_station(const Station& station)
-    {
-        if (has_flt_area)
-        {
-            if (!q.latrange.contains(station.coords.lat) ||
-                !q.lonrange.contains(station.coords.lon))
-                return false;
-        }
-
-        if (has_flt_rep_memo && q.report != station.report)
-            return false;
-
-        if (has_flt_ident && q.ident != station.ident)
-            return false;
-
-        return true;
-    }
-};
-
-template<class Station>
-struct StationFilter;
-
-template<>
-struct StationFilter<dballe::Station> : public StationFilterBase
-{
-    using StationFilterBase::StationFilterBase;
-    bool matches_station(const Station& station)
-    {
-        return StationFilterBase::matches_station(station);
-    }
-};
-
-template<>
-struct StationFilter<dballe::DBStation> : public StationFilterBase
-{
-    StationFilter(const dballe::Query& query)
-        : StationFilterBase(query)
-    {
-        has_flt_station |= (q.ana_id != MISSING_INT);
-    }
-
-    bool matches_station(const DBStation& station)
-    {
-        if (q.ana_id != MISSING_INT and station.id != q.ana_id)
-            return false;
-        return StationFilterBase::matches_station(station);
-    }
-};
-
 }
 
 
@@ -170,19 +100,13 @@ BaseSummaryXapian<Station>::BaseSummaryXapian()
 }
 
 template<typename Station>
-const summary::StationEntries<Station>& BaseSummaryXapian<Station>::stations() const
+bool BaseSummaryXapian<Station>::stations(std::function<bool(const Station&)> dest) const
 {
-static summary::StationEntries<Station> FIXMEentries;
-
-    FIXMEentries = summary::StationEntries<Station>();
     auto end = db.allterms_end("S");
     for (auto ti = db.allterms_begin("S"); ti != end; ++ti)
-    {
-        Station station = station_from_term<Station>(*ti);
-        FIXMEentries.add(station, summary::VarDesc(Level(), Trange(), 0), DatetimeRange(), 0);
-    }
-
-    return FIXMEentries;
+        if (!dest(station_from_term<Station>(*ti)))
+            return false;
+    return true;
 }
 
 template<typename Station>
@@ -365,7 +289,7 @@ bool BaseSummaryXapian<Station>::iter(std::function<bool(const Station&, const s
 template<typename Station>
 bool BaseSummaryXapian<Station>::iter_filtered(const dballe::Query& query, std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange& dtrange, size_t count)> dest) const
 {
-    StationFilter<Station> filter(query);
+    summary::StationFilter<Station> filter(query);
     const core::Query& q = core::Query::downcast(query);
     DatetimeRange wanted_dtrange = q.get_datetimerange();
 
@@ -523,48 +447,6 @@ void BaseSummaryXapian<Station>::to_json(core::JSONWriter& writer) const
 
     writer.end_list();
     writer.end_mapping();
-}
-
-template<typename Station>
-void BaseSummaryXapian<Station>::load_json(core::json::Stream& in)
-{
-    in.parse_object([&](const std::string& key) {
-        if (key == "e")
-            in.parse_array([&]{
-                in.parse_object([&](const std::string& key) {
-                    Station station;
-                    if (key == "s")
-                        station = in.parse<Station>();
-                    else if (key == "v")
-                        in.parse_array([&]{
-                            summary::VarDesc vd;
-                            DatetimeRange dtrange;
-                            size_t count = 0;
-
-                            in.parse_object([&](const std::string& key) {
-                                if (key == "l")
-                                    vd.level = in.parse_level();
-                                else if (key == "t")
-                                    vd.trange = in.parse_trange();
-                                else if (key == "v")
-                                    vd.varcode = in.parse_unsigned<unsigned short>();
-                                else if (key == "d")
-                                    dtrange = in.parse_datetimerange();
-                                else if (key == "c")
-                                    count = in.parse_unsigned<size_t>();
-                                else
-                                    throw core::JSONParseException("unsupported key \"" + key + "\" for summary::VarEntry");
-                            });
-
-                            add(station, vd, dtrange, count);
-                        });
-                    else
-                        throw core::JSONParseException("unsupported key \"" + key + "\" for summary::StationEntry");
-                });
-            });
-        else
-            throw core::JSONParseException("unsupported key \"" + key + "\" for summary::Entry");
-    });
 }
 
 template<typename Station>

@@ -19,7 +19,7 @@ class BaseSummaryXapian: public BaseSummary<Station>
 public:
     BaseSummaryXapian();
 
-    const summary::StationEntries<Station>& stations() const override;
+    bool stations(std::function<bool(const Station&)>) const override;
     const core::SortedSmallUniqueValueSet<std::string>& reports() const override;
     const core::SortedSmallUniqueValueSet<dballe::Level>& levels() const override;
     const core::SortedSmallUniqueValueSet<dballe::Trange>& tranges() const override;
@@ -49,9 +49,6 @@ public:
 
     /// Serialize to JSON
     void to_json(core::JSONWriter& writer) const override;
-
-    /// Load contents from JSON, merging with the current contents
-    void load_json(core::json::Stream& in) override;
 
     DBALLE_TEST_ONLY void dump(FILE* out) const override;
 };

@@ -3,6 +3,7 @@
 
 #include <dballe/core/fwd.h>
 #include <dballe/db/summary.h>
+#include <dballe/db/summary_utils.h>
 
 namespace dballe {
 namespace db {
@@ -12,42 +13,50 @@ namespace summary {
 template<typename Station>
 struct CursorMemory : public impl::CursorSummary
 {
-    struct Entry
-    {
-        const summary::StationEntry<Station>& station_entry;
-        const summary::VarEntry& var_entry;
-        Entry(const summary::StationEntry<Station>& station_entry, const summary::VarEntry& var_entry)
-            : station_entry(station_entry), var_entry(var_entry) {}
-    };
-    std::vector<Entry> results;
-    typename std::vector<Entry>::const_iterator cur;
+    summary::StationEntries<Station> results;
+    typename summary::StationEntries<Station>::const_iterator station_entry;
+    typename summary::StationEntry<Station>::const_iterator var_entry;
     bool at_start = true;
+    int _remaining = 0;
 
     CursorMemory(const summary::StationEntries<Station>& entries, const Query& query);
 
-    bool has_value() const { return !at_start && cur != results.end(); }
+    bool has_value() const { return !at_start && station_entry != results.end(); }
 
     int remaining() const override
     {
-        if (at_start) return results.size();
-        return results.end() - cur;
+        return _remaining;
     }
 
     bool next() override
     {
         if (at_start)
         {
-            cur = results.begin();
+            station_entry = results.begin();
+            if (station_entry != results.end())
+                var_entry = station_entry->begin();
             at_start = false;
+        } else if (station_entry == results.end())
+            return false;
+        else {
+            if (var_entry != station_entry->end())
+                ++var_entry;
+            if (var_entry == station_entry->end())
+            {
+                ++station_entry;
+                if (station_entry != results.end())
+                {
+                    var_entry = station_entry->begin();
+                    --_remaining;
+                }
+            }
         }
-        else if (cur != results.end())
-            ++cur;
-        return cur != results.end();
+        return station_entry != results.end();
     }
 
     void discard() override
     {
-        cur = results.end();
+        station_entry = results.end();
     }
 
     static DBStation _get_dbstation(const DBStation& s) { return s; }
@@ -64,37 +73,14 @@ struct CursorMemory : public impl::CursorSummary
 
     DBStation get_station() const override
     {
-        return _get_dbstation(cur->station_entry.station);
+        return _get_dbstation(station_entry->station);
     }
 
-#if 0
-    int get_station_id() const override
-    {
-        return _get_station_id(cur->station_entry.station);
-    }
-
-    Coords get_coords() const override { return cur->station_entry.station.coords; }
-    Ident get_ident() const override { return cur->station_entry.station.ident; }
-    std::string get_report() const override { return cur->station_entry.station.report; }
-
-    unsigned test_iterate(FILE* dump=0) override
-    {
-        unsigned count;
-        for (count = 0; next(); ++count)
-            ;
-#if 0
-            if (dump)
-                cur->dump(dump);
-#endif
-        return count;
-    }
-#endif
-
-    Level get_level() const override { return cur->var_entry.var.level; }
-    Trange get_trange() const override { return cur->var_entry.var.trange; }
-    wreport::Varcode get_varcode() const override { return cur->var_entry.var.varcode; }
-    DatetimeRange get_datetimerange() const override { return cur->var_entry.dtrange; }
-    size_t get_count() const override { return cur->var_entry.count; }
+    Level get_level() const override { return var_entry->var.level; }
+    Trange get_trange() const override { return var_entry->var.trange; }
+    wreport::Varcode get_varcode() const override { return var_entry->var.varcode; }
+    DatetimeRange get_datetimerange() const override { return var_entry->dtrange; }
+    size_t get_count() const override { return var_entry->count; }
 
     void enq(impl::Enq& enq) const;
 };
@@ -136,7 +122,7 @@ public:
     //     return entries == o.entries;
     // }
 
-    const summary::StationEntries<Station>& stations() const override { if (dirty) recompute_summaries(); return entries.sorted(); }
+    bool stations(std::function<bool(const Station&)>) const override;
     const core::SortedSmallUniqueValueSet<std::string>& reports() const override { if (dirty) recompute_summaries(); return m_reports; }
     const core::SortedSmallUniqueValueSet<dballe::Level>& levels() const override { if (dirty) recompute_summaries(); return m_levels; }
     const core::SortedSmallUniqueValueSet<dballe::Trange>& tranges() const override { if (dirty) recompute_summaries(); return m_tranges; }

@@ -17,110 +17,12 @@ namespace db {
 
 namespace summary {
 
-namespace {
-
-struct StationFilterBase
-{
-    const core::Query& q;
-    bool has_flt_rep_memo;
-    bool has_flt_ident;
-    bool has_flt_area;
-    bool has_flt_station;
-
-    StationFilterBase(const dballe::Query& query)
-        : q(core::Query::downcast(query))
-    {
-        // Scan the filter building a todo list of things to match
-
-        // If there is any filtering on the station, build a whitelist of matching stations
-        has_flt_rep_memo = !q.report.empty();
-        has_flt_ident = !q.ident.is_missing();
-        has_flt_area = !q.latrange.is_missing() || !q.lonrange.is_missing();
-        has_flt_station = has_flt_rep_memo || has_flt_area || has_flt_ident;
-    }
-
-    template<typename Station>
-    bool matches_station(const Station& station)
-    {
-        if (has_flt_area)
-        {
-            if (!q.latrange.contains(station.coords.lat) ||
-                !q.lonrange.contains(station.coords.lon))
-                return false;
-        }
-
-        if (has_flt_rep_memo && q.report != station.report)
-            return false;
-
-        if (has_flt_ident && q.ident != station.ident)
-            return false;
-
-        return true;
-    }
-};
-
-template<class Station>
-struct StationFilter;
-
-template<>
-struct StationFilter<dballe::Station> : public StationFilterBase
-{
-    using StationFilterBase::StationFilterBase;
-    bool matches_station(const Station& station)
-    {
-        return StationFilterBase::matches_station(station);
-    }
-};
-
-template<>
-struct StationFilter<dballe::DBStation> : public StationFilterBase
-{
-    StationFilter(const dballe::Query& query)
-        : StationFilterBase(query)
-    {
-        has_flt_station |= (q.ana_id != MISSING_INT);
-    }
-
-    bool matches_station(const DBStation& station)
-    {
-        if (q.ana_id != MISSING_INT and station.id != q.ana_id)
-            return false;
-        return StationFilterBase::matches_station(station);
-    }
-};
-
-}
-
 template<typename Station>
 CursorMemory<Station>::CursorMemory(const summary::StationEntries<Station>& entries, const Query& query)
 {
-    const core::Query& q = core::Query::downcast(query);
-
-    summary::StationFilter<Station> filter(query);
-    DatetimeRange wanted_dtrange = q.get_datetimerange();
-
-    for (const auto& station_entry: entries)
-    {
-        if (filter.has_flt_station && !filter.matches_station(station_entry.station))
-            continue;
-
-        for (const auto& var_entry: station_entry)
-        {
-            if (!q.level.is_missing() && q.level != var_entry.var.level)
-                continue;
-
-            if (!q.trange.is_missing() && q.trange != var_entry.var.trange)
-                continue;
-
-            if (!q.varcodes.empty() && q.varcodes.find(var_entry.var.varcode) == q.varcodes.end())
-                continue;
-
-            if (!wanted_dtrange.contains(var_entry.dtrange))
-                continue;
-
-            results.emplace_back(station_entry, var_entry);
-        }
-    }
+    results.add_filtered(entries, query);
+    for (const auto& s: results)
+        _remaining += s.size();
 }
 
 template class CursorMemory<dballe::Station>;
@@ -131,6 +33,17 @@ template class CursorMemory<dballe::DBStation>;
 template<typename Station>
 BaseSummaryMemory<Station>::BaseSummaryMemory()
 {
+}
+
+template<typename Station>
+bool BaseSummaryMemory<Station>::stations(std::function<bool(const Station&)> dest) const
+{
+    if (dirty) recompute_summaries();
+    entries.sorted();
+    for (const auto& e: entries)
+        if (!dest(e.station))
+            return false;
+    return true;
 }
 
 template<typename Station>
