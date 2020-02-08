@@ -5,9 +5,11 @@
 #include "dballe/core/json.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
+#include <wreport/utils/sys.h>
 #include <algorithm>
 #include <unordered_set>
 #include <cstring>
+#include <sstream>
 
 using namespace std;
 using namespace dballe;
@@ -18,6 +20,19 @@ namespace db {
 template<typename Station>
 BaseSummaryMemory<Station>::BaseSummaryMemory()
 {
+}
+
+template<typename Station>
+BaseSummaryMemory<Station>::BaseSummaryMemory(const std::string& pathname)
+    : pathname(pathname)
+{
+    using namespace wreport;
+    if (sys::exists(pathname))
+    {
+        std::stringstream in(sys::read_file(pathname));
+        core::json::Stream json(in);
+        load_json(json);
+    }
 }
 
 template<typename Station>
@@ -125,6 +140,19 @@ void BaseSummaryMemory<Station>::recompute_summaries() const
 }
 
 template<typename Station>
+void BaseSummaryMemory<Station>::clear()
+{
+    entries = summary::StationEntries<Station>();
+    m_reports.clear();
+    m_levels.clear();
+    m_tranges.clear();
+    m_varcodes.clear();
+    dtrange = dballe::DatetimeRange();
+    count = 0;
+    dirty = false;
+}
+
+template<typename Station>
 void BaseSummaryMemory<Station>::add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count)
 {
     entries.add(station, vd, dtrange, count);
@@ -165,6 +193,19 @@ void BaseSummaryMemory<Station>::add_summary(const BaseSummary<dballe::DBStation
     } else {
         BaseSummary<Station>::add_summary(summary);
     }
+}
+
+template<typename Station>
+void BaseSummaryMemory<Station>::commit()
+{
+    using namespace wreport;
+    if (pathname.empty())
+        return;
+
+    std::stringstream out;
+    core::JSONWriter writer(out);
+    to_json(writer);
+    sys::write_file(pathname, out.str());
 }
 
 template<typename Station>

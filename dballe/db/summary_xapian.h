@@ -18,6 +18,7 @@ class BaseSummaryXapian: public BaseSummary<Station>
 
 public:
     BaseSummaryXapian();
+    BaseSummaryXapian(const std::string& pathname);
 
     bool stations(std::function<bool(const Station&)>) const override;
     bool reports(std::function<bool(const std::string&)>) const override;
@@ -29,8 +30,9 @@ public:
     Datetime datetime_max() const override;
     unsigned data_count() const override;
 
-    /// Add an entry to the summary
+    void clear() override;
     void add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count) override;
+    void commit() override;
 
     bool iter(std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange&, size_t)>) const override;
     bool iter_filtered(const dballe::Query& query, std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange&, size_t)>) const override;

@@ -24,6 +24,9 @@ protected:
     /// Summary of active_filter
     std::shared_ptr<dballe::db::BaseSummary<Station>> _active_summary;
 
+    /// Commit changes to disk
+    void commit();
+
     /// Regenerate _active_summary based on filter
     void update_active_summary();
 
@@ -69,6 +72,7 @@ public:
     };
 
     BaseExplorer();
+    BaseExplorer(const std::string& pathname);
     BaseExplorer(const BaseExplorer&) = delete;
     BaseExplorer(BaseExplorer&&) = delete;
     ~BaseExplorer();

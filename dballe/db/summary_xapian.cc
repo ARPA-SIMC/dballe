@@ -100,6 +100,12 @@ BaseSummaryXapian<Station>::BaseSummaryXapian()
 }
 
 template<typename Station>
+BaseSummaryXapian<Station>::BaseSummaryXapian(const std::string& pathname)
+    : db(pathname, Xapian::DB_CREATE_OR_OPEN)
+{
+}
+
+template<typename Station>
 bool BaseSummaryXapian<Station>::stations(std::function<bool(const Station&)> dest) const
 {
     auto end = db.allterms_end("S");
@@ -178,6 +184,12 @@ unsigned BaseSummaryXapian<Station>::data_count() const
 }
 
 template<typename Station>
+void BaseSummaryXapian<Station>::clear()
+{
+    db = Xapian::WritableDatabase("/dev/null", Xapian::DB_BACKEND_INMEMORY | Xapian::DB_CREATE_OR_OVERWRITE);
+}
+
+template<typename Station>
 void BaseSummaryXapian<Station>::add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count)
 {
     try {
@@ -228,6 +240,12 @@ void BaseSummaryXapian<Station>::add(const Station& station, const summary::VarD
     } catch (Xapian::Error& e) {
         wreport::error_consistency::throwf("Xapian error %s: %s [%s]", e.get_type(), e.get_msg().c_str(), e.get_context().c_str());
     }
+}
+
+template<typename Station>
+void BaseSummaryXapian<Station>::commit()
+{
+    db.commit();
 }
 
 template<typename Station>

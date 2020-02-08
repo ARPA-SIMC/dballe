@@ -66,6 +66,11 @@ namespace python {
 dpy_Explorer* explorer_create();
 
 /**
+ * Create a new dpy_Explorer
+ */
+dpy_Explorer* explorer_create(const std::string& pathname);
+
+/**
  * Create a new dpy_Explorer, taking over memory management
  */
 dpy_Explorer* explorer_create(std::unique_ptr<dballe::db::Explorer> explorer);
@@ -74,6 +79,11 @@ dpy_Explorer* explorer_create(std::unique_ptr<dballe::db::Explorer> explorer);
  * Create a new dpy_Explorer
  */
 dpy_DBExplorer* dbexplorer_create();
+
+/**
+ * Create a new dpy_Explorer
+ */
+dpy_DBExplorer* dbexplorer_create(const std::string& pathname);
 
 /**
  * Create a new dpy_Explorer, taking over memory management

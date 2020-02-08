@@ -18,6 +18,8 @@ protected:
     // Summary of items for the currently active filter
     summary::StationEntries<Station> entries;
 
+    std::string pathname;
+
     mutable core::SortedSmallUniqueValueSet<std::string> m_reports;
     mutable core::SortedSmallUniqueValueSet<dballe::Level> m_levels;
     mutable core::SortedSmallUniqueValueSet<dballe::Trange> m_tranges;
@@ -31,6 +33,7 @@ protected:
 
 public:
     BaseSummaryMemory();
+    BaseSummaryMemory(const std::string& pathname);
 
     const summary::StationEntries<Station>& _entries() const { if (dirty) recompute_summaries(); return entries.sorted(); }
 
@@ -59,6 +62,8 @@ public:
     bool iter(std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange&, size_t)>) const override;
     bool iter_filtered(const dballe::Query& query, std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange&, size_t)>) const override;
 
+    void clear() override;
+
     /// Add an entry to the summary
     void add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count) override;
 
@@ -70,6 +75,8 @@ public:
 
     /// Merge the copy of another summary into this one
     void add_filtered(const BaseSummary<Station>& summary, const dballe::Query& query) override;
+
+    void commit() override;
 
     /// Serialize to JSON
     void to_json(core::JSONWriter& writer) const override;

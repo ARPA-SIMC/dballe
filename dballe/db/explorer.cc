@@ -3,7 +3,13 @@
 #include "summary_memory.h"
 #include "dballe/core/query.h"
 #include "dballe/core/json.h"
+#include <wreport/utils/string.h>
 #include <cstring>
+#include "config.h"
+
+#ifdef HAVE_XAPIAN
+#include "summary_xapian.h"
+#endif
 
 using namespace std;
 using namespace dballe;
@@ -23,6 +29,22 @@ bool has_db<dballe::DBStation>() { return true; }
 template<typename Station>
 BaseExplorer<Station>::BaseExplorer()
 {
+}
+
+template<typename Station>
+BaseExplorer<Station>::BaseExplorer(const std::string& pathname)
+{
+    using namespace wreport;
+    if (str::endswith(pathname, ".json"))
+        _global_summary = make_shared<db::BaseSummaryMemory<Station>>(pathname);
+    else
+    {
+#ifdef HAVE_XAPIAN
+        _global_summary = make_shared<db::BaseSummaryXapian<Station>>(pathname);
+#else
+        _global_summary = make_shared<db::BaseSummaryMemory<Station>>(pathname);
+#endif
+    }
 }
 
 template<typename Station>
@@ -47,6 +69,13 @@ const dballe::db::BaseSummary<Station>& BaseExplorer<Station>::active_summary() 
 }
 
 template<typename Station>
+void BaseExplorer<Station>::commit()
+{
+    if (_global_summary)
+        _global_summary->commit();
+}
+
+template<typename Station>
 const dballe::Query& BaseExplorer<Station>::get_filter() const
 {
     return filter;
@@ -63,7 +92,10 @@ void BaseExplorer<Station>::set_filter(const dballe::Query& query)
 template<typename Station>
 typename BaseExplorer<Station>::Update BaseExplorer<Station>::rebuild()
 {
-    _global_summary = make_shared<db::BaseSummaryMemory<Station>>();
+    if (!_global_summary)
+        _global_summary = make_shared<db::BaseSummaryMemory<Station>>();
+    else
+        _global_summary->clear();
     _active_summary.reset();
     return Update(this);
 }
@@ -121,6 +153,7 @@ void BaseExplorer<Station>::Update::commit()
 {
     if (!explorer)
         return;
+    explorer->commit();
     explorer->update_active_summary();
     explorer = nullptr;
 }

@@ -488,12 +488,16 @@ populate it.
 
     static int _init(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { nullptr };
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "", const_cast<char**>(kwlist)))
+        static const char* kwlist[] = { "pathname", nullptr };
+        const char* pathname = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "|s", const_cast<char**>(kwlist), &pathname))
             return -1;
 
         try {
-            self->explorer = new typename ImplTraits<Station>::cpp_impl;
+            if (pathname)
+                self->explorer = new typename ImplTraits<Station>::cpp_impl(pathname);
+            else
+                self->explorer = new typename ImplTraits<Station>::cpp_impl;
         } DBALLE_CATCH_RETURN_INT
 
         return 0;
@@ -749,6 +753,12 @@ dpy_Explorer* explorer_create()
     return explorer_create(move(explorer));
 }
 
+dpy_Explorer* explorer_create(const std::string& pathname)
+{
+    unique_ptr<db::Explorer> explorer(new db::Explorer(pathname));
+    return explorer_create(move(explorer));
+}
+
 dpy_Explorer* explorer_create(std::unique_ptr<db::Explorer> explorer)
 {
     dpy_Explorer* result = PyObject_New(dpy_Explorer, dpy_Explorer_Type);
@@ -761,6 +771,12 @@ dpy_Explorer* explorer_create(std::unique_ptr<db::Explorer> explorer)
 dpy_DBExplorer* dbexplorer_create()
 {
     unique_ptr<db::DBExplorer> explorer(new db::DBExplorer);
+    return dbexplorer_create(move(explorer));
+}
+
+dpy_DBExplorer* dbexplorer_create(const std::string& pathname)
+{
+    unique_ptr<db::DBExplorer> explorer(new db::DBExplorer(pathname));
     return dbexplorer_create(move(explorer));
 }
 

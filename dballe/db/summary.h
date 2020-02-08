@@ -83,6 +83,9 @@ public:
      */
     virtual std::unique_ptr<dballe::CursorSummary> query_summary(const Query& query) const;
 
+    /// Completely empty the summary
+    virtual void clear() = 0;
+
     /// Add an entry to the summary
     virtual void add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count) = 0;
 
@@ -103,6 +106,9 @@ public:
 
     /// Merge the copy of another summary into this one
     virtual void add_filtered(const BaseSummary<Station>& summary, const dballe::Query& query);
+
+    /// Write changes to disk
+    virtual void commit() = 0;
 
     /// Iterate the contents of this summary. There is no guarantee on sorting order.
     virtual bool iter(std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange&, size_t)>) const = 0;
