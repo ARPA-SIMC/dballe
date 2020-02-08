@@ -472,8 +472,14 @@ struct Definition : Type<Definition<Station>, typename ImplTraits<Station>::Impl
     constexpr static const char* doc = R"(
 Browser for a summary of DB-All-e database of message contents.
 
-The constructor has no arguments: use :meth:`rebuild` or :meth:`update` to
-populate it.
+Use :meth:`rebuild` or :meth:`update` to populate the explorer.
+
+If a file name is passed to the constructor, the Explorer automatically loads
+contents from the file (if it exists), and saves them to the file on update.
+
+The persistence file is in JSON format if the file name ends with ``.json`` or
+if no Xapian support is compiled in. Otherwise, the Explorer will persist using
+an indexed Xapian database.
 
 ::
 

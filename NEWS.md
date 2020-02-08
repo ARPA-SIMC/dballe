@@ -1,6 +1,9 @@
 # New in version 8.8
 
 * Added `dballe.Explorer` examples to python HOWTO (#181)
+* Creating an Explorer with a pathname makes it load/save from that file, which
+  can be a JSON file if it ends with `.json` or no Xapian support is compiled
+  in, otherwise Explorer will persist using an indexed Xapian database.
 
 # New in version 8.7
 
