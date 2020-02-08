@@ -85,6 +85,30 @@ std::vector<typename BACKEND::station_type> get_stations(const BACKEND& summary)
     return res;
 }
 
+template<typename BACKEND>
+std::vector<Level> get_levels(const BACKEND& summary)
+{
+    std::vector<Level> res;
+    summary.levels([&](const Level& l) { res.emplace_back(l); return true; });
+    return res;
+}
+
+template<typename BACKEND>
+std::vector<Trange> get_tranges(const BACKEND& summary)
+{
+    std::vector<Trange> res;
+    summary.tranges([&](const Trange& tr) { res.emplace_back(tr); return true; });
+    return res;
+}
+
+template<typename BACKEND>
+std::vector<wreport::Varcode> get_varcodes(const BACKEND& summary)
+{
+    std::vector<wreport::Varcode> res;
+    summary.varcodes([&](const wreport::Varcode& v) { res.emplace_back(v); return true; });
+    return res;
+}
+
 template<typename DB>
 class Tests : public FixtureTestCase<DBDataFixture<DB>>
 {
@@ -114,14 +138,17 @@ class Tests : public FixtureTestCase<DBDataFixture<DB>>
             auto check_base = [](const db::DBSummary& res) {
                 auto stations = get_stations(res);
                 wassert(actual(stations.size()) == 2u);
-                wassert(actual(stations.begin()->coords) == Coords(12.34560, 76.54320));
-                wassert(actual(res.levels().size()) == 1u);
-                wassert(actual(*res.levels().begin()) == Level(10, 11, 15, 22));
-                wassert(actual(res.tranges().size()) == 1u);
-                wassert(actual(*res.tranges().begin()) == Trange(20, 111, 122));
-                wassert(actual(res.varcodes().size()) == 2u);
-                wassert(actual(*res.varcodes().begin()) == WR_VAR(0, 12, 101));
-                wassert(actual(*(res.varcodes().begin() + 1)) == WR_VAR(0, 12, 103));
+                wassert(actual(stations[0].coords) == Coords(12.34560, 76.54320));
+                auto levels = get_levels(res);
+                wassert(actual(levels.size()) == 1u);
+                wassert(actual(levels[0]) == Level(10, 11, 15, 22));
+                auto tranges = get_tranges(res);
+                wassert(actual(tranges.size()) == 1u);
+                wassert(actual(tranges[0]) == Trange(20, 111, 122));
+                auto varcodes = get_varcodes(res);
+                wassert(actual(varcodes.size()) == 2u);
+                wassert(actual(varcodes[0]) == WR_VAR(0, 12, 101));
+                wassert(actual(varcodes[1]) == WR_VAR(0, 12, 103));
             };
             auto check_nodetails = [&](const db::DBSummary& res) {
                 wassert(check_base(res));

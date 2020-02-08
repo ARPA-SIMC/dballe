@@ -32,6 +32,46 @@ bool BaseSummaryMemory<Station>::stations(std::function<bool(const Station&)> de
 }
 
 template<typename Station>
+bool BaseSummaryMemory<Station>::reports(std::function<bool(const std::string&)> dest) const
+{
+    if (dirty) recompute_summaries();
+    for (const auto& v: m_reports)
+        if (!dest(v))
+            return false;
+    return true;
+}
+
+template<typename Station>
+bool BaseSummaryMemory<Station>::levels(std::function<bool(const Level&)> dest) const
+{
+    if (dirty) recompute_summaries();
+    for (const auto& v: m_levels)
+        if (!dest(v))
+            return false;
+    return true;
+}
+
+template<typename Station>
+bool BaseSummaryMemory<Station>::tranges(std::function<bool(const Trange&)> dest) const
+{
+    if (dirty) recompute_summaries();
+    for (const auto& v: m_tranges)
+        if (!dest(v))
+            return false;
+    return true;
+}
+
+template<typename Station>
+bool BaseSummaryMemory<Station>::varcodes(std::function<bool(const wreport::Varcode&)> dest) const
+{
+    if (dirty) recompute_summaries();
+    for (const auto& v: m_varcodes)
+        if (!dest(v))
+            return false;
+    return true;
+}
+
+template<typename Station>
 std::unique_ptr<dballe::CursorSummary> BaseSummaryMemory<Station>::query_summary(const Query& query) const
 {
     return std::unique_ptr<dballe::CursorSummary>(new summary::Cursor<Station>(entries, query));

@@ -110,51 +110,44 @@ bool BaseSummaryXapian<Station>::stations(std::function<bool(const Station&)> de
 }
 
 template<typename Station>
-const core::SortedSmallUniqueValueSet<std::string>& BaseSummaryXapian<Station>::reports() const
+bool BaseSummaryXapian<Station>::reports(std::function<bool(const std::string&)> dest) const
 {
-static core::SortedSmallUniqueValueSet<std::string> FIXMEentries;
-
-    FIXMEentries.clear();
     auto end = db.allterms_end("S");
     for (auto ti = db.allterms_begin("S"); ti != end; ++ti)
-        FIXMEentries.add(station_from_term<Station>(*ti).report);
-    return FIXMEentries;
+        if (!dest(station_from_term<Station>(*ti).report))
+            return false;
+    return true;
 }
 
 template<typename Station>
-const core::SortedSmallUniqueValueSet<dballe::Level>& BaseSummaryXapian<Station>::levels() const
+bool BaseSummaryXapian<Station>::levels(std::function<bool(const Level&)> dest) const
 {
-static core::SortedSmallUniqueValueSet<dballe::Level> FIXMEentries;
-
-    FIXMEentries.clear();
     auto end = db.allterms_end("L");
     for (auto ti = db.allterms_begin("L"); ti != end; ++ti)
-        FIXMEentries.add(level_from_term(*ti));
-    return FIXMEentries;
+        if (!dest(level_from_term(*ti)))
+            return false;
+    return true;
 }
 
 template<typename Station>
-const core::SortedSmallUniqueValueSet<dballe::Trange>& BaseSummaryXapian<Station>::tranges() const
+bool BaseSummaryXapian<Station>::tranges(std::function<bool(const Trange&)> dest) const
 {
-static core::SortedSmallUniqueValueSet<dballe::Trange> FIXMEentries;
-
-    FIXMEentries.clear();
     auto end = db.allterms_end("T");
     for (auto ti = db.allterms_begin("T"); ti != end; ++ti)
-        FIXMEentries.add(trange_from_term(*ti));
-    return FIXMEentries;
+        if (!dest(trange_from_term(*ti)))
+            return false;
+    return true;
 }
 
-template<typename Station>
-const core::SortedSmallUniqueValueSet<wreport::Varcode>& BaseSummaryXapian<Station>::varcodes() const
-{
-static core::SortedSmallUniqueValueSet<wreport::Varcode> FIXMEentries;
 
-    FIXMEentries.clear();
+template<typename Station>
+bool BaseSummaryXapian<Station>::varcodes(std::function<bool(const wreport::Varcode&)> dest) const
+{
     auto end = db.allterms_end("B");
     for (auto ti = db.allterms_begin("B"); ti != end; ++ti)
-        FIXMEentries.add(varcode_from_term(*ti));
-    return FIXMEentries;
+        if (!dest(varcode_from_term(*ti)))
+            return false;
+    return true;
 }
 
 template<typename Station>

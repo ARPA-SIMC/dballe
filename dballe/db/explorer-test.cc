@@ -52,59 +52,51 @@ void test_explorer_contents(const BaseExplorer<Station>& explorer)
     vector<string> reports;
 
     reports.clear();
-    for (const auto& v: explorer.global_summary().reports())
-        reports.push_back(v);
+    explorer.global_summary().reports([&](const std::string& r) { reports.push_back(r); return true; });
     wassert(actual(reports.size()) == 2);
     wassert(actual(reports[0]) == "metar");
     wassert(actual(reports[1]) == "synop");
 
     reports.clear();
-    for (const auto& v: explorer.active_summary().reports())
-        reports.push_back(v);
+    explorer.active_summary().reports([&](const std::string& r) { reports.push_back(r); return true; });
     wassert(actual(reports.size()) == 1);
     wassert(actual(reports[0]) == "metar");
 
     vector<Level> levels;
 
     levels.clear();
-    for (const auto& v: explorer.global_summary().levels())
-        levels.push_back(v);
+    explorer.global_summary().levels([&](const Level& l) { levels.push_back(l); return true; });
     wassert(actual(levels.size()) == 1);
     wassert(actual(levels[0]) == Level(10, 11, 15, 22));
 
     levels.clear();
-    for (const auto& v: explorer.active_summary().levels())
-        levels.push_back(v);
+    explorer.active_summary().levels([&](const Level& l) { levels.push_back(l); return true; });
     wassert(actual(levels.size()) == 1);
     wassert(actual(levels[0]) == Level(10, 11, 15, 22));
 
     vector<Trange> tranges;
 
     tranges.clear();
-    for (const auto& v: explorer.global_summary().tranges())
-        tranges.push_back(v);
+    explorer.global_summary().tranges([&](const Trange& tr) { tranges.push_back(tr); return true; });
     wassert(actual(tranges.size()) == 2);
     wassert(actual(tranges[0]) == Trange(20, 111, 122));
     wassert(actual(tranges[1]) == Trange(20, 111, 123));
 
     tranges.clear();
-    for (const auto& v: explorer.active_summary().tranges())
-        tranges.push_back(v);
+    explorer.active_summary().tranges([&](const Trange& tr) { tranges.push_back(tr); return true; });
     wassert(actual(tranges.size()) == 1);
     wassert(actual(tranges[0]) == Trange(20, 111, 123));
 
     vector<wreport::Varcode> vars;
 
     vars.clear();
-    for (const auto& v: explorer.global_summary().varcodes())
-        vars.push_back(v);
+    explorer.global_summary().varcodes([&](const wreport::Varcode& v) { vars.push_back(v); return true; });
     wassert(actual(vars.size()) == 2);
     wassert(actual(vars[0]) == WR_VAR(0, 1, 11));
     wassert(actual(vars[1]) == WR_VAR(0, 1, 12));
 
     vars.clear();
-    for (const auto& v: explorer.active_summary().varcodes())
-        vars.push_back(v);
+    explorer.active_summary().varcodes([&](const wreport::Varcode& v) { vars.push_back(v); return true; });
     wassert(actual(vars.size()) == 2);
     wassert(actual(vars[0]) == WR_VAR(0, 1, 11));
     wassert(actual(vars[1]) == WR_VAR(0, 1, 12));

@@ -20,10 +20,10 @@ public:
     BaseSummaryXapian();
 
     bool stations(std::function<bool(const Station&)>) const override;
-    const core::SortedSmallUniqueValueSet<std::string>& reports() const override;
-    const core::SortedSmallUniqueValueSet<dballe::Level>& levels() const override;
-    const core::SortedSmallUniqueValueSet<dballe::Trange>& tranges() const override;
-    const core::SortedSmallUniqueValueSet<wreport::Varcode>& varcodes() const override;
+    bool reports(std::function<bool(const std::string&)>) const override;
+    bool levels(std::function<bool(const Level&)>) const override;
+    bool tranges(std::function<bool(const Trange&)>) const override;
+    bool varcodes(std::function<bool(const wreport::Varcode&)>) const override;
 
     Datetime datetime_min() const override;
     Datetime datetime_max() const override;

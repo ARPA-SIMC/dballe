@@ -3,11 +3,8 @@
 
 #include <dballe/core/fwd.h>
 #include <dballe/core/defs.h>
-#include <dballe/core/query.h>
-#include <dballe/core/smallset.h>
-#include <dballe/db/db.h>
+#include <dballe/types.h>
 #include <vector>
-#include <set>
 #include <functional>
 
 namespace dballe {
@@ -59,10 +56,10 @@ public:
     // virtual bool operator==(const BaseSummary<Station>& o) const = 0;
 
     virtual bool stations(std::function<bool(const Station&)>) const = 0;
-    virtual const core::SortedSmallUniqueValueSet<std::string>& reports() const = 0;
-    virtual const core::SortedSmallUniqueValueSet<dballe::Level>& levels() const = 0;
-    virtual const core::SortedSmallUniqueValueSet<dballe::Trange>& tranges() const = 0;
-    virtual const core::SortedSmallUniqueValueSet<wreport::Varcode>& varcodes() const = 0;
+    virtual bool reports(std::function<bool(const std::string&)>) const = 0;
+    virtual bool levels(std::function<bool(const Level&)>) const = 0;
+    virtual bool tranges(std::function<bool(const Trange&)>) const = 0;
+    virtual bool varcodes(std::function<bool(const wreport::Varcode&)>) const = 0;
 
     /**
      * Recompute reports, levels, tranges, and varcodes.

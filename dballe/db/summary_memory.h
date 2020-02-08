@@ -34,16 +34,11 @@ public:
 
     const summary::StationEntries<Station>& _entries() const { if (dirty) recompute_summaries(); return entries.sorted(); }
 
-    // bool operator==(const BaseSummary<Station>& o) const
-    // {
-    //     return entries == o.entries;
-    // }
-
     bool stations(std::function<bool(const Station&)>) const override;
-    const core::SortedSmallUniqueValueSet<std::string>& reports() const override { if (dirty) recompute_summaries(); return m_reports; }
-    const core::SortedSmallUniqueValueSet<dballe::Level>& levels() const override { if (dirty) recompute_summaries(); return m_levels; }
-    const core::SortedSmallUniqueValueSet<dballe::Trange>& tranges() const override { if (dirty) recompute_summaries(); return m_tranges; }
-    const core::SortedSmallUniqueValueSet<wreport::Varcode>& varcodes() const override { if (dirty) recompute_summaries(); return m_varcodes; }
+    bool reports(std::function<bool(const std::string&)>) const override;
+    bool levels(std::function<bool(const Level&)>) const override;
+    bool tranges(std::function<bool(const Trange&)>) const override;
+    bool varcodes(std::function<bool(const wreport::Varcode&)>) const override;
 
     Datetime datetime_min() const override { if (dirty) recompute_summaries(); return dtrange.min; }
     Datetime datetime_max() const override { if (dirty) recompute_summaries(); return dtrange.max; }

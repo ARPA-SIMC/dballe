@@ -94,6 +94,38 @@ std::vector<typename BACKEND::station_type> get_stations(const BACKEND& summary)
     return res;
 }
 
+template<typename BACKEND>
+std::vector<std::string> get_reports(const BACKEND& summary)
+{
+    std::vector<std::string> res;
+    summary.reports([&](const std::string& l) { res.emplace_back(l); return true; });
+    return res;
+}
+
+template<typename BACKEND>
+std::vector<Level> get_levels(const BACKEND& summary)
+{
+    std::vector<Level> res;
+    summary.levels([&](const Level& l) { res.emplace_back(l); return true; });
+    return res;
+}
+
+template<typename BACKEND>
+std::vector<Trange> get_tranges(const BACKEND& summary)
+{
+    std::vector<Trange> res;
+    summary.tranges([&](const Trange& tr) { res.emplace_back(tr); return true; });
+    return res;
+}
+
+template<typename BACKEND>
+std::vector<wreport::Varcode> get_varcodes(const BACKEND& summary)
+{
+    std::vector<wreport::Varcode> res;
+    summary.varcodes([&](const wreport::Varcode& v) { res.emplace_back(v); return true; });
+    return res;
+}
+
 template<typename T>
 std::ostream& operator<<(std::ostream& o, const std::vector<T>& vec)
 {
@@ -141,9 +173,9 @@ this->add_method("summary", [](Fixture& f) {
     // Check its contents
     wassert(actual(get_stations(s).size()) == 2);
     wassert(station_id_isset(get_stations(s).front()));
-    wassert(actual(s.levels().size()) == 1);
-    wassert(actual(s.tranges().size()) == 2);
-    wassert(actual(s.varcodes().size()) == 2);
+    wassert(actual(get_levels(s).size()) == 1);
+    wassert(actual(get_tranges(s).size()) == 2);
+    wassert(actual(get_varcodes(s).size()) == 2);
     wassert(actual(s.datetime_min()) == Datetime(1945, 4, 25, 8));
     wassert(actual(s.datetime_max()) == Datetime(1945, 4, 25, 8, 30));
     wassert(actual(s.data_count()) == 4);
@@ -169,9 +201,9 @@ this->add_method("summary_msg", [](Fixture& f) {
 
     // Check its contents
     wassert(actual(get_stations(s).size()) == 25);
-    wassert(actual(s.levels().size()) == 37);
-    wassert(actual(s.tranges().size()) == 9);
-    wassert(actual(s.varcodes().size()) == 39);
+    wassert(actual(get_levels(s).size()) == 37);
+    wassert(actual(get_tranges(s).size()) == 9);
+    wassert(actual(get_varcodes(s).size()) == 39);
     wassert(actual(s.datetime_min()) == Datetime(2015, 3, 5, 3));
     wassert(actual(s.datetime_max()) == Datetime(2015, 3, 5, 3));
     wassert(actual(s.data_count()) == 1095);
@@ -254,10 +286,10 @@ this->add_method("json_summary", [](Fixture& f) {
     BACKEND summary1;
     wassert(summary1.load_json(in));
     wassert(actual(get_stations(summary1)) == get_stations(summary));
-    wassert_true(summary.reports() == summary1.reports());
-    wassert_true(summary.levels() == summary1.levels());
-    wassert_true(summary.tranges() == summary1.tranges());
-    wassert_true(summary.varcodes() == summary1.varcodes());
+    wassert(actual(get_reports(summary1)) == get_reports(summary));
+    wassert(actual(get_levels(summary1)) == get_levels(summary));
+    wassert(actual(get_tranges(summary1)) == get_tranges(summary));
+    wassert(actual(get_varcodes(summary1)) == get_varcodes(summary));
     wassert_true(summary.datetime_min() == summary1.datetime_min());
     wassert_true(summary.datetime_max() == summary1.datetime_max());
     wassert_true(summary.data_count() == summary1.data_count());
@@ -266,11 +298,11 @@ this->add_method("json_summary", [](Fixture& f) {
     json.seekg(0);
     core::json::Stream in1(json);
     wassert(summary1.load_json(in1));
-    wassert(actual(get_stations(summary).size()) == get_stations(summary1).size());
-    wassert_true(summary.reports() == summary1.reports());
-    wassert_true(summary.levels() == summary1.levels());
-    wassert_true(summary.tranges() == summary1.tranges());
-    wassert_true(summary.varcodes() == summary1.varcodes());
+    wassert(actual(get_stations(summary1).size()) == get_stations(summary).size());
+    wassert(actual(get_reports(summary1)) == get_reports(summary));
+    wassert(actual(get_levels(summary1)) == get_levels(summary));
+    wassert(actual(get_tranges(summary1)) == get_tranges(summary));
+    wassert(actual(get_varcodes(summary1)) == get_varcodes(summary));
     wassert_true(summary.datetime_min() == summary1.datetime_min());
     wassert_true(summary.datetime_max() == summary1.datetime_max());
     wassert_true(summary.data_count() * 2 == summary1.data_count());

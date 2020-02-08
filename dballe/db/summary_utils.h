@@ -1,8 +1,12 @@
 #ifndef DBALLE_DB_SUMMARY_UTILS_H
 #define DBALLE_DB_SUMMARY_UTILS_H
 
+#include <dballe/core/smallset.h>
+#include <dballe/core/query.h>
+#include <dballe/core/cursor.h>
 #include <dballe/db/summary.h>
 #include <dballe/types.h>
+#include <wreport/error.h>
 
 namespace dballe {
 namespace db {
