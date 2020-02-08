@@ -4,7 +4,7 @@
 #include <dballe/types.h>
 #include <dballe/db/db.h>
 #include <dballe/db/v7/fwd.h>
-#include <dballe/db/summary.h>
+#include <dballe/db/summary_utils.h>
 #include <dballe/core/var.h>
 #include "utils/core.h"
 

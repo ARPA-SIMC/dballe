@@ -61,15 +61,6 @@ PyTypeObject* dpy_DBExplorerUpdate_Type = nullptr;
 
 }
 
-namespace dballe {
-namespace python {
-
-template<typename Station>
-inline PyObject* to_python(const db::summary::StationEntry<Station>& s) { return to_python(s.station); }
-
-}
-}
-
 namespace {
 
 struct All {};
@@ -104,32 +95,47 @@ template<> const db::BaseSummary<DBStation>& get_summary<DBStation, Selected>(dp
 
 template<typename Station>
 struct get_stations {
-    static const db::summary::StationEntries<Station>& get(const db::BaseSummary<Station>& summary) { return summary.stations(); }
+    static bool iter(const db::BaseSummary<Station>& summary, std::function<bool(PyObject*)> dest)
+    {
+        return summary.stations([&](const Station& s) { return dest(to_python(s)); });
+    }
 };
 
 template<typename Station>
 struct get_reports {
-    static const core::SortedSmallUniqueValueSet<std::string>& get(const db::BaseSummary<Station>& summary) { return summary.reports(); }
+    static bool iter(const db::BaseSummary<Station>& summary, std::function<bool(PyObject*)> dest)
+    {
+        return summary.reports([&](const std::string& r) { return dest(to_python(r)); });
+    }
 };
 
 template<typename Station>
 struct get_levels {
-    static const core::SortedSmallUniqueValueSet<dballe::Level>& get(const db::BaseSummary<Station>& summary) { return summary.levels(); }
+    static bool iter(const db::BaseSummary<Station>& summary, std::function<bool(PyObject*)> dest)
+    {
+        return summary.levels([&](const Level& lev) { return dest(to_python(lev)); });
+    }
 };
 
 template<typename Station>
 struct get_tranges {
-    static const core::SortedSmallUniqueValueSet<dballe::Trange>& get(const db::BaseSummary<Station>& summary) { return summary.tranges(); }
+    static bool iter(const db::BaseSummary<Station>& summary, std::function<bool(PyObject*)> dest)
+    {
+        return summary.tranges([&](const Trange& tr) { return dest(to_python(tr)); });
+    }
 };
 
 template<typename Station>
 struct get_varcodes {
-    static const core::SortedSmallUniqueValueSet<wreport::Varcode>& get(const db::BaseSummary<Station>& summary) { return summary.varcodes(); }
+    static bool iter(const db::BaseSummary<Station>& summary, std::function<bool(PyObject*)> dest)
+    {
+        return summary.varcodes([&](const wreport::Varcode& v) { return dest(to_python(v)); });
+    }
 };
 
 namespace explorer {
 
-template<typename Base, typename Station, typename Scope, typename GET>
+template<typename Base, typename Station, typename Scope, typename ITER>
 struct BaseGetter : public Getter<Base, typename ImplTraits<Station>::Impl>
 {
     typedef typename ImplTraits<Station>::Impl Impl;
@@ -137,17 +143,14 @@ struct BaseGetter : public Getter<Base, typename ImplTraits<Station>::Impl>
     {
         try {
             const auto& summary = get_summary<Station, Scope>(*self);
-            const auto& stations = GET::get(summary);
-            pyo_unique_ptr result(PyList_New(stations.size()));
+            pyo_unique_ptr result(PyList_New(0));
 
-            unsigned idx = 0;
-            for (const auto& entry: stations)
-            {
-                pyo_unique_ptr station(to_python(entry));
-                if (PyList_SetItem(result, idx, station.release()))
-                    return nullptr;
-                ++idx;
-            }
+            ITER::iter(summary, [&](PyObject* o) {
+                pyo_unique_ptr val(o);
+                if (PyList_Append(result, val.release()) == -1)
+                    throw PythonException();
+                return true;
+            });
 
             return result.release();
         } DBALLE_CATCH_RETURN_PYO
