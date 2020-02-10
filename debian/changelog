@@ -1,8 +1,8 @@
-dballe (8.8-1) UNRELEASED; urgency=medium
+dballe (8.9-1) UNRELEASED; urgency=medium
 
   * New upstream version, see NEWS.md for what's new.
 
- -- Enrico Zini <enrico@debian.org>  Sat, 08 Feb 2020 09:41:41 +0100
+ -- Enrico Zini <enrico@debian.org>  Mon, 10 Feb 2020 13:21:18 +0100
 
 dballe (8.6-1) unstable; urgency=medium
 

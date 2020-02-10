@@ -1,3 +1,8 @@
+# New in version 8.9
+
+* Worked around an internal compiler error on Centos7
+* Made Xapian support really optional
+
 # New in version 8.8
 
 * Added `dballe.Explorer` examples to python HOWTO (#181)
