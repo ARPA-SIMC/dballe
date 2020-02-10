@@ -89,6 +89,11 @@ public:
     virtual std::string to_binary(const std::vector<std::shared_ptr<Message>>& messages) const = 0;
 
     /**
+     * Export to a Bulletin
+     */
+    virtual std::unique_ptr<wreport::Bulletin> to_bulletin(const std::vector<std::shared_ptr<Message>>& msgs) const;
+
+    /**
      * Create a bulletin that works with this exporter.
      *
      * @returns the bulletin, or NULL of this is an exporter for a format not
@@ -109,7 +114,7 @@ public:
     /**
      * Export to a Bulletin
      */
-    virtual std::unique_ptr<wreport::Bulletin> to_bulletin(const std::vector<std::shared_ptr<Message>>& msgs) const = 0;
+    std::unique_ptr<wreport::Bulletin> to_bulletin(const std::vector<std::shared_ptr<Message>>& msgs) const override = 0;
 };
 
 }

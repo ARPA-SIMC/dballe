@@ -69,6 +69,11 @@ std::vector<std::shared_ptr<Message>> Importer::from_binary(const BinaryMessage&
     return res;
 }
 
+std::vector<std::shared_ptr<Message>> Importer::from_bulletin(const wreport::Bulletin& msg) const
+{
+    throw wreport::error_unimplemented("this exporter cannot read bulletins");
+}
+
 std::unique_ptr<Importer> Importer::create(Encoding type, const ImporterOptions& opts)
 {
     switch (type)

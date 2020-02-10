@@ -78,6 +78,11 @@ Exporter::~Exporter()
 {
 }
 
+std::unique_ptr<wreport::Bulletin> Exporter::to_bulletin(const std::vector<std::shared_ptr<Message>>& msgs) const
+{
+    throw wreport::error_unimplemented("this exporter cannot generate bulletins");
+}
+
 std::unique_ptr<wreport::Bulletin> Exporter::make_bulletin() const
 {
     return std::unique_ptr<wreport::Bulletin>(nullptr);
