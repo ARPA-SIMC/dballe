@@ -1,3 +1,4 @@
+#define _DBALLE_LIBRARY_CODE
 #include "summary_utils.h"
 #include <cstring>
 

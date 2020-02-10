@@ -121,45 +121,67 @@ void BaseSummary<Station>::add_summary(const BaseSummary<dballe::DBStation>& sum
     });
 }
 
+namespace {
+
+// This class is used to disentangle code a bit to try and workaround an
+// internal compiler error on centos7: https://travis-ci.org/ARPA-SIMC/dballe/jobs/648366650#L1906
+template<typename Station>
+struct Loader
+{
+    BaseSummary<Station>& summary;
+    Station station;
+    std::vector<summary::VarEntry> vars;
+
+    Loader(BaseSummary<Station>& summary)
+        : summary(summary) {}
+
+    void load_station_entry(core::json::Stream& in)
+    {
+        in.parse_array([&](){
+            in.parse_object([&](const std::string& key) {
+                if (key == "s")
+                    station = in.parse<Station>();
+                else if (key == "v")
+                {
+                    in.parse_array([&]{
+                        vars.emplace_back();
+                        summary::VarEntry& var = vars.back();
+
+                        in.parse_object([&](const std::string& key) {
+                            if (key == "l")
+                                var.var.level = in.parse_level();
+                            else if (key == "t")
+                                var.var.trange = in.parse_trange();
+                            else if (key == "v")
+                                var.var.varcode = in.parse_unsigned<unsigned short>();
+                            else if (key == "d")
+                                var.dtrange = in.parse_datetimerange();
+                            else if (key == "c")
+                                var.count = in.parse_unsigned<size_t>();
+                            else
+                                throw core::JSONParseException("unsupported key \"" + key + "\" for summary::VarEntry");
+                        });
+                    });
+                }
+                else
+                    throw core::JSONParseException("unsupported key \"" + key + "\" for summary::StationEntry");
+            });
+            for (const auto& e: vars)
+                summary.add(station, e.var, e.dtrange, e.count);
+        });
+    }
+};
+
+}
+
 template<typename Station>
 void BaseSummary<Station>::load_json(core::json::Stream& in)
 {
+    Loader<Station> loader(*this);
+
     in.parse_object([&](const std::string& key) {
         if (key == "e")
-            in.parse_array([&]{
-                Station station;
-                std::vector<summary::VarEntry> vars;
-                in.parse_object([&](const std::string& key) {
-                    if (key == "s")
-                        station = in.parse<Station>();
-                    else if (key == "v")
-                    {
-                        in.parse_array([&]{
-                            vars.emplace_back();
-                            summary::VarEntry& var = vars.back();
-
-                            in.parse_object([&](const std::string& key) {
-                                if (key == "l")
-                                    var.var.level = in.parse_level();
-                                else if (key == "t")
-                                    var.var.trange = in.parse_trange();
-                                else if (key == "v")
-                                    var.var.varcode = in.parse_unsigned<unsigned short>();
-                                else if (key == "d")
-                                    var.dtrange = in.parse_datetimerange();
-                                else if (key == "c")
-                                    var.count = in.parse_unsigned<size_t>();
-                                else
-                                    throw core::JSONParseException("unsupported key \"" + key + "\" for summary::VarEntry");
-                            });
-                        });
-                    }
-                    else
-                        throw core::JSONParseException("unsupported key \"" + key + "\" for summary::StationEntry");
-                });
-                for (const auto& e: vars)
-                    add(station, e.var, e.dtrange, e.count);
-            });
+            loader.load_station_entry(in);
         else
             throw core::JSONParseException("unsupported key \"" + key + "\" for summary::Entry");
     });
