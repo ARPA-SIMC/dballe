@@ -266,7 +266,7 @@ then
     AC_DEFINE([HAVE_XAPIAN], 1, [Xapian is available])
     PKGCONFIG_REQUIRES="$PKGCONFIG_REQUIRES xapian-core"
 fi
-AM_CONDITIONAL([HAVE_XAPIAN], [test x"$have_libxapian" = x"yes"])
+AM_CONDITIONAL([HAVE_XAPIAN], [test x"$have_xapian" = x"yes"])
 
 
 dnl Check for popt
