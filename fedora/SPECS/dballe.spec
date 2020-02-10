@@ -4,7 +4,7 @@
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 8.8
+Version: 8.9
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -317,6 +317,10 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Mon Feb 10 2020 Emanuele Di Giacomo <edigiacomo@arpae.it> - 8.9-1
+- Worked around an internal compiler error on Centos7
+- Made Xapian support really optional
+
 * Mon Feb 10 2020 Emanuele Di Giacomo <edigiacomo@arpae.it> - 8.8-1
 - Added `dballe.Explorer` examples to python HOWTO (#181)
 - Creating an Explorer with a pathname makes it load/save from that file, which
