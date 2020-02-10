@@ -4,6 +4,7 @@
 * Creating an Explorer with a pathname makes it load/save from that file, which
   can be a JSON file if it ends with `.json` or no Xapian support is compiled
   in, otherwise Explorer will persist using an indexed Xapian database.
+* Undo breaking changes to stable API on importers/exporters
 
 # New in version 8.7
 
