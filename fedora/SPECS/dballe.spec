@@ -48,7 +48,7 @@ BuildRequires: %{python3_vers}-numpy
 BuildRequires: %{python3_vers}-sphinx
 BuildRequires: %{python3_vers}-breathe
 %endif
-BuildRequires: xapian-core-devel
+%{!?el7:Requires:BuildRequires: xapian-core-devel}
 
 Requires: %{python3_vers}-dballe = %{?epoch:%epoch:}%{version}-%{release}
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
