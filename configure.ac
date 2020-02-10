@@ -262,7 +262,7 @@ dnl Check for Xapian
 PKG_CHECK_EXISTS(xapian-core, [have_xapian=yes], [have_xapian=no])
 if test x$have_xapian = xyes
 then
-    PKG_CHECK_MODULES(XAPIAN, xapian-core)
+    PKG_CHECK_MODULES(XAPIAN, xapian-core >= 1.4)
     AC_DEFINE([HAVE_XAPIAN], 1, [Xapian is available])
     PKGCONFIG_REQUIRES="$PKGCONFIG_REQUIRES xapian-core"
 fi
