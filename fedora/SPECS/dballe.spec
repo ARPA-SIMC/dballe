@@ -4,7 +4,7 @@
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 8.7
+Version: 8.8
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -317,6 +317,13 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Mon Feb 10 2020 Emanuele Di Giacomo <edigiacomo@arpae.it> - 8.8-1
+- Added `dballe.Explorer` examples to python HOWTO (#181)
+- Creating an Explorer with a pathname makes it load/save from that file, which
+  can be a JSON file if it ends with `.json` or no Xapian support is compiled
+  in, otherwise Explorer will persist using an indexed Xapian database.
+- Undo breaking changes to stable API on importers/exporters
+
 * Tue Feb  4 2020 Daniele Branchini <dbranchini@arpae.it> - 8.7-1
 - Fixed the command line documentation of possible input types (#202)
 - Restructured and tested documentation (#204, #205, #206)
