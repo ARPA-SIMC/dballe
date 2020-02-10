@@ -235,7 +235,7 @@ std::shared_ptr<dballe::db::v7::DB> V7DB::create_db(const std::string& backend, 
 }
 
 
-void TestDataSet::populate_db(DB& db)
+void TestDataSet::populate_db(dballe::DB& db)
 {
     auto tr = db.transaction();
     populate_transaction(*tr);
