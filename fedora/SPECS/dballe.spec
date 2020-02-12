@@ -1,4 +1,4 @@
-%global releaseno 1
+%global releaseno 2
 # Note: define _srcarchivename in Travis build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
@@ -317,6 +317,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Mon Feb 10 2020 Emanuele Di Giacomo <edigiacomo@arpae.it> - 8.9-2
+- Fixed typo in BuildRequires
+
 * Mon Feb 10 2020 Emanuele Di Giacomo <edigiacomo@arpae.it> - 8.9-1
 - Worked around an internal compiler error on Centos7
 - Made Xapian support really optional
