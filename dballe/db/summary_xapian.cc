@@ -360,7 +360,7 @@ bool BaseSummaryXapian<Station>::iter_filtered(const dballe::Query& query, std::
     if (!has_query)
     {
         return iter([&](const Station& station, const summary::VarDesc& var, const DatetimeRange& dtrange, size_t count) {
-            if (!wanted_dtrange.contains(dtrange))
+            if (wanted_dtrange.is_disjoint(dtrange))
                 return true;
             return dest(station, var, dtrange, count);
         });
@@ -391,7 +391,7 @@ bool BaseSummaryXapian<Station>::iter_filtered(const dballe::Query& query, std::
         DatetimeRange dtrange(
                 Datetime::from_iso8601(doc.get_value(0).c_str()),
                 Datetime::from_iso8601(doc.get_value(1).c_str()));
-        if (!wanted_dtrange.contains(dtrange))
+        if (wanted_dtrange.is_disjoint(dtrange))
             continue;
 
         size_t count = Xapian::sortable_unserialise(doc.get_value(2));

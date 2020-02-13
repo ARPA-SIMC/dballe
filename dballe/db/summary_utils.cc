@@ -86,7 +86,7 @@ void StationEntry<Station>::add_filtered(const StationEntry& entries, const dbal
         if (!q.varcodes.empty() && q.varcodes.find(entry.var.varcode) == q.varcodes.end())
             continue;
 
-        if (!wanted_dtrange.contains(entry.dtrange))
+        if (wanted_dtrange.is_disjoint(entry.dtrange))
             continue;
 
         add(entry.var, entry.dtrange, entry.count);
@@ -111,7 +111,7 @@ bool StationEntry<Station>::iter_filtered(const dballe::Query& query, std::funct
         if (!q.varcodes.empty() && q.varcodes.find(entry.var.varcode) == q.varcodes.end())
             continue;
 
-        if (!wanted_dtrange.contains(entry.dtrange))
+        if (wanted_dtrange.is_disjoint(entry.dtrange))
             continue;
 
         if (!dest(station, entry.var, entry.dtrange, entry.count))
