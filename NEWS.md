@@ -1,3 +1,7 @@
+# New in version 8.10
+
+* Fixed explorer query (#209)
+
 # New in version 8.9
 
 * Worked around an internal compiler error on Centos7
