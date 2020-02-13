@@ -308,6 +308,85 @@ this->add_method("json_summary", [](Fixture& f) {
     wassert_true(summary.data_count() * 2 == summary1.data_count());
 });
 
+this->add_method("datetime_intersect", [](Fixture& f) {
+    BACKEND s;
+
+    DBStation station;
+    station.id = 1;
+    station.report = "synop";
+    station.coords = Coords(44.0, 11.0);
+    summary::VarDesc vd;
+    vd.level = Level(1);
+    vd.trange = Trange::instant();
+    vd.varcode = WR_VAR(0, 12, 101);
+    s.add(station, vd, DatetimeRange(Datetime(2020, 1, 1), Datetime(2020, 2, 1)), 10);
+
+    {
+        BACKEND s1;
+        core::Query query;
+        query.dtrange.min = Datetime(2020, 1, 1);
+        s1.add_filtered(s, query);
+        wassert(actual(s1.data_count()) == 10);
+    }
+
+    {
+        BACKEND s1;
+        core::Query query;
+        query.dtrange.min = Datetime(2020, 1, 15);
+        s1.add_filtered(s, query);
+        wassert(actual(s1.data_count()) == 10);
+    }
+
+    {
+        BACKEND s1;
+        core::Query query;
+        query.dtrange.min = Datetime(2020, 1, 15);
+        query.dtrange.max = Datetime(2020, 1, 16);
+        s1.add_filtered(s, query);
+        wassert(actual(s1.data_count()) == 10);
+    }
+
+    {
+        BACKEND s1;
+        core::Query query;
+        query.dtrange.max = Datetime(2020, 1, 16);
+        s1.add_filtered(s, query);
+        wassert(actual(s1.data_count()) == 10);
+    }
+
+    {
+        BACKEND s1;
+        core::Query query;
+        query.dtrange.max = Datetime(2020, 2, 1);
+        s1.add_filtered(s, query);
+        wassert(actual(s1.data_count()) == 10);
+    }
+
+    {
+        BACKEND s1;
+        core::Query query;
+        query.dtrange.max = Datetime(2020, 2, 2);
+        s1.add_filtered(s, query);
+        wassert(actual(s1.data_count()) == 10);
+    }
+
+    {
+        BACKEND s1;
+        core::Query query;
+        query.dtrange.max = Datetime(2020, 1, 1);
+        s1.add_filtered(s, query);
+        wassert(actual(s1.data_count()) == 10);
+    }
+
+    {
+        BACKEND s1;
+        core::Query query;
+        query.dtrange.max = Datetime(2019, 12, 31);
+        s1.add_filtered(s, query);
+        wassert(actual(s1.data_count()) == 0);
+    }
+});
+
 }
 
 }
