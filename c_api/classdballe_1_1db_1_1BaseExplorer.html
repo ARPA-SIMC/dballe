@@ -19,7 +19,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">libdballe
-   &#160;<span id="projectnumber">8.6</span>
+   &#160;<span id="projectnumber">8.10</span>
    </div>
   </td>
  </tr>
@@ -61,6 +61,9 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a0250aa9d9a63f05c32a631d0f9116d4e"><td class="memItemLeft" align="right" valign="top"><a id="a0250aa9d9a63f05c32a631d0f9116d4e"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>BaseExplorer</b> (const std::string &amp;pathname)</td></tr>
+<tr class="separator:a0250aa9d9a63f05c32a631d0f9116d4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a71a4a8c7e521529138596f1cf3f1cd4f"><td class="memItemLeft" align="right" valign="top"><a id="a71a4a8c7e521529138596f1cf3f1cd4f"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>BaseExplorer</b> (const <a class="el" href="classdballe_1_1db_1_1BaseExplorer.html">BaseExplorer</a> &amp;)=delete</td></tr>
 <tr class="separator:a71a4a8c7e521529138596f1cf3f1cd4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -103,6 +106,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
+<tr class="memitem:aace972d7144c9635e1281af5d7d237ed"><td class="memItemLeft" align="right" valign="top"><a id="aace972d7144c9635e1281af5d7d237ed"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseExplorer.html#aace972d7144c9635e1281af5d7d237ed">commit</a> ()</td></tr>
+<tr class="memdesc:aace972d7144c9635e1281af5d7d237ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Commit changes to disk. <br /></td></tr>
+<tr class="separator:aace972d7144c9635e1281af5d7d237ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7eb37116875b01ecbaf7157c19942d9a"><td class="memItemLeft" align="right" valign="top"><a id="a7eb37116875b01ecbaf7157c19942d9a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseExplorer.html#a7eb37116875b01ecbaf7157c19942d9a">update_active_summary</a> ()</td></tr>
 <tr class="memdesc:a7eb37116875b01ecbaf7157c19942d9a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Regenerate _active_summary based on filter. <br /></td></tr>
@@ -110,18 +117,18 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
-<tr class="memitem:a171c973b18d17ada337e63c59eaaab1b"><td class="memItemLeft" align="right" valign="top"><a id="a171c973b18d17ada337e63c59eaaab1b"></a>
-<a class="el" href="classdballe_1_1db_1_1BaseSummary.html">dballe::db::BaseSummary</a>&lt; <a class="el" href="structdballe_1_1Station.html">Station</a> &gt; *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseExplorer.html#a171c973b18d17ada337e63c59eaaab1b">_global_summary</a> = nullptr</td></tr>
-<tr class="memdesc:a171c973b18d17ada337e63c59eaaab1b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Summary of the whole database. <br /></td></tr>
-<tr class="separator:a171c973b18d17ada337e63c59eaaab1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a60d1b2844ee796d20d99ec3dc0c54a96"><td class="memItemLeft" align="right" valign="top"><a id="a60d1b2844ee796d20d99ec3dc0c54a96"></a>
+std::shared_ptr&lt; <a class="el" href="classdballe_1_1db_1_1BaseSummary.html">dballe::db::BaseSummary</a>&lt; <a class="el" href="structdballe_1_1Station.html">Station</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseExplorer.html#a60d1b2844ee796d20d99ec3dc0c54a96">_global_summary</a></td></tr>
+<tr class="memdesc:a60d1b2844ee796d20d99ec3dc0c54a96"><td class="mdescLeft">&#160;</td><td class="mdescRight">Summary of the whole database. <br /></td></tr>
+<tr class="separator:a60d1b2844ee796d20d99ec3dc0c54a96"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9a2a5c5269b5dcf8a7391e479305d0b8"><td class="memItemLeft" align="right" valign="top"><a id="a9a2a5c5269b5dcf8a7391e479305d0b8"></a>
 <a class="el" href="structdballe_1_1core_1_1Query.html">dballe::core::Query</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseExplorer.html#a9a2a5c5269b5dcf8a7391e479305d0b8">filter</a></td></tr>
 <tr class="memdesc:a9a2a5c5269b5dcf8a7391e479305d0b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Currently active filter. <br /></td></tr>
 <tr class="separator:a9a2a5c5269b5dcf8a7391e479305d0b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a17ef8ae16492b23ead5284dc8f799aa2"><td class="memItemLeft" align="right" valign="top"><a id="a17ef8ae16492b23ead5284dc8f799aa2"></a>
-<a class="el" href="classdballe_1_1db_1_1BaseSummary.html">dballe::db::BaseSummary</a>&lt; <a class="el" href="structdballe_1_1Station.html">Station</a> &gt; *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseExplorer.html#a17ef8ae16492b23ead5284dc8f799aa2">_active_summary</a> = nullptr</td></tr>
-<tr class="memdesc:a17ef8ae16492b23ead5284dc8f799aa2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Summary of active_filter. <br /></td></tr>
-<tr class="separator:a17ef8ae16492b23ead5284dc8f799aa2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1408b1f2a2d8c0ab846d3c491e813b54"><td class="memItemLeft" align="right" valign="top"><a id="a1408b1f2a2d8c0ab846d3c491e813b54"></a>
+std::shared_ptr&lt; <a class="el" href="classdballe_1_1db_1_1BaseSummary.html">dballe::db::BaseSummary</a>&lt; <a class="el" href="structdballe_1_1Station.html">Station</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseExplorer.html#a1408b1f2a2d8c0ab846d3c491e813b54">_active_summary</a></td></tr>
+<tr class="memdesc:a1408b1f2a2d8c0ab846d3c491e813b54"><td class="mdescLeft">&#160;</td><td class="mdescRight">Summary of active_filter. <br /></td></tr>
+<tr class="separator:a1408b1f2a2d8c0ab846d3c491e813b54"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
 <a id="a5564eccce3861acb5ad6b86dac75630d"></a>

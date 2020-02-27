@@ -42,8 +42,12 @@
 <dt id="dballe.Explorer">
 <em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">Explorer</code><a class="headerlink" href="#dballe.Explorer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Browser for a summary of DB-All-e database of message contents.</p>
-<p>The constructor has no arguments: use <a class="reference internal" href="#dballe.Explorer.rebuild" title="dballe.Explorer.rebuild"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rebuild()</span></code></a> or <a class="reference internal" href="#dballe.Explorer.update" title="dballe.Explorer.update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update()</span></code></a> to
-populate it.</p>
+<p>Use <a class="reference internal" href="#dballe.Explorer.rebuild" title="dballe.Explorer.rebuild"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rebuild()</span></code></a> or <a class="reference internal" href="#dballe.Explorer.update" title="dballe.Explorer.update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update()</span></code></a> to populate the explorer.</p>
+<p>If a file name is passed to the constructor, the Explorer automatically loads
+contents from the file (if it exists), and saves them to the file on update.</p>
+<p>The persistence file is in JSON format if the file name ends with <code class="docutils literal notranslate"><span class="pre">.json</span></code> or
+if no Xapian support is compiled in. Otherwise, the Explorer will persist using
+an indexed Xapian database.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Populate an explorer with the contents of a database</span>
 <span class="n">explorer</span> <span class="o">=</span> <span class="n">dballe</span><span class="o">.</span><span class="n">Explorer</span><span class="p">()</span>
 <span class="k">with</span> <span class="n">explorer</span><span class="o">.</span><span class="n">rebuild</span><span class="p">()</span> <span class="k">as</span> <span class="n">update</span><span class="p">:</span>
@@ -187,8 +191,12 @@ add data to the explorer in a single transaction.</p>
 <dt id="dballe.DBExplorer">
 <em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">DBExplorer</code><a class="headerlink" href="#dballe.DBExplorer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Browser for a summary of DB-All-e database of message contents.</p>
-<p>The constructor has no arguments: use <a class="reference internal" href="#dballe.DBExplorer.rebuild" title="dballe.DBExplorer.rebuild"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rebuild()</span></code></a> or <a class="reference internal" href="#dballe.DBExplorer.update" title="dballe.DBExplorer.update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update()</span></code></a> to
-populate it.</p>
+<p>Use <a class="reference internal" href="#dballe.DBExplorer.rebuild" title="dballe.DBExplorer.rebuild"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rebuild()</span></code></a> or <a class="reference internal" href="#dballe.DBExplorer.update" title="dballe.DBExplorer.update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update()</span></code></a> to populate the explorer.</p>
+<p>If a file name is passed to the constructor, the Explorer automatically loads
+contents from the file (if it exists), and saves them to the file on update.</p>
+<p>The persistence file is in JSON format if the file name ends with <code class="docutils literal notranslate"><span class="pre">.json</span></code> or
+if no Xapian support is compiled in. Otherwise, the Explorer will persist using
+an indexed Xapian database.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Populate an explorer with the contents of a database</span>
 <span class="n">explorer</span> <span class="o">=</span> <span class="n">dballe</span><span class="o">.</span><span class="n">Explorer</span><span class="p">()</span>
 <span class="k">with</span> <span class="n">explorer</span><span class="o">.</span><span class="n">rebuild</span><span class="p">()</span> <span class="k">as</span> <span class="n">update</span><span class="p">:</span>
@@ -341,7 +349,7 @@ add data to the explorer in a single transaction.</p>
 <dl class="method">
 <dt id="dballe.ExplorerUpdate.add_explorer">
 <code class="descname">add_explorer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dballe.ExplorerUpdate.add_explorer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add the contents of the given Explorer or DBExplorer to the Explorer.</p>
+<dd><p>Add the currently selected contents of the given Explorer or DBExplorer to the Explorer.</p>
 </dd></dl>
 
 <dl class="method">
@@ -354,7 +362,7 @@ add data to the explorer in a single transaction.</p>
 <dt id="dballe.ExplorerUpdate.add_messages">
 <code class="descname">add_messages</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dballe.ExplorerUpdate.add_messages" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add dballe.Message objects to the explorer.</p>
-<p>It takes the same messages argument of dballe.DB.import_messages</p>
+<p>It takes the same messages argument of <a class="reference internal" href="db.html#dballe.DB.import_messages" title="dballe.DB.import_messages"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.DB.import_messages()</span></code></a>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -372,7 +380,7 @@ add data to the explorer in a single transaction.</p>
 <dl class="method">
 <dt id="dballe.DBExplorerUpdate.add_explorer">
 <code class="descname">add_explorer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dballe.DBExplorerUpdate.add_explorer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add the contents of the given Explorer or DBExplorer to the Explorer.</p>
+<dd><p>Add the currently selected contents of the given Explorer or DBExplorer to the Explorer.</p>
 </dd></dl>
 
 <dl class="method">
@@ -385,7 +393,7 @@ add data to the explorer in a single transaction.</p>
 <dt id="dballe.DBExplorerUpdate.add_messages">
 <code class="descname">add_messages</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dballe.DBExplorerUpdate.add_messages" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add dballe.Message objects to the explorer.</p>
-<p>It takes the same messages argument of dballe.DB.import_messages</p>
+<p>It takes the same messages argument of <a class="reference internal" href="db.html#dballe.DB.import_messages" title="dballe.DB.import_messages"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.DB.import_messages()</span></code></a>.</p>
 </dd></dl>
 
 </dd></dl>

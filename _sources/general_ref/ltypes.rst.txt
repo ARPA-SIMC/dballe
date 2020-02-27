@@ -99,8 +99,8 @@ where possible.
    * - 111
      - Eta (NAM) Level (see note below)
      - 1/10000
-   * - 112
-     - 116 Reserved
+   * - 112-116 Reserved
+     - 
      - 
    * - 117
      - Mixed Layer Depth

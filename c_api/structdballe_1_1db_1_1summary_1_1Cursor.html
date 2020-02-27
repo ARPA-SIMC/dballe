@@ -19,7 +19,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">libdballe
-   &#160;<span id="projectnumber">8.6</span>
+   &#160;<span id="projectnumber">8.10</span>
    </div>
   </td>
  </tr>
@@ -44,7 +44,6 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
@@ -65,13 +64,11 @@ Inheritance diagram for dballe::db::summary::Cursor&lt; Station &gt;:</div>
   </map>
 </div></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
-Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdballe_1_1db_1_1summary_1_1Cursor_1_1Entry.html">Entry</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a649fcbbb87b412ee934977c9aaad4453"><td class="memItemLeft" align="right" valign="top"><a id="a649fcbbb87b412ee934977c9aaad4453"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Cursor</b> (const <a class="el" href="classdballe_1_1db_1_1BaseSummary.html">BaseSummary</a>&lt; <a class="el" href="structdballe_1_1Station.html">Station</a> &gt; &amp;summary, const <a class="el" href="classdballe_1_1Query.html">Query</a> &amp;query)</td></tr>
+<tr class="separator:a649fcbbb87b412ee934977c9aaad4453"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0aeb1802345f051cbd22d69b51f326a7"><td class="memItemLeft" align="right" valign="top"><a id="a0aeb1802345f051cbd22d69b51f326a7"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Cursor</b> (const <a class="el" href="structdballe_1_1db_1_1summary_1_1StationEntries.html">summary::StationEntries</a>&lt; <a class="el" href="structdballe_1_1Station.html">Station</a> &gt; &amp;entries, const <a class="el" href="classdballe_1_1Query.html">Query</a> &amp;query)</td></tr>
 <tr class="separator:a0aeb1802345f051cbd22d69b51f326a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -101,7 +98,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stru
 <tr class="memdesc:af0fb6f44bb3d9e24a2e942dec1f62d95"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the time range. <br /></td></tr>
 <tr class="separator:af0fb6f44bb3d9e24a2e942dec1f62d95"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a027a5bf923d2036b48245b8ae5e709f4"><td class="memItemLeft" align="right" valign="top"><a id="a027a5bf923d2036b48245b8ae5e709f4"></a>
-<a class="elRef" doxygen="/tmp/tmpsbelutm8/build/doc/libwreport.doxytags:/usr/share/doc/wreport/html/doxygen/" href="/usr/share/doc/wreport/html/doxygen/namespacewreport.html#af9fa16e12fde1ccfb4ce11b3988f5b05">wreport::Varcode</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdballe_1_1db_1_1summary_1_1Cursor.html#a027a5bf923d2036b48245b8ae5e709f4">get_varcode</a> () const override</td></tr>
+<a class="elRef" doxygen="/tmp/tmpdbh7i1d8/build/doc/libwreport.doxytags:/usr/share/doc/wreport/html/doxygen/" href="/usr/share/doc/wreport/html/doxygen/namespacewreport.html#af9fa16e12fde1ccfb4ce11b3988f5b05">wreport::Varcode</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdballe_1_1db_1_1summary_1_1Cursor.html#a027a5bf923d2036b48245b8ae5e709f4">get_varcode</a> () const override</td></tr>
 <tr class="memdesc:a027a5bf923d2036b48245b8ae5e709f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the variable code. <br /></td></tr>
 <tr class="separator:a027a5bf923d2036b48245b8ae5e709f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abc5c6fc1859ff351c26ee212b9dc0de0"><td class="memItemLeft" align="right" valign="top"><a id="abc5c6fc1859ff351c26ee212b9dc0de0"></a>
@@ -142,15 +139,21 @@ static std::unique_ptr&lt; <a class="el" href="structdballe_1_1impl_1_1CursorSum
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a17244516de3e553eb765e65112159c83"><td class="memItemLeft" align="right" valign="top"><a id="a17244516de3e553eb765e65112159c83"></a>
-std::vector&lt; <a class="el" href="structdballe_1_1db_1_1summary_1_1Cursor_1_1Entry.html">Entry</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>results</b></td></tr>
-<tr class="separator:a17244516de3e553eb765e65112159c83"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af3c6b8c681f8bebc99ff3024283d9e6c"><td class="memItemLeft" align="right" valign="top"><a id="af3c6b8c681f8bebc99ff3024283d9e6c"></a>
-std::vector&lt; <a class="el" href="structdballe_1_1db_1_1summary_1_1Cursor_1_1Entry.html">Entry</a> &gt;::const_iterator&#160;</td><td class="memItemRight" valign="bottom"><b>cur</b></td></tr>
-<tr class="separator:af3c6b8c681f8bebc99ff3024283d9e6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aceaf21655198bc1163ebe098f371f2d8"><td class="memItemLeft" align="right" valign="top"><a id="aceaf21655198bc1163ebe098f371f2d8"></a>
+<a class="el" href="structdballe_1_1db_1_1summary_1_1StationEntries.html">summary::StationEntries</a>&lt; <a class="el" href="structdballe_1_1Station.html">Station</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>results</b></td></tr>
+<tr class="separator:aceaf21655198bc1163ebe098f371f2d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abacc557a5688581bd2fcdbd493aacf80"><td class="memItemLeft" align="right" valign="top"><a id="abacc557a5688581bd2fcdbd493aacf80"></a>
+<a class="el" href="structdballe_1_1db_1_1summary_1_1StationEntries.html">summary::StationEntries</a>&lt; <a class="el" href="structdballe_1_1Station.html">Station</a> &gt;::const_iterator&#160;</td><td class="memItemRight" valign="bottom"><b>station_entry</b></td></tr>
+<tr class="separator:abacc557a5688581bd2fcdbd493aacf80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb6b2305186714c19a50c4a6613576b7"><td class="memItemLeft" align="right" valign="top"><a id="acb6b2305186714c19a50c4a6613576b7"></a>
+<a class="el" href="structdballe_1_1db_1_1summary_1_1StationEntry.html">summary::StationEntry</a>&lt; <a class="el" href="structdballe_1_1Station.html">Station</a> &gt;::const_iterator&#160;</td><td class="memItemRight" valign="bottom"><b>var_entry</b></td></tr>
+<tr class="separator:acb6b2305186714c19a50c4a6613576b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae08115281c8db87f73789c9edfaaf920"><td class="memItemLeft" align="right" valign="top"><a id="ae08115281c8db87f73789c9edfaaf920"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>at_start</b> = true</td></tr>
 <tr class="separator:ae08115281c8db87f73789c9edfaaf920"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb92e743e1b424e652f2c88312f18b8a"><td class="memItemLeft" align="right" valign="top"><a id="abb92e743e1b424e652f2c88312f18b8a"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>_remaining</b> = 0</td></tr>
+<tr class="separator:abb92e743e1b424e652f2c88312f18b8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
 <a id="a6293c9581f06cced614ede4bdbfd33b7"></a>
@@ -250,7 +253,7 @@ template&lt;typename Station &gt; </div>
 </div>
 </div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li><a class="el" href="summary_8h_source.html">summary.h</a></li>
+<li><a class="el" href="summary__utils_8h_source.html">summary_utils.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

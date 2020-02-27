@@ -19,7 +19,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">libdballe
-   &#160;<span id="projectnumber">8.6</span>
+   &#160;<span id="projectnumber">8.10</span>
    </div>
   </td>
  </tr>
@@ -64,9 +64,11 @@ Inheritance diagram for dballe::Exporter:</div>
  <div class="center">
   <img src="classdballe_1_1Exporter.png" usemap="#dballe::Exporter_map" alt=""/>
   <map id="dballe::Exporter_map" name="dballe::Exporter_map">
-<area href="classdballe_1_1impl_1_1msg_1_1WRExporter.html" alt="dballe::impl::msg::WRExporter" shape="rect" coords="96,56,279,80"/>
-<area href="classdballe_1_1impl_1_1msg_1_1BufrExporter.html" alt="dballe::impl::msg::BufrExporter" shape="rect" coords="0,112,183,136"/>
-<area href="classdballe_1_1impl_1_1msg_1_1CrexExporter.html" alt="dballe::impl::msg::CrexExporter" shape="rect" coords="193,112,376,136"/>
+<area href="classdballe_1_1BulletinExporter.html" alt="dballe::BulletinExporter" shape="rect" coords="96,56,279,80"/>
+<area href="classdballe_1_1impl_1_1msg_1_1JsonExporter.html" alt="dballe::impl::msg::JsonExporter" shape="rect" coords="289,56,472,80"/>
+<area href="classdballe_1_1impl_1_1msg_1_1WRExporter.html" alt="dballe::impl::msg::WRExporter" shape="rect" coords="96,112,279,136"/>
+<area href="classdballe_1_1impl_1_1msg_1_1BufrExporter.html" alt="dballe::impl::msg::BufrExporter" shape="rect" coords="0,168,183,192"/>
+<area href="classdballe_1_1impl_1_1msg_1_1CrexExporter.html" alt="dballe::impl::msg::CrexExporter" shape="rect" coords="193,168,376,192"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -87,11 +89,11 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aabf6ece053435b770e273b0fc5a7d00e"><td class="memItemLeft" align="right" valign="top">virtual std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1Exporter.html#aabf6ece053435b770e273b0fc5a7d00e">to_binary</a> (const std::vector&lt; std::shared_ptr&lt; <a class="el" href="classdballe_1_1Message.html">Message</a> &gt;&gt; &amp;messages) const =0</td></tr>
 <tr class="memdesc:aabf6ece053435b770e273b0fc5a7d00e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Encode a message.  <a href="#aabf6ece053435b770e273b0fc5a7d00e">More...</a><br /></td></tr>
 <tr class="separator:aabf6ece053435b770e273b0fc5a7d00e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0c3a505e8c0ad50eb3b89d54961c9500"><td class="memItemLeft" align="right" valign="top"><a id="a0c3a505e8c0ad50eb3b89d54961c9500"></a>
-virtual std::unique_ptr&lt; <a class="elRef" doxygen="/tmp/tmpsbelutm8/build/doc/libwreport.doxytags:/usr/share/doc/wreport/html/doxygen/" href="/usr/share/doc/wreport/html/doxygen/classwreport_1_1Bulletin.html">wreport::Bulletin</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1Exporter.html#a0c3a505e8c0ad50eb3b89d54961c9500">to_bulletin</a> (const std::vector&lt; std::shared_ptr&lt; <a class="el" href="classdballe_1_1Message.html">Message</a> &gt;&gt; &amp;msgs) const =0</td></tr>
-<tr class="memdesc:a0c3a505e8c0ad50eb3b89d54961c9500"><td class="mdescLeft">&#160;</td><td class="mdescRight">Export to a Bulletin. <br /></td></tr>
-<tr class="separator:a0c3a505e8c0ad50eb3b89d54961c9500"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0454d30f7a80c8538a0bb4546dc73f89"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="elRef" doxygen="/tmp/tmpsbelutm8/build/doc/libwreport.doxytags:/usr/share/doc/wreport/html/doxygen/" href="/usr/share/doc/wreport/html/doxygen/classwreport_1_1Bulletin.html">wreport::Bulletin</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1Exporter.html#a0454d30f7a80c8538a0bb4546dc73f89">make_bulletin</a> () const</td></tr>
+<tr class="memitem:a226d300db8a8061f22a1b8a3eca8b48a"><td class="memItemLeft" align="right" valign="top"><a id="a226d300db8a8061f22a1b8a3eca8b48a"></a>
+virtual std::unique_ptr&lt; <a class="elRef" doxygen="/tmp/tmpdbh7i1d8/build/doc/libwreport.doxytags:/usr/share/doc/wreport/html/doxygen/" href="/usr/share/doc/wreport/html/doxygen/classwreport_1_1Bulletin.html">wreport::Bulletin</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1Exporter.html#a226d300db8a8061f22a1b8a3eca8b48a">to_bulletin</a> (const std::vector&lt; std::shared_ptr&lt; <a class="el" href="classdballe_1_1Message.html">Message</a> &gt;&gt; &amp;msgs) const</td></tr>
+<tr class="memdesc:a226d300db8a8061f22a1b8a3eca8b48a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Export to a Bulletin. <br /></td></tr>
+<tr class="separator:a226d300db8a8061f22a1b8a3eca8b48a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0454d30f7a80c8538a0bb4546dc73f89"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="elRef" doxygen="/tmp/tmpdbh7i1d8/build/doc/libwreport.doxytags:/usr/share/doc/wreport/html/doxygen/" href="/usr/share/doc/wreport/html/doxygen/classwreport_1_1Bulletin.html">wreport::Bulletin</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1Exporter.html#a0454d30f7a80c8538a0bb4546dc73f89">make_bulletin</a> () const</td></tr>
 <tr class="memdesc:a0454d30f7a80c8538a0bb4546dc73f89"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a bulletin that works with this exporter.  <a href="#a0454d30f7a80c8538a0bb4546dc73f89">More...</a><br /></td></tr>
 <tr class="separator:a0454d30f7a80c8538a0bb4546dc73f89"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -127,7 +129,7 @@ Protected Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual std::unique_ptr&lt;<a class="elRef" doxygen="/tmp/tmpsbelutm8/build/doc/libwreport.doxytags:/usr/share/doc/wreport/html/doxygen/" href="/usr/share/doc/wreport/html/doxygen/classwreport_1_1Bulletin.html">wreport::Bulletin</a>&gt; dballe::Exporter::make_bulletin </td>
+          <td class="memname">virtual std::unique_ptr&lt;<a class="elRef" doxygen="/tmp/tmpdbh7i1d8/build/doc/libwreport.doxytags:/usr/share/doc/wreport/html/doxygen/" href="/usr/share/doc/wreport/html/doxygen/classwreport_1_1Bulletin.html">wreport::Bulletin</a>&gt; dballe::Exporter::make_bulletin </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>

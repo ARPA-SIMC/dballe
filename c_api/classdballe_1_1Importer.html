@@ -19,7 +19,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">libdballe
-   &#160;<span id="projectnumber">8.6</span>
+   &#160;<span id="projectnumber">8.10</span>
    </div>
   </td>
  </tr>
@@ -64,9 +64,11 @@ Inheritance diagram for dballe::Importer:</div>
  <div class="center">
   <img src="classdballe_1_1Importer.png" usemap="#dballe::Importer_map" alt=""/>
   <map id="dballe::Importer_map" name="dballe::Importer_map">
-<area href="classdballe_1_1impl_1_1msg_1_1WRImporter.html" alt="dballe::impl::msg::WRImporter" shape="rect" coords="95,56,276,80"/>
-<area href="classdballe_1_1impl_1_1msg_1_1BufrImporter.html" alt="dballe::impl::msg::BufrImporter" shape="rect" coords="0,112,181,136"/>
-<area href="classdballe_1_1impl_1_1msg_1_1CrexImporter.html" alt="dballe::impl::msg::CrexImporter" shape="rect" coords="191,112,372,136"/>
+<area href="classdballe_1_1BulletinImporter.html" alt="dballe::BulletinImporter" shape="rect" coords="95,56,276,80"/>
+<area href="classdballe_1_1impl_1_1msg_1_1JsonImporter.html" alt="dballe::impl::msg::JsonImporter" shape="rect" coords="286,56,467,80"/>
+<area href="classdballe_1_1impl_1_1msg_1_1WRImporter.html" alt="dballe::impl::msg::WRImporter" shape="rect" coords="95,112,276,136"/>
+<area href="classdballe_1_1impl_1_1msg_1_1BufrImporter.html" alt="dballe::impl::msg::BufrImporter" shape="rect" coords="0,168,181,192"/>
+<area href="classdballe_1_1impl_1_1msg_1_1CrexImporter.html" alt="dballe::impl::msg::CrexImporter" shape="rect" coords="191,168,372,192"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -91,10 +93,10 @@ virtual Encoding&#160;</td><td class="memItemRight" valign="bottom"><a class="el
 <tr class="memitem:a364839db5a2ab387079dade4dcac46b1"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::shared_ptr&lt; <a class="el" href="classdballe_1_1Message.html">Message</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1Importer.html#a364839db5a2ab387079dade4dcac46b1">from_binary</a> (const <a class="el" href="classdballe_1_1BinaryMessage.html">BinaryMessage</a> &amp;msg) const</td></tr>
 <tr class="memdesc:a364839db5a2ab387079dade4dcac46b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decode a message from its raw encoded representation.  <a href="#a364839db5a2ab387079dade4dcac46b1">More...</a><br /></td></tr>
 <tr class="separator:a364839db5a2ab387079dade4dcac46b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8c12836d8fc5bc26e3c9d8debb799c74"><td class="memItemLeft" align="right" valign="top"><a id="a8c12836d8fc5bc26e3c9d8debb799c74"></a>
-virtual std::vector&lt; std::shared_ptr&lt; <a class="el" href="classdballe_1_1Message.html">Message</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1Importer.html#a8c12836d8fc5bc26e3c9d8debb799c74">from_bulletin</a> (const <a class="elRef" doxygen="/tmp/tmpsbelutm8/build/doc/libwreport.doxytags:/usr/share/doc/wreport/html/doxygen/" href="/usr/share/doc/wreport/html/doxygen/classwreport_1_1Bulletin.html">wreport::Bulletin</a> &amp;msg) const =0</td></tr>
-<tr class="memdesc:a8c12836d8fc5bc26e3c9d8debb799c74"><td class="mdescLeft">&#160;</td><td class="mdescRight">Import a decoded BUFR/CREX message. <br /></td></tr>
-<tr class="separator:a8c12836d8fc5bc26e3c9d8debb799c74"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff8d4877a8f6b12a5c9b8f39b999fe4b"><td class="memItemLeft" align="right" valign="top"><a id="aff8d4877a8f6b12a5c9b8f39b999fe4b"></a>
+virtual std::vector&lt; std::shared_ptr&lt; <a class="el" href="classdballe_1_1Message.html">Message</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1Importer.html#aff8d4877a8f6b12a5c9b8f39b999fe4b">from_bulletin</a> (const <a class="elRef" doxygen="/tmp/tmpdbh7i1d8/build/doc/libwreport.doxytags:/usr/share/doc/wreport/html/doxygen/" href="/usr/share/doc/wreport/html/doxygen/classwreport_1_1Bulletin.html">wreport::Bulletin</a> &amp;msg) const</td></tr>
+<tr class="memdesc:aff8d4877a8f6b12a5c9b8f39b999fe4b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Import a decoded BUFR/CREX message. <br /></td></tr>
+<tr class="separator:aff8d4877a8f6b12a5c9b8f39b999fe4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a93689178ae7349ac22eb15e954ab3385"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1Importer.html#a93689178ae7349ac22eb15e954ab3385">foreach_decoded</a> (const <a class="el" href="classdballe_1_1BinaryMessage.html">BinaryMessage</a> &amp;msg, std::function&lt; bool(std::unique_ptr&lt; <a class="el" href="classdballe_1_1Message.html">Message</a> &gt;)&gt; dest) const =0</td></tr>
 <tr class="memdesc:a93689178ae7349ac22eb15e954ab3385"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decode a message from its raw encoded representation, calling <em>dest</em> on each resulting <a class="el" href="classdballe_1_1Message.html" title="A bulletin that has been decoded and physically interpreted.">Message</a>.  <a href="#a93689178ae7349ac22eb15e954ab3385">More...</a><br /></td></tr>
 <tr class="separator:a93689178ae7349ac22eb15e954ab3385"><td class="memSeparator" colspan="2">&#160;</td></tr>

@@ -540,7 +540,7 @@ are read via <a class="reference internal" href="#_CPPv4N6dballe4FileE" title="d
 <dt id="_CPPv4N6dballe8ImporterE">
 <span id="_CPPv3N6dballe8ImporterE"></span><span id="_CPPv2N6dballe8ImporterE"></span><span id="dballe::Importer"></span><span class="target" id="classdballe_1_1Importer"></span><em class="property">class </em><code class="descname">Importer</code><a class="headerlink" href="#_CPPv4N6dballe8ImporterE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p><a class="reference internal" href="#classdballe_1_1Message"><span class="std std-ref">Message</span></a> importer interface. </p>
-<p>Subclassed by dballe::impl::msg::WRImporter</p>
+<p>Subclassed by dballe::BulletinImporter, dballe::impl::msg::JsonImporter</p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric">Public Functions</p>
 <dl class="function">
@@ -570,7 +570,7 @@ are read via <a class="reference internal" href="#_CPPv4N6dballe4FileE" title="d
 
 <dl class="function">
 <dt id="_CPPv4NK6dballe8Importer13from_bulletinERKN7wreport8BulletinE">
-<span id="_CPPv3NK6dballe8Importer13from_bulletinERKN7wreport8BulletinE"></span><span id="_CPPv2NK6dballe8Importer13from_bulletinERKN7wreport8BulletinE"></span><span id="dballe::Importer::from_bulletin__wreport::BulletinCRC"></span><span class="target" id="classdballe_1_1Importer_1a8c12836d8fc5bc26e3c9d8debb799c74"></span><em class="property">virtual</em> std::vector&lt;std::shared_ptr&lt;<a class="reference internal" href="#_CPPv4N6dballe7MessageE" title="dballe::Message">Message</a>&gt;&gt; <code class="descname">from_bulletin</code><span class="sig-paren">(</span><em class="property">const</em> wreport::Bulletin &amp;<em>msg</em><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe8Importer13from_bulletinERKN7wreport8BulletinE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3NK6dballe8Importer13from_bulletinERKN7wreport8BulletinE"></span><span id="_CPPv2NK6dballe8Importer13from_bulletinERKN7wreport8BulletinE"></span><span id="dballe::Importer::from_bulletin__wreport::BulletinCRC"></span><span class="target" id="classdballe_1_1Importer_1aff8d4877a8f6b12a5c9b8f39b999fe4b"></span><em class="property">virtual</em> std::vector&lt;std::shared_ptr&lt;<a class="reference internal" href="#_CPPv4N6dballe7MessageE" title="dballe::Message">Message</a>&gt;&gt; <code class="descname">from_bulletin</code><span class="sig-paren">(</span><em class="property">const</em> wreport::Bulletin &amp;<em>msg</em><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK6dballe8Importer13from_bulletinERKN7wreport8BulletinE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Import a decoded BUFR/CREX message. </p>
 </dd></dl>
 
@@ -691,7 +691,7 @@ are read via <a class="reference internal" href="#_CPPv4N6dballe4FileE" title="d
 <dt id="_CPPv4N6dballe8ExporterE">
 <span id="_CPPv3N6dballe8ExporterE"></span><span id="_CPPv2N6dballe8ExporterE"></span><span id="dballe::Exporter"></span><span class="target" id="classdballe_1_1Exporter"></span><em class="property">class </em><code class="descname">Exporter</code><a class="headerlink" href="#_CPPv4N6dballe8ExporterE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p><a class="reference internal" href="#classdballe_1_1Message"><span class="std std-ref">Message</span></a> exporter interface. </p>
-<p>Subclassed by dballe::impl::msg::WRExporter</p>
+<p>Subclassed by dballe::BulletinExporter, dballe::impl::msg::JsonExporter</p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric">Public Functions</p>
 <dl class="function">
@@ -712,7 +712,7 @@ are read via <a class="reference internal" href="#_CPPv4N6dballe4FileE" title="d
 
 <dl class="function">
 <dt id="_CPPv4NK6dballe8Exporter11to_bulletinERKNSt6vectorINSt10shared_ptrI7MessageEEEE">
-<span id="_CPPv3NK6dballe8Exporter11to_bulletinERKNSt6vectorINSt10shared_ptrI7MessageEEEE"></span><span id="_CPPv2NK6dballe8Exporter11to_bulletinERKNSt6vectorINSt10shared_ptrI7MessageEEEE"></span><span id="dballe::Exporter::to_bulletin__std::vector:std::shared_ptr:Message::CRC"></span><span class="target" id="classdballe_1_1Exporter_1a0c3a505e8c0ad50eb3b89d54961c9500"></span><em class="property">virtual</em> std::unique_ptr&lt;wreport::Bulletin&gt; <code class="descname">to_bulletin</code><span class="sig-paren">(</span><em class="property">const</em> std::vector&lt;std::shared_ptr&lt;<a class="reference internal" href="#_CPPv4N6dballe7MessageE" title="dballe::Message">Message</a>&gt;&gt; &amp;<em>msgs</em><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK6dballe8Exporter11to_bulletinERKNSt6vectorINSt10shared_ptrI7MessageEEEE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3NK6dballe8Exporter11to_bulletinERKNSt6vectorINSt10shared_ptrI7MessageEEEE"></span><span id="_CPPv2NK6dballe8Exporter11to_bulletinERKNSt6vectorINSt10shared_ptrI7MessageEEEE"></span><span id="dballe::Exporter::to_bulletin__std::vector:std::shared_ptr:Message::CRC"></span><span class="target" id="classdballe_1_1Exporter_1a226d300db8a8061f22a1b8a3eca8b48a"></span><em class="property">virtual</em> std::unique_ptr&lt;wreport::Bulletin&gt; <code class="descname">to_bulletin</code><span class="sig-paren">(</span><em class="property">const</em> std::vector&lt;std::shared_ptr&lt;<a class="reference internal" href="#_CPPv4N6dballe7MessageE" title="dballe::Message">Message</a>&gt;&gt; &amp;<em>msgs</em><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK6dballe8Exporter11to_bulletinERKNSt6vectorINSt10shared_ptrI7MessageEEEE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Export to a Bulletin. </p>
 </dd></dl>
 

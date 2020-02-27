@@ -19,7 +19,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">libdballe
-   &#160;<span id="projectnumber">8.6</span>
+   &#160;<span id="projectnumber">8.10</span>
    </div>
   </td>
  </tr>
@@ -56,7 +56,7 @@ $(function() {
 <p>Information about a station, and statistics about its variables.  
  <a href="structdballe_1_1db_1_1summary_1_1StationEntry.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="summary_8h_source.html">summary.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="summary__utils_8h_source.html">summary_utils.h</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for dballe::db::summary::StationEntry&lt; Station &gt;:</div>
 <div class="dyncontent">
@@ -98,6 +98,9 @@ template&lt;typename OStation &gt; </td></tr>
 <tr class="memitem:a76b7a550b0005834135ce15dad32d46e"><td class="memItemLeft" align="right" valign="top"><a id="a76b7a550b0005834135ce15dad32d46e"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>add_filtered</b> (const <a class="el" href="structdballe_1_1db_1_1summary_1_1StationEntry.html">StationEntry</a> &amp;entries, const <a class="el" href="classdballe_1_1Query.html">dballe::Query</a> &amp;query)</td></tr>
 <tr class="separator:a76b7a550b0005834135ce15dad32d46e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a778c39402a9beae34dcd4da3184a3963"><td class="memItemLeft" align="right" valign="top"><a id="a778c39402a9beae34dcd4da3184a3963"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>iter_filtered</b> (const <a class="el" href="classdballe_1_1Query.html">dballe::Query</a> &amp;query, std::function&lt; bool(const <a class="el" href="structdballe_1_1Station.html">Station</a> &amp;, const <a class="el" href="structdballe_1_1db_1_1summary_1_1VarDesc.html">summary::VarDesc</a> &amp;, const <a class="el" href="structdballe_1_1DatetimeRange.html">DatetimeRange</a> &amp;dtrange, size_t count)&gt; dest) const</td></tr>
+<tr class="separator:a778c39402a9beae34dcd4da3184a3963"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a797a4f7e8349d0862272ea594f4d3f96"><td class="memItemLeft" align="right" valign="top"><a id="a797a4f7e8349d0862272ea594f4d3f96"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>to_json</b> (<a class="el" href="classdballe_1_1core_1_1JSONWriter.html">core::JSONWriter</a> &amp;writer) const</td></tr>
 <tr class="separator:a797a4f7e8349d0862272ea594f4d3f96"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -202,7 +205,7 @@ struct dballe::db::summary::StationEntry&lt; Station &gt;</h3>
 <p>Information about a station, and statistics about its variables. </p>
 <p>It behaves similarly to a std::vector&lt;VarEntry&gt; </p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
-<li><a class="el" href="summary_8h_source.html">summary.h</a></li>
+<li><a class="el" href="summary__utils_8h_source.html">summary_utils.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

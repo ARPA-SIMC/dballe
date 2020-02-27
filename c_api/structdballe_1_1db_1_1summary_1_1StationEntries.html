@@ -19,7 +19,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">libdballe
-   &#160;<span id="projectnumber">8.6</span>
+   &#160;<span id="projectnumber">8.10</span>
    </div>
   </td>
  </tr>
@@ -55,7 +55,7 @@ $(function() {
 <p>Index of all stations known to a summary.  
  <a href="structdballe_1_1db_1_1summary_1_1StationEntries.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="summary_8h_source.html">summary.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="summary__utils_8h_source.html">summary_utils.h</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for dballe::db::summary::StationEntries&lt; Station &gt;:</div>
 <div class="dyncontent">
@@ -101,10 +101,10 @@ template&lt;typename OStation &gt; </td></tr>
 <tr class="memitem:aabcb7efe9ace845842ae3231aae0dbf3"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structdballe_1_1db_1_1summary_1_1StationEntries.html#aabcb7efe9ace845842ae3231aae0dbf3">add</a> (const <a class="el" href="structdballe_1_1db_1_1summary_1_1StationEntries.html">StationEntries</a>&lt; OStation &gt; &amp;entry)</td></tr>
 <tr class="memdesc:aabcb7efe9ace845842ae3231aae0dbf3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Merge the given entries. <br /></td></tr>
 <tr class="separator:aabcb7efe9ace845842ae3231aae0dbf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3aabcbbf69737eef89ff046079449a9e"><td class="memItemLeft" align="right" valign="top"><a id="a3aabcbbf69737eef89ff046079449a9e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdballe_1_1db_1_1summary_1_1StationEntries.html#a3aabcbbf69737eef89ff046079449a9e">add</a> (const <a class="el" href="structdballe_1_1db_1_1summary_1_1StationEntries.html">StationEntries</a>&lt; <a class="el" href="structdballe_1_1Station.html">Station</a> &gt; &amp;entry)</td></tr>
-<tr class="memdesc:a3aabcbbf69737eef89ff046079449a9e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Merge the given entries. <br /></td></tr>
-<tr class="separator:a3aabcbbf69737eef89ff046079449a9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0d3fc886134130df136be0900ba9cb3c"><td class="memItemLeft" align="right" valign="top"><a id="a0d3fc886134130df136be0900ba9cb3c"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdballe_1_1db_1_1summary_1_1StationEntries.html#a0d3fc886134130df136be0900ba9cb3c">add</a> (const <a class="el" href="structdballe_1_1db_1_1summary_1_1StationEntries.html">StationEntries</a>&lt; <a class="el" href="structdballe_1_1Station.html">Station</a> &gt; &amp;entry)</td></tr>
+<tr class="memdesc:a0d3fc886134130df136be0900ba9cb3c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Merge the given entries. <br /></td></tr>
+<tr class="separator:a0d3fc886134130df136be0900ba9cb3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a26c54dd1aac0df89c4e0a7be3cca5994"><td class="memItemLeft" align="right" valign="top"><a id="a26c54dd1aac0df89c4e0a7be3cca5994"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdballe_1_1db_1_1summary_1_1StationEntries.html#a26c54dd1aac0df89c4e0a7be3cca5994">add</a> (const <a class="el" href="structdballe_1_1db_1_1summary_1_1StationEntry.html">StationEntry</a>&lt; <a class="el" href="structdballe_1_1Station.html">Station</a> &gt; &amp;entry)</td></tr>
 <tr class="memdesc:a26c54dd1aac0df89c4e0a7be3cca5994"><td class="mdescLeft">&#160;</td><td class="mdescRight">Merge the given entry. <br /></td></tr>
@@ -118,6 +118,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>has</b> (const <a cla
 <tr class="memitem:a9a56296dfefdc851a9cad55e208f2853"><td class="memItemLeft" align="right" valign="top"><a id="a9a56296dfefdc851a9cad55e208f2853"></a>
 const <a class="el" href="structdballe_1_1db_1_1summary_1_1StationEntries.html">StationEntries</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>sorted</b> () const</td></tr>
 <tr class="separator:a9a56296dfefdc851a9cad55e208f2853"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19dd87431df7eabdea68ae291363f7ff"><td class="memItemLeft" align="right" valign="top"><a id="a19dd87431df7eabdea68ae291363f7ff"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>iter_filtered</b> (const <a class="el" href="classdballe_1_1Query.html">dballe::Query</a> &amp;query, std::function&lt; bool(const <a class="el" href="structdballe_1_1Station.html">Station</a> &amp;, const <a class="el" href="structdballe_1_1db_1_1summary_1_1VarDesc.html">summary::VarDesc</a> &amp;, const <a class="el" href="structdballe_1_1DatetimeRange.html">DatetimeRange</a> &amp;dtrange, size_t count)&gt; dest) const</td></tr>
+<tr class="separator:a19dd87431df7eabdea68ae291363f7ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
@@ -204,7 +207,7 @@ struct dballe::db::summary::StationEntries&lt; Station &gt;</h3>
 <p>Index of all stations known to a summary. </p>
 <p>It behaves similarly to a std::vector&lt;StationEntry&lt;Station&gt;&gt; </p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
-<li><a class="el" href="summary_8h_source.html">summary.h</a></li>
+<li><a class="el" href="summary__utils_8h_source.html">summary_utils.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

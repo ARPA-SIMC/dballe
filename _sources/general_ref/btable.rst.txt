@@ -1656,6 +1656,12 @@ digits and description.
      - Aerosol Optical Thickness                                       
      - Numeric                 
      - #.####
+   * - .. _B15242:
+
+       B15242
+     - CO2 Concentration                                               
+     - KG/M**3                 
+     - .######
    * - .. _B20001:
 
        B20001
@@ -2886,6 +2892,30 @@ digits and description.
      - Corilacee_Ostria                                                
      - POLLEN/M**3             
      - #######.#
+   * - .. _B48081:
+
+       B48081
+     - Moracee - Broussonetia                                          
+     - POLLEN/M**3             
+     - #######.#
+   * - .. _B48082:
+
+       B48082
+     - Moracee - Morus                                                 
+     - POLLEN/M**3             
+     - #######.#
+   * - .. _B48083:
+
+       B48083
+     - Leguminose                                                      
+     - POLLEN/M**3             
+     - #######.#
+   * - .. _B48084:
+
+       B48084
+     - Arecacee                                                        
+     - POLLEN/M**3             
+     - #######.#
    * - .. _B48128:
 
        B48128
@@ -3364,6 +3394,30 @@ digits and description.
 
        B48207
      - Conta Corilacee_Ostria                                          
+     - Numeric                 
+     - 7 digits
+   * - .. _B48208:
+
+       B48208
+     - Conta Moracee - Broussonetia                                    
+     - Numeric                 
+     - 7 digits
+   * - .. _B48209:
+
+       B48209
+     - Conta Moracee - Morus                                           
+     - Numeric                 
+     - 7 digits
+   * - .. _B48210:
+
+       B48210
+     - Conta Leguminose                                                
+     - Numeric                 
+     - 7 digits
+   * - .. _B48211:
+
+       B48211
+     - Conta Arecacee                                                  
      - Numeric                 
      - 7 digits
    * - .. _B49192:

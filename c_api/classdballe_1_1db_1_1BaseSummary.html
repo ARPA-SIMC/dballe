@@ -19,7 +19,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">libdballe
-   &#160;<span id="projectnumber">8.6</span>
+   &#160;<span id="projectnumber">8.10</span>
    </div>
   </td>
  </tr>
@@ -44,12 +44,11 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pro-methods">Protected Member Functions</a> &#124;
-<a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="classdballe_1_1db_1_1BaseSummary-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">dballe::db::BaseSummary&lt; Station &gt; Class Template Reference</div>  </div>
+<div class="title">dballe::db::BaseSummary&lt; Station &gt; Class Template Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
 </div><!--header-->
 <div class="contents">
 
@@ -57,7 +56,23 @@ $(function() {
  <a href="classdballe_1_1db_1_1BaseSummary.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="summary_8h_source.html">summary.h</a>&gt;</code></p>
+<div class="dynheader">
+Inheritance diagram for dballe::db::BaseSummary&lt; Station &gt;:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="classdballe_1_1db_1_1BaseSummary.png" usemap="#dballe::db::BaseSummary_3C_20Station_20_3E_map" alt=""/>
+  <map id="dballe::db::BaseSummary_3C_20Station_20_3E_map" name="dballe::db::BaseSummary_3C_20Station_20_3E_map">
+<area href="classdballe_1_1db_1_1BaseSummaryMemory.html" title="High level objects for working with DB-All.e DB summaries." alt="dballe::db::BaseSummaryMemory&lt; Station &gt;" shape="rect" coords="0,56,260,80"/>
+<area href="classdballe_1_1db_1_1BaseSummaryXapian.html" title="High level objects for working with DB-All.e DB summaries." alt="dballe::db::BaseSummaryXapian&lt; Station &gt;" shape="rect" coords="270,56,530,80"/>
+  </map>
+</div></div>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:a67cce080a6fb63d6b070e3b3a953826d"><td class="memItemLeft" align="right" valign="top"><a id="a67cce080a6fb63d6b070e3b3a953826d"></a>
+typedef <a class="el" href="structdballe_1_1Station.html">Station</a>&#160;</td><td class="memItemRight" valign="bottom"><b>station_type</b></td></tr>
+<tr class="separator:a67cce080a6fb63d6b070e3b3a953826d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a314768e31e0d0d80f0f1017012d18ec6"><td class="memItemLeft" align="right" valign="top"><a id="a314768e31e0d0d80f0f1017012d18ec6"></a>
@@ -72,105 +87,88 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aa31363bc5d6d7b7a5e6d1a7c65a1cfad"><td class="memItemLeft" align="right" valign="top"><a id="aa31363bc5d6d7b7a5e6d1a7c65a1cfad"></a>
 <a class="el" href="classdballe_1_1db_1_1BaseSummary.html">BaseSummary</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classdballe_1_1db_1_1BaseSummary.html">BaseSummary</a> &amp;&amp;)=delete</td></tr>
 <tr class="separator:aa31363bc5d6d7b7a5e6d1a7c65a1cfad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a33490e621c18c95c38775193c5b57f16"><td class="memItemLeft" align="right" valign="top"><a id="a33490e621c18c95c38775193c5b57f16"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="classdballe_1_1db_1_1BaseSummary.html">BaseSummary</a> &amp;o) const</td></tr>
-<tr class="separator:a33490e621c18c95c38775193c5b57f16"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:add9093ff444eeaafaa11e8bd14030bf8"><td class="memItemLeft" align="right" valign="top"><a id="add9093ff444eeaafaa11e8bd14030bf8"></a>
-const <a class="el" href="structdballe_1_1db_1_1summary_1_1StationEntries.html">summary::StationEntries</a>&lt; <a class="el" href="structdballe_1_1Station.html">Station</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>stations</b> () const</td></tr>
-<tr class="separator:add9093ff444eeaafaa11e8bd14030bf8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac132115494ab3d869272162f88afadc1"><td class="memItemLeft" align="right" valign="top"><a id="ac132115494ab3d869272162f88afadc1"></a>
-const <a class="el" href="structdballe_1_1core_1_1SortedSmallUniqueValueSet.html">core::SortedSmallUniqueValueSet</a>&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>reports</b> () const</td></tr>
-<tr class="separator:ac132115494ab3d869272162f88afadc1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0cf59347da4e7531d5dea3f4d85682e2"><td class="memItemLeft" align="right" valign="top"><a id="a0cf59347da4e7531d5dea3f4d85682e2"></a>
-const <a class="el" href="structdballe_1_1core_1_1SortedSmallUniqueValueSet.html">core::SortedSmallUniqueValueSet</a>&lt; <a class="el" href="structdballe_1_1Level.html">dballe::Level</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>levels</b> () const</td></tr>
-<tr class="separator:a0cf59347da4e7531d5dea3f4d85682e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6723a6e07bd9d7fd19b3dd5dc6666d91"><td class="memItemLeft" align="right" valign="top"><a id="a6723a6e07bd9d7fd19b3dd5dc6666d91"></a>
-const <a class="el" href="structdballe_1_1core_1_1SortedSmallUniqueValueSet.html">core::SortedSmallUniqueValueSet</a>&lt; <a class="el" href="structdballe_1_1Trange.html">dballe::Trange</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>tranges</b> () const</td></tr>
-<tr class="separator:a6723a6e07bd9d7fd19b3dd5dc6666d91"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a597ec7da807aa04163b4640782d7efe4"><td class="memItemLeft" align="right" valign="top"><a id="a597ec7da807aa04163b4640782d7efe4"></a>
-const <a class="el" href="structdballe_1_1core_1_1SortedSmallUniqueValueSet.html">core::SortedSmallUniqueValueSet</a>&lt; <a class="elRef" doxygen="/tmp/tmpsbelutm8/build/doc/libwreport.doxytags:/usr/share/doc/wreport/html/doxygen/" href="/usr/share/doc/wreport/html/doxygen/namespacewreport.html#af9fa16e12fde1ccfb4ce11b3988f5b05">wreport::Varcode</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>varcodes</b> () const</td></tr>
-<tr class="separator:a597ec7da807aa04163b4640782d7efe4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a07dbff1962010df80898d3db693f338d"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structdballe_1_1Datetime.html">Datetime</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#a07dbff1962010df80898d3db693f338d">datetime_min</a> () const</td></tr>
-<tr class="memdesc:a07dbff1962010df80898d3db693f338d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Recompute reports, levels, tranges, and varcodes.  <a href="#a07dbff1962010df80898d3db693f338d">More...</a><br /></td></tr>
-<tr class="separator:a07dbff1962010df80898d3db693f338d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab11000acd82bf62c6a8cc1cbc90dfac1"><td class="memItemLeft" align="right" valign="top"><a id="ab11000acd82bf62c6a8cc1cbc90dfac1"></a>
-const <a class="el" href="structdballe_1_1Datetime.html">Datetime</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>datetime_max</b> () const</td></tr>
-<tr class="separator:ab11000acd82bf62c6a8cc1cbc90dfac1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac8b178ab3c684b22e068c1d72821e2fd"><td class="memItemLeft" align="right" valign="top"><a id="ac8b178ab3c684b22e068c1d72821e2fd"></a>
-unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>data_count</b> () const</td></tr>
-<tr class="separator:ac8b178ab3c684b22e068c1d72821e2fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae0eab138d99b7adf7de29bad009363bc"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classdballe_1_1CursorSummary.html">dballe::CursorSummary</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#ae0eab138d99b7adf7de29bad009363bc">query_summary</a> (const <a class="el" href="classdballe_1_1Query.html">Query</a> &amp;query) const</td></tr>
-<tr class="memdesc:ae0eab138d99b7adf7de29bad009363bc"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classdballe_1_1Query.html" title="Query used to filter DB-All.e data.">Query</a> the contents of the summary.  <a href="#ae0eab138d99b7adf7de29bad009363bc">More...</a><br /></td></tr>
-<tr class="separator:ae0eab138d99b7adf7de29bad009363bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acb9716698a6ffb5120c31f75c3277f83"><td class="memItemLeft" align="right" valign="top"><a id="acb9716698a6ffb5120c31f75c3277f83"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#acb9716698a6ffb5120c31f75c3277f83">add</a> (const <a class="el" href="structdballe_1_1Station.html">Station</a> &amp;station, const <a class="el" href="structdballe_1_1db_1_1summary_1_1VarDesc.html">summary::VarDesc</a> &amp;vd, const <a class="el" href="structdballe_1_1DatetimeRange.html">dballe::DatetimeRange</a> &amp;dtrange, size_t count)</td></tr>
-<tr class="memdesc:acb9716698a6ffb5120c31f75c3277f83"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an entry to the summary. <br /></td></tr>
-<tr class="separator:acb9716698a6ffb5120c31f75c3277f83"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a24613f022ef6baf23c11dfca68dddfea"><td class="memItemLeft" align="right" valign="top"><a id="a24613f022ef6baf23c11dfca68dddfea"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#a24613f022ef6baf23c11dfca68dddfea">add_cursor</a> (const <a class="el" href="classdballe_1_1CursorSummary.html">dballe::CursorSummary</a> &amp;cur)</td></tr>
-<tr class="memdesc:a24613f022ef6baf23c11dfca68dddfea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an entry to the summary taken from the current status of <em>cur</em>. <br /></td></tr>
-<tr class="separator:a24613f022ef6baf23c11dfca68dddfea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b78ccde687b4f3d0f69d4c61eceb3ae"><td class="memItemLeft" align="right" valign="top"><a id="a4b78ccde687b4f3d0f69d4c61eceb3ae"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#a4b78ccde687b4f3d0f69d4c61eceb3ae">add_message</a> (const <a class="el" href="classdballe_1_1Message.html">dballe::Message</a> &amp;message)</td></tr>
-<tr class="memdesc:a4b78ccde687b4f3d0f69d4c61eceb3ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add the contents of a <a class="el" href="classdballe_1_1Message.html" title="A bulletin that has been decoded and physically interpreted.">Message</a>. <br /></td></tr>
-<tr class="separator:a4b78ccde687b4f3d0f69d4c61eceb3ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab76cb88e0d09e33affefa1ea99983891"><td class="memItemLeft" align="right" valign="top"><a id="ab76cb88e0d09e33affefa1ea99983891"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#ab76cb88e0d09e33affefa1ea99983891">add_messages</a> (const std::vector&lt; std::shared_ptr&lt; <a class="el" href="classdballe_1_1Message.html">dballe::Message</a> &gt;&gt; &amp;messages)</td></tr>
-<tr class="memdesc:ab76cb88e0d09e33affefa1ea99983891"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add the contents of a Messages. <br /></td></tr>
-<tr class="separator:ab76cb88e0d09e33affefa1ea99983891"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a45cae0401bbd5990226bd7f23e65eed4"><td class="memTemplParams" colspan="2"><a id="a45cae0401bbd5990226bd7f23e65eed4"></a>
-template&lt;typename OSummary &gt; </td></tr>
-<tr class="memitem:a45cae0401bbd5990226bd7f23e65eed4"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#a45cae0401bbd5990226bd7f23e65eed4">add_summary</a> (const <a class="el" href="classdballe_1_1db_1_1BaseSummary.html">BaseSummary</a>&lt; OSummary &gt; &amp;summary)</td></tr>
-<tr class="memdesc:a45cae0401bbd5990226bd7f23e65eed4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Merge the copy of another summary into this one. <br /></td></tr>
-<tr class="separator:a45cae0401bbd5990226bd7f23e65eed4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4f4e1f87b21354f2d1e08cb75ecfffcf"><td class="memItemLeft" align="right" valign="top"><a id="a4f4e1f87b21354f2d1e08cb75ecfffcf"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#a4f4e1f87b21354f2d1e08cb75ecfffcf">add_filtered</a> (const <a class="el" href="classdballe_1_1db_1_1BaseSummary.html">BaseSummary</a> &amp;summary, const <a class="el" href="classdballe_1_1Query.html">dballe::Query</a> &amp;query)</td></tr>
-<tr class="memdesc:a4f4e1f87b21354f2d1e08cb75ecfffcf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Merge the copy of another summary into this one. <br /></td></tr>
-<tr class="separator:a4f4e1f87b21354f2d1e08cb75ecfffcf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a61225a17d53f2cbd0374275afa8e8496"><td class="memItemLeft" align="right" valign="top"><a id="a61225a17d53f2cbd0374275afa8e8496"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#a61225a17d53f2cbd0374275afa8e8496">to_json</a> (<a class="el" href="classdballe_1_1core_1_1JSONWriter.html">core::JSONWriter</a> &amp;writer) const</td></tr>
-<tr class="memdesc:a61225a17d53f2cbd0374275afa8e8496"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serialize to JSON. <br /></td></tr>
-<tr class="separator:a61225a17d53f2cbd0374275afa8e8496"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a120e9eeebb91fe25f148d03eeb2c4c80"><td class="memItemLeft" align="right" valign="top"><a id="a120e9eeebb91fe25f148d03eeb2c4c80"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#a120e9eeebb91fe25f148d03eeb2c4c80">load_json</a> (<a class="el" href="structdballe_1_1core_1_1json_1_1Stream.html">core::json::Stream</a> &amp;in)</td></tr>
-<tr class="memdesc:a120e9eeebb91fe25f148d03eeb2c4c80"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load contents from JSON, merging with the current contents. <br /></td></tr>
-<tr class="separator:a120e9eeebb91fe25f148d03eeb2c4c80"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afa4d57f55e8a578be0e5a26b384b598e"><td class="memItemLeft" align="right" valign="top"><a id="afa4d57f55e8a578be0e5a26b384b598e"></a>
-DBALLE_TEST_ONLY void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> (FILE *out) const</td></tr>
-<tr class="separator:afa4d57f55e8a578be0e5a26b384b598e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
-Protected Member Functions</h2></td></tr>
-<tr class="memitem:a8d331f1980fd0455b615936af99aff90"><td class="memItemLeft" align="right" valign="top"><a id="a8d331f1980fd0455b615936af99aff90"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>recompute_summaries</b> () const</td></tr>
-<tr class="separator:a8d331f1980fd0455b615936af99aff90"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
-Protected Attributes</h2></td></tr>
-<tr class="memitem:abf931bb77f45b30aff5fd661db0cde68"><td class="memItemLeft" align="right" valign="top"><a id="abf931bb77f45b30aff5fd661db0cde68"></a>
-<a class="el" href="structdballe_1_1db_1_1summary_1_1StationEntries.html">summary::StationEntries</a>&lt; <a class="el" href="structdballe_1_1Station.html">Station</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>entries</b></td></tr>
-<tr class="separator:abf931bb77f45b30aff5fd661db0cde68"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3eeb38f0e575ae2acaad0640f7644070"><td class="memItemLeft" align="right" valign="top"><a id="a3eeb38f0e575ae2acaad0640f7644070"></a>
-<a class="el" href="structdballe_1_1core_1_1SortedSmallUniqueValueSet.html">core::SortedSmallUniqueValueSet</a>&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>m_reports</b></td></tr>
-<tr class="separator:a3eeb38f0e575ae2acaad0640f7644070"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abe548e491658979e923a156fe7d3fb11"><td class="memItemLeft" align="right" valign="top"><a id="abe548e491658979e923a156fe7d3fb11"></a>
-<a class="el" href="structdballe_1_1core_1_1SortedSmallUniqueValueSet.html">core::SortedSmallUniqueValueSet</a>&lt; <a class="el" href="structdballe_1_1Level.html">dballe::Level</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>m_levels</b></td></tr>
-<tr class="separator:abe548e491658979e923a156fe7d3fb11"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac7598d72f8dba40c66aa6c30241a4f05"><td class="memItemLeft" align="right" valign="top"><a id="ac7598d72f8dba40c66aa6c30241a4f05"></a>
-<a class="el" href="structdballe_1_1core_1_1SortedSmallUniqueValueSet.html">core::SortedSmallUniqueValueSet</a>&lt; <a class="el" href="structdballe_1_1Trange.html">dballe::Trange</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>m_tranges</b></td></tr>
-<tr class="separator:ac7598d72f8dba40c66aa6c30241a4f05"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab54b67eb55647b29bdd69875eb5537ff"><td class="memItemLeft" align="right" valign="top"><a id="ab54b67eb55647b29bdd69875eb5537ff"></a>
-<a class="el" href="structdballe_1_1core_1_1SortedSmallUniqueValueSet.html">core::SortedSmallUniqueValueSet</a>&lt; <a class="elRef" doxygen="/tmp/tmpsbelutm8/build/doc/libwreport.doxytags:/usr/share/doc/wreport/html/doxygen/" href="/usr/share/doc/wreport/html/doxygen/namespacewreport.html#af9fa16e12fde1ccfb4ce11b3988f5b05">wreport::Varcode</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>m_varcodes</b></td></tr>
-<tr class="separator:ab54b67eb55647b29bdd69875eb5537ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a97c53d5d364f24e02435c2bb2f365a04"><td class="memItemLeft" align="right" valign="top"><a id="a97c53d5d364f24e02435c2bb2f365a04"></a>
-<a class="el" href="structdballe_1_1DatetimeRange.html">dballe::DatetimeRange</a>&#160;</td><td class="memItemRight" valign="bottom"><b>dtrange</b></td></tr>
-<tr class="separator:a97c53d5d364f24e02435c2bb2f365a04"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a30d2a298383a9ca26205733a26d9f71a"><td class="memItemLeft" align="right" valign="top"><a id="a30d2a298383a9ca26205733a26d9f71a"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>count</b> = 0</td></tr>
-<tr class="separator:a30d2a298383a9ca26205733a26d9f71a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af9a97e6a444fa5aaaf0f575e3345fba5"><td class="memItemLeft" align="right" valign="top"><a id="af9a97e6a444fa5aaaf0f575e3345fba5"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>dirty</b> = false</td></tr>
-<tr class="separator:af9a97e6a444fa5aaaf0f575e3345fba5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc21006a23ac37fdaf5558c78fabd465"><td class="memItemLeft" align="right" valign="top"><a id="abc21006a23ac37fdaf5558c78fabd465"></a>
+virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>stations</b> (std::function&lt; bool(const <a class="el" href="structdballe_1_1Station.html">Station</a> &amp;)&gt;) const =0</td></tr>
+<tr class="separator:abc21006a23ac37fdaf5558c78fabd465"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c5284623923bd77a59a1dd443952422"><td class="memItemLeft" align="right" valign="top"><a id="a2c5284623923bd77a59a1dd443952422"></a>
+virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>reports</b> (std::function&lt; bool(const std::string &amp;)&gt;) const =0</td></tr>
+<tr class="separator:a2c5284623923bd77a59a1dd443952422"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7cef80916befacc1cf57758fb9e37310"><td class="memItemLeft" align="right" valign="top"><a id="a7cef80916befacc1cf57758fb9e37310"></a>
+virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>levels</b> (std::function&lt; bool(const <a class="el" href="structdballe_1_1Level.html">Level</a> &amp;)&gt;) const =0</td></tr>
+<tr class="separator:a7cef80916befacc1cf57758fb9e37310"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a246bafdbe8a569cc316fed0ee2f0f4bd"><td class="memItemLeft" align="right" valign="top"><a id="a246bafdbe8a569cc316fed0ee2f0f4bd"></a>
+virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>tranges</b> (std::function&lt; bool(const <a class="el" href="structdballe_1_1Trange.html">Trange</a> &amp;)&gt;) const =0</td></tr>
+<tr class="separator:a246bafdbe8a569cc316fed0ee2f0f4bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a457db1c96f41bbcb41cdbfb45b97ecb5"><td class="memItemLeft" align="right" valign="top"><a id="a457db1c96f41bbcb41cdbfb45b97ecb5"></a>
+virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>varcodes</b> (std::function&lt; bool(const <a class="elRef" doxygen="/tmp/tmpdbh7i1d8/build/doc/libwreport.doxytags:/usr/share/doc/wreport/html/doxygen/" href="/usr/share/doc/wreport/html/doxygen/namespacewreport.html#af9fa16e12fde1ccfb4ce11b3988f5b05">wreport::Varcode</a> &amp;)&gt;) const =0</td></tr>
+<tr class="separator:a457db1c96f41bbcb41cdbfb45b97ecb5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1a60d0ce242a54defce8ffbffbb2853c"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="structdballe_1_1Datetime.html">Datetime</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#a1a60d0ce242a54defce8ffbffbb2853c">datetime_min</a> () const =0</td></tr>
+<tr class="memdesc:a1a60d0ce242a54defce8ffbffbb2853c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Recompute reports, levels, tranges, and varcodes.  <a href="#a1a60d0ce242a54defce8ffbffbb2853c">More...</a><br /></td></tr>
+<tr class="separator:a1a60d0ce242a54defce8ffbffbb2853c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad426654b85196f22db72418a23f02e38"><td class="memItemLeft" align="right" valign="top"><a id="ad426654b85196f22db72418a23f02e38"></a>
+virtual <a class="el" href="structdballe_1_1Datetime.html">Datetime</a>&#160;</td><td class="memItemRight" valign="bottom"><b>datetime_max</b> () const =0</td></tr>
+<tr class="separator:ad426654b85196f22db72418a23f02e38"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac145691078f434ac16c992db78c032a"><td class="memItemLeft" align="right" valign="top"><a id="aac145691078f434ac16c992db78c032a"></a>
+virtual unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>data_count</b> () const =0</td></tr>
+<tr class="separator:aac145691078f434ac16c992db78c032a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3142ebbc7ebf61565e195280526f02d"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="el" href="classdballe_1_1CursorSummary.html">dballe::CursorSummary</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#ae3142ebbc7ebf61565e195280526f02d">query_summary</a> (const <a class="el" href="classdballe_1_1Query.html">Query</a> &amp;query) const</td></tr>
+<tr class="memdesc:ae3142ebbc7ebf61565e195280526f02d"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classdballe_1_1Query.html" title="Query used to filter DB-All.e data.">Query</a> the contents of the summary.  <a href="#ae3142ebbc7ebf61565e195280526f02d">More...</a><br /></td></tr>
+<tr class="separator:ae3142ebbc7ebf61565e195280526f02d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac7e48ba1b3a05f27fb90cd69136f7835"><td class="memItemLeft" align="right" valign="top"><a id="ac7e48ba1b3a05f27fb90cd69136f7835"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#ac7e48ba1b3a05f27fb90cd69136f7835">clear</a> ()=0</td></tr>
+<tr class="memdesc:ac7e48ba1b3a05f27fb90cd69136f7835"><td class="mdescLeft">&#160;</td><td class="mdescRight">Completely empty the summary. <br /></td></tr>
+<tr class="separator:ac7e48ba1b3a05f27fb90cd69136f7835"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf03a8916d6107a5e9723f7d3369c8ac"><td class="memItemLeft" align="right" valign="top"><a id="adf03a8916d6107a5e9723f7d3369c8ac"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#adf03a8916d6107a5e9723f7d3369c8ac">add</a> (const <a class="el" href="structdballe_1_1Station.html">Station</a> &amp;station, const <a class="el" href="structdballe_1_1db_1_1summary_1_1VarDesc.html">summary::VarDesc</a> &amp;vd, const <a class="el" href="structdballe_1_1DatetimeRange.html">dballe::DatetimeRange</a> &amp;dtrange, size_t count)=0</td></tr>
+<tr class="memdesc:adf03a8916d6107a5e9723f7d3369c8ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an entry to the summary. <br /></td></tr>
+<tr class="separator:adf03a8916d6107a5e9723f7d3369c8ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2a9ad44d53b0ea993c86a5eadbc7a139"><td class="memItemLeft" align="right" valign="top"><a id="a2a9ad44d53b0ea993c86a5eadbc7a139"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#a2a9ad44d53b0ea993c86a5eadbc7a139">add_cursor</a> (const <a class="el" href="classdballe_1_1CursorSummary.html">dballe::CursorSummary</a> &amp;cur)</td></tr>
+<tr class="memdesc:a2a9ad44d53b0ea993c86a5eadbc7a139"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an entry to the summary taken from the current status of <em>cur</em>. <br /></td></tr>
+<tr class="separator:a2a9ad44d53b0ea993c86a5eadbc7a139"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b1bcff27aee6bb655826f432946a22f"><td class="memItemLeft" align="right" valign="top"><a id="a2b1bcff27aee6bb655826f432946a22f"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#a2b1bcff27aee6bb655826f432946a22f">add_message</a> (const <a class="el" href="classdballe_1_1Message.html">dballe::Message</a> &amp;message)</td></tr>
+<tr class="memdesc:a2b1bcff27aee6bb655826f432946a22f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add the contents of a <a class="el" href="classdballe_1_1Message.html" title="A bulletin that has been decoded and physically interpreted.">Message</a>. <br /></td></tr>
+<tr class="separator:a2b1bcff27aee6bb655826f432946a22f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58994a8bc00c8f3a9b1061d2d6b331f2"><td class="memItemLeft" align="right" valign="top"><a id="a58994a8bc00c8f3a9b1061d2d6b331f2"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#a58994a8bc00c8f3a9b1061d2d6b331f2">add_messages</a> (const std::vector&lt; std::shared_ptr&lt; <a class="el" href="classdballe_1_1Message.html">dballe::Message</a> &gt;&gt; &amp;messages)</td></tr>
+<tr class="memdesc:a58994a8bc00c8f3a9b1061d2d6b331f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add the contents of a Messages. <br /></td></tr>
+<tr class="separator:a58994a8bc00c8f3a9b1061d2d6b331f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c76cad74161100cc46cd35f4b6488ac"><td class="memItemLeft" align="right" valign="top"><a id="a8c76cad74161100cc46cd35f4b6488ac"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#a8c76cad74161100cc46cd35f4b6488ac">add_summary</a> (const <a class="el" href="classdballe_1_1db_1_1BaseSummary.html">BaseSummary</a>&lt; <a class="el" href="structdballe_1_1Station.html">dballe::Station</a> &gt; &amp;summary)</td></tr>
+<tr class="memdesc:a8c76cad74161100cc46cd35f4b6488ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Merge the copy of another summary into this one. <br /></td></tr>
+<tr class="separator:a8c76cad74161100cc46cd35f4b6488ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33bea9e7e2cfa7662bb58b1feb2bafef"><td class="memItemLeft" align="right" valign="top"><a id="a33bea9e7e2cfa7662bb58b1feb2bafef"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#a33bea9e7e2cfa7662bb58b1feb2bafef">add_summary</a> (const <a class="el" href="classdballe_1_1db_1_1BaseSummary.html">BaseSummary</a>&lt; <a class="el" href="structdballe_1_1DBStation.html">dballe::DBStation</a> &gt; &amp;summary)</td></tr>
+<tr class="memdesc:a33bea9e7e2cfa7662bb58b1feb2bafef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Merge the copy of another summary into this one. <br /></td></tr>
+<tr class="separator:a33bea9e7e2cfa7662bb58b1feb2bafef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc3d020a978322737102219fd2d64016"><td class="memItemLeft" align="right" valign="top"><a id="afc3d020a978322737102219fd2d64016"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#afc3d020a978322737102219fd2d64016">add_filtered</a> (const <a class="el" href="classdballe_1_1db_1_1BaseSummary.html">BaseSummary</a>&lt; <a class="el" href="structdballe_1_1Station.html">Station</a> &gt; &amp;summary, const <a class="el" href="classdballe_1_1Query.html">dballe::Query</a> &amp;query)</td></tr>
+<tr class="memdesc:afc3d020a978322737102219fd2d64016"><td class="mdescLeft">&#160;</td><td class="mdescRight">Merge the copy of another summary into this one. <br /></td></tr>
+<tr class="separator:afc3d020a978322737102219fd2d64016"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:affb2fa4f7b6670cae62f9a1ca444f491"><td class="memItemLeft" align="right" valign="top"><a id="affb2fa4f7b6670cae62f9a1ca444f491"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#affb2fa4f7b6670cae62f9a1ca444f491">commit</a> ()=0</td></tr>
+<tr class="memdesc:affb2fa4f7b6670cae62f9a1ca444f491"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write changes to disk. <br /></td></tr>
+<tr class="separator:affb2fa4f7b6670cae62f9a1ca444f491"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ada26fa43203911ca5e3c76d010d1b2ef"><td class="memItemLeft" align="right" valign="top"><a id="ada26fa43203911ca5e3c76d010d1b2ef"></a>
+virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#ada26fa43203911ca5e3c76d010d1b2ef">iter</a> (std::function&lt; bool(const <a class="el" href="structdballe_1_1Station.html">Station</a> &amp;, const <a class="el" href="structdballe_1_1db_1_1summary_1_1VarDesc.html">summary::VarDesc</a> &amp;, const <a class="el" href="structdballe_1_1DatetimeRange.html">DatetimeRange</a> &amp;, size_t)&gt;) const =0</td></tr>
+<tr class="memdesc:ada26fa43203911ca5e3c76d010d1b2ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Iterate the contents of this summary. There is no guarantee on sorting order. <br /></td></tr>
+<tr class="separator:ada26fa43203911ca5e3c76d010d1b2ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1ec4346c0945c1afef67b5a9f5b4fdbe"><td class="memItemLeft" align="right" valign="top"><a id="a1ec4346c0945c1afef67b5a9f5b4fdbe"></a>
+virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#a1ec4346c0945c1afef67b5a9f5b4fdbe">iter_filtered</a> (const <a class="el" href="classdballe_1_1Query.html">dballe::Query</a> &amp;query, std::function&lt; bool(const <a class="el" href="structdballe_1_1Station.html">Station</a> &amp;, const <a class="el" href="structdballe_1_1db_1_1summary_1_1VarDesc.html">summary::VarDesc</a> &amp;, const <a class="el" href="structdballe_1_1DatetimeRange.html">DatetimeRange</a> &amp;, size_t)&gt;) const =0</td></tr>
+<tr class="memdesc:a1ec4346c0945c1afef67b5a9f5b4fdbe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Iterate the contents of this summary. There is no guarantee on sorting order. <br /></td></tr>
+<tr class="separator:a1ec4346c0945c1afef67b5a9f5b4fdbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a291566bc3e1535aa3ec8c5a28a186f5b"><td class="memItemLeft" align="right" valign="top"><a id="a291566bc3e1535aa3ec8c5a28a186f5b"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#a291566bc3e1535aa3ec8c5a28a186f5b">to_json</a> (<a class="el" href="classdballe_1_1core_1_1JSONWriter.html">core::JSONWriter</a> &amp;writer) const =0</td></tr>
+<tr class="memdesc:a291566bc3e1535aa3ec8c5a28a186f5b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serialize to JSON. <br /></td></tr>
+<tr class="separator:a291566bc3e1535aa3ec8c5a28a186f5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a464619c88e4cdcff79bb0ddefd7ee04e"><td class="memItemLeft" align="right" valign="top"><a id="a464619c88e4cdcff79bb0ddefd7ee04e"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdballe_1_1db_1_1BaseSummary.html#a464619c88e4cdcff79bb0ddefd7ee04e">load_json</a> (<a class="el" href="structdballe_1_1core_1_1json_1_1Stream.html">core::json::Stream</a> &amp;in)</td></tr>
+<tr class="memdesc:a464619c88e4cdcff79bb0ddefd7ee04e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load contents from JSON, merging with the current contents. <br /></td></tr>
+<tr class="separator:a464619c88e4cdcff79bb0ddefd7ee04e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61cfbbf4f655add2f2fc1d83f48517a4"><td class="memItemLeft" align="right" valign="top"><a id="a61cfbbf4f655add2f2fc1d83f48517a4"></a>
+virtual DBALLE_TEST_ONLY void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> (FILE *out) const =0</td></tr>
+<tr class="separator:a61cfbbf4f655add2f2fc1d83f48517a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename Station&gt;<br />
@@ -178,8 +176,8 @@ class dballe::db::BaseSummary&lt; Station &gt;</h3>
 
 <p>High level objects for working with DB-All.e <a class="el" href="classdballe_1_1db_1_1DB.html">DB</a> summaries. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a07dbff1962010df80898d3db693f338d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a07dbff1962010df80898d3db693f338d">&#9670;&nbsp;</a></span>datetime_min()</h2>
+<a id="a1a60d0ce242a54defce8ffbffbb2853c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1a60d0ce242a54defce8ffbffbb2853c">&#9670;&nbsp;</a></span>datetime_min()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -190,7 +188,7 @@ template&lt;typename Station&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="structdballe_1_1Datetime.html">Datetime</a>&amp; <a class="el" href="classdballe_1_1db_1_1BaseSummary.html">dballe::db::BaseSummary</a>&lt; <a class="el" href="structdballe_1_1Station.html">Station</a> &gt;::datetime_min </td>
+          <td class="memname">virtual <a class="el" href="structdballe_1_1Datetime.html">Datetime</a> <a class="el" href="classdballe_1_1db_1_1BaseSummary.html">dballe::db::BaseSummary</a>&lt; <a class="el" href="structdballe_1_1Station.html">Station</a> &gt;::datetime_min </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -198,7 +196,7 @@ template&lt;typename Station&gt; </div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -206,24 +204,34 @@ template&lt;typename Station&gt; </div>
 <p>Recompute reports, levels, tranges, and varcodes. </p>
 <p>Call this after performing changes to the summary, to make those sets valid before reading them. </p>
 
+<p>Implemented in <a class="el" href="classdballe_1_1db_1_1BaseSummaryMemory.html#a320e6c306ab259198bc91d6db2ebf7ca">dballe::db::BaseSummaryMemory&lt; Station &gt;</a>, and <a class="el" href="classdballe_1_1db_1_1BaseSummaryXapian.html#adc2c776e94879e97fb6c026b411a0c2b">dballe::db::BaseSummaryXapian&lt; Station &gt;</a>.</p>
+
 </div>
 </div>
-<a id="ae0eab138d99b7adf7de29bad009363bc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae0eab138d99b7adf7de29bad009363bc">&#9670;&nbsp;</a></span>query_summary()</h2>
+<a id="ae3142ebbc7ebf61565e195280526f02d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae3142ebbc7ebf61565e195280526f02d">&#9670;&nbsp;</a></span>query_summary()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
 template&lt;typename Station&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::unique_ptr&lt;<a class="el" href="classdballe_1_1CursorSummary.html">dballe::CursorSummary</a>&gt; <a class="el" href="classdballe_1_1db_1_1BaseSummary.html">dballe::db::BaseSummary</a>&lt; <a class="el" href="structdballe_1_1Station.html">Station</a> &gt;::query_summary </td>
+          <td class="memname">virtual std::unique_ptr&lt;<a class="el" href="classdballe_1_1CursorSummary.html">dballe::CursorSummary</a>&gt; <a class="el" href="classdballe_1_1db_1_1BaseSummary.html">dballe::db::BaseSummary</a>&lt; <a class="el" href="structdballe_1_1Station.html">Station</a> &gt;::query_summary </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classdballe_1_1Query.html">Query</a> &amp;&#160;</td>
           <td class="paramname"><em>query</em></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 <p><a class="el" href="classdballe_1_1Query.html" title="Query used to filter DB-All.e data.">Query</a> the contents of the summary. </p>
@@ -234,6 +242,8 @@ template&lt;typename Station&gt; </div>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>The cursor to use to iterate over the results. The results are the same as <a class="el" href="classdballe_1_1DB.html#a9ab1e39d7a23d507cdfb8e6bb2c06b48" title="Query a summary of what the result would be for a query.">DB::query_summary</a>. </dd></dl>
+
+<p>Reimplemented in <a class="el" href="classdballe_1_1db_1_1BaseSummaryMemory.html#ac89ccadb5a1778d35e78bc9f345b979d">dballe::db::BaseSummaryMemory&lt; Station &gt;</a>.</p>
 
 </div>
 </div>
