@@ -1,5 +1,6 @@
 #include "dballe/msg/msg.h"
 #include "dballe/db/tests.h"
+#include "dballe/core/error.h"
 #include "v7/repinfo.h"
 #include "v7/db.h"
 #include "v7/transaction.h"
@@ -573,6 +574,24 @@ this->add_method("wipe", [](Fixture& f) {
 
     // Test that the data is there
     wassert(actual(db->query_station_data(core::Query())->remaining()) == 1u);
+});
+
+this->add_method("transaction_create_error", [](Fixture& f) {
+    f.db->disappear();
+    // TODO: update wobble to use std::current_exception in wassert_throws
+    try {
+        f.db->transaction();
+        throw TestFailed("db->transaction() should throw");
+    } catch (dballe::error_db& e) {
+        wassert(actual(e.what()).startswith("cannot compile query"));
+    }
+
+    try {
+        f.db->transaction();
+        throw TestFailed("db->transaction() should throw");
+    } catch (dballe::error_db& e) {
+        wassert(actual(e.what()).startswith("cannot compile query"));
+    }
 });
 
 }
