@@ -7,6 +7,7 @@
 #include "v7/transaction.h"
 #include "config.h"
 #include <cstring>
+#include <unistd.h>
 #include <wreport/utils/subprocess.h>
 
 using namespace dballe;
@@ -606,6 +607,7 @@ this->add_method("transactions_after_fork", [](Fixture& f) {
         {
             try {
                 auto t = db->transaction();
+                usleep(100000);
                 return 0;
             } catch (std::exception& e) {
                 fprintf(stderr, "Cannot start a transaction in test child: %s", e.what());
@@ -620,7 +622,7 @@ this->add_method("transactions_after_fork", [](Fixture& f) {
         }
     };
 
-    auto db = DB::create_db(f.backend, false);
+    auto db = DB::create_db(f.backend, true);
 
     TestChild child1(db);
     TestChild child2(db);

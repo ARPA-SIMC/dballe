@@ -271,7 +271,7 @@ public:
     /**
      * Create a database from an open Connection
      */
-    static std::shared_ptr<DB> create(std::unique_ptr<sql::Connection> conn);
+    static std::shared_ptr<DB> create(std::shared_ptr<sql::Connection> conn);
 
     /**
      * Return TRUE if the string looks like a DB URL

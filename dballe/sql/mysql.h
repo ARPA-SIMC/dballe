@@ -137,13 +137,16 @@ protected:
     // See https://dev.mysql.com/doc/refman/5.0/en/mysql-real-connect.html
     void open(const mysql::ConnectInfo& info);
 
-public:
     MySQLConnection();
+
+public:
     MySQLConnection(const MySQLConnection&) = delete;
     MySQLConnection(const MySQLConnection&&) = delete;
     ~MySQLConnection();
     MySQLConnection& operator=(const MySQLConnection&) = delete;
     MySQLConnection& operator=(const MySQLConnection&&) = delete;
+
+    static std::shared_ptr<MySQLConnection> create();
 
     operator MYSQL*() { return db; }
 

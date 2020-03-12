@@ -40,11 +40,14 @@ protected:
     void init_after_connect();
     static void on_sqlite3_profile(void* arg, const char* query, sqlite3_uint64 usecs);
 
-public:
     SQLiteConnection();
+
+public:
     SQLiteConnection(const SQLiteConnection&) = delete;
     SQLiteConnection(const SQLiteConnection&&) = delete;
     ~SQLiteConnection();
+
+    static std::shared_ptr<SQLiteConnection> create();
 
     SQLiteConnection& operator=(const SQLiteConnection&) = delete;
 

@@ -21,7 +21,7 @@ class DB : public dballe::db::DB
 {
 public:
     /// Database connection
-    dballe::sql::Connection* conn;
+    std::shared_ptr<dballe::sql::Connection> conn;
     /// Database query tracing
     Trace* trace = nullptr;
     /// True if we print an EXPLAIN trace of all queries to stderr
@@ -34,7 +34,7 @@ protected:
     void init_after_connect();
 
 public:
-    DB(std::unique_ptr<dballe::sql::Connection> conn);
+    DB(std::shared_ptr<dballe::sql::Connection> conn);
     virtual ~DB();
 
     db::Format format() const { return Format::V7; }

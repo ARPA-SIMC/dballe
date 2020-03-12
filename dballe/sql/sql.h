@@ -54,6 +54,8 @@ class Connection
 protected:
     std::string url;
 
+    Connection();
+
 public:
     /**
      * Type of SQL server we are connected to.
@@ -63,7 +65,6 @@ public:
      */
     ServerType server_type;
 
-    Connection();
     virtual ~Connection();
 
     const std::string& get_url() const { return url; }
@@ -106,7 +107,7 @@ public:
     virtual void explain(const std::string& query, FILE* out) = 0;
 
     /// Create a new connection from a URL
-    static std::unique_ptr<Connection> create(const DBConnectOptions& options);
+    static std::shared_ptr<Connection> create(const DBConnectOptions& options);
 };
 
 /**

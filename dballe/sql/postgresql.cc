@@ -191,6 +191,11 @@ PostgreSQLConnection::~PostgreSQLConnection()
     if (db) PQfinish(db);
 }
 
+std::shared_ptr<PostgreSQLConnection> PostgreSQLConnection::create()
+{
+    return std::shared_ptr<PostgreSQLConnection>(new PostgreSQLConnection);
+}
+
 void PostgreSQLConnection::open_url(const std::string& connection_string)
 {
     url = connection_string;

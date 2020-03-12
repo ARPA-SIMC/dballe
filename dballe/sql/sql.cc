@@ -51,20 +51,20 @@ void Connection::add_datetime(Querybuf& qb, const Datetime& dt) const
             dt.hour, dt.minute, dt.second);
 }
 
-std::unique_ptr<Connection> Connection::create(const DBConnectOptions& options)
+std::shared_ptr<Connection> Connection::create(const DBConnectOptions& options)
 {
     const char* url = options.url.c_str();
     if (strncmp(url, "sqlite://", 9) == 0)
     {
-        unique_ptr<SQLiteConnection> conn(new SQLiteConnection);
+        auto conn = SQLiteConnection::create();
         conn->open_file(url + 9);
-        return unique_ptr<Connection>(conn.release());
+        return conn;
     }
     if (strncmp(url, "sqlite:", 7) == 0)
     {
-        unique_ptr<SQLiteConnection> conn(new SQLiteConnection);
+        auto conn = SQLiteConnection::create();
         conn->open_file(url + 7);
-        return unique_ptr<Connection>(conn.release());
+        return conn;
     }
     if (strncmp(url, "mem:", 4) == 0)
     {
@@ -73,9 +73,9 @@ std::unique_ptr<Connection> Connection::create(const DBConnectOptions& options)
     if (strncmp(url, "postgresql:", 11) == 0)
     {
 #ifdef HAVE_LIBPQ
-        unique_ptr<PostgreSQLConnection> conn(new PostgreSQLConnection);
+        auto conn = PostgreSQLConnection::create();
         conn->open_url(url);
-        return unique_ptr<Connection>(conn.release());
+        return conn;
 #else
         throw error_unimplemented("PostgreSQL support is not available");
 #endif
@@ -83,9 +83,9 @@ std::unique_ptr<Connection> Connection::create(const DBConnectOptions& options)
     if (strncmp(url, "mysql:", 6) == 0)
     {
 #ifdef HAVE_MYSQL
-        unique_ptr<MySQLConnection> conn(new MySQLConnection);
+        auto conn = MySQLConnection::create();
         conn->open_url(url);
-        return unique_ptr<Connection>(conn.release());
+        return conn;
 #else
         throw error_unimplemented("MySQL support is not available");
 #endif

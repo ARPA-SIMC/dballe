@@ -248,13 +248,16 @@ protected:
 protected:
     void init_after_connect();
 
-public:
     PostgreSQLConnection();
+
+public:
     PostgreSQLConnection(const PostgreSQLConnection&) = delete;
     PostgreSQLConnection(const PostgreSQLConnection&&) = delete;
     ~PostgreSQLConnection();
 
     PostgreSQLConnection& operator=(const PostgreSQLConnection&) = delete;
+
+    static std::shared_ptr<PostgreSQLConnection> create();
 
     operator PGconn*() { return db; }
 

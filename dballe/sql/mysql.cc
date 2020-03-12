@@ -231,6 +231,11 @@ MySQLConnection::~MySQLConnection()
     if (db) mysql_close(db);
 }
 
+std::shared_ptr<MySQLConnection> MySQLConnection::create()
+{
+    return std::shared_ptr<MySQLConnection>(new MySQLConnection);
+}
+
 void MySQLConnection::open(const mysql::ConnectInfo& info)
 {
     // See http://www.enricozini.org/2012/tips/sa-sqlmode-traditional/

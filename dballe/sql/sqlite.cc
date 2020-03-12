@@ -80,6 +80,11 @@ SQLiteConnection::~SQLiteConnection()
     if (db) sqlite3_close(db);
 }
 
+std::shared_ptr<SQLiteConnection> SQLiteConnection::create()
+{
+    return std::shared_ptr<SQLiteConnection>(new SQLiteConnection);
+}
+
 void SQLiteConnection::open_file(const std::string& pathname, int flags)
 {
     url = "sqlite://" + pathname;
