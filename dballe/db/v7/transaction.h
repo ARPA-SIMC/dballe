@@ -33,7 +33,7 @@ public:
 
     std::shared_ptr<v7::DB> db;
     /// SQL-side transaction
-    dballe::sql::Transaction* sql_transaction = nullptr;
+    std::shared_ptr<dballe::sql::Transaction> sql_transaction;
     /// True if commit or rollback have already been called on this transaction
     bool fired = false;
     /// Batch importer

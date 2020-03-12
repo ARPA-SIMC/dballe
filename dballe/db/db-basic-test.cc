@@ -582,17 +582,17 @@ this->add_method("transaction_create_error", [](Fixture& f) {
     f.db->disappear();
     // TODO: update wobble to use std::current_exception in wassert_throws
     try {
-        f.db->transaction();
+        auto t = f.db->transaction();
         throw TestFailed("db->transaction() should throw");
     } catch (dballe::error_db& e) {
-        wassert(actual(e.what()).startswith("cannot compile query"));
+        wassert(actual(e.what()).matches("^cannot compile query|relation \"repinfo\" does not exist|Table 'test\\.repinfo' doesn't exist"));
     }
 
     try {
-        f.db->transaction();
+        auto t = f.db->transaction();
         throw TestFailed("db->transaction() should throw");
     } catch (dballe::error_db& e) {
-        wassert(actual(e.what()).startswith("cannot compile query"));
+        wassert(actual(e.what()).matches("^cannot compile query|relation \"repinfo\" does not exist|Table 'test\\.repinfo' doesn't exist"));
     }
 });
 

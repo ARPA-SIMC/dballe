@@ -21,7 +21,7 @@ namespace db {
 namespace v7 {
 
 Transaction::Transaction(std::shared_ptr<v7::DB> db, std::unique_ptr<dballe::sql::Transaction> sql_transaction)
-    : db(db), sql_transaction(sql_transaction.release()), batch(*this), trc(db->trace->trace_transaction())
+    : db(db), sql_transaction(std::move(sql_transaction)), batch(*this), trc(db->trace->trace_transaction())
 {
     m_repinfo = db->driver().create_repinfo(*this).release();
     m_station = db->driver().create_station(*this).release();
@@ -38,7 +38,6 @@ Transaction::~Transaction()
     delete m_levtr;
     delete m_station;
     delete m_repinfo;
-    delete sql_transaction;
 }
 
 v7::Repinfo& Transaction::repinfo()

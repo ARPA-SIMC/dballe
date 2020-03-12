@@ -1,9 +1,9 @@
-#include "sql/postgresql.h"
+#include "postgresql.h"
 #include "dballe/types.h"
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
-#include "sql/querybuf.h"
+#include "querybuf.h"
 #include <cstdlib>
 #include <cstring>
 #include <arpa/inet.h>
@@ -140,7 +140,6 @@ error_postgresql::error_postgresql(PGconn* db, const std::string& msg)
     this->msg = msg;
     this->msg += ": ";
     this->msg += PQerrorMessage(db);
-    fprintf(stderr, "ERROR %s\n", this->msg.c_str());
 }
 
 error_postgresql::error_postgresql(PGresult* res, const std::string& msg)
@@ -148,7 +147,6 @@ error_postgresql::error_postgresql(PGresult* res, const std::string& msg)
     this->msg = msg;
     this->msg += ": ";
     this->msg += PQresultErrorMessage(res);
-    fprintf(stderr, "ERROR %s\n", this->msg.c_str());
 }
 
 error_postgresql::error_postgresql(const std::string& dbmsg, const std::string& msg)
@@ -156,7 +154,6 @@ error_postgresql::error_postgresql(const std::string& dbmsg, const std::string& 
     this->msg = msg;
     this->msg += ": ";
     this->msg += dbmsg;
-    fprintf(stderr, "ERROR %s\n", this->msg.c_str());
 }
 
 void error_postgresql::throwf(PGconn* db, const char* fmt, ...)
@@ -245,7 +242,10 @@ struct PostgreSQLTransaction : public Transaction
     PostgreSQLTransaction(PostgreSQLConnection& conn) : conn(conn)
     {
     }
-    ~PostgreSQLTransaction() { if (!fired) rollback_nothrow(); }
+    ~PostgreSQLTransaction()
+    {
+        if (!fired) rollback_nothrow();
+    }
 
     void commit() override
     {
