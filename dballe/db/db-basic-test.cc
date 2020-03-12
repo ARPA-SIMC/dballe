@@ -1,11 +1,13 @@
 #include "dballe/msg/msg.h"
 #include "dballe/db/tests.h"
 #include "dballe/core/error.h"
+#include "dballe/db.h"
 #include "v7/repinfo.h"
 #include "v7/db.h"
 #include "v7/transaction.h"
 #include "config.h"
 #include <cstring>
+#include <wreport/utils/subprocess.h>
 
 using namespace dballe;
 using namespace dballe::db;
@@ -592,6 +594,42 @@ this->add_method("transaction_create_error", [](Fixture& f) {
     } catch (dballe::error_db& e) {
         wassert(actual(e.what()).startswith("cannot compile query"));
     }
+});
+
+this->add_method("transactions_after_fork", [](Fixture& f) {
+    class TestChild: public subprocess::Child
+    {
+    protected:
+        std::shared_ptr<dballe::DB> db;
+
+        int main() noexcept override
+        {
+            try {
+                auto t = db->transaction();
+                return 0;
+            } catch (std::exception& e) {
+                fprintf(stderr, "Cannot start a transaction in test child: %s", e.what());
+                return 1;
+            }
+        }
+
+    public:
+        TestChild(std::shared_ptr<dballe::DB> db)
+            : db(db)
+        {
+        }
+    };
+
+    auto db = DB::create_db(f.backend, false);
+
+    TestChild child1(db);
+    TestChild child2(db);
+
+    child1.fork();
+    child2.fork();
+
+    wassert(actual(child1.wait()) == 0);
+    wassert(actual(child2.wait()) == 0);
 });
 
 }
