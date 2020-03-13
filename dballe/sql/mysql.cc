@@ -231,6 +231,34 @@ MySQLConnection::~MySQLConnection()
     if (db) mysql_close(db);
 }
 
+std::shared_ptr<MySQLConnection> MySQLConnection::create()
+{
+    auto res = std::shared_ptr<MySQLConnection>(new MySQLConnection);
+    res->register_atfork();
+    return res;
+}
+
+void MySQLConnection::fork_prepare()
+{
+}
+
+void MySQLConnection::fork_parent()
+{
+}
+
+void MySQLConnection::fork_child()
+{
+    forked = true;
+    // TODO: close the underlying file descriptor (how?) instead of leaking it
+    db = nullptr;
+}
+
+void MySQLConnection::check_connection()
+{
+    if (forked)
+        throw error_mysql("mysql handle not safe", "database connections cannot be used after forking");
+}
+
 void MySQLConnection::open(const mysql::ConnectInfo& info)
 {
     // See http://www.enricozini.org/2012/tips/sa-sqlmode-traditional/
@@ -281,6 +309,7 @@ void MySQLConnection::init_after_connect()
 
 std::string MySQLConnection::escape(const char* str)
 {
+    check_connection();
     // Dirty: we write directly inside the resulting std::string storage.
     // It should work in C++11, although not according to its specifications,
     // and if for some reason we discover that it does not work, this can be
@@ -294,6 +323,7 @@ std::string MySQLConnection::escape(const char* str)
 
 std::string MySQLConnection::escape(const std::string& str)
 {
+    check_connection();
     // Dirty: we write directly inside the resulting std::string storage.
     // It should work in C++11, although not according to its specifications,
     // and if for some reason we discover that it does not work, this can be
@@ -306,6 +336,7 @@ std::string MySQLConnection::escape(const std::string& str)
 
 std::string MySQLConnection::escape(const std::vector<uint8_t>& buf)
 {
+    check_connection();
     // Dirty: we write directly inside the resulting std::string storage.
     // It should work in C++11, although not according to its specifications,
     // and if for some reason we discover that it does not work, this can be
@@ -320,6 +351,7 @@ void MySQLConnection::exec_no_data_nothrow(const char* query) noexcept
 {
     using namespace dballe::sql::mysql;
     trace_query("exec_no_data_nothrow: %s\n", query);
+    check_connection();
 
     if (mysql_query(db, query))
     {
@@ -347,6 +379,7 @@ void MySQLConnection::exec_no_data(const char* query)
 {
     using namespace dballe::sql::mysql;
     trace_query("exec_no_data: %s\n", query);
+    check_connection();
 
     if (mysql_query(db, query))
         error_mysql::throwf(db, "cannot execute '%s'", query);
@@ -363,6 +396,7 @@ void MySQLConnection::exec_no_data(const std::string& query)
 {
     using namespace dballe::sql::mysql;
     trace_query("exec_no_data: %s\n", query.c_str());
+    check_connection();
 
     if (mysql_real_query(db, query.data(), query.size()))
         error_mysql::throwf(db, "cannot execute '%s'", query.c_str());
@@ -379,6 +413,7 @@ mysql::Result MySQLConnection::exec_store(const char* query)
 {
     using namespace dballe::sql::mysql;
     trace_query("exec_store: %s\n", query);
+    check_connection();
 
     if (mysql_query(db, query))
         error_mysql::throwf(db, "cannot execute '%s'", query);
@@ -395,6 +430,7 @@ mysql::Result MySQLConnection::exec_store(const std::string& query)
 {
     using namespace dballe::sql::mysql;
     trace_query("exec_store: %s\n", query.c_str());
+    check_connection();
 
     if (mysql_real_query(db, query.data(), query.size()))
         error_mysql::throwf(db, "cannot execute '%s'", query.c_str());
@@ -411,6 +447,7 @@ void MySQLConnection::exec_use(const char* query, std::function<void(const mysql
 {
     using namespace dballe::sql::mysql;
     trace_query("exec_use: %s\n", query);
+    check_connection();
 
     if (mysql_query(db, query))
         error_mysql::throwf(db, "cannot execute '%s'", query);
@@ -429,6 +466,7 @@ void MySQLConnection::exec_use(const std::string& query, std::function<void(cons
 {
     using namespace dballe::sql::mysql;
     trace_query("exec_use: %s\n", query.c_str());
+    check_connection();
 
     if (mysql_real_query(db, query.data(), query.size()))
         error_mysql::throwf(db, "cannot execute '%s'", query.c_str());
@@ -446,6 +484,7 @@ void MySQLConnection::exec_use(const std::string& query, std::function<void(cons
 void MySQLConnection::send_result(mysql::Result&& res, std::function<void(const mysql::Row&)> dest)
 {
     using namespace dballe::sql::mysql;
+    check_connection();
 
     while (Row row = res.fetch())
     {
@@ -527,6 +566,7 @@ void MySQLConnection::drop_table_if_exists(const char* name)
 
 int MySQLConnection::get_last_insert_id()
 {
+    check_connection();
     return mysql_insert_id(db);
 }
 

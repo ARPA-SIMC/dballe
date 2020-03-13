@@ -34,17 +34,34 @@ struct error_sqlite : public dballe::error_db
 class SQLiteConnection : public Connection
 {
 protected:
+    /// Connection pathname
+    std::string pathname;
+    /// Connection flags
+    int flags = 0;
     /// Database connection
     sqlite3* db = nullptr;
+    /// Marker to catch attempts to reuse connections in forked processes
+    bool forked = false;
 
     void init_after_connect();
     static void on_sqlite3_profile(void* arg, const char* query, sqlite3_uint64 usecs);
 
-public:
     SQLiteConnection();
+
+    void fork_prepare() override;
+    void fork_parent() override;
+    void fork_child() override;
+
+    void check_connection();
+
+    void reopen();
+
+public:
     SQLiteConnection(const SQLiteConnection&) = delete;
     SQLiteConnection(const SQLiteConnection&&) = delete;
     ~SQLiteConnection();
+
+    static std::shared_ptr<SQLiteConnection> create();
 
     SQLiteConnection& operator=(const SQLiteConnection&) = delete;
 
@@ -98,6 +115,7 @@ public:
 struct SQLiteStatement
 {
     SQLiteConnection& conn;
+    std::string query;
     sqlite3_stmt *stm = nullptr;
 
     SQLiteStatement(SQLiteConnection& conn, const std::string& query);

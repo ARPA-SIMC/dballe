@@ -49,10 +49,25 @@ enum class ServerType
 const char* format_server_type(ServerType type);
 
 
-class Connection
+class Connection : public std::enable_shared_from_this<Connection>
 {
+private:
+    static void atfork_prepare_hook();
+    static void atfork_parent_hook();
+    static void atfork_child_hook();
+
 protected:
     std::string url;
+
+    Connection();
+
+    /// Register this connection to be notified in case of fork()-ing
+    void register_atfork();
+
+    // Optional pthread_atfork hooks
+    virtual void fork_prepare();
+    virtual void fork_parent();
+    virtual void fork_child();
 
 public:
     /**
@@ -63,7 +78,6 @@ public:
      */
     ServerType server_type;
 
-    Connection();
     virtual ~Connection();
 
     const std::string& get_url() const { return url; }
@@ -106,7 +120,7 @@ public:
     virtual void explain(const std::string& query, FILE* out) = 0;
 
     /// Create a new connection from a URL
-    static std::unique_ptr<Connection> create(const DBConnectOptions& options);
+    static std::shared_ptr<Connection> create(const DBConnectOptions& options);
 };
 
 /**

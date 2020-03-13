@@ -117,8 +117,8 @@ std::shared_ptr<DB> DB::connect(const DBConnectOptions& opts)
     {
         return db::DB::connect_memory();
     } else {
-        std::unique_ptr<sql::Connection> conn(sql::Connection::create(opts));
-        auto res = db::DB::create(move(conn));
+        auto conn(sql::Connection::create(opts));
+        auto res = db::DB::create(conn);
         if (opts.wipe)
             res->reset();
         return res;

@@ -1,10 +1,14 @@
 #include "dballe/msg/msg.h"
 #include "dballe/db/tests.h"
+#include "dballe/core/error.h"
+#include "dballe/db.h"
 #include "v7/repinfo.h"
 #include "v7/db.h"
 #include "v7/transaction.h"
 #include "config.h"
 #include <cstring>
+#include <unistd.h>
+#include <wreport/utils/subprocess.h>
 
 using namespace dballe;
 using namespace dballe::db;
@@ -573,6 +577,65 @@ this->add_method("wipe", [](Fixture& f) {
 
     // Test that the data is there
     wassert(actual(db->query_station_data(core::Query())->remaining()) == 1u);
+});
+
+this->add_method("transaction_create_error", [](Fixture& f) {
+    f.db->disappear();
+    // TODO: update wobble to use std::current_exception in wassert_throws
+    try {
+        auto t = f.db->transaction();
+        throw TestFailed("db->transaction() should throw");
+    } catch (dballe::error_db& e) {
+        wassert(actual(e.what()).matches("^cannot compile query|relation \"repinfo\" does not exist|Table 'test\\.repinfo' doesn't exist"));
+    }
+
+    try {
+        auto t = f.db->transaction();
+        throw TestFailed("db->transaction() should throw");
+    } catch (dballe::error_db& e) {
+        wassert(actual(e.what()).matches("^cannot compile query|relation \"repinfo\" does not exist|Table 'test\\.repinfo' doesn't exist"));
+    }
+});
+
+this->add_method("transactions_after_fork", [](Fixture& f) {
+    class TestChild: public subprocess::Child
+    {
+    protected:
+        std::shared_ptr<dballe::DB> db;
+
+        int main() noexcept override
+        {
+            try {
+                auto t = db->transaction();
+                fprintf(stderr, "Opening a transaction in forked process unexpectedly succeeded\n");
+                return 1;
+            } catch (std::exception& e) {
+                std::string msg(e.what());
+                if (msg.find("database connections cannot be used after forking") != std::string::npos)
+                    return 0;
+                fprintf(stderr, "Unexpected error starting a transaction in test child: %s", e.what());
+                return 2;
+            }
+        }
+
+    public:
+        TestChild(std::shared_ptr<dballe::DB> db)
+            : db(db)
+        {
+        }
+    };
+
+    TestChild child1(f.db);
+    TestChild child2(f.db);
+
+    child1.fork();
+    child2.fork();
+
+    wassert(actual(child1.wait()) == 0);
+    wassert(actual(child2.wait()) == 0);
+
+    // Try to use the DB after the child processes ended
+    f.db->transaction();
 });
 
 }

@@ -244,17 +244,28 @@ protected:
     /// Database connection
     PGconn* db = nullptr;
     std::unordered_set<std::string> prepared_names;
+    /// Marker to catch attempts to reuse connections in forked processes
+    bool forked = false;
 
 protected:
     void init_after_connect();
 
-public:
     PostgreSQLConnection();
+
+    void fork_prepare() override;
+    void fork_parent() override;
+    void fork_child() override;
+
+    void check_connection();
+
+public:
     PostgreSQLConnection(const PostgreSQLConnection&) = delete;
     PostgreSQLConnection(const PostgreSQLConnection&&) = delete;
     ~PostgreSQLConnection();
 
     PostgreSQLConnection& operator=(const PostgreSQLConnection&) = delete;
+
+    static std::shared_ptr<PostgreSQLConnection> create();
 
     operator PGconn*() { return db; }
 
@@ -274,12 +285,20 @@ public:
 
     postgresql::Result exec_unchecked(const char* query)
     {
-        return PQexecParams(db, query, 0, nullptr, nullptr, nullptr, nullptr, 1);
+        check_connection();
+        auto res = PQexecParams(db, query, 0, nullptr, nullptr, nullptr, nullptr, 1);
+        if (!res)
+            throw error_postgresql(db, std::string("cannot execute query ") + query);
+        return res;
     }
 
     postgresql::Result exec_unchecked(const std::string& query)
     {
-        return PQexecParams(db, query.c_str(), 0, nullptr, nullptr, nullptr, nullptr, 1);
+        check_connection();
+        auto res = PQexecParams(db, query.c_str(), 0, nullptr, nullptr, nullptr, nullptr, 1);
+        if (!res)
+            throw error_postgresql(db, "cannot execute query " + query);
+        return res;
     }
 
     template<typename STRING>
@@ -308,15 +327,23 @@ public:
     template<typename ...ARGS>
     postgresql::Result exec_unchecked(const char* query, ARGS... args)
     {
+        check_connection();
         postgresql::Params<ARGS...> params(args...);
-        return PQexecParams(db, query, params.count, nullptr, params.args, params.lengths, params.formats, 1);
+        auto res = PQexecParams(db, query, params.count, nullptr, params.args, params.lengths, params.formats, 1);
+        if (!res)
+            throw error_postgresql(db, std::string("cannot execute query ") + query);
+        return res;
     }
 
     template<typename ...ARGS>
     postgresql::Result exec_unchecked(const std::string& query, ARGS... args)
     {
+        check_connection();
         postgresql::Params<ARGS...> params(args...);
-        return PQexecParams(db, query.c_str(), params.count, nullptr, params.args, params.lengths, params.formats, 1);
+        auto res = PQexecParams(db, query.c_str(), params.count, nullptr, params.args, params.lengths, params.formats, 1);
+        if (!res)
+            throw error_postgresql(db, "cannot execute query " + query);
+        return res;
     }
 
     template<typename STRING, typename ...ARGS>
@@ -344,12 +371,20 @@ public:
 
     postgresql::Result exec_prepared_unchecked(const char* name)
     {
-        return PQexecPrepared(db, name, 0, nullptr, nullptr, nullptr, 1);
+        check_connection();
+        auto res = PQexecPrepared(db, name, 0, nullptr, nullptr, nullptr, 1);
+        if (!res)
+            throw error_postgresql(db, std::string("cannot execute prepared query ") + name);
+        return res;
     }
 
     postgresql::Result exec_prepared_unchecked(const std::string& name)
     {
-        return PQexecPrepared(db, name.c_str(), 0, nullptr, nullptr, nullptr, 1);
+        check_connection();
+        auto res = PQexecPrepared(db, name.c_str(), 0, nullptr, nullptr, nullptr, 1);
+        if (!res)
+            throw error_postgresql(db, "cannot execute prepared query " + name);
+        return res;
     }
 
     template<typename STRING>

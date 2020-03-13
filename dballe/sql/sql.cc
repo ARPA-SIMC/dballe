@@ -44,6 +44,64 @@ Connection::~Connection()
 {
 }
 
+static std::vector<std::weak_ptr<Connection>> atfork_connections;
+
+void Connection::atfork_prepare_hook()
+{
+    try {
+        for (auto& c: atfork_connections)
+            if (!c.expired())
+                c.lock()->fork_prepare();
+    } catch (std::exception& e) {
+        fprintf(stderr, "pre-fork error: %s\n", e.what());
+    }
+}
+
+void Connection::atfork_parent_hook()
+{
+    try {
+        for (auto& c: atfork_connections)
+            if (!c.expired())
+                c.lock()->fork_parent();
+    } catch (std::exception& e) {
+        fprintf(stderr, "post-fork parent error: %s\n", e.what());
+    }
+}
+
+void Connection::atfork_child_hook()
+{
+    try {
+        for (auto& c: atfork_connections)
+            if (!c.expired())
+                c.lock()->fork_child();
+    } catch (std::exception& e) {
+        fprintf(stderr, "post-fork child error: %s\n", e.what());
+    }
+}
+
+void Connection::register_atfork()
+{
+    for (auto& c: atfork_connections)
+        if (c.expired())
+        {
+            c = shared_from_this();
+            return;
+        }
+    atfork_connections.emplace_back(shared_from_this());
+
+    static bool atfork_registered = false;
+    if (!atfork_registered)
+    {
+        if (pthread_atfork(atfork_prepare_hook, atfork_parent_hook, atfork_child_hook) != 0)
+            throw error_system("cannot register atfork handlers for db connections");
+        atfork_registered = true;
+    }
+}
+
+void Connection::fork_prepare() {}
+void Connection::fork_parent() {}
+void Connection::fork_child() {}
+
 void Connection::add_datetime(Querybuf& qb, const Datetime& dt) const
 {
     qb.appendf("'%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu'",
@@ -51,20 +109,20 @@ void Connection::add_datetime(Querybuf& qb, const Datetime& dt) const
             dt.hour, dt.minute, dt.second);
 }
 
-std::unique_ptr<Connection> Connection::create(const DBConnectOptions& options)
+std::shared_ptr<Connection> Connection::create(const DBConnectOptions& options)
 {
     const char* url = options.url.c_str();
     if (strncmp(url, "sqlite://", 9) == 0)
     {
-        unique_ptr<SQLiteConnection> conn(new SQLiteConnection);
+        auto conn = SQLiteConnection::create();
         conn->open_file(url + 9);
-        return unique_ptr<Connection>(conn.release());
+        return conn;
     }
     if (strncmp(url, "sqlite:", 7) == 0)
     {
-        unique_ptr<SQLiteConnection> conn(new SQLiteConnection);
+        auto conn = SQLiteConnection::create();
         conn->open_file(url + 7);
-        return unique_ptr<Connection>(conn.release());
+        return conn;
     }
     if (strncmp(url, "mem:", 4) == 0)
     {
@@ -73,9 +131,9 @@ std::unique_ptr<Connection> Connection::create(const DBConnectOptions& options)
     if (strncmp(url, "postgresql:", 11) == 0)
     {
 #ifdef HAVE_LIBPQ
-        unique_ptr<PostgreSQLConnection> conn(new PostgreSQLConnection);
+        auto conn = PostgreSQLConnection::create();
         conn->open_url(url);
-        return unique_ptr<Connection>(conn.release());
+        return conn;
 #else
         throw error_unimplemented("PostgreSQL support is not available");
 #endif
@@ -83,9 +141,9 @@ std::unique_ptr<Connection> Connection::create(const DBConnectOptions& options)
     if (strncmp(url, "mysql:", 6) == 0)
     {
 #ifdef HAVE_MYSQL
-        unique_ptr<MySQLConnection> conn(new MySQLConnection);
+        auto conn = MySQLConnection::create();
         conn->open_url(url);
-        return unique_ptr<Connection>(conn.release());
+        return conn;
 #else
         throw error_unimplemented("MySQL support is not available");
 #endif

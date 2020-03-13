@@ -26,9 +26,8 @@ namespace db {
 namespace v7 {
 
 // First part of initialising a dba_db
-DB::DB(unique_ptr<Connection> conn)
-    : conn(conn.release()),
-      m_driver(v7::Driver::create(*this->conn).release())
+DB::DB(shared_ptr<Connection> conn)
+    : conn(conn), m_driver(v7::Driver::create(*this->conn).release())
 {
     if (getenv("DBA_EXPLAIN") != NULL)
         explain_queries = true;
@@ -50,7 +49,6 @@ DB::~DB()
 {
     trace->save();
     delete m_driver;
-    delete conn;
     delete trace;
 }
 

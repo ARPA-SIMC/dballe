@@ -80,9 +80,22 @@ SQLiteConnection::~SQLiteConnection()
     if (db) sqlite3_close(db);
 }
 
-void SQLiteConnection::open_file(const std::string& pathname, int flags)
+std::shared_ptr<SQLiteConnection> SQLiteConnection::create()
 {
-    url = "sqlite://" + pathname;
+    auto res = std::shared_ptr<SQLiteConnection>(new SQLiteConnection);
+    res->register_atfork();
+    return res;
+}
+
+void SQLiteConnection::reopen()
+{
+    if (db)
+    {
+        if (sqlite3_close(db) != SQLITE_OK)
+            throw error_sqlite("?", "failed to close db");
+        db = nullptr;
+    }
+
     size_t qs_begin = pathname.find('?');
     int res;
     if (qs_begin == string::npos)
@@ -104,6 +117,14 @@ void SQLiteConnection::open_file(const std::string& pathname, int flags)
     init_after_connect();
 }
 
+void SQLiteConnection::open_file(const std::string& pathname, int flags)
+{
+    this->pathname = pathname;
+    this->flags = flags;
+    url = "sqlite://" + pathname;
+    reopen();
+}
+
 void SQLiteConnection::open_memory(int flags)
 {
     url = "sqlite://:memory:";
@@ -114,6 +135,27 @@ void SQLiteConnection::open_private_file(int flags)
 {
     url = "sqlite://";
     open_file("", flags);
+}
+
+void SQLiteConnection::fork_prepare()
+{
+}
+
+void SQLiteConnection::fork_parent()
+{
+}
+
+void SQLiteConnection::fork_child()
+{
+    forked = true;
+    // TODO: close the underlying file descriptor (how?) instead of leaking it
+    db = nullptr;
+}
+
+void SQLiteConnection::check_connection()
+{
+    if (forked)
+        throw error_sqlite("sqlite handle not safe", "database connections cannot be used after forking");
 }
 
 void SQLiteConnection::on_sqlite3_profile(void* arg, const char* query, sqlite3_uint64 usecs)
@@ -140,6 +182,7 @@ void SQLiteConnection::init_after_connect()
 
 void SQLiteConnection::exec(const std::string& query)
 {
+    check_connection();
     char* errmsg;
     int res = sqlite3_exec(db, query.c_str(), nullptr, nullptr, &errmsg);
     if (res != SQLITE_OK && errmsg)
@@ -160,6 +203,8 @@ void SQLiteConnection::exec(const std::string& query)
 
 void SQLiteConnection::exec_nothrow(const std::string& query) noexcept
 {
+    if (forked)
+        return;
     char* errmsg;
     int res = sqlite3_exec(db, query.c_str(), nullptr, nullptr, &errmsg);
     if (res != SQLITE_OK && errmsg)
@@ -172,7 +217,7 @@ void SQLiteConnection::exec_nothrow(const std::string& query) noexcept
         // application should invoke sqlite3_free() on error message strings
         // returned through the 5th parameter of of sqlite3_exec() after the
         // error message string is no longer needed.·
-        fprintf(stderr, "cannot execute '%s': %s\n", query.c_str(), errmsg);
+        fprintf(stderr, "sqlite3 cleanup: cannot execute '%s': %s\n", query.c_str(), errmsg);
         sqlite3_free(errmsg);
     }
 }
@@ -240,6 +285,7 @@ std::unique_ptr<Transaction> SQLiteConnection::transaction(bool readonly)
 
 std::unique_ptr<SQLiteStatement> SQLiteConnection::sqlitestatement(const std::string& query)
 {
+    check_connection();
     return unique_ptr<SQLiteStatement>(new SQLiteStatement(*this, query));
 }
 
@@ -250,6 +296,7 @@ void SQLiteConnection::drop_table_if_exists(const char* name)
 
 int SQLiteConnection::get_last_insert_id()
 {
+    check_connection();
     int res = sqlite3_last_insert_rowid(db);
     if (res == 0)
         throw error_consistency("no last insert ID value returned from database");
@@ -309,13 +356,14 @@ int SQLiteConnection::changes()
 #if SQLITE_VERSION_NUMBER >= 3014000
 void SQLiteConnection::trace(unsigned mask)
 {
+    check_connection();
     if (sqlite3_trace_v2(db, mask, trace_callback, nullptr) != SQLITE_OK)
         error_sqlite::throwf(db, "Cannot set up SQLite tracing");
 }
 #endif
 
 SQLiteStatement::SQLiteStatement(SQLiteConnection& conn, const std::string& query)
-    : conn(conn)
+    : conn(conn), query(query)
 {
     // From http://www.sqlite.org/c3ref/prepare.html:
     // If the caller knows that the supplied string is nul-terminated, then
@@ -364,7 +412,7 @@ void SQLiteStatement::execute(std::function<void()> on_row)
             case SQLITE_BUSY:
             case SQLITE_MISUSE:
             default:
-                reset_and_throw("cannot execute the query");
+                reset_and_throw("cannot execute the query " + query);
         }
     }
 }
@@ -391,7 +439,7 @@ void SQLiteStatement::execute_one(std::function<void()> on_row)
             case SQLITE_BUSY:
             case SQLITE_MISUSE:
             default:
-                reset_and_throw("cannot execute the query");
+                reset_and_throw("cannot execute the query " + query);
         }
     }
 }
@@ -409,7 +457,7 @@ void SQLiteStatement::execute()
             case SQLITE_BUSY:
             case SQLITE_MISUSE:
             default:
-                reset_and_throw("cannot execute the query");
+                reset_and_throw("cannot execute the query " + query);
         }
     }
 }

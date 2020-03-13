@@ -75,7 +75,7 @@ bool DB::is_url(const char* str)
     return false;
 }
 
-std::shared_ptr<DB> DB::create(unique_ptr<sql::Connection> conn)
+std::shared_ptr<DB> DB::create(std::shared_ptr<sql::Connection> conn)
 {
     // Autodetect format
     Format format = default_format;
@@ -112,25 +112,23 @@ std::shared_ptr<DB> DB::create(unique_ptr<sql::Connection> conn)
     {
         case Format::V5: throw error_unimplemented("V5 format is not supported anymore by this version of DB-All.e");
         case Format::V6: throw error_unimplemented("V6 format is not supported anymore by this version of DB-All.e");
-        case Format::V7: return static_pointer_cast<DB>(make_shared<v7::DB>(move(conn)));
+        case Format::V7: return static_pointer_cast<DB>(make_shared<v7::DB>(conn));
         default: error_consistency::throwf("requested unknown format %d", (int)format);
     }
 }
 
 shared_ptr<DB> DB::connect_from_file(const char* pathname)
 {
-    unique_ptr<sql::SQLiteConnection> conn(new sql::SQLiteConnection);
+    auto conn = sql::SQLiteConnection::create();
     conn->open_file(pathname);
-    return create(unique_ptr<sql::Connection>(conn.release()));
+    return create(conn);
 }
 
 shared_ptr<DB> DB::connect_memory()
 {
-    sql::SQLiteConnection* sqlite_conn;
-
-    unique_ptr<sql::Connection> conn(sqlite_conn = new sql::SQLiteConnection);
-    sqlite_conn->open_memory();
-    auto res = static_pointer_cast<DB>(make_shared<v7::DB>(move(conn)));
+    auto conn = sql::SQLiteConnection::create();
+    conn->open_memory();
+    auto res = static_pointer_cast<DB>(make_shared<v7::DB>(conn));
     res->reset();
     return res;
 }

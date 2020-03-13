@@ -904,6 +904,15 @@ class FullDBTestMixin(CommonDBTestMixin):
         with self.deprecated_on_db():
             self.assertEqual(len(list(self.db.query_data({"rep_memo": "synop"}))), 3)
 
+    def test_transaction_creation_error(self):
+        self.db.disappear()
+        with self.assertRaisesRegex(OSError, r"^cannot compile query"):
+            with self.db.transaction() as tr:
+                pass
+        with self.assertRaisesRegex(OSError, r"^cannot compile query"):
+            with self.db.transaction() as tr:
+                pass
+
 
 class AttrTestMixin(object):
     def testLoadFileOverwriteAttrs(self):
