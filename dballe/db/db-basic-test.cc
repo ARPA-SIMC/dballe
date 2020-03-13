@@ -607,11 +607,14 @@ this->add_method("transactions_after_fork", [](Fixture& f) {
         {
             try {
                 auto t = db->transaction();
-                usleep(100000);
-                return 0;
-            } catch (std::exception& e) {
-                fprintf(stderr, "Cannot start a transaction in test child: %s", e.what());
+                fprintf(stderr, "Opening a transaction in forked process unexpectedly succeeded\n");
                 return 1;
+            } catch (std::exception& e) {
+                std::string msg(e.what());
+                if (msg.find("database connections cannot be used after forking") != std::string::npos)
+                    return 0;
+                fprintf(stderr, "Unexpected error starting a transaction in test child: %s", e.what());
+                return 2;
             }
         }
 
@@ -622,16 +625,17 @@ this->add_method("transactions_after_fork", [](Fixture& f) {
         }
     };
 
-    auto db = DB::create_db(f.backend, true);
-
-    TestChild child1(db);
-    TestChild child2(db);
+    TestChild child1(f.db);
+    TestChild child2(f.db);
 
     child1.fork();
     child2.fork();
 
     wassert(actual(child1.wait()) == 0);
     wassert(actual(child2.wait()) == 0);
+
+    // Try to use the DB after the child processes ended
+    f.db->transaction();
 });
 
 }

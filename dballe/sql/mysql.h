@@ -128,6 +128,8 @@ class MySQLConnection : public Connection
 protected:
     /// Database connection
     MYSQL* db = nullptr;
+    /// Marker to catch attempts to reuse connections in forked processes
+    bool forked = false;
 
     void send_result(mysql::Result&& res, std::function<void(const mysql::Row&)> dest);
 
@@ -138,6 +140,12 @@ protected:
     void open(const mysql::ConnectInfo& info);
 
     MySQLConnection();
+
+    void fork_prepare() override;
+    void fork_parent() override;
+    void fork_child() override;
+
+    void check_connection();
 
 public:
     MySQLConnection(const MySQLConnection&) = delete;

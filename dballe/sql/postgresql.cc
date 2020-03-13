@@ -8,6 +8,7 @@
 #include <cstring>
 #include <arpa/inet.h>
 #include <endian.h>
+#include <unistd.h>
 
 using namespace std;
 using namespace wreport;
@@ -193,7 +194,36 @@ PostgreSQLConnection::~PostgreSQLConnection()
 
 std::shared_ptr<PostgreSQLConnection> PostgreSQLConnection::create()
 {
-    return std::shared_ptr<PostgreSQLConnection>(new PostgreSQLConnection);
+    auto res = std::shared_ptr<PostgreSQLConnection>(new PostgreSQLConnection);
+    res->register_atfork();
+    return res;
+}
+
+void PostgreSQLConnection::fork_prepare()
+{
+}
+
+void PostgreSQLConnection::fork_parent()
+{
+}
+
+void PostgreSQLConnection::fork_child()
+{
+    if (db)
+    {
+        // Close socket to avoid sending close commands to the server that
+        // would interfere with the parent
+        ::close(PQsocket(db));
+        PQfinish(db);
+        db = nullptr;
+        forked = true;
+    }
+}
+
+void PostgreSQLConnection::check_connection()
+{
+    if (forked)
+        throw error_postgresql("server connection closed", "database connections cannot be used after forking");
 }
 
 void PostgreSQLConnection::open_url(const std::string& connection_string)
@@ -202,6 +232,7 @@ void PostgreSQLConnection::open_url(const std::string& connection_string)
     db = PQconnectdb(connection_string.c_str());
     if (PQstatus(db) != CONNECTION_OK)
         throw error_postgresql(db, "opening " + connection_string);
+
     init_after_connect();
 }
 
@@ -222,12 +253,16 @@ void PostgreSQLConnection::init_after_connect()
 
 void PostgreSQLConnection::pqexec(const std::string& query)
 {
+    check_connection();
     postgresql::Result res(PQexec(db, query.c_str()));
     res.expect_success(query);
 }
 
 void PostgreSQLConnection::pqexec_nothrow(const std::string& query) noexcept
 {
+    if (forked)
+        return;
+
     postgresql::Result res(PQexec(db, query.c_str()));
     switch (PQresultStatus(res))
     {
@@ -235,7 +270,7 @@ void PostgreSQLConnection::pqexec_nothrow(const std::string& query) noexcept
         case PGRES_TUPLES_OK:
             return;
         default:
-            fprintf(stderr, "cannot execute '%s': %s\n", query.c_str(), PQresultErrorMessage(res));
+            fprintf(stderr, "postgresql cleanup: cannot execute '%s': %s\n", query.c_str(), PQresultErrorMessage(res));
     }
 }
 

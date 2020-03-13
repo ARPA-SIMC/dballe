@@ -44,6 +44,64 @@ Connection::~Connection()
 {
 }
 
+static std::vector<std::weak_ptr<Connection>> atfork_connections;
+
+void Connection::atfork_prepare_hook()
+{
+    try {
+        for (auto& c: atfork_connections)
+            if (!c.expired())
+                c.lock()->fork_prepare();
+    } catch (std::exception& e) {
+        fprintf(stderr, "pre-fork error: %s\n", e.what());
+    }
+}
+
+void Connection::atfork_parent_hook()
+{
+    try {
+        for (auto& c: atfork_connections)
+            if (!c.expired())
+                c.lock()->fork_parent();
+    } catch (std::exception& e) {
+        fprintf(stderr, "post-fork parent error: %s\n", e.what());
+    }
+}
+
+void Connection::atfork_child_hook()
+{
+    try {
+        for (auto& c: atfork_connections)
+            if (!c.expired())
+                c.lock()->fork_child();
+    } catch (std::exception& e) {
+        fprintf(stderr, "post-fork child error: %s\n", e.what());
+    }
+}
+
+void Connection::register_atfork()
+{
+    for (auto& c: atfork_connections)
+        if (c.expired())
+        {
+            c = shared_from_this();
+            return;
+        }
+    atfork_connections.emplace_back(shared_from_this());
+
+    static bool atfork_registered = false;
+    if (!atfork_registered)
+    {
+        if (pthread_atfork(atfork_prepare_hook, atfork_parent_hook, atfork_child_hook) != 0)
+            throw error_system("cannot register atfork handlers for db connections");
+        atfork_registered = true;
+    }
+}
+
+void Connection::fork_prepare() {}
+void Connection::fork_parent() {}
+void Connection::fork_child() {}
+
 void Connection::add_datetime(Querybuf& qb, const Datetime& dt) const
 {
     qb.appendf("'%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu'",
