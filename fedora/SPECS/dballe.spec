@@ -4,7 +4,7 @@
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 8.10
+Version: 8.11
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -96,7 +96,6 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
 Summary:  DB-ALL.e core C development library
 Group:    Applications/Meteo
 Requires: lib%{name}6 = %{?epoch:%epoch:}%{version}-%{release}
-Obsoletes: libdballepp-devel
 %if 0%{?rhel} == 7
 Requires: popt-devel
 Requires: postgresql-devel
@@ -145,7 +144,6 @@ Group: Applications/Meteo
 Summary:   DB-ALL.e core shared library
 Group:    Applications/Meteo
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
-Obsoletes: libdballe5, libdballe4, libdballepp4 
 
 %description -n libdballe6
 DB-ALL.e C shared library
@@ -317,6 +315,10 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Fri Mar 13 2020 Daniele Branchini <dbranchini@arpae.it> - 8.11-1
+- Fix errors after failed starting of transactions and raise clear errors if
+  using a db connection in a forked process. (#210)
+
 * Thu Feb 13 2020 Emanuele Di Giacomo <edigiacomo@arpae.it> - 8.10-1
 - Fixed explorer query (#209)
 

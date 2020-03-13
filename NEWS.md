@@ -1,3 +1,7 @@
+# New in version 8.11
+
+* Fix errors after failed starting of transactions and raise clear errors if using a db connection in a forked process (#210)
+
 # New in version 8.10
 
 * Fixed explorer query (#209)
