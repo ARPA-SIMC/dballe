@@ -187,6 +187,18 @@ void BaseDBFixture<DB>::test_setup()
 
     if (!db)
         create_db();
+
+    destroys_db = false;
+}
+
+template<typename DB>
+void BaseDBFixture<DB>::test_teardown()
+{
+    if (destroys_db)
+    {
+        db->disappear();
+        db.reset();
+    }
 }
 
 template<typename DB>

@@ -580,6 +580,7 @@ this->add_method("wipe", [](Fixture& f) {
 });
 
 this->add_method("transaction_create_error", [](Fixture& f) {
+    f.destroys_db = true;
     f.db->disappear();
     // TODO: update wobble to use std::current_exception in wassert_throws
     try {

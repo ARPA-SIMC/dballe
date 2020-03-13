@@ -56,11 +56,13 @@ struct BaseDBFixture : public Fixture
 {
     std::string backend;
     std::shared_ptr<typename DB::DB> db;
+    bool destroys_db = false;
 
     BaseDBFixture(const char* backend);
     ~BaseDBFixture();
 
     void test_setup();
+    void test_teardown();
     virtual void create_db();
     bool has_driver();
 };
