@@ -1,4 +1,4 @@
-%global releaseno 1
+%global releaseno 2
 # Note: define _srcarchivename in Travis build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
@@ -315,6 +315,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Thu Apr 30 2020 Daniele Branchini <dbranchini@arpae.it> - 8.11-2
+- Fixed compilation error for gcc 10 (#211)
+
 * Fri Mar 13 2020 Daniele Branchini <dbranchini@arpae.it> - 8.11-1
 - Fix errors after failed starting of transactions and raise clear errors if
   using a db connection in a forked process. (#210)
