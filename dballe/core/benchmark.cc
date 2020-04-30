@@ -58,15 +58,15 @@ std::string format_clockdiff(const struct timespec& begin, const struct timespec
         secs = until.tv_sec - begin.tv_sec - 1;
         nsecs = 1000000000 + until.tv_nsec - begin.tv_nsec;
     }
-    char buf[32];
+    char buf[64];
     if (secs > 0)
-        snprintf(buf, 32, "%lu.%03lus", secs, nsecs / 1000000);
+        snprintf(buf, 64, "%lu.%03lus", secs, nsecs / 1000000);
     else if (nsecs > 1000000)
-        snprintf(buf, 32, "%lums", nsecs / 1000000);
+        snprintf(buf, 64, "%lums", nsecs / 1000000);
     else if (nsecs > 1000)
-        snprintf(buf, 32, "%luµs", nsecs / 1000);
+        snprintf(buf, 64, "%luµs", nsecs / 1000);
     else
-        snprintf(buf, 32, "%luns", nsecs);
+        snprintf(buf, 64, "%luns", nsecs);
     return buf;
 }
 
