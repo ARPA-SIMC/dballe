@@ -567,12 +567,12 @@
  048209 Conta Moracee - Morus                                            NUMERIC                    0            0  20 NUMERIC                   0          7
  048210 Conta Leguminose                                                 NUMERIC                    0            0  20 NUMERIC                   0          7
  048211 Conta Arecacee                                                   NUMERIC                    0            0  20 NUMERIC                   0          7
- 049192 Number of particles with diameter <= 0.3 um                      NUMERIC                   -3            0  16 NUMERIC                  -1          5
- 049193 Number of particles with diameter > 0.3 <= 0.5 um                NUMERIC                   -3            0  16 NUMERIC                  -1          5
- 049194 Number of particles with diameter > 0.5 <= 1.0 um                NUMERIC                   -2            0  16 NUMERIC                  -1          5
+ 049192 Number of particles with diameter <= 0.3 um                      NUMERIC                   -3            0  16 NUMERIC                  -3          5
+ 049193 Number of particles with diameter > 0.3 <= 0.5 um                NUMERIC                   -3            0  16 NUMERIC                  -3          5
+ 049194 Number of particles with diameter > 0.5 <= 1.0 um                NUMERIC                   -2            0  16 NUMERIC                  -2          5
  049195 Number of particles with diameter > 1.0 <= 2.5 um                NUMERIC                   -1            0  16 NUMERIC                  -1          5
- 049196 Number of particles with diameter > 2.5 <= 5.0 um                NUMERIC                    0            0  16 NUMERIC                  -1          5
- 049197 Number of particles with diameter > 5.0 <= 10.0 um               NUMERIC                    0            0  16 NUMERIC                  -1          5
+ 049196 Number of particles with diameter > 2.5 <= 5.0 um                NUMERIC                    0            0  16 NUMERIC                   0          5
+ 049197 Number of particles with diameter > 5.0 <= 10.0 um               NUMERIC                    1            0  16 NUMERIC                   1          5
  049198 Density of particles with diameter > 0.35 <= 0.46 um             NUMERIC/M**3              -5            0  16 NUMERIC/M**3             -5          5
  049199 Density of particles with diameter > 0.46 <= 0.66 um             NUMERIC/M**3              -5            0  16 NUMERIC/M**3             -5          5
  049200 Density of particles with diameter > 0.66 <= 1.0 um              NUMERIC/M**3              -4            0  16 NUMERIC/M**3             -4          5
