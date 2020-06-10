@@ -167,12 +167,12 @@ void JSONWriter::add_datetime(const Datetime& val)
     else
     {
         start_list();
-        if (val.year != MISSING_INT) add(val.year); else add_null();
-        if (val.month != MISSING_INT) add(val.month); else add_null();
-        if (val.day != MISSING_INT) add(val.day); else add_null();
-        if (val.hour != MISSING_INT) add(val.hour); else add_null();
-        if (val.minute != MISSING_INT) add(val.minute); else add_null();
-        if (val.second != MISSING_INT) add(val.second); else add_null();
+        if (val.year != 0xffff) add(val.year); else add_null();
+        if (val.month != 0xff) add(val.month); else add_null();
+        if (val.day != 0xff) add(val.day); else add_null();
+        if (val.hour != 0xff) add(val.hour); else add_null();
+        if (val.minute != 0xff) add(val.minute); else add_null();
+        if (val.second != 0xff) add(val.second); else add_null();
         end_list();
     }
 }

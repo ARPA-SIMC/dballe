@@ -344,6 +344,7 @@ AX_CXXFLAGS_WARN_ALL
 dnl warnings="-Wall -Wextra -Werror=return-type -Werror=empty-body"
 dnl CFLAGS="$warnings $CFLAGS"
 dnl CXXFLAGS="$warnings $CXXFLAGS"
+AX_APPEND_FLAG([-Wextra -Wno-unused-parameter])
 
 # Enforce dependencies
 if test x"$enable_dballef" = x"yes"; then

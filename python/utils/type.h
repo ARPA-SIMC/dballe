@@ -56,6 +56,27 @@ struct MethGenericEnter : MethNoargs<MethGenericEnter<Impl>, Impl>
     }
 };
 
+template<typename Impl>
+struct MethGenericExit : MethKwargs<MethGenericExit<Impl>, Impl>
+{
+    constexpr static const char* name = "__exit__";
+    constexpr static const char* signature = "ext_type, ext_val, ext_tb";
+    constexpr static const char* returns = "";
+    constexpr static const char* summary = "";
+
+    static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
+    {
+        static const char* kwlist[] = { "exc_type", "exc_val", "exc_tb", nullptr };
+        PyObject* exc_type = nullptr;
+        PyObject* exc_val = nullptr;
+        PyObject* exc_tb = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "OOO", const_cast<char**>(kwlist),
+                &exc_type, &exc_val, &exc_tb))
+            return nullptr;
+
+        return self->python__exit__();
+    }
+};
 
 /*
  * Base class for implementing python classes

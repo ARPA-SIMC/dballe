@@ -76,7 +76,7 @@ static void manpage_print_options(const char* title, struct poptOption* optable,
 
 void Subcommand::add_to_optable(std::vector<poptOption>& opts) const
 {
-    opts.push_back({ "help", '?', 0, 0, 1, "print an help message" });
+    opts.push_back({ "help", '?', 0, 0, 1, "print an help message", 0 });
     opts.push_back({ "verbose", 0, POPT_ARG_NONE, (void*)&op_verbose, 0, "verbose output", 0 });
 }
 

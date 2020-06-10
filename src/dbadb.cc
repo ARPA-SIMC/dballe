@@ -56,7 +56,7 @@ struct poptOption dbTable[] = {
     { "url", 0, POPT_ARG_STRING, &op_url, 0,
         "DSN, or URL-like database definition, to use for connecting to the DB-All.e database (can also be specified in the environment as DBA_DB)", "url" },
     { "wipe-first", 0, POPT_ARG_NONE, &op_wipe_first, 0,
-        "wipe database before any other action" },
+        "wipe database before any other action", 0 },
     POPT_TABLEEND
 };
 

@@ -59,7 +59,7 @@ struct Row
 
     operator bool() const { return row != nullptr; }
     operator MYSQL_ROW() { return row; }
-    operator const MYSQL_ROW() const { return row; }
+    operator MYSQL_ROW() const { return row; }
 
     int as_int(unsigned col) const { return strtol(row[col], 0, 10); }
     unsigned as_unsigned(unsigned col) const { return strtoul(row[col], 0, 10); }
