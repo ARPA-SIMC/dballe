@@ -25,6 +25,27 @@ Remove the ``.json`` extension to use an indexed on-disk database, if Xapian
 support is available.
 
 
+Create an explorer from a database
+==================================
+
+This is an example python code that creates a new :class:`dballe.Explorer`
+filled with the contents of a from a :class:`dballe.DB`, and saves is back to
+JSON::
+
+   #!/usr/bin/python3
+   import dballe
+   import os
+   import sys
+
+   with dballe.Explorer("data.json") as explorer:
+      with explorer.update() as updater:
+          with db.transaction() as tr:
+              updater.add_db(tr)
+
+Remove the ``.json`` extension to use an indexed on-disk database, if Xapian
+support is available.
+
+
 Work with a subset of an Explorer
 =================================
 
@@ -38,3 +59,28 @@ the data of an existing one::
       e1 = dballe.Explorer()
       with e1.update() as updater:
           updater.add_explorer(e)
+
+
+Merge data from multiple explorers
+==================================
+
+This is an example python code that creates a multiple :class:`dballe.Explorer`
+objects and merges them together into a new one::
+
+   #!/usr/bin/python3
+   import dballe
+   import os
+   import sys
+
+   with dballe.Explorer("data1.json") as explorer1:
+       # Data from data1.json is automatically loaded
+       with dballe.Explorer("data2.json") as explorer2:
+           # Data from data2.json is automatically loaded
+           with dballe.Explorer("new.json") as merged:
+               # new.json is automatically created
+               with merged.update() as updater:
+                   updater.add_explorer(explorer1)
+                   updater.add_explorer(explorer2)
+
+Remove the ``.json`` extension to use an indexed on-disk databases, if Xapian
+support is available.
