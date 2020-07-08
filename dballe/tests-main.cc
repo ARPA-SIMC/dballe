@@ -34,11 +34,17 @@ int main(int argc,const char* argv[])
     else
         controller.reset(new SimpleTestController(output));
 
-    if (const char* whitelist = getenv("TEST_WHITELIST"))
-        controller->whitelist = whitelist;
+    if (const char* allowlist = getenv("TEST_WHITELIST"))
+        controller->allowlist = allowlist;
 
-    if (const char* blacklist = getenv("TEST_BLACKLIST"))
-        controller->blacklist = blacklist;
+    if (const char* allowlist = getenv("TEST_ONLY"))
+        controller->allowlist = allowlist;
+
+    if (const char* blocklist = getenv("TEST_BLACKLIST"))
+        controller->blocklist = blocklist;
+
+    if (const char* blocklist = getenv("TEST_EXCEPT"))
+        controller->blocklist = blocklist;
 
     auto all_results = tests.run_tests(*controller);
     TestResultStats rstats(all_results);
