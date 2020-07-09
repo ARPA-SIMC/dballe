@@ -107,7 +107,7 @@ struct CursorStationData : public impl::CursorStationData
         {
             at_start = false;
             cur = station_values.begin();
-            return true;
+            return cur != station_values.end();
         }
         else if (cur == station_values.end())
             return false;
@@ -203,7 +203,7 @@ struct CursorData : public impl::CursorData
         {
             at_start = false;
             cur = rows.begin();
-            return true;
+            return cur != rows.end();
         }
         else if (cur == rows.end())
         {

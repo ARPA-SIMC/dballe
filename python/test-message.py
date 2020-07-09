@@ -120,7 +120,7 @@ class TestMessage(MessageTestMixin, unittest.TestCase):
                         d["trange"]
                         count_data += 1
         self.assertEqual(count_msg, 1)
-        self.assertEqual(count_data, 1)
+        self.assertEqual(count_data, 0)
 
 
 if __name__ == "__main__":
