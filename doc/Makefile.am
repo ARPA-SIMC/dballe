@@ -115,7 +115,7 @@ tranges.dox: mksnippet
 	$(top_srcdir)/doc/mksnippet tranges dox > $@ || rm $@
 
 general_ref/btable.rst: ../tables/dballe.txt mksnippet
-	$(top_srcdir)/doc/mksnippet btable rst < $< > $@ || rm $@
+	$(top_srcdir)/doc/mksnippet btable rst $< > $@ || rm $@
 
 general_ref/ltypes.rst: $(top_srcdir)/dballe/msg/ltypes.txt mksnippet
 	$(top_srcdir)/doc/mksnippet levels rst < $< > $@ || rm $@

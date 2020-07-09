@@ -1,8 +1,10 @@
 #!/usr/bin/python3
+from typing import Optional
 import textwrap
 import argparse
 import sys
 import re
+from contextlib import contextmanager
 from itertools import zip_longest
 import logging
 
@@ -55,33 +57,44 @@ def mkformat(unit, sz, dec):
         return ('#' * sz) + ('0' * (-dec))
 
 
-class Aliases:
-    def read(self):
-        # Skip the declaration section
-        for line in sys.stdin:
-            if line.startswith("%%"):
-                break
+class Generator:
+    @contextmanager
+    def open(self, fname: Optional[str] = None):
+        if fname is None:
+            yield sys.stdin
+        else:
+            with open(fname, "rt") as fd:
+                yield fd
 
-        alias_line = re.compile(r"^(?P<name>[^,]+),\s*WR_VAR\((?P<f>\d+),\s*(?P<x>\d+),\s*(?P<y>\d+)\)")
 
-        # Read the data
-        data = []
-        for line in sys.stdin:
-            line = line.strip()
-            if line == "%%":
-                break
-            mo = alias_line.match(line)
-            if not mo:
-                raise RuntimeError("Cannot parse {}".format(repr(line)))
+class Aliases(Generator):
+    def read(self, fname: Optional[str] = None):
+        with self.open(fname) as infd:
+            # Skip the declaration section
+            for line in infd:
+                if line.startswith("%%"):
+                    break
 
-            data.append((
-                mo.group("name"),
-                "B{x:02d}{y:03d}".format(x=int(mo.group("x")), y=int(mo.group("y")))
-            ))
+            alias_line = re.compile(r"^(?P<name>[^,]+),\s*WR_VAR\((?P<f>\d+),\s*(?P<x>\d+),\s*(?P<y>\d+)\)")
 
-        data.sort()
+            # Read the data
+            data = []
+            for line in infd:
+                line = line.strip()
+                if line == "%%":
+                    break
+                mo = alias_line.match(line)
+                if not mo:
+                    raise RuntimeError("Cannot parse {}".format(repr(line)))
 
-        self.data = data
+                data.append((
+                    mo.group("name"),
+                    "B{x:02d}{y:03d}".format(x=int(mo.group("x")), y=int(mo.group("y")))
+                ))
+
+            data.sort()
+
+            self.data = data
 
     def print_dox(self):
         print("""/**@defgroup dba_core_aliases Variable aliases
@@ -136,19 +149,20 @@ This table lists the aliases that can be used to refer to varcodes.
             print("     - :ref:`{} <{}>`".format(var, var))
 
 
-class Levels:
-    def read(self):
+class Levels(Generator):
+    def read(self, fname: Optional[str] = None):
         re_split = re.compile(r"\t+")
         # Read the data
         self.data = []
-        for line in sys.stdin:
-            line = line.strip()
-            lev = re_split.split(line)
-            if len(lev) < 3:
-                lev += [""] * (3 - len(lev))
-            elif len(lev) > 3:
-                raise RuntimeError("line {} has too many fields".format(repr(lev)))
-            self.data.append(lev)
+        with self.open(fname) as infd:
+            for line in infd:
+                line = line.strip()
+                lev = re_split.split(line)
+                if len(lev) < 3:
+                    lev += [""] * (3 - len(lev))
+                elif len(lev) > 3:
+                    raise RuntimeError("line {} has too many fields".format(repr(lev)))
+                self.data.append(lev)
 
     def print_dox(self):
         print("""/**@defgroup level_table Level type values
@@ -239,7 +253,7 @@ where possible.
             print("     - {}".format(li))
 
 
-class Tranges:
+class Tranges(Generator):
     def __init__(self):
         self.descs = (
             (0, "Average"),
@@ -288,7 +302,7 @@ class Tranges:
             # level pressure at that point.",
         )
 
-    def read(self):
+    def read(self, fname: Optional[str] = None):
         pass
 
     def print_dox(self):
@@ -364,14 +378,22 @@ time range:
             print("     - {}".format(re_newlines.sub(d[1], "\n")))
 
 
-class Btable:
-    def read(self):
+class Btable(Generator):
+    def read(self, fname: Optional[str] = None):
+        if fname is None:
+            raise RuntimeError("btable cannot read table data from stdin")
+
+        import wreport
         import struct
         reader = struct.Struct("x 6s x 64s x 24s x 3s x 12s x 3s x 24s x 3s x 10s")
+        table = wreport.Vartable.load_bufr(fname)
 
         self.data = []
-        for lineno, line in enumerate(sys.stdin.buffer, 1):
-            self.data.append(tuple(x.decode("utf-8") for x in reader.unpack(line[:158])))
+        with open(fname, "rb") as infd:
+            for lineno, line in enumerate(infd, 1):
+                raw = tuple(x.decode("utf-8") for x in reader.unpack(line[:158]))
+                entry = table[raw[0]]
+                self.data.append(entry)
 
     def print_dox(self):
         print("""/**@defgroup local_b_table Local B table
@@ -393,7 +415,7 @@ digits and description.
         table.print_head()
 
         for info in self.data:
-            code, desc, unit, dec, sz = info[0], info[1], info[6], int(info[7]), int(info[8])
+            code, desc, unit, dec, sz = info[0], info[1], info[2], int(info[7]), int(info[8])
             fmt = mkformat(unit, sz, dec)
             unit = re.sub("CHARACTER", "Character", unit)
             unit = re.sub("(NUMERIC|NUMBER)", "Numeric", unit)
@@ -447,21 +469,21 @@ digits and description.
 """)
 
         for info in self.data:
-            code, desc, unit, dec, sz = info[0], info[1], info[6], int(info[7]), int(info[8])
-            if code[0] == '0':
-                code = 'B' + code[1:]
-            fmt = mkformat(unit, sz, dec)
-            unit = re.sub("CHARACTER", "Character", unit)
+            # code, desc, unit, dec, sz = info[0], info[1], info[6], int(info[7]), int(info[8])
+            # if code[0] == '0':
+            #     code = 'B' + code[1:]
+            fmt = mkformat(info.unit, info.len, info.scale)
+            unit = re.sub("CHARACTER", "Character", info.unit)
             unit = re.sub("(NUMERIC|NUMBER)", "Numeric", unit)
-            print("   * - .. _{}:".format(code))
+            print("   * - .. _{}:".format(info.code))
             print("")
-            print("       {}".format(code))
-            print("     - {}".format(desc))
+            print("       {}".format(info.code))
+            print("     - {}".format(info.desc))
             print("     - {}".format(unit))
             print("     - {}".format(fmt))
 
 
-class MsgVars:
+class MsgVars(Generator):
     def format_level(self, ltype1, l1, ltype2, l2):
         if ltype1 == "-" and l1 == "-" and ltype2 == "-" and l2 == "-":
             return "station"
@@ -472,21 +494,22 @@ class MsgVars:
             return "station"
         return ",".join((pind, p1, p2))
 
-    def read(self):
+    def read(self, fname: Optional[str] = None):
         import csv
 
         self.data = []
-        for row in csv.reader(sys.stdin):
-            if not row or row[0].startswith("#"):
-                continue
-            name, type, bcode, ltype1, l1, ltype2, l2, pind, p1, p2, desc = row
-            self.data.append((
-                name.strip(),
-                type.strip(),
-                bcode.strip(),
-                self.format_level(ltype1.strip(), l1.strip(), ltype2.strip(), l2.strip()),
-                self.format_trange(pind.strip(), p1.strip(), p2.strip()),
-                desc.strip()))
+        with self.open(fname) as infd:
+            for row in csv.reader(infd):
+                if not row or row[0].startswith("#"):
+                    continue
+                name, type, bcode, ltype1, l1, ltype2, l2, pind, p1, p2, desc = row
+                self.data.append((
+                    name.strip(),
+                    type.strip(),
+                    bcode.strip(),
+                    self.format_level(ltype1.strip(), l1.strip(), ltype2.strip(), l2.strip()),
+                    self.format_trange(pind.strip(), p1.strip(), p2.strip()),
+                    desc.strip()))
 
     def print_rst(self):
         print(""".. _msg_vars:
@@ -526,6 +549,7 @@ def main():
     parser = argparse.ArgumentParser(description="Format dballe data snippets for documentation.")
     parser.add_argument("intype", help="input type")
     parser.add_argument("outtype", help="output type")
+    parser.add_argument("input", nargs="?", help="input file")
     parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
     parser.add_argument("--debug", action="store_true", help="verbose output")
 
@@ -552,7 +576,7 @@ def main():
         raise RuntimeError("Input type {} not supported".format(args.intype))
 
     proc = Proc()
-    proc.read()
+    proc.read(args.input)
 
     gen = getattr(proc, "print_" + args.outtype, None)
     if gen is None:
