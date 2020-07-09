@@ -130,8 +130,9 @@ void JsonFile::write(const std::string& msg)
     fwrite(msg.data(), msg.size(), 1, fd);
     if (ferror(fd))
         error_system::throwf("cannot write JSON line to %s", m_name.c_str());
-    if (putc('\n', fd) == EOF)
-        error_system::throwf("cannot write JSON line terminator to %s", m_name.c_str());
+    // No need to add a newline, as the JSON exporter already does
+    // if (putc('\n', fd) == EOF)
+    //     error_system::throwf("cannot write JSON line terminator to %s", m_name.c_str());
 }
 
 }
