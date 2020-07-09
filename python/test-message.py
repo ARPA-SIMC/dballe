@@ -108,6 +108,20 @@ class TestMessage(MessageTestMixin, unittest.TestCase):
             "B04001", "B04002", "B04003", "B04004", "B04005", "B04006",
             "B05001", "B06001"))
 
+    def test_issue213(self):
+        importer = dballe.Importer("BUFR")
+        count_msg = 0
+        count_data = 0
+        with importer.from_file(test_pathname("bufr/generic-onlystation.bufr")) as f:
+            for msgs in f:
+                for msg in msgs:
+                    count_msg += 1
+                    for d in msg.query_data():
+                        d["trange"]
+                        count_data += 1
+        self.assertEqual(count_msg, 1)
+        self.assertEqual(count_data, 1)
+
 
 if __name__ == "__main__":
     from testlib import main
