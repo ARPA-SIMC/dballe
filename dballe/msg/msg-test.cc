@@ -2,6 +2,7 @@
 #include "msg.h"
 #include "context.h"
 #include "dballe/core/csv.h"
+#include "dballe/cursor.h"
 #include <wreport/notes.h>
 
 using namespace std;
@@ -606,6 +607,15 @@ add_method("msgs_copy", []() {
     Messages msgs2;
     msgs2 = msgs;
     msgs1 = msgs1;
+});
+
+add_method("iterate_no_data", [] {
+    // Check that a message that only contains station variables does get imported
+    impl::Messages msgs = read_msgs("bufr/generic-onlystation.bufr", Encoding::BUFR);
+    auto cur = msgs[0]->query_data(core::Query());
+
+    wassert(actual(cur->remaining()) == 0);
+    wassert(actual(cur->next()).isfalse());
 });
 
 }
