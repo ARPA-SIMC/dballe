@@ -1,6 +1,7 @@
 /check_attrs
 /check_fdballe
 /check_messages
+/check_messages_json
 /check_messages_stdinstdout
 /check_set
 /check_missing

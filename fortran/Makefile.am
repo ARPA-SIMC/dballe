@@ -42,7 +42,7 @@ TESTS_ENVIRONMENT = $(top_srcdir)/extra/runtest
 #TESTS = $(check_PROGRAMS)
 dbtestlib = test.f90 dbtest.f90
 
-check_PROGRAMS = check_real0 check_range check_fdballe check_fdballe_oldapi check_attrs check_set check_missing check_missing_msg check_segfault1 check_multiplehandler check_spiegab check_messages check_transactions1 check_connect_wipe
+check_PROGRAMS = check_real0 check_range check_fdballe check_fdballe_oldapi check_attrs check_set check_missing check_missing_msg check_segfault1 check_multiplehandler check_spiegab check_messages check_messages_json check_transactions1 check_connect_wipe
 
 check_real0_SOURCES = $(dbtestlib) check_real0.f90
 check_real0_DEPENDENCIES = dballef.mod
@@ -98,6 +98,11 @@ check_messages_SOURCES = $(dbtestlib) check_messages.f90
 check_messages_DEPENDENCIES = dballef.mod
 check_messages_LDADD = libdballef.la
 check_messages_FCFLAGS = -g
+
+check_messages_json_SOURCES = $(dbtestlib) check_messages_json.f90
+check_messages_json_DEPENDENCIES = dballef.mod
+check_messages_json_LDADD = libdballef.la
+check_messages_json_FCFLAGS = -g
 
 check_multiplehandler_SOURCES = $(dbtestlib) check_multiplehandler.f90
 check_multiplehandler_DEPENDENCIES = dballef.mod
