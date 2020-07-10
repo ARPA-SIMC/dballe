@@ -388,31 +388,23 @@ this->add_method("datetime_intersect", [](Fixture& f) {
 });
 
 this->add_method("issue218", [](Fixture& f) {
-    // Test building a summary and checking if it supports queries
-    OldDballeTestDataSet test_data;
-    wassert(f.populate(test_data));
-
     BACKEND s;
-
-    // Build the whole db summary
-    core::Query query;
-    query.query = "details";
-    auto cur = f.tr->query_summary(query);
-    while (cur->next())
-        s.add_cursor(*cur);
+    impl::Messages msgs = dballe::tests::read_msgs("bufr/synop-rad1.bufr", Encoding::BUFR, "accurate");
+    s.add_messages(msgs);
 
     // Check its contents
     auto reports = get_reports(s);
-    wassert(actual(reports.size()) == 2);
-    wassert(actual(reports[0]) == "metar");
-    wassert(actual(reports[1]) == "synop");
+    wassert(actual(reports.size()) == 1);
+    wassert(actual(reports[0]) == "synop");
 
-    query.report = "metar";
+    core::Query query;
+    query.report = "synop";
     BACKEND s1;
     s1.add_filtered(s, query);
+
     reports = get_reports(s1);
     wassert(actual(reports.size()) == 1);
-    wassert(actual(reports[0]) == "metar");
+    wassert(actual(reports[0]) == "synop");
 });
 
 }

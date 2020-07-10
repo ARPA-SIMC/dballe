@@ -123,9 +123,13 @@ bool BaseSummaryXapian<Station>::stations(std::function<bool(const Station&)> de
 template<typename Station>
 bool BaseSummaryXapian<Station>::reports(std::function<bool(const std::string&)> dest) const
 {
+    core::SmallUniqueValueSet<std::string> res;
     auto end = db.allterms_end("S");
     for (auto ti = db.allterms_begin("S"); ti != end; ++ti)
-        if (!dest(station_from_term<Station>(*ti).report))
+        res.add(station_from_term<Station>(*ti).report);
+
+    for (const auto& r: res)
+        if (!dest(r))
             return false;
     return true;
 }
