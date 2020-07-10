@@ -166,6 +166,26 @@ class BaseExplorerTestMixin(DballeDBMixin):
             self.assertStrRepr(explorer)
             self.assertExplorerContents(explorer)
 
+    def test_issue218(self):
+        with self.db.transaction() as tr:
+            tr.remove_all()
+            importer = dballe.Importer("BUFR")
+            with importer.from_file(test_pathname("bufr/issue218.bufr")) as imp:
+                tr.import_messages(imp)
+
+        with self._explorer("test-explorer") as explorer:
+            with explorer.rebuild() as update:
+                with self.db.transaction() as tr:
+                    update.add_db(tr)
+
+            self.assertEqual(explorer.all_reports, ["mnw"])
+            self.assertEqual(explorer.reports, ["mnw"])
+
+            explorer.set_filter({"rep_memo": "mnw"})
+
+            self.assertEqual(explorer.all_reports, ["mnw"])
+            self.assertEqual(explorer.reports, [])
+
 
 class ExplorerTestMixin(BaseExplorerTestMixin):
     def _explorer(self, *args, **kw):
