@@ -338,7 +338,7 @@ bool BaseSummaryXapian<Station>::iter_filtered(const dballe::Query& query, std::
         // Skip filtering if we just matched all stations
         if (!all_stations)
         {
-            xquery &= Xapian::Query(Xapian::Query::OP_AND, terms.begin(), terms.end());
+            xquery &= Xapian::Query(Xapian::Query::OP_OR, terms.begin(), terms.end());
             has_query = true;
         }
     }
