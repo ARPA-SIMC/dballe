@@ -407,6 +407,9 @@ struct query_summary_doc_traits<Station>
     constexpr static const char* returns = "dballe.CursorSummarySummary";
     constexpr static const char* doc = R"(
 :return: a cursor to iterate the query results (see :py:class:`dballe.CursorSummarySummary`)
+
+Adding ``query=details`` will be ignored for Explorers and considered always
+present, as details are always provided in results.
 )";
 };
 
@@ -416,6 +419,9 @@ struct query_summary_doc_traits<DBStation>
     constexpr static const char* returns = "dballe.CursorSummaryDBSummary";
     constexpr static const char* doc = R"(
 :return: a cursor to iterate the query results (see :py:class:`dballe.CursorSummaryDBSummary`)
+
+Adding ``query=details`` will be ignored for Explorers and considered always
+present, as details are always provided in results.
 )";
 };
 
