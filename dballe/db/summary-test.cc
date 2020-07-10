@@ -388,23 +388,40 @@ this->add_method("datetime_intersect", [](Fixture& f) {
 });
 
 this->add_method("issue218", [](Fixture& f) {
-    BACKEND s;
-    impl::Messages msgs = dballe::tests::read_msgs("bufr/synop-rad1.bufr", Encoding::BUFR, "accurate");
-    s.add_messages(msgs);
+    BACKEND summary;
 
-    // Check its contents
-    auto reports = get_reports(s);
-    wassert(actual(reports.size()) == 1);
-    wassert(actual(reports[0]) == "synop");
+    typename BACKEND::station_type station;
+    summary::VarDesc vd(Level(1), Trange::instant(), WR_VAR(0, 1, 112));
+    DatetimeRange dtrange(Datetime(2018, 1, 1), Datetime(2018, 7, 1));
+
+    station.report = "test1";
+    station.coords = Coords(44.5, 11.5);
+    summary.add(station, vd, dtrange, 12);
+
+    station.coords = Coords(45.5, 11.5);
+    summary.add(station, vd, dtrange, 12);
+
+    station.report = "test2";
+    station.coords = Coords(44.5, 11.5);
+    summary.add(station, vd, dtrange, 12);
+
+    station.coords = Coords(45.5, 11.5);
+    summary.add(station, vd, dtrange, 12);
+
+
+    auto reports = get_reports(summary);
+    wassert(actual(reports.size()) == 2);
+    wassert(actual(reports[0]) == "test1");
+    wassert(actual(reports[1]) == "test2");
 
     core::Query query;
-    query.report = "synop";
+    query.report = "test1";
     BACKEND s1;
-    s1.add_filtered(s, query);
+    s1.add_filtered(summary, query);
 
     reports = get_reports(s1);
     wassert(actual(reports.size()) == 1);
-    wassert(actual(reports[0]) == "synop");
+    wassert(actual(reports[0]) == "test1");
 });
 
 }
