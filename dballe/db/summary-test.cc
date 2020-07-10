@@ -414,14 +414,29 @@ this->add_method("issue218", [](Fixture& f) {
     wassert(actual(reports[0]) == "test1");
     wassert(actual(reports[1]) == "test2");
 
-    core::Query query;
-    query.report = "test1";
-    BACKEND s1;
-    s1.add_filtered(summary, query);
+    {
+        core::Query query;
+        query.report = "test1";
+        BACKEND s1;
+        s1.add_filtered(summary, query);
 
-    reports = get_reports(s1);
-    wassert(actual(reports.size()) == 1);
-    wassert(actual(reports[0]) == "test1");
+        reports = get_reports(s1);
+        wassert(actual(reports.size()) == 1);
+        wassert(actual(reports[0]) == "test1");
+    }
+
+    {
+        core::Query query;
+        query.varcodes.insert(WR_VAR(0, 1, 112));
+        query.varcodes.insert(WR_VAR(0, 1, 113));
+        BACKEND s1;
+        s1.add_filtered(summary, query);
+
+        reports = get_reports(s1);
+        wassert(actual(reports.size()) == 2);
+        wassert(actual(reports[0]) == "test1");
+        wassert(actual(reports[1]) == "test2");
+    }
 });
 
 }
