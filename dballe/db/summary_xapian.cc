@@ -123,9 +123,13 @@ bool BaseSummaryXapian<Station>::stations(std::function<bool(const Station&)> de
 template<typename Station>
 bool BaseSummaryXapian<Station>::reports(std::function<bool(const std::string&)> dest) const
 {
+    core::SmallUniqueValueSet<std::string> res;
     auto end = db.allterms_end("S");
     for (auto ti = db.allterms_begin("S"); ti != end; ++ti)
-        if (!dest(station_from_term<Station>(*ti).report))
+        res.add(station_from_term<Station>(*ti).report);
+
+    for (const auto& r: res)
+        if (!dest(r))
             return false;
     return true;
 }
@@ -334,7 +338,7 @@ bool BaseSummaryXapian<Station>::iter_filtered(const dballe::Query& query, std::
         // Skip filtering if we just matched all stations
         if (!all_stations)
         {
-            xquery &= Xapian::Query(Xapian::Query::OP_AND, terms.begin(), terms.end());
+            xquery &= Xapian::Query(Xapian::Query::OP_OR, terms.begin(), terms.end());
             has_query = true;
         }
     }
@@ -351,10 +355,22 @@ bool BaseSummaryXapian<Station>::iter_filtered(const dballe::Query& query, std::
         has_query = true;
     }
 
-    for (const auto& varcode: q.varcodes)
+    switch (q.varcodes.size())
     {
-        xquery &= Xapian::Query(to_term(varcode));
-        has_query = true;
+        case 0:
+            break;
+        case 1:
+            xquery &= Xapian::Query(to_term(*q.varcodes.begin()));
+            has_query = true;
+            break;
+        default:
+        {
+            std::vector<std::string> terms;
+            for (const auto& varcode: q.varcodes)
+                terms.emplace_back(to_term(varcode));
+            xquery &= Xapian::Query(Xapian::Query::OP_OR, terms.begin(), terms.end());
+            has_query = true;
+        }
     }
 
     if (!has_query)
