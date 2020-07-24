@@ -166,6 +166,30 @@ class BaseExplorerTestMixin(DballeDBMixin):
             self.assertStrRepr(explorer)
             self.assertExplorerContents(explorer)
 
+    def test_issue228(self):
+        if os.path.isdir("test-explorer"):
+            shutil.rmtree("test-explorer")
+        elif os.path.exists("test-explorer"):
+            os.unlink("test-explorer")
+
+        # update from file
+        with self._explorer("test-explorer") as explorer:
+            with explorer.update() as updater:
+                importer = dballe.Importer("BUFR")
+                with importer.from_file(test_pathname("bufr/issue228.bufr")) as message:
+                    updater.add_messages(message)
+            self.assertEqual(explorer.stats.datetime_min, None)
+            self.assertEqual(explorer.stats.datetime_max, None)
+            self.assertEqual(explorer.stats.count, 5)
+
+            with explorer.update() as updater:
+                importer = dballe.Importer("BUFR")
+                with importer.from_file(test_pathname("bufr/issue228.bufr")) as message:
+                    updater.add_messages(message)
+            self.assertEqual(explorer.stats.datetime_min, None)
+            self.assertEqual(explorer.stats.datetime_max, None)
+            self.assertEqual(explorer.stats.count, 10)
+
 
 class ExplorerTestMixin(BaseExplorerTestMixin):
     def _explorer(self, *args, **kw):
