@@ -375,6 +375,55 @@ this->add_method("query_ordering", [](Fixture& f) {
         default: error_unimplemented::throwf("cannot run this test on a database of format %d", (int)DB::format);
     }
 });
+
+this->add_method("issue224", [](Fixture& f) {
+    auto insert = [&](const char* str, int attr) {
+        core::Data data;
+        data.set_from_test_string(str);
+        wassert(f.tr->insert_data(data));
+
+        // Do not add the attribute if attr == -1
+        if (attr != -1)
+        {
+            Values attrs;
+            attrs.set(newvar(WR_VAR(0, 33, 196), attr));
+            wassert(f.tr->attr_insert_data(data.values.value(WR_VAR(0, 12, 101)).data_id, attrs));
+        }
+
+        return data;
+    };
+    auto vals01 = insert("lat=1, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=synop, B12101=280.15", -1);
+    auto vals02 = insert("lat=2, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=synop, B12101=281.15", 0);
+    auto vals03 = insert("lat=3, lon=1, year=2000, leveltype1=1, pindicator=1, rep_memo=synop, B12101=282.15", 1);
+
+    {
+        core::Query query;
+        query.attr_filter = "B33196==0";
+        auto cur = f.tr->query_data(query);
+        wassert(actual(cur->remaining()) == 1);
+        wassert_true(cur->next());
+        wassert(actual(cur->get_var().enqd()) == 281.15);
+    }
+
+    {
+        core::Query query;
+        query.attr_filter = "B33196==1";
+        auto cur = f.tr->query_data(query);
+        wassert(actual(cur->remaining()) == 1);
+        wassert_true(cur->next());
+        wassert(actual(cur->get_var().enqd()) == 282.15);
+    }
+
+    {
+        core::Query query;
+        query.attr_filter = "B33196!=1";
+        auto cur = f.tr->query_data(query);
+        wassert(actual(cur->remaining()) == 1);
+        wassert_true(cur->next());
+        wassert(actual(cur->get_var().enqd()) == 281.15);
+    }
+});
+
 }
 
 }

@@ -34,8 +34,8 @@ Name              Type      Description                             Comment
 ``var``           String    Station measures this variable          When setting var, varlist is cleared
 ``varlist``       String    Station measures one of these variables Comma-separated list of variable codes to query; when setting varlist, var is cleared
 ``query``         String    Query behaviour modifier                Comma-separated list of query modifiers.  See :ref:`parms_query_modifiers`.
-``ana_filter``    String    Filter on anagraphical data             Restricts the results to only those stations which have a pseudoana value that matches
-                                                                    the filter. Examples: 'height>=1000', 'B02001=1', '1000<=height<=2000
+``ana_filter``    String    Filter on station values                Restricts the results to only those stations which have a pseudoana value that matches
+                                                                    the filter. See :ref:`parms_filters`.
 ``limit``         Integer   Maximum number of results to return
 ``block``         Integer   WMO block number of the station
 ``station``       Integer   WMO station number of the station
@@ -67,9 +67,9 @@ Name              Type      Description                         Comment
 ``var``           String    Variable queried                    When setting var, varlist is cleared
 ``varlist``       String    List of variables to query          Comma-separated list of variable codes to query; when setting varlist, var is cleared
 ``query``         String    Query behaviour modifier            Comma-separated list of query modifiers.  See :ref:`parms_query_modifiers`.
-``ana_filter``    String    Filter on anagraphical data         Restricts the results to only those stations which have a pseudoana value that matches the filter. Examples: 'height>=1000', 'B02001=1', '1000<=height<=2000
-``data_filter``   String    Filter on data                      Restricts the results to only the variables of the given type, which have a value that matches the filter. Examples: 't<260', 'B22021>2', '10<=B22021<=20'
-``attr_filter``   String    Filter on data attributes           Restricts the results to only those data which have an attribute that matches the filter. Examples: 'conf>70', 'B33197=0', '25<=conf<=50'
+``ana_filter``    String    Filter on station values            Restricts the results to only those stations which have a pseudoana value that matches the filter. See :ref:`parms_filters`.
+``data_filter``   String    Filter on data                      Restricts the results to only the variables of the given type, which have a value that matches the filter. See :ref:`parms_filters`.
+``attr_filter``   String    Filter on data attributes           Restricts the results to only those data which have an attribute that matches the filter. See :ref:`parms_filters`.
 ``limit``         Integer   Maximum number of results to return
 ``block``         Integer   WMO block number of the station
 ``station``       Integer   WMO station number of the station
@@ -131,9 +131,9 @@ Name              Type                   Description                         Com
 ``var``           String                 Variable queried                    When setting var, varlist is cleared
 ``varlist``       String                 List of variables to query          Comma-separated list of variable codes to query; when setting varlist, var is cleared
 ``query``         String                 Query behaviour modifier            Comma-separated list of query modifiers.  See :ref:`parms_query_modifiers`.
-``ana_filter``    String                 Filter on anagraphical data         Restricts the results to only those stations which have a pseudoana value that matches the filter. Examples: 'height>=1000', 'B02001=1', '1000<=height<=2000
-``data_filter``   String                 Filter on data                      Restricts the results to only the variables of the given type, which have a value that matches the filter. Examples: 't<260', 'B22021>2', '10<=B22021<=20'
-``attr_filter``   String                 Filter on data attributes           Restricts the results to only those data which have an attribute that matches the filter. Examples: 'conf>70', 'B33197=0', '25<=conf<=50'
+``ana_filter``    String                 Filter on station values            Restricts the results to only those stations which have a pseudoana value that matches the filter. See :ref:`parms_filters`.
+``data_filter``   String                 Filter on data                      Restricts the results to only the variables of the given type, which have a value that matches the filter. See :ref:`parms_filters`.
+``attr_filter``   String                 Filter on data attributes           Restricts the results to only those data which have an attribute that matches the filter. See :ref:`parms_filters`.
 ``limit``         Integer                Maximum number of results to return
 ``block``         Integer                WMO block number of the station
 ``station``       Integer                WMO station number of the station
