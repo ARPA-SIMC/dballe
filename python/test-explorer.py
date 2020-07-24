@@ -182,6 +182,14 @@ class BaseExplorerTestMixin(DballeDBMixin):
             self.assertEqual(explorer.stats.datetime_max, None)
             self.assertEqual(explorer.stats.count, 5)
 
+            with explorer.update() as updater:
+                importer = dballe.Importer("BUFR")
+                with importer.from_file(test_pathname("bufr/issue228.bufr")) as message:
+                    updater.add_messages(message)
+            self.assertEqual(explorer.stats.datetime_min, None)
+            self.assertEqual(explorer.stats.datetime_max, None)
+            self.assertEqual(explorer.stats.count, 10)
+
 
 class ExplorerTestMixin(BaseExplorerTestMixin):
     def _explorer(self, *args, **kw):

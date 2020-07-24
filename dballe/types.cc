@@ -479,6 +479,10 @@ bool Datetime::operator>=(const Datetime& o) const
 
 Datetime Datetime::from_iso8601(const char* str)
 {
+    // Handle empty strings as missing values
+    if (!*str)
+        return Datetime();
+
     int ye, mo, da, ho, mi, se;
     char sep;
     if (sscanf(str, "%04d-%02d-%02d%c%02d:%02d:%02d", &ye, &mo, &da, &sep, &ho, &mi, &se) != 7)
@@ -525,6 +529,8 @@ void Datetime::to_csv_iso8601(CSVWriter& out, char sep, const char* tz) const
 
 std::string Datetime::to_string(char sep, const char* tz) const
 {
+    if (is_missing())
+        return std::string();
     char buf[32];
     int len = snprintf(buf, 32, "%04hu-%02hhu-%02hhu%c%02hhu:%02hhu:%02hhu%s",
             year, month, day, sep, hour, minute, second, tz);
