@@ -20,8 +20,8 @@ have one of these formats:
 * ``Bxxyyy!=value``
 * ``value1<Bxxyyy<value2``
 * ``value1<=Bxxyyy<=value2``
-* ``value1>Bxxyyy>value2``
-* ``value1>=Bxxyyy>=value2``
+* ``value1<Bxxyyy<=value2``
+* ``value1<=Bxxyyy<value2``
 
 Examples for station values: ``height>=1000``, ``B02001=1``, ``1000<=height<=2000``.
 

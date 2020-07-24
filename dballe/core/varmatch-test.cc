@@ -123,6 +123,20 @@ add_method("string", []() {
     wassert(actual((*Varmatch::parse("daniele<=B01011<=emanuele"))(var)).isfalse());
 });
 
+add_method("errors", []() {
+    wassert_throws(wreport::error_consistency, Varmatch::parse("B01011"));
+    wassert_throws(wreport::error_consistency, Varmatch::parse("enrico"));
+    wassert_throws(wreport::error_consistency, Varmatch::parse("B01011 3"));
+    wassert_throws(wreport::error_consistency, Varmatch::parse("B01011=!3"));
+    wassert_throws(wreport::error_consistency, Varmatch::parse("B01011><3"));
+    wassert_throws(wreport::error_consistency, Varmatch::parse("3<B01011>3"));
+    wassert_throws(wreport::error_consistency, Varmatch::parse("3>B01011>3"));
+    wassert_throws(wreport::error_consistency, Varmatch::parse("3>B01011<3"));
+    wassert_throws(wreport::error_consistency, Varmatch::parse("3<B01011>=3"));
+    wassert_throws(wreport::error_consistency, Varmatch::parse("3<=B01011>3"));
+    wassert_throws(wreport::error_consistency, Varmatch::parse("3=B01011=3"));
+});
+
 }
 
 }
