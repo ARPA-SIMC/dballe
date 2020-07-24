@@ -44,6 +44,8 @@ add_method("int", []() {
 
     wassert(actual((*Varmatch::parse("B01001<>43"))(var)).istrue());
     wassert(actual((*Varmatch::parse("B01001<>42"))(var)).isfalse());
+    wassert(actual((*Varmatch::parse("B01001!=43"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B01001!=42"))(var)).isfalse());
 
     wassert(actual((*Varmatch::parse("41<=B01001<=42"))(var)).istrue());
     wassert(actual((*Varmatch::parse("42<=B01001<=42"))(var)).istrue());
@@ -77,6 +79,8 @@ add_method("decimal", []() {
 
     wassert(actual((*Varmatch::parse("B12101<>274"))(var)).istrue());
     wassert(actual((*Varmatch::parse("B12101<>273.15"))(var)).isfalse());
+    wassert(actual((*Varmatch::parse("B12101!=274"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B12101!=273.15"))(var)).isfalse());
 
     wassert(actual((*Varmatch::parse("273<=B12101<=273.15"))(var)).istrue());
     wassert(actual((*Varmatch::parse("273.15<=B12101<=273.15"))(var)).istrue());
@@ -110,6 +114,8 @@ add_method("string", []() {
 
     wassert(actual((*Varmatch::parse("B01011<>paolo"))(var)).istrue());
     wassert(actual((*Varmatch::parse("B01011<>enrico"))(var)).isfalse());
+    wassert(actual((*Varmatch::parse("B01011!=paolo"))(var)).istrue());
+    wassert(actual((*Varmatch::parse("B01011!=enrico"))(var)).isfalse());
 
     wassert(actual((*Varmatch::parse("emanuele<=B01011<=enrico"))(var)).istrue());
     wassert(actual((*Varmatch::parse("enrico<=B01011<=enrico"))(var)).istrue());
