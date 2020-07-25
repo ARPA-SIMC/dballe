@@ -483,6 +483,19 @@ Datetime Datetime::from_iso8601(const char* str)
     if (!*str)
         return Datetime();
 
+    size_t len = strlen(str);
+    switch (len)
+    {
+        case 19:
+            break;
+        case 20:
+            if (str[19] != 'Z')
+                error_consistency::throwf("the only supported time zone indicator for \"%s\" is Z", str);
+            break;
+        default:
+            error_consistency::throwf("date/time string \"%s\" is %zd characters long instead of 19", str, len);
+    }
+
     int ye, mo, da, ho, mi, se;
     char sep;
     if (sscanf(str, "%04d-%02d-%02d%c%02d:%02d:%02d", &ye, &mo, &da, &sep, &ho, &mi, &se) != 7)

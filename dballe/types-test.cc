@@ -43,6 +43,12 @@ add_method("datetime", []() {
     wassert(actual(Datetime(2013, 1, 1, 0, 0, 0)) < Datetime(2013, 1, 1, 0, 1, 0));
     wassert(actual(Datetime(2013, 1, 1, 0, 0, 0)) < Datetime(2013, 1, 1, 0, 0, 1));
     wassert(actual(Datetime(1945, 4, 25, 8, 0, 0)) != Datetime(1945, 4, 26, 8, 0, 0));
+
+    wassert(actual(Datetime::from_iso8601("2020-07-01T12:30:45")) == Datetime(2020, 7, 1, 12, 30, 45));
+    wassert(actual(Datetime::from_iso8601("2020-07-01 12:30:45")) == Datetime(2020, 7, 1, 12, 30, 45));
+    wassert(actual(Datetime::from_iso8601("2020-07-01T12:30:45Z")) == Datetime(2020, 7, 1, 12, 30, 45));
+    wassert_throws(wreport::error_consistency, Datetime::from_iso8601("2020-07-01T12:30:45+00:00"));
+    wassert_throws(wreport::error_consistency, Datetime::from_iso8601("2020-07-01"));
 });
 add_method("datetime_jdays", []() {
     // Test Date to/from julian days conversion
