@@ -61,10 +61,10 @@ public:
         void add_explorer(const BaseExplorer<OStation>& explorer);
 
         /// Merge the contents of a message
-        void add_message(const dballe::Message& message);
+        void add_message(const dballe::Message& message, bool station_data=true, bool data=true);
 
         /// Merge the contents of a vector of messages
-        void add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages);
+        void add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages, bool station_data=true, bool data=true);
 
         void commit();
 

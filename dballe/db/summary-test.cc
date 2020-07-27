@@ -439,6 +439,35 @@ this->add_method("issue218", [](Fixture& f) {
     }
 });
 
+this->add_method("xapian_filtering_regression1", [](Fixture& f) {
+    std::string json_sample = R"({"e":[
+        {"s":{"r":"synop","c":[1234560,7654320]},"v":[
+            {"l":[10,11,15,22],"t":[20,111,222],"v":267,"d":[[1945,4,25,8,0,0],[1945,4,25,8,0,0]],"c":1},
+            {"l":[10,11,15,22],"t":[20,111,222],"v":268,"d":[[1945,4,25,8,0,0],[1945,4,25,8,0,0]],"c":1}
+        ]},
+        {"s":{"r":"amdar","c":[1234560,7654320],"i":"foo"},"v":[
+            {"l":[10,11,15,22],"t":[20,111,223],"v":268,"d":[[1945,4,25,12,0,0],[1945,4,25,12,0,0]],"c":1}
+        ]}]})";
+
+    std::stringstream json(json_sample);
+    core::json::Stream in(json);
+    BACKEND summary;
+    wassert(summary.load_json(in));
+
+    BACKEND summary1;
+    core::Query query;
+    query.report = "amdar";
+    summary1.add_filtered(summary, query);
+
+    auto reports = get_reports(summary1);
+    wassert(actual(reports.size()) == 1);
+    wassert(actual(reports[0]) == "amdar");
+
+    auto tranges = get_tranges(summary1);
+    wassert(actual(tranges.size()) == 1);
+    wassert(actual(tranges[0]) == Trange(20, 111, 223));
+});
+
 }
 
 }

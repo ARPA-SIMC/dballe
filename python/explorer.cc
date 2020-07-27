@@ -683,9 +683,11 @@ It takes the same messages argument of :func:`dballe.DB.import_messages`.
 
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { "messages", nullptr };
+        static const char* kwlist[] = { "messages", "station_data", "data", nullptr };
         PyObject* obj;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "O", const_cast<char**>(kwlist), &obj))
+        int station_data = 1;
+        int data = 1;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O|pp", const_cast<char**>(kwlist), &obj, &station_data, &data))
             return nullptr;
 
         try {
@@ -701,7 +703,7 @@ It takes the same messages argument of :func:`dballe.DB.import_messages`.
                 while (auto binmsg = impf->file->file->file().read())
                 {
                     auto messages = impf->importer->importer->from_binary(binmsg);
-                    self->update.add_messages(messages);
+                    self->update.add_messages(messages, station_data, data);
                 }
                 Py_RETURN_NONE;
             }
@@ -717,7 +719,7 @@ It takes the same messages argument of :func:`dballe.DB.import_messages`.
                 {
                     pyo_unique_ptr o(throw_ifnull(PySequence_ITEM(obj, i)));
                     if (!dpy_Message_Check(o)) throw_typeerror();
-                    self->update.add_message(*(((dpy_Message*)o.get())->message));
+                    self->update.add_message(*(((dpy_Message*)o.get())->message), station_data, data);
                 }
                 Py_RETURN_NONE;
             }
@@ -729,7 +731,7 @@ It takes the same messages argument of :func:`dballe.DB.import_messages`.
                 while (pyo_unique_ptr item = PyIter_Next(iterator))
                 {
                     if (!dpy_Message_Check(item)) throw_typeerror();
-                    self->update.add_message(*(((dpy_Message*)item.get())->message));
+                    self->update.add_message(*(((dpy_Message*)item.get())->message), station_data, data);
                 }
                 if (PyErr_Occurred()) return nullptr;
                 Py_RETURN_NONE;
