@@ -525,7 +525,20 @@ void BaseSummaryXapian<Station>::to_json(core::JSONWriter& writer) const
 template<typename Station>
 void BaseSummaryXapian<Station>::dump(FILE* out) const
 {
-    throw wreport::error_unimplemented("SummaryXapian::dump()");
+    try {
+        for (auto i = db.postlist_begin(""); i != db.postlist_end(""); ++i)
+        {
+            Xapian::Document doc = db.get_document(*i);
+            fprintf(out, "Entry:\n");
+            for (auto t = doc.termlist_begin(); t != doc.termlist_end(); ++t)
+                fprintf(out, "  %s\n", (*t).c_str());
+
+            fprintf(out, "  dmin: %s\n", doc.get_value(0).c_str());
+            fprintf(out, "  dmax: %s\n", doc.get_value(1).c_str());
+            fprintf(out, "  count: %s\n", doc.get_value(2).c_str());
+        }
+    CATCH_XAPIAN_RETHROW_WREPORT
+    }
 }
 
 template class BaseSummaryXapian<dballe::Station>;
