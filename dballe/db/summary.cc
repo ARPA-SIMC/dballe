@@ -144,6 +144,7 @@ struct Loader
     void load_station_entry(core::json::Stream& in)
     {
         in.parse_array([&](){
+            vars.clear();
             in.parse_object([&](const std::string& key) {
                 if (key == "s")
                     station = in.parse<Station>();
