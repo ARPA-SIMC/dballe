@@ -219,15 +219,15 @@ void BaseExplorer<DBStation>::Update::add_explorer(const BaseExplorer<DBStation>
 }
 
 template<typename Station>
-void BaseExplorer<Station>::Update::add_message(const dballe::Message& message)
+void BaseExplorer<Station>::Update::add_message(const dballe::Message& message, bool station_data, bool data)
 {
-    this->explorer->_global_summary->add_message(message);
+    this->explorer->_global_summary->add_message(message, station_data, data);
 }
 
 template<typename Station>
-void BaseExplorer<Station>::Update::add_messages(const std::vector<std::shared_ptr<Message>>& messages)
+void BaseExplorer<Station>::Update::add_messages(const std::vector<std::shared_ptr<Message>>& messages, bool station_data, bool data)
 {
-    this->explorer->_global_summary->add_messages(messages);
+    this->explorer->_global_summary->add_messages(messages, station_data, data);
 }
 
 template class BaseExplorer<dballe::Station>;
