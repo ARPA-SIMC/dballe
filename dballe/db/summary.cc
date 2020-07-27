@@ -39,7 +39,7 @@ void BaseSummary<Station>::add_cursor(const dballe::CursorSummary& cur)
 }
 
 template<typename Station>
-void BaseSummary<Station>::add_message(const dballe::Message& message)
+void BaseSummary<Station>::add_message(const dballe::Message& message, bool station_data, bool data)
 {
     const impl::Message& msg = impl::Message::downcast(message);
 
@@ -64,34 +64,40 @@ void BaseSummary<Station>::add_message(const dballe::Message& message)
     // avoid looking it up for each variable
 
     // Station variables
-    summary::VarDesc vd_ana;
-    vd_ana.level = Level();
-    vd_ana.trange = Trange();
-    for (const auto& val: msg.station_data)
+    if (station_data)
     {
-        vd_ana.varcode = val->code();
-        add(station, vd_ana, dtrange, 1);
+        summary::VarDesc vd_ana;
+        vd_ana.level = Level();
+        vd_ana.trange = Trange();
+        for (const auto& val: msg.station_data)
+        {
+            vd_ana.varcode = val->code();
+            add(station, vd_ana, dtrange, 1);
+        }
     }
 
     // Variables
-    for (const auto& ctx: msg.data)
+    if (data)
     {
-        summary::VarDesc vd(ctx.level, ctx.trange, 0);
-
-        for (const auto& val: ctx.values)
+        for (const auto& ctx: msg.data)
         {
-            if (not val->isset()) continue;
-            vd.varcode = val->code();
-            add(station, vd, dtrange, 1);
+            summary::VarDesc vd(ctx.level, ctx.trange, 0);
+
+            for (const auto& val: ctx.values)
+            {
+                if (not val->isset()) continue;
+                vd.varcode = val->code();
+                add(station, vd, dtrange, 1);
+            }
         }
     }
 }
 
 template<typename Station>
-void BaseSummary<Station>::add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages)
+void BaseSummary<Station>::add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages, bool station_data, bool data)
 {
     for (const auto& message: messages)
-        add_message(*message);
+        add_message(*message, station_data, data);
 }
 
 template<typename Station>

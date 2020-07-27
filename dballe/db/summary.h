@@ -93,10 +93,10 @@ public:
     virtual void add_cursor(const dballe::CursorSummary& cur);
 
     /// Add the contents of a Message
-    virtual void add_message(const dballe::Message& message);
+    virtual void add_message(const dballe::Message& message, bool station_data=true, bool data=true);
 
     /// Add the contents of a Messages
-    virtual void add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages);
+    virtual void add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages, bool station_data=true, bool data=true);
 
     /// Merge the copy of another summary into this one
     virtual void add_summary(const BaseSummary<dballe::Station>& summary);
