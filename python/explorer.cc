@@ -685,8 +685,8 @@ It takes the same messages argument of :func:`dballe.DB.import_messages`.
     {
         static const char* kwlist[] = { "messages", "station_data", "data", nullptr };
         PyObject* obj;
-        bool station_data = true;
-        bool data = true;
+        int station_data = 1;
+        int data = 1;
         if (!PyArg_ParseTupleAndKeywords(args, kw, "O|pp", const_cast<char**>(kwlist), &obj, &station_data, &data))
             return nullptr;
 

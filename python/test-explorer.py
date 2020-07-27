@@ -193,10 +193,39 @@ class BaseExplorerTestMixin(DballeDBMixin):
         Check that one can import messages with either all data, station data
         only, measured data only
         """
-        if os.path.isdir("test-explorer"):
-            shutil.rmtree("test-explorer")
-        elif os.path.exists("test-explorer"):
-            os.unlink("test-explorer")
+        with self._explorer("e1") as explorer:
+            with explorer.update() as updater:
+                importer = dballe.Importer("BUFR")
+                with importer.from_file(test_pathname("bufr/gts-acars1.bufr")) as messages:
+                    updater.add_messages(messages)
+            self.assertEqual(explorer.all_varcodes, [
+                'B01011', 'B02062', 'B02064', 'B04001', 'B04002', 'B04003',
+                'B04004', 'B04005', 'B04006', 'B05001', 'B06001', 'B07030',
+                'B08004', 'B11001', 'B11002', 'B12101', 'B13002'])
+
+        with self._explorer("e2") as explorer:
+            with explorer.update() as updater:
+                importer = dballe.Importer("BUFR")
+                with importer.from_file(test_pathname("bufr/gts-acars1.bufr")) as messages:
+                    updater.add_messages(messages, station_data=True, data=False)
+            self.assertEqual(explorer.all_varcodes, [
+                'B01011', 'B04001', 'B04002', 'B04003', 'B04004', 'B04005',
+                'B04006', 'B05001', 'B06001'])
+
+        with self._explorer("e3") as explorer:
+            with explorer.update() as updater:
+                importer = dballe.Importer("BUFR")
+                with importer.from_file(test_pathname("bufr/gts-acars1.bufr")) as messages:
+                    updater.add_messages(messages, station_data=False, data=True)
+            self.assertEqual(explorer.all_varcodes, [
+                'B02062', 'B02064', 'B07030', 'B08004', 'B11001', 'B11002', 'B12101', 'B13002'])
+
+        with self._explorer("e4") as explorer:
+            with explorer.update() as updater:
+                importer = dballe.Importer("BUFR")
+                with importer.from_file(test_pathname("bufr/gts-acars1.bufr")) as messages:
+                    updater.add_messages(messages, station_data=False, data=False)
+            self.assertEqual(explorer.all_varcodes, [])
 
 
 class ExplorerTestMixin(BaseExplorerTestMixin):
