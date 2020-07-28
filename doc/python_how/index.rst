@@ -7,4 +7,5 @@ Python HOWTOs
    dumpdb
    insert
    convertvars
+   attributes
    explorer
