@@ -71,6 +71,7 @@ sphinx_packaged_sources =  \
     python_how/dumpdb.rst \
     python_how/explorer.rst \
     python_how/insert.rst \
+    python_how/attributes.rst \
     python_ref/index.rst \
     python_ref/types.rst \
     python_ref/messages.rst \
