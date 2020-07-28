@@ -94,7 +94,7 @@ wreport::Varcode varcode_from_term(const std::string& term)
 
 #define CATCH_XAPIAN_RETHROW_WREPORT \
     } catch (Xapian::Error& e) { \
-        wreport::error_consistency::throwf("Xapian error %s: %s [%s]", e.get_type(), e.get_msg().c_str(), e.get_context().c_str()); \
+        wreport::error_consistency::throwf("Xapian error %s", e.get_description().c_str()); \
 
 template<typename Station>
 BaseSummaryXapian<Station>::BaseSummaryXapian()
