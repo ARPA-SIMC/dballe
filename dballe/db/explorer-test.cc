@@ -2,6 +2,7 @@
 #include "dballe/db/tests.h"
 #include "dballe/db/v7/db.h"
 #include "dballe/db/v7/transaction.h"
+#include "wreport/utils/sys.h"
 #include "explorer.h"
 #include "config.h"
 
@@ -190,6 +191,28 @@ this->add_method("merge_self", [](Fixture& f) {
         auto e = wassert_throws(wreport::error_consistency, update.add_explorer(explorer));
         wassert(actual(e.what()) == "Adding an Explorer to itself is not supported");
     }
+});
+
+this->add_method("issue232", [](Fixture& f) {
+    EXPLORER explorer;
+
+    std::string json_data = sys::read_file(dballe::tests::datafile("json/issue232.json"));
+    std::stringstream json(json_data);
+    {
+        auto update = explorer.update();
+        core::json::Stream in(json);
+        wassert(update.add_json(in));
+    }
+
+    core::Query query;
+    query.dtrange.min = Datetime(2020, 1, 1, 1, 0);
+    query.dtrange.max = Datetime(2020, 6, 1, 15, 13);
+    query.report = "simnpr";
+    query.query = "details";
+
+    auto cur = explorer.global_summary().query_summary(query);
+    while (cur->next())
+        cur->get_datetimerange();
 });
 
 }
