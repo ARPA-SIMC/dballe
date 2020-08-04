@@ -218,8 +218,11 @@ void StationEntries<Station>::add_filtered(const StationEntries& entries, const 
             iterator cur = this->find(entry.station);
             if (cur != end())
                 cur->add_filtered(entry, query);
-            else
-                Parent::add(StationEntry<Station>(entry, query));
+            else {
+                StationEntry<Station> se(entry, query);
+                if (!se.empty())
+                    Parent::add(std::move(se));
+            }
         }
     } else {
         for (auto entry: entries)

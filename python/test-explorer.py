@@ -227,6 +227,21 @@ class BaseExplorerTestMixin(DballeDBMixin):
                     updater.add_messages(messages, station_data=False, data=False)
             self.assertEqual(explorer.all_varcodes, [])
 
+    def test_issue232(self):
+        explorer = dballe.DBExplorer()
+        with explorer.update() as updater:
+            with open(test_pathname("json/issue232.json"), "rt") as fd:
+                updater.add_json(fd.read())
+
+        query = {
+            'datetimemin': datetime.datetime(2020, 1, 1, 1, 0),
+            'datetimemax': datetime.datetime(2020, 6, 1, 15, 13),
+            'rep_memo': 'simnpr',
+            'query': 'details'
+        }
+        for cur in explorer.query_summary_all(query):
+            cur["yearmin"]
+
 
 class ExplorerTestMixin(BaseExplorerTestMixin):
     def _make_explorer(self, name, *args, **kw):
