@@ -1,6 +1,7 @@
 #include <wreport/utils/tests.h>
 #include <wreport/utils/testrunner.h>
 #include <wreport/utils/term.h>
+#include <wreport/fwd.h>
 #include <dballe/db/tests.h>
 #include <dballe/db/v7/trace.h>
 #include <signal.h>
@@ -33,6 +34,11 @@ int main(int argc,const char* argv[])
         controller.reset(new VerboseTestController(output));
     else
         controller.reset(new SimpleTestController(output));
+
+#ifndef WREPORT_VERSION_MAJOR
+#define allowlist whitelist
+#define blocklist blacklist
+#endif
 
     if (const char* allowlist = getenv("TEST_WHITELIST"))
         controller->allowlist = allowlist;

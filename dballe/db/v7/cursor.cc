@@ -262,7 +262,7 @@ void Summary::remove()
     rows.tr->remove_data(query);
 }
 
-unique_ptr<dballe::CursorStation> run_station_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
+std::unique_ptr<dballe::CursorStation> run_station_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     StationQueryBuilder qb(tr, q, modifiers);
@@ -275,12 +275,13 @@ unique_ptr<dballe::CursorStation> run_station_query(Tracer<>& trc, std::shared_p
     }
 
     auto resptr = new Stations(tr);
-    unique_ptr<db::CursorStation> res(resptr);
+    std::unique_ptr<db::CursorStation> res(resptr);
     resptr->rows.load(trc, qb);
-    return res;
+    // std::move is redundant, but needed by centos7's obsolete compiler
+    return std::move(res);
 }
 
-unique_ptr<dballe::CursorStationData> run_station_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
+std::unique_ptr<dballe::CursorStationData> run_station_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     DataQueryBuilder qb(tr, q, modifiers, true);
@@ -292,7 +293,7 @@ unique_ptr<dballe::CursorStationData> run_station_data_query(Tracer<>& trc, std:
         tr->db->conn->explain(qb.sql_query, stderr);
     }
 
-    unique_ptr<db::CursorStationData> res;
+    std::unique_ptr<db::CursorStationData> res;
     if (modifiers & DBA_DB_MODIFIER_BEST)
     {
         throw error_unimplemented("best queries of station vars");
@@ -304,10 +305,11 @@ unique_ptr<dballe::CursorStationData> run_station_data_query(Tracer<>& trc, std:
         res.reset(resptr);
         resptr->rows.load(trc, qb);
     }
-    return res;
+    // std::move is redundant, but needed by centos7's obsolete compiler
+    return std::move(res);
 }
 
-unique_ptr<dballe::CursorData> run_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
+std::unique_ptr<dballe::CursorData> run_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     DataQueryBuilder qb(tr, q, modifiers, false);
@@ -319,7 +321,7 @@ unique_ptr<dballe::CursorData> run_data_query(Tracer<>& trc, std::shared_ptr<v7:
         tr->db->conn->explain(qb.sql_query, stderr);
     }
 
-    unique_ptr<CursorData> res;
+    std::unique_ptr<CursorData> res;
     auto resptr = new Data(qb, modifiers & DBA_DB_MODIFIER_WITH_ATTRIBUTES);
     res.reset(resptr);
 
@@ -327,10 +329,11 @@ unique_ptr<dballe::CursorData> run_data_query(Tracer<>& trc, std::shared_ptr<v7:
         resptr->rows.load_best(trc, qb);
     else
         resptr->rows.load(trc, qb);
-    return res;
+    // std::move is redundant, but needed by centos7's obsolete compiler
+    return std::move(res);
 }
 
-unique_ptr<dballe::CursorSummary> run_summary_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
+std::unique_ptr<dballe::CursorSummary> run_summary_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
     if (modifiers & DBA_DB_MODIFIER_BEST)
@@ -346,9 +349,10 @@ unique_ptr<dballe::CursorSummary> run_summary_query(Tracer<>& trc, std::shared_p
     }
 
     auto resptr = new Summary(tr);
-    unique_ptr<CursorSummary> res(resptr);
+    std::unique_ptr<CursorSummary> res(resptr);
     resptr->rows.load(trc, qb);
-    return res;
+    // std::move is redundant, but needed by centos7's obsolete compiler
+    return std::move(res);
 }
 
 void run_delete_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool station_vars, bool explain)
