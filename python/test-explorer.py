@@ -228,54 +228,19 @@ class BaseExplorerTestMixin(DballeDBMixin):
             self.assertEqual(explorer.all_varcodes, [])
 
     def test_issue232(self):
-        import itertools
-        db = dballe.DB.connect("sqlite://test.sqlite?wipe=1")
-
-        fields = ['datetimemin', 'datetimemax', 'rep_memo']
-        queries = [[datetime.datetime(2020, 1, 1, 1, 0)], [datetime.datetime(2020, 6, 1, 15, 13)], [
-            'locali', 'profe', 'simnpr', 'simnbo', 'rer', 'simc', 'urbane',
-            'arpae', 'boa', 'cer', 'provpc', 'syrep', 'umsuol', 'cro',
-            'fidupo', 'icirfe', 'idrost', 'idrtl9', 'marefe']]
-
-        # json_summary = "/arkimet/config/arkimet_summary.json"
-        json_summary = test_pathname("json/issue232.json")
-
         explorer = dballe.DBExplorer()
         with explorer.update() as updater:
-            with db.transaction() as tr:
-                updater.add_db(tr)
-            with open(json_summary, "rt") as fd:
+            with open(test_pathname("json/issue232.json"), "rt") as fd:
                 updater.add_json(fd.read())
 
-        min_date = None
-        max_date = None
-        message_count = 0
-        all_queries = list(itertools.product(*queries))
-        for q in all_queries:
-            dballe_query = {}
-            for k, v in zip(fields, q):
-                dballe_query[k] = v
-            dballe_query["query"] = "details"
-            print("query: {}".format(dballe_query))
-            explorer.set_filter(dballe_query)
-            count = explorer.query_summary_all(dballe_query).remaining
-            message_count += count
-            print("count: {}".format(count))
-            for cur in explorer.query_summary_all(dballe_query):
-                # print (cur["report"])
-                datetimemin = datetime.datetime(cur["yearmin"], cur["monthmin"], cur["daymin"], cur["hourmin"], cur["minumin"], cur["secmin"])
-                datetimemax = datetime.datetime(cur["yearmax"], cur["monthmax"], cur["daymax"], cur["hourmax"], cur["minumax"], cur["secmax"])
-                if min_date:
-                    if datetimemin < min_date:
-                        min_date = datetimemin
-                else:
-                    min_date = datetimemin
-                if max_date:
-                    if datetimemax > max_date:
-                        max_date = datetimemax
-                else:
-                    max_date = datetimemax
-        print("min date: {}, max_date: {}, count: {}".format(min_date, max_date, message_count))
+        query = {
+            'datetimemin': datetime.datetime(2020, 1, 1, 1, 0),
+            'datetimemax': datetime.datetime(2020, 6, 1, 15, 13),
+            'rep_memo': 'simnpr',
+            'query': 'details'
+        }
+        for cur in explorer.query_summary_all(query):
+            cur["yearmin"]
 
 
 class ExplorerTestMixin(BaseExplorerTestMixin):
