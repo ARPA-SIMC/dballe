@@ -37,7 +37,13 @@ using namespace wreport;
 namespace dballe {
 %}
 
-struct aliasdef { const char* alias; Varcode var = 0; };
+struct aliasdef {
+    const char* alias;
+	Varcode var;
+
+	aliasdef(const char* alias) : alias(alias), var(0) {}
+	aliasdef(const char* alias, Varcode var) : alias(alias), var(var) {}
+};
 %%
 block,			WR_VAR(0,  1,   1)
 station,		WR_VAR(0,  1,   2)
