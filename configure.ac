@@ -345,6 +345,11 @@ dnl warnings="-Wall -Wextra -Werror=return-type -Werror=empty-body"
 dnl CFLAGS="$warnings $CFLAGS"
 dnl CXXFLAGS="$warnings $CXXFLAGS"
 AX_APPEND_FLAG([-Wextra -Wno-unused-parameter])
+AX_CHECK_COMPILE_FLAG([-Wredundant-move], [has_redundant_move=yes], [has_redundant_move=no])
+if test $has_redundant_move = yes
+then
+	AX_APPEND_FLAG([-Wno-error=redundant-move])
+fi
 
 # Enforce dependencies
 if test x"$enable_dballef" = x"yes"; then
