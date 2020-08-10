@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>dballe cursors &#8212; dballe 3.23 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -40,7 +38,7 @@
 </div>
 <dl class="class">
 <dt id="dballe.CursorStation">
-<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorStation</code><a class="headerlink" href="#dballe.CursorStation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dballe.</code><code class="sig-name descname">CursorStation</code><a class="headerlink" href="#dballe.CursorStation" title="Permalink to this definition">¶</a></dt>
 <dd><p>This cursor is the iterable result of a <code class="docutils literal notranslate"><span class="pre">query_stations</span></code> operation performed
 outside a database, like <a class="reference internal" href="messages.html#dballe.Message.query_stations" title="dballe.Message.query_stations"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Message.query_stations()</span></code></a>.</p>
 <p>Each iteration returns the cursor itself, that can be used to access the
@@ -55,37 +53,37 @@ functions. For the keys available, see <a class="reference internal" href="../ge
 </div>
 <dl class="method">
 <dt id="dballe.CursorStation.enqd">
-<code class="descname">enqd</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorStation.enqd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqd</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorStation.enqd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the float value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorStation.enqf">
-<code class="descname">enqf</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorStation.enqf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqf</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorStation.enqf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the formatted string value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorStation.enqi">
-<code class="descname">enqi</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorStation.enqi" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqi</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorStation.enqi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the integer value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorStation.enqs">
-<code class="descname">enqs</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorStation.enqs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqs</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorStation.enqs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the string value for a keyword</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorStation.query">
-<code class="descname">query</code><a class="headerlink" href="#dballe.CursorStation.query" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">query</code><a class="headerlink" href="#dballe.CursorStation.query" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a dict with a query to select exactly the current value at this cursor</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorStation.remaining">
-<code class="descname">remaining</code><a class="headerlink" href="#dballe.CursorStation.remaining" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remaining</code><a class="headerlink" href="#dballe.CursorStation.remaining" title="Permalink to this definition">¶</a></dt>
 <dd><p>number of results still to be returned</p>
 </dd></dl>
 
@@ -93,7 +91,7 @@ functions. For the keys available, see <a class="reference internal" href="../ge
 
 <dl class="class">
 <dt id="dballe.CursorStationDB">
-<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorStationDB</code><a class="headerlink" href="#dballe.CursorStationDB" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dballe.</code><code class="sig-name descname">CursorStationDB</code><a class="headerlink" href="#dballe.CursorStationDB" title="Permalink to this definition">¶</a></dt>
 <dd><p>This cursor is the iterable result of a <code class="docutils literal notranslate"><span class="pre">query_stations</span></code> operation performed
 in a database, like <a class="reference internal" href="db.html#dballe.Transaction.query_stations" title="dballe.Transaction.query_stations"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Transaction.query_stations()</span></code></a>.</p>
 <p>Each iteration returns the cursor itself, that can be used to access the
@@ -108,43 +106,43 @@ functions. For the keys available, see <a class="reference internal" href="../ge
 </div>
 <dl class="method">
 <dt id="dballe.CursorStationDB.enqd">
-<code class="descname">enqd</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorStationDB.enqd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqd</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorStationDB.enqd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the float value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorStationDB.enqf">
-<code class="descname">enqf</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorStationDB.enqf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqf</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorStationDB.enqf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the formatted string value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorStationDB.enqi">
-<code class="descname">enqi</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorStationDB.enqi" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqi</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorStationDB.enqi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the integer value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorStationDB.enqs">
-<code class="descname">enqs</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorStationDB.enqs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqs</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorStationDB.enqs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the string value for a keyword</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorStationDB.query">
-<code class="descname">query</code><a class="headerlink" href="#dballe.CursorStationDB.query" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">query</code><a class="headerlink" href="#dballe.CursorStationDB.query" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a dict with a query to select exactly the current value at this cursor</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorStationDB.remaining">
-<code class="descname">remaining</code><a class="headerlink" href="#dballe.CursorStationDB.remaining" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remaining</code><a class="headerlink" href="#dballe.CursorStationDB.remaining" title="Permalink to this definition">¶</a></dt>
 <dd><p>number of results still to be returned</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorStationDB.remove">
-<code class="descname">remove</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dballe.CursorStationDB.remove" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remove</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dballe.CursorStationDB.remove" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove the data currently addressed by the cursor</p>
 </dd></dl>
 
@@ -152,7 +150,7 @@ functions. For the keys available, see <a class="reference internal" href="../ge
 
 <dl class="class">
 <dt id="dballe.CursorStationData">
-<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorStationData</code><a class="headerlink" href="#dballe.CursorStationData" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dballe.</code><code class="sig-name descname">CursorStationData</code><a class="headerlink" href="#dballe.CursorStationData" title="Permalink to this definition">¶</a></dt>
 <dd><p>This cursor is the iterable result of a <code class="docutils literal notranslate"><span class="pre">query_station_data</span></code> operation performed
 outside a database, like <a class="reference internal" href="messages.html#dballe.Message.query_station_data" title="dballe.Message.query_station_data"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Message.query_station_data()</span></code></a>.</p>
 <p>Each iteration returns the cursor itself, that can be used to access the
@@ -167,49 +165,49 @@ functions. For the keys available, see <a class="reference internal" href="../ge
 </div>
 <dl class="attribute">
 <dt id="dballe.CursorStationData.data">
-<code class="descname">data</code><a class="headerlink" href="#dballe.CursorStationData.data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">data</code><a class="headerlink" href="#dballe.CursorStationData.data" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a dballe.Data which can be used to insert into a database the current cursor value</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorStationData.data_dict">
-<code class="descname">data_dict</code><a class="headerlink" href="#dballe.CursorStationData.data_dict" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">data_dict</code><a class="headerlink" href="#dballe.CursorStationData.data_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a dict which can be used to insert into a database the current cursor value</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorStationData.enqd">
-<code class="descname">enqd</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorStationData.enqd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqd</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorStationData.enqd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the float value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorStationData.enqf">
-<code class="descname">enqf</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorStationData.enqf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqf</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorStationData.enqf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the formatted string value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorStationData.enqi">
-<code class="descname">enqi</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorStationData.enqi" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqi</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorStationData.enqi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the integer value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorStationData.enqs">
-<code class="descname">enqs</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorStationData.enqs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqs</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorStationData.enqs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the string value for a keyword</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorStationData.query">
-<code class="descname">query</code><a class="headerlink" href="#dballe.CursorStationData.query" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">query</code><a class="headerlink" href="#dballe.CursorStationData.query" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a dict with a query to select exactly the current value at this cursor</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorStationData.remaining">
-<code class="descname">remaining</code><a class="headerlink" href="#dballe.CursorStationData.remaining" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remaining</code><a class="headerlink" href="#dballe.CursorStationData.remaining" title="Permalink to this definition">¶</a></dt>
 <dd><p>number of results still to be returned</p>
 </dd></dl>
 
@@ -217,7 +215,7 @@ functions. For the keys available, see <a class="reference internal" href="../ge
 
 <dl class="class">
 <dt id="dballe.CursorStationDataDB">
-<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorStationDataDB</code><a class="headerlink" href="#dballe.CursorStationDataDB" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dballe.</code><code class="sig-name descname">CursorStationDataDB</code><a class="headerlink" href="#dballe.CursorStationDataDB" title="Permalink to this definition">¶</a></dt>
 <dd><p>This cursor is the iterable result of a <code class="docutils literal notranslate"><span class="pre">query_station_data</span></code> operation performed
 in a database, like <a class="reference internal" href="db.html#dballe.Transaction.query_station_data" title="dballe.Transaction.query_station_data"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Transaction.query_station_data()</span></code></a>.</p>
 <p>Each iteration returns the cursor itself, that can be used to access the
@@ -232,67 +230,67 @@ functions. For the keys available, see <a class="reference internal" href="../ge
 </div>
 <dl class="attribute">
 <dt id="dballe.CursorStationDataDB.data">
-<code class="descname">data</code><a class="headerlink" href="#dballe.CursorStationDataDB.data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">data</code><a class="headerlink" href="#dballe.CursorStationDataDB.data" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a dballe.Data which can be used to insert into a database the current cursor value</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorStationDataDB.data_dict">
-<code class="descname">data_dict</code><a class="headerlink" href="#dballe.CursorStationDataDB.data_dict" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">data_dict</code><a class="headerlink" href="#dballe.CursorStationDataDB.data_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a dict which can be used to insert into a database the current cursor value</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorStationDataDB.enqd">
-<code class="descname">enqd</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorStationDataDB.enqd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqd</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorStationDataDB.enqd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the float value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorStationDataDB.enqf">
-<code class="descname">enqf</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorStationDataDB.enqf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqf</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorStationDataDB.enqf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the formatted string value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorStationDataDB.enqi">
-<code class="descname">enqi</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorStationDataDB.enqi" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqi</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorStationDataDB.enqi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the integer value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorStationDataDB.enqs">
-<code class="descname">enqs</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorStationDataDB.enqs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqs</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorStationDataDB.enqs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the string value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorStationDataDB.insert_attrs">
-<code class="descname">insert_attrs</code><span class="sig-paren">(</span><em>attrs: Dict[str, Any]</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.CursorStationDataDB.insert_attrs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">insert_attrs</code><span class="sig-paren">(</span><em class="sig-param">attrs: Dict[str, Any]</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.CursorStationDataDB.insert_attrs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Insert or update attributes for the current variable</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorStationDataDB.query">
-<code class="descname">query</code><a class="headerlink" href="#dballe.CursorStationDataDB.query" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">query</code><a class="headerlink" href="#dballe.CursorStationDataDB.query" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a dict with a query to select exactly the current value at this cursor</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorStationDataDB.remaining">
-<code class="descname">remaining</code><a class="headerlink" href="#dballe.CursorStationDataDB.remaining" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remaining</code><a class="headerlink" href="#dballe.CursorStationDataDB.remaining" title="Permalink to this definition">¶</a></dt>
 <dd><p>number of results still to be returned</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorStationDataDB.remove">
-<code class="descname">remove</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dballe.CursorStationDataDB.remove" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remove</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dballe.CursorStationDataDB.remove" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove the data currently addressed by the cursor</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorStationDataDB.remove_attrs">
-<code class="descname">remove_attrs</code><span class="sig-paren">(</span><em>attrs: Iterable[str]</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.CursorStationDataDB.remove_attrs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remove_attrs</code><span class="sig-paren">(</span><em class="sig-param">attrs: Iterable[str]</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.CursorStationDataDB.remove_attrs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove attributes from the current variable</p>
 </dd></dl>
 
@@ -300,7 +298,7 @@ functions. For the keys available, see <a class="reference internal" href="../ge
 
 <dl class="class">
 <dt id="dballe.CursorData">
-<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorData</code><a class="headerlink" href="#dballe.CursorData" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dballe.</code><code class="sig-name descname">CursorData</code><a class="headerlink" href="#dballe.CursorData" title="Permalink to this definition">¶</a></dt>
 <dd><p>This cursor is the iterable result of a <code class="docutils literal notranslate"><span class="pre">query_data</span></code> operation performed
 outside a database, like <a class="reference internal" href="messages.html#dballe.Message.query_data" title="dballe.Message.query_data"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Message.query_data()</span></code></a>.</p>
 <p>Each iteration returns the cursor itself, that can be used to access the
@@ -315,49 +313,49 @@ functions. For the keys available, see <a class="reference internal" href="../ge
 </div>
 <dl class="attribute">
 <dt id="dballe.CursorData.data">
-<code class="descname">data</code><a class="headerlink" href="#dballe.CursorData.data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">data</code><a class="headerlink" href="#dballe.CursorData.data" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a dballe.Data which can be used to insert into a database the current cursor value</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorData.data_dict">
-<code class="descname">data_dict</code><a class="headerlink" href="#dballe.CursorData.data_dict" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">data_dict</code><a class="headerlink" href="#dballe.CursorData.data_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a dict which can be used to insert into a database the current cursor value</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorData.enqd">
-<code class="descname">enqd</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorData.enqd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqd</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorData.enqd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the float value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorData.enqf">
-<code class="descname">enqf</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorData.enqf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqf</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorData.enqf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the formatted string value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorData.enqi">
-<code class="descname">enqi</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorData.enqi" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqi</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorData.enqi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the integer value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorData.enqs">
-<code class="descname">enqs</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorData.enqs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqs</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorData.enqs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the string value for a keyword</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorData.query">
-<code class="descname">query</code><a class="headerlink" href="#dballe.CursorData.query" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">query</code><a class="headerlink" href="#dballe.CursorData.query" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a dict with a query to select exactly the current value at this cursor</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorData.remaining">
-<code class="descname">remaining</code><a class="headerlink" href="#dballe.CursorData.remaining" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remaining</code><a class="headerlink" href="#dballe.CursorData.remaining" title="Permalink to this definition">¶</a></dt>
 <dd><p>number of results still to be returned</p>
 </dd></dl>
 
@@ -365,7 +363,7 @@ functions. For the keys available, see <a class="reference internal" href="../ge
 
 <dl class="class">
 <dt id="dballe.CursorDataDB">
-<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorDataDB</code><a class="headerlink" href="#dballe.CursorDataDB" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dballe.</code><code class="sig-name descname">CursorDataDB</code><a class="headerlink" href="#dballe.CursorDataDB" title="Permalink to this definition">¶</a></dt>
 <dd><p>This cursor is the iterable result of a <code class="docutils literal notranslate"><span class="pre">query_data</span></code> operation performed
 in a database, like <a class="reference internal" href="db.html#dballe.Transaction.query_data" title="dballe.Transaction.query_data"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Transaction.query_data()</span></code></a>.</p>
 <p>Each iteration returns the cursor itself, that can be used to access the
@@ -380,67 +378,67 @@ functions. For the keys available, see <a class="reference internal" href="../ge
 </div>
 <dl class="attribute">
 <dt id="dballe.CursorDataDB.data">
-<code class="descname">data</code><a class="headerlink" href="#dballe.CursorDataDB.data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">data</code><a class="headerlink" href="#dballe.CursorDataDB.data" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a dballe.Data which can be used to insert into a database the current cursor value</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorDataDB.data_dict">
-<code class="descname">data_dict</code><a class="headerlink" href="#dballe.CursorDataDB.data_dict" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">data_dict</code><a class="headerlink" href="#dballe.CursorDataDB.data_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a dict which can be used to insert into a database the current cursor value</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorDataDB.enqd">
-<code class="descname">enqd</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorDataDB.enqd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqd</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorDataDB.enqd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the float value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorDataDB.enqf">
-<code class="descname">enqf</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorDataDB.enqf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqf</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorDataDB.enqf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the formatted string value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorDataDB.enqi">
-<code class="descname">enqi</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorDataDB.enqi" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqi</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorDataDB.enqi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the integer value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorDataDB.enqs">
-<code class="descname">enqs</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorDataDB.enqs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqs</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorDataDB.enqs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the string value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorDataDB.insert_attrs">
-<code class="descname">insert_attrs</code><span class="sig-paren">(</span><em>attrs: Dict[str, Any]</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.CursorDataDB.insert_attrs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">insert_attrs</code><span class="sig-paren">(</span><em class="sig-param">attrs: Dict[str, Any]</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.CursorDataDB.insert_attrs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Insert or update attributes for the current variable</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorDataDB.query">
-<code class="descname">query</code><a class="headerlink" href="#dballe.CursorDataDB.query" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">query</code><a class="headerlink" href="#dballe.CursorDataDB.query" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a dict with a query to select exactly the current value at this cursor</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorDataDB.remaining">
-<code class="descname">remaining</code><a class="headerlink" href="#dballe.CursorDataDB.remaining" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remaining</code><a class="headerlink" href="#dballe.CursorDataDB.remaining" title="Permalink to this definition">¶</a></dt>
 <dd><p>number of results still to be returned</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorDataDB.remove">
-<code class="descname">remove</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dballe.CursorDataDB.remove" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remove</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dballe.CursorDataDB.remove" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove the data currently addressed by the cursor</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorDataDB.remove_attrs">
-<code class="descname">remove_attrs</code><span class="sig-paren">(</span><em>attrs: Iterable[str]</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.CursorDataDB.remove_attrs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remove_attrs</code><span class="sig-paren">(</span><em class="sig-param">attrs: Iterable[str]</em><span class="sig-paren">)</span><a class="headerlink" href="#dballe.CursorDataDB.remove_attrs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove attributes from the current variable</p>
 </dd></dl>
 
@@ -448,7 +446,7 @@ functions. For the keys available, see <a class="reference internal" href="../ge
 
 <dl class="class">
 <dt id="dballe.CursorSummaryDB">
-<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorSummaryDB</code><a class="headerlink" href="#dballe.CursorSummaryDB" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dballe.</code><code class="sig-name descname">CursorSummaryDB</code><a class="headerlink" href="#dballe.CursorSummaryDB" title="Permalink to this definition">¶</a></dt>
 <dd><p>This cursor is the iterable result of a <code class="docutils literal notranslate"><span class="pre">query_summary</span></code> operation performed
 in a database, like <a class="reference internal" href="db.html#dballe.Transaction.query_summary" title="dballe.Transaction.query_summary"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Transaction.query_summary()</span></code></a>.</p>
 <p>Each iteration returns the cursor itself, that can be used to access the
@@ -463,43 +461,43 @@ functions. For the keys available, see <a class="reference internal" href="../ge
 </div>
 <dl class="method">
 <dt id="dballe.CursorSummaryDB.enqd">
-<code class="descname">enqd</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorSummaryDB.enqd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqd</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorSummaryDB.enqd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the float value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorSummaryDB.enqf">
-<code class="descname">enqf</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorSummaryDB.enqf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqf</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorSummaryDB.enqf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the formatted string value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorSummaryDB.enqi">
-<code class="descname">enqi</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorSummaryDB.enqi" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqi</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorSummaryDB.enqi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the integer value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorSummaryDB.enqs">
-<code class="descname">enqs</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorSummaryDB.enqs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqs</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorSummaryDB.enqs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the string value for a keyword</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorSummaryDB.query">
-<code class="descname">query</code><a class="headerlink" href="#dballe.CursorSummaryDB.query" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">query</code><a class="headerlink" href="#dballe.CursorSummaryDB.query" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a dict with a query to select exactly the current value at this cursor</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorSummaryDB.remaining">
-<code class="descname">remaining</code><a class="headerlink" href="#dballe.CursorSummaryDB.remaining" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remaining</code><a class="headerlink" href="#dballe.CursorSummaryDB.remaining" title="Permalink to this definition">¶</a></dt>
 <dd><p>number of results still to be returned</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorSummaryDB.remove">
-<code class="descname">remove</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dballe.CursorSummaryDB.remove" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remove</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dballe.CursorSummaryDB.remove" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove the data currently addressed by the cursor</p>
 </dd></dl>
 
@@ -507,7 +505,7 @@ functions. For the keys available, see <a class="reference internal" href="../ge
 
 <dl class="class">
 <dt id="dballe.CursorSummarySummary">
-<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorSummarySummary</code><a class="headerlink" href="#dballe.CursorSummarySummary" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dballe.</code><code class="sig-name descname">CursorSummarySummary</code><a class="headerlink" href="#dballe.CursorSummarySummary" title="Permalink to this definition">¶</a></dt>
 <dd><p>This cursor is the iterable result of a <a class="reference internal" href="explorer.html#dballe.Explorer" title="dballe.Explorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.Explorer</span></code></a> <code class="docutils literal notranslate"><span class="pre">query_*</span></code>.
 like <a class="reference internal" href="explorer.html#dballe.Explorer.query_summary" title="dballe.Explorer.query_summary"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Explorer.query_summary()</span></code></a> or <a class="reference internal" href="explorer.html#dballe.Explorer.query_summary_all" title="dballe.Explorer.query_summary_all"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Explorer.query_summary_all()</span></code></a>.</p>
 <p>Each iteration returns the cursor itself, that can be used to access the
@@ -522,37 +520,37 @@ functions. For the keys available, see <a class="reference internal" href="../ge
 </div>
 <dl class="method">
 <dt id="dballe.CursorSummarySummary.enqd">
-<code class="descname">enqd</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorSummarySummary.enqd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqd</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorSummarySummary.enqd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the float value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorSummarySummary.enqf">
-<code class="descname">enqf</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorSummarySummary.enqf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqf</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorSummarySummary.enqf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the formatted string value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorSummarySummary.enqi">
-<code class="descname">enqi</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorSummarySummary.enqi" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqi</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorSummarySummary.enqi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the integer value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorSummarySummary.enqs">
-<code class="descname">enqs</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorSummarySummary.enqs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqs</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorSummarySummary.enqs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the string value for a keyword</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorSummarySummary.query">
-<code class="descname">query</code><a class="headerlink" href="#dballe.CursorSummarySummary.query" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">query</code><a class="headerlink" href="#dballe.CursorSummarySummary.query" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a dict with a query to select exactly the current value at this cursor</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorSummarySummary.remaining">
-<code class="descname">remaining</code><a class="headerlink" href="#dballe.CursorSummarySummary.remaining" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remaining</code><a class="headerlink" href="#dballe.CursorSummarySummary.remaining" title="Permalink to this definition">¶</a></dt>
 <dd><p>number of results still to be returned</p>
 </dd></dl>
 
@@ -560,7 +558,7 @@ functions. For the keys available, see <a class="reference internal" href="../ge
 
 <dl class="class">
 <dt id="dballe.CursorSummaryDBSummary">
-<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorSummaryDBSummary</code><a class="headerlink" href="#dballe.CursorSummaryDBSummary" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dballe.</code><code class="sig-name descname">CursorSummaryDBSummary</code><a class="headerlink" href="#dballe.CursorSummaryDBSummary" title="Permalink to this definition">¶</a></dt>
 <dd><p>This cursor is the iterable result of a <a class="reference internal" href="explorer.html#dballe.DBExplorer" title="dballe.DBExplorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">dballe.DBExplorer</span></code></a> <code class="docutils literal notranslate"><span class="pre">query_*</span></code>.
 like <a class="reference internal" href="explorer.html#dballe.DBExplorer.query_summary" title="dballe.DBExplorer.query_summary"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.DBExplorer.query_summary()</span></code></a> or <a class="reference internal" href="explorer.html#dballe.DBExplorer.query_summary_all" title="dballe.DBExplorer.query_summary_all"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.DBExplorer.query_summary_all()</span></code></a>.</p>
 <p>Each iteration returns the cursor itself, that can be used to access the
@@ -575,37 +573,37 @@ functions. For the keys available, see <a class="reference internal" href="../ge
 </div>
 <dl class="method">
 <dt id="dballe.CursorSummaryDBSummary.enqd">
-<code class="descname">enqd</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorSummaryDBSummary.enqd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqd</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorSummaryDBSummary.enqd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the float value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorSummaryDBSummary.enqf">
-<code class="descname">enqf</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorSummaryDBSummary.enqf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqf</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorSummaryDBSummary.enqf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the formatted string value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorSummaryDBSummary.enqi">
-<code class="descname">enqi</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorSummaryDBSummary.enqi" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqi</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorSummaryDBSummary.enqi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the integer value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorSummaryDBSummary.enqs">
-<code class="descname">enqs</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorSummaryDBSummary.enqs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqs</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorSummaryDBSummary.enqs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the string value for a keyword</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorSummaryDBSummary.query">
-<code class="descname">query</code><a class="headerlink" href="#dballe.CursorSummaryDBSummary.query" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">query</code><a class="headerlink" href="#dballe.CursorSummaryDBSummary.query" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a dict with a query to select exactly the current value at this cursor</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorSummaryDBSummary.remaining">
-<code class="descname">remaining</code><a class="headerlink" href="#dballe.CursorSummaryDBSummary.remaining" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remaining</code><a class="headerlink" href="#dballe.CursorSummaryDBSummary.remaining" title="Permalink to this definition">¶</a></dt>
 <dd><p>number of results still to be returned</p>
 </dd></dl>
 
@@ -613,7 +611,7 @@ functions. For the keys available, see <a class="reference internal" href="../ge
 
 <dl class="class">
 <dt id="dballe.CursorMessage">
-<em class="property">class </em><code class="descclassname">dballe.</code><code class="descname">CursorMessage</code><a class="headerlink" href="#dballe.CursorMessage" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dballe.</code><code class="sig-name descname">CursorMessage</code><a class="headerlink" href="#dballe.CursorMessage" title="Permalink to this definition">¶</a></dt>
 <dd><p>This cursor is the iterable result of a <code class="docutils literal notranslate"><span class="pre">query_messages</span></code> operation, like
 <a class="reference internal" href="db.html#dballe.Transaction.query_messages" title="dballe.Transaction.query_messages"><code class="xref py py-func docutils literal notranslate"><span class="pre">dballe.Transaction.query_messages()</span></code></a>.</p>
 <p>Each iteration returns the cursor itself, that can be used to access the
@@ -630,43 +628,43 @@ cursors, but there are currently no valid keys that can be used.</p>
 </div>
 <dl class="method">
 <dt id="dballe.CursorMessage.enqd">
-<code class="descname">enqd</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorMessage.enqd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqd</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[float, None]<a class="headerlink" href="#dballe.CursorMessage.enqd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the float value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorMessage.enqf">
-<code class="descname">enqf</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorMessage.enqf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqf</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorMessage.enqf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the formatted string value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorMessage.enqi">
-<code class="descname">enqi</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorMessage.enqi" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqi</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[int, None]<a class="headerlink" href="#dballe.CursorMessage.enqi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the integer value for a keyword</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dballe.CursorMessage.enqs">
-<code class="descname">enqs</code><span class="sig-paren">(</span><em>key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorMessage.enqs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">enqs</code><span class="sig-paren">(</span><em class="sig-param">key: str</em><span class="sig-paren">)</span> &#x2192; Union[str, None]<a class="headerlink" href="#dballe.CursorMessage.enqs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the string value for a keyword</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorMessage.message">
-<code class="descname">message</code><a class="headerlink" href="#dballe.CursorMessage.message" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">message</code><a class="headerlink" href="#dballe.CursorMessage.message" title="Permalink to this definition">¶</a></dt>
 <dd><p>dballe.Message object with the current message</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorMessage.query">
-<code class="descname">query</code><a class="headerlink" href="#dballe.CursorMessage.query" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">query</code><a class="headerlink" href="#dballe.CursorMessage.query" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a dict with a query to select exactly the current value at this cursor</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="dballe.CursorMessage.remaining">
-<code class="descname">remaining</code><a class="headerlink" href="#dballe.CursorMessage.remaining" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remaining</code><a class="headerlink" href="#dballe.CursorMessage.remaining" title="Permalink to this definition">¶</a></dt>
 <dd><p>number of results still to be returned</p>
 </dd></dl>
 
@@ -717,13 +715,11 @@ cursors, but there are currently no valid keys that can be used.</p>
 </ul>
 </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -744,7 +740,7 @@ cursors, but there are currently no valid keys that can be used.</p>
       &copy;2019, Enrico Zini.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

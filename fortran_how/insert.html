@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>Inserting data &#8212; dballe 3.23 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -42,7 +40,7 @@
 <h2>Inserting data<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <p>Data is inserted using <a class="reference internal" href="../fortran_ref/functions.html#c.idba_insert_data" title="idba_insert_data"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_insert_data()</span></code></a>:</p>
 <blockquote>
-<div>! Insert a new data in the database
+<div><p>! Insert a new data in the database
 ierr = idba_setr(handle, “ana_id”, 4)
 ierr = idba_setr(handle, “rep_memo”, “synop”)
 ierr = idba_setd(handle, “lat”, 44.500D0)
@@ -52,10 +50,11 @@ ierr = idba_setr(handle, “month”, 7)
 ierr = idba_setr(handle, “day”, 26)
 …
 ierr = idba_setr(handle, “B11002”, 1.8)
-ierr = idba_insert_data(handle)</div></blockquote>
+ierr = idba_insert_data(handle)</p>
+</div></blockquote>
 <p>This code introduces a new function:</p>
 <ul>
-<li><p class="first"><a class="reference internal" href="../fortran_ref/functions.html#c.idba_insert_data" title="idba_insert_data"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_insert_data()</span></code></a>:
+<li><p><a class="reference internal" href="../fortran_ref/functions.html#c.idba_insert_data" title="idba_insert_data"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_insert_data()</span></code></a>:
 inserts a new value in the database.  All the information about the parameter
 to insert is taken from the input previously set by <code class="docutils literal notranslate"><span class="pre">idba_set*</span></code> functions.</p>
 <p>When data of the same kind and with the same characteristics already exists,
@@ -66,18 +65,18 @@ the behaviour of <a class="reference internal" href="../fortran_ref/functions.ht
 <p><a class="reference internal" href="../fortran_ref/functions.html#c.idba_insert_data" title="idba_insert_data"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_insert_data()</span></code></a> will work in different ways according to the data opening
 mode of the database:</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">read</span></code>: causes an error, because the data cannot be read.</li>
-<li><code class="docutils literal notranslate"><span class="pre">add</span></code>: new data can be inserted, but causes an error when trying to insert a
-value that already exists.</li>
-<li><code class="docutils literal notranslate"><span class="pre">rewrite</span></code>: new data can be inserted, and existing data is overwritten.</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">read</span></code>: causes an error, because the data cannot be read.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">add</span></code>: new data can be inserted, but causes an error when trying to insert a
+value that already exists.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rewrite</span></code>: new data can be inserted, and existing data is overwritten.</p></li>
 </ul>
 <p>Also, behaviour changes according to the station values opening mode:</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">&quot;reuse&quot;</span></code>: when inserting data, if an existing pseudoana record for the data
-is found, it will be reused.</li>
-<li><code class="docutils literal notranslate"><span class="pre">&quot;rewrite&quot;</span></code>: when inserting data, if an existing pseudoana record for the
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;reuse&quot;</span></code>: when inserting data, if an existing pseudoana record for the data
+is found, it will be reused.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;rewrite&quot;</span></code>: when inserting data, if an existing pseudoana record for the
 data is found, it will be completely overwritten with the parameters in
-input.</li>
+input.</p></li>
 </ul>
 <p>Note that the database cannot be opened in pseudoana <code class="docutils literal notranslate"><span class="pre">read</span></code> mode when data
 is <code class="docutils literal notranslate"><span class="pre">add</span></code> or <code class="docutils literal notranslate"><span class="pre">rewrite</span></code>.</p>
@@ -156,13 +155,11 @@ is <code class="docutils literal notranslate"><span class="pre">add</span></code
 </ul>
 </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -183,7 +180,7 @@ is <code class="docutils literal notranslate"><span class="pre">add</span></code
       &copy;2019, Enrico Zini.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

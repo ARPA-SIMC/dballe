@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>Error management &#8212; dballe 3.23 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -39,10 +37,10 @@
 <div class="toctree-wrapper compound">
 </div>
 <ul class="simple">
-<li>All errors are reported as function return values</li>
-<li>All results are reported as output parameters</li>
-<li>All functions <code class="docutils literal notranslate"><span class="pre">idba_set*</span></code> set the input of action routines</li>
-<li>All functions <code class="docutils literal notranslate"><span class="pre">idba_enq*</span></code> get the output of action routines</li>
+<li><p>All errors are reported as function return values</p></li>
+<li><p>All results are reported as output parameters</p></li>
+<li><p>All functions <code class="docutils literal notranslate"><span class="pre">idba_set*</span></code> set the input of action routines</p></li>
+<li><p>All functions <code class="docutils literal notranslate"><span class="pre">idba_enq*</span></code> get the output of action routines</p></li>
 </ul>
 <p>Errors can be handled by checking the return value of every function:</p>
 <div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">! Example error handling</span>
@@ -108,14 +106,14 @@ calling <a class="reference internal" href="../fortran_ref/functions.html#c.idba
 </div>
 <p>This code introduces three new functions:</p>
 <ul class="simple">
-<li><a class="reference internal" href="../fortran_ref/functions.html#c.idba_error_message" title="idba_error_message"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_error_message()</span></code></a>:
-returns a string describing what type of error has happened.</li>
-<li><a class="reference internal" href="../fortran_ref/functions.html#c.idba_error_context" title="idba_error_context"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_error_context()</span></code></a>:
+<li><p><a class="reference internal" href="../fortran_ref/functions.html#c.idba_error_message" title="idba_error_message"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_error_message()</span></code></a>:
+returns a string describing what type of error has happened.</p></li>
+<li><p><a class="reference internal" href="../fortran_ref/functions.html#c.idba_error_context" title="idba_error_context"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_error_context()</span></code></a>:
 returns a string describing what DB-All.e was trying to do when the error
-happened.</li>
-<li><a class="reference internal" href="../fortran_ref/functions.html#c.idba_error_details" title="idba_error_details"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_error_details()</span></code></a>:
+happened.</p></li>
+<li><p><a class="reference internal" href="../fortran_ref/functions.html#c.idba_error_details" title="idba_error_details"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_error_details()</span></code></a>:
 returns a detailed description of the error, when available.  If no detailed
-description is available, it returns an empty string.</li>
+description is available, it returns an empty string.</p></li>
 </ul>
 <p>A similar error handling behaviour can be obtained by using the predefined
 convenience function <a class="reference internal" href="../fortran_ref/functions.html#c.idba_default_error_handler" title="idba_default_error_handler"><code class="xref c c-func docutils literal notranslate"><span class="pre">idba_default_error_handler()</span></code></a>:</p>
@@ -182,13 +180,11 @@ returned by the DB-All.e function that causes the error.</p>
 </ul>
 </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -209,7 +205,7 @@ returned by the DB-All.e function that causes the error.</p>
       &copy;2019, Enrico Zini.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

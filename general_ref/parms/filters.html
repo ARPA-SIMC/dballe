@@ -1,0 +1,142 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>ana_filter, data_filter, attr_filter &#8212; dballe 3.23 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Local B table codes" href="../btable.html" />
+    <link rel="prev" title="Input parameters for attribute-related action routines" href="attrs.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="ana-filter-data-filter-attr-filter">
+<span id="parms-filters"></span><h1>ana_filter, data_filter, attr_filter<a class="headerlink" href="#ana-filter-data-filter-attr-filter" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>The expressions in <code class="docutils literal notranslate"><span class="pre">ana_filter</span></code>, <code class="docutils literal notranslate"><span class="pre">data_filter</span></code>, and <code class="docutils literal notranslate"><span class="pre">attr_filter</span></code> can
+have one of these formats:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Bxxyyy&lt;value</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Bxxyyy&lt;=value</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Bxxyyy&gt;value</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Bxxyyy&gt;=value</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Bxxyyy=value</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Bxxyyy==value</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Bxxyyy&lt;&gt;value</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Bxxyyy!=value</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value1&lt;Bxxyyy&lt;value2</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value1&lt;=Bxxyyy&lt;=value2</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value1&lt;Bxxyyy&lt;=value2</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value1&lt;=Bxxyyy&lt;value2</span></code></p></li>
+</ul>
+<p>Examples for station values: <code class="docutils literal notranslate"><span class="pre">height&gt;=1000</span></code>, <code class="docutils literal notranslate"><span class="pre">B02001=1</span></code>, <code class="docutils literal notranslate"><span class="pre">1000&lt;=height&lt;=2000</span></code>.</p>
+<p>Examples for data values: <code class="docutils literal notranslate"><span class="pre">t&lt;260</span></code>, <code class="docutils literal notranslate"><span class="pre">B22021&gt;2</span></code>, <code class="docutils literal notranslate"><span class="pre">10&lt;=B22021&lt;=20</span></code>.</p>
+<p>Examples for attributes: <code class="docutils literal notranslate"><span class="pre">conf&gt;70</span></code>, <code class="docutils literal notranslate"><span class="pre">B33197=0</span></code>, <code class="docutils literal notranslate"><span class="pre">25&lt;=conf&lt;=50</span></code>.</p>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">dballe</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../howtos.html">How-to guides</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../reference.html">Reference documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">General reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../python_ref/index.html">Python reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../cpp_ref/index.html">C++ reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../fortran_ref/index.html">Fortran reference</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../reference.html">Reference documentation</a><ul>
+  <li><a href="../index.html">General reference</a><ul>
+  <li><a href="../parms.html">Input/output/query parameters</a><ul>
+      <li>Previous: <a href="attrs.html" title="previous chapter">Input parameters for attribute-related action routines</a></li>
+      <li>Next: <a href="../btable.html" title="next chapter">Local B table codes</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Enrico Zini.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/general_ref/parms/filters.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

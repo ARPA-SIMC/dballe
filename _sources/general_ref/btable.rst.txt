@@ -21,3582 +21,3594 @@ digits and description.
    * - .. _B01001:
 
        B01001
-     - WMO BLOCK NUMBER                                                
-     - Numeric                 
-     - 2 digits
+     - WMO BLOCK NUMBER
+     - Numeric
+     - 3 digits
    * - .. _B01002:
 
        B01002
-     - WMO STATION NUMBER                                              
-     - Numeric                 
-     - 3 digits
+     - WMO STATION NUMBER
+     - Numeric
+     - 4 digits
    * - .. _B01006:
 
        B01006
-     - AIRCRAFT FLIGHT NUMBER                                          
-     - Character               
-     - 8 chars
+     - AIRCRAFT FLIGHT NUMBER
+     - CCITTIA5
+     - 8 digits
    * - .. _B01007:
 
        B01007
-     - SATELLITE IDENTIFIER                                            
-     - CODE TABLE 1007         
-     - 3 chars
+     - SATELLITE IDENTIFIER
+     - CODE TABLE
+     - 4 chars
    * - .. _B01008:
 
        B01008
-     - AIRCRAFT REGISTRATION NUMBER OR OTHER IDENTIFICATION            
-     - Character               
-     - 8 chars
+     - AIRCRAFT REGISTRATION NUMBER OR OTHER IDENTIFICATION
+     - CCITTIA5
+     - 8 digits
    * - .. _B01011:
 
        B01011
-     - SHIP OR MOBILE LAND STATION IDENTIFIER                          
-     - Character               
-     - 9 chars
+     - SHIP OR MOBILE LAND STATION IDENTIFIER
+     - CCITTIA5
+     - 9 digits
    * - .. _B01012:
 
        B01012
-     - DIRECTION OF MOTION OF MOVING OBSERVING PLATFORM**              
-     - DEGREE TRUE             
+     - DIRECTION OF MOTION OF MOVING OBSERVING PLATFORM**
+     - DEGREE TRUE
      - 3 digits
    * - .. _B01013:
 
        B01013
-     - SPEED OF MOTION OF MOVING OBSERVING PLATFORM*                   
-     - M/S                     
-     - 3 digits
+     - SPEED OF MOTION OF MOVING OBSERVING PLATFORM*
+     - M/S
+     - 4 digits
    * - .. _B01019:
 
        B01019
-     - LONG STATION OR SITE NAME                                       
-     - Character               
-     - 32 chars
+     - LONG STATION OR SITE NAME
+     - CCITTIA5
+     - 32 digits
    * - .. _B01023:
 
        B01023
-     - OBSERVATION SEQUENCE NUMBER                                     
-     - Numeric                 
+     - OBSERVATION SEQUENCE NUMBER
+     - Numeric
      - 3 digits
    * - .. _B01033:
 
        B01033
-     - IDENTIFICATION OF ORIGINATING/GENERATING CENTRE                 
-     - CODE TABLE 001033       
+     - IDENTIFICATION OF ORIGINATING/GENERATING CENTRE
+     - CODE TABLE
      - 3 chars
    * - .. _B01034:
 
        B01034
-     - IDENTIFICATION OF ORIGINATING/GENERATING SUB-CENTRE             
-     - CODE TABLE 001034       
+     - IDENTIFICATION OF ORIGINATING/GENERATING SUB-CENTRE
+     - CODE TABLE
      - 3 chars
    * - .. _B01063:
 
        B01063
-     - ICAO LOCATION INDICATOR                                         
-     - Character               
-     - 8 chars
+     - ICAO LOCATION INDICATOR
+     - CCITTIA5
+     - 8 digits
    * - .. _B01192:
 
        B01192
-     - MeteoDB station ID                                              
-     - Numeric                 
+     - MeteoDB station ID
+     - Numeric
      - 8 digits
    * - .. _B01193:
 
        B01193
-     - Report code                                                     
-     - Numeric                 
+     - Report code
+     - Numeric
      - 5 digits
    * - .. _B01194:
 
        B01194
-     - Report mnemonic                                                 
-     - Character               
-     - 16 chars
+     - Report mnemonic
+     - CCITTIA5
+     - 16 digits
    * - .. _B01212:
 
        B01212
-     - AIR QUALITY OBSERVING STATION LOCAL CODE                        
-     - Character               
-     - 7 chars
+     - AIR QUALITY OBSERVING STATION LOCAL CODE
+     - CCITTIA5
+     - 7 digits
    * - .. _B01213:
 
        B01213
-     - AIRBASE AIR QUALITY OBSERVING STATION CODE                      
-     - Character               
-     - 7 chars
+     - AIRBASE AIR QUALITY OBSERVING STATION CODE
+     - CCITTIA5
+     - 7 digits
    * - .. _B01214:
 
        B01214
-     - GEMS AIR QUALITY OBSERVING STATION CODE                         
-     - Character               
-     - 6 chars
+     - GEMS AIR QUALITY OBSERVING STATION CODE
+     - CCITTIA5
+     - 6 digits
    * - .. _B01215:
 
        B01215
-     - AIR QUALITY OBSERVING STATION DOMINANT EMISSION SOURCE          
-     - CODE TABLE 001215       
+     - AIR QUALITY OBSERVING STATION DOMINANT EMISSION SOURCE
+     - CODE TABLE
      - 1 chars
    * - .. _B01216:
 
        B01216
-     - AIR QUALITY OBSERVING STATION AREA TYPE                         
-     - CODE TABLE 001216       
+     - AIR QUALITY OBSERVING STATION AREA TYPE
+     - CODE TABLE
      - 1 chars
    * - .. _B01217:
 
        B01217
-     - AIR QUALITY OBSERVING STATION TERRAIN TYPE                      
-     - CODE TABLE 001217       
+     - AIR QUALITY OBSERVING STATION TERRAIN TYPE
+     - CODE TABLE
      - 2 chars
    * - .. _B02001:
 
        B02001
-     - TYPE OF STATION                                                 
-     - CODE TABLE 2001         
+     - TYPE OF STATION
+     - CODE TABLE
      - 1 chars
    * - .. _B02002:
 
        B02002
-     - TYPE OF INSTRUMENTATION FOR WIND MEASUREMENT                    
-     - FLAG TABLE 2002         
+     - TYPE OF INSTRUMENTATION FOR WIND MEASUREMENT
+     - FLAG TABLE
      - 2 digits
    * - .. _B02003:
 
        B02003
-     - TYPE OF MEASURING EQUIPMENT USED                                
-     - CODE TABLE 2003         
+     - TYPE OF MEASURING EQUIPMENT USED
+     - CODE TABLE
      - 2 chars
    * - .. _B02004:
 
        B02004
-     - TYPE OF INSTRUMENTATION FOR EVAPORATION MEASUREMENT OR TYPE OF C
-     - CODE TABLE 2004         
+     - TYPE OF INSTRUMENTATION FOR EVAPORATION MEASUREMENT OR TYPE OF CCODE TABLE
+     - CODE TABLE
      - 2 chars
    * - .. _B02005:
 
        B02005
-     - PRECISION OF TEMPERATURE OBSERVATION                            
-     - K                       
+     - PRECISION OF TEMPERATURE OBSERVATION
+     - K
      - #.##
    * - .. _B02011:
 
        B02011
-     - RADIOSONDE TYPE                                                 
-     - CODE TABLE 2011         
+     - RADIOSONDE TYPE
+     - CODE TABLE
      - 3 chars
    * - .. _B02012:
 
        B02012
-     - RADIOSONDE COMPUTATIONAL METHOD                                 
-     - CODE TABLE 2012         
+     - RADIOSONDE COMPUTATIONAL METHOD
+     - CODE TABLE
      - 2 chars
    * - .. _B02013:
 
        B02013
-     - SOLAR AND INFRARED RADIATION CORRECTION                         
-     - CODE TABLE 2013         
+     - SOLAR AND INFRARED RADIATION CORRECTION
+     - CODE TABLE
      - 2 chars
    * - .. _B02014:
 
        B02014
-     - TRACKING TECHNIQUE/STATUS OF SYSTEM USED                        
-     - CODE TABLE 2014         
+     - TRACKING TECHNIQUE/STATUS OF SYSTEM USED
+     - CODE TABLE
      - 3 chars
    * - .. _B02038:
 
        B02038
-     - METHOD OF WATER TEMPERATURE AND/OR SALINITY MEASUREMENT         
-     - CODE TABLE 2038         
+     - METHOD OF WATER TEMPERATURE AND/OR SALINITY MEASUREMENT
+     - CODE TABLE
      - 2 chars
    * - .. _B02039:
 
        B02039
-     - METHOD OF WET-BULB TEMPERATURE MEASUREMENT                      
-     - CODE TABLE 2039         
+     - METHOD OF WET-BULB TEMPERATURE MEASUREMENT
+     - CODE TABLE
      - 1 chars
    * - .. _B02048:
 
        B02048
-     - SATELLITE SENSOR INDICATOR                                      
-     - CODE TABLE 2048         
+     - SATELLITE SENSOR INDICATOR
+     - CODE TABLE
      - 2 chars
    * - .. _B02061:
 
        B02061
-     - AIRCRAFT NAVIGATIONAL SYSTEM                                    
-     - CODE TABLE 2061         
+     - AIRCRAFT NAVIGATIONAL SYSTEM
+     - CODE TABLE
      - 1 chars
    * - .. _B02062:
 
        B02062
-     - TYPE OF AIRCRAFT DATA RELAY SYSTEM                              
-     - CODE TABLE 2062         
+     - TYPE OF AIRCRAFT DATA RELAY SYSTEM
+     - CODE TABLE
      - 2 chars
    * - .. _B02063:
 
        B02063
-     - AIRCRAFT ROLL ANGLE                                             
-     - DEGREE                  
+     - AIRCRAFT ROLL ANGLE
+     - DEGREE
      - ###.##
    * - .. _B02064:
 
        B02064
-     - AIRCRAFT ROLL ANGLE QUALITY                                     
-     - CODE TABLE 2064         
+     - AIRCRAFT ROLL ANGLE QUALITY
+     - CODE TABLE
      - 1 chars
    * - .. _B02070:
 
        B02070
-     - ORIGINAL SPECIFICATION OF LATITUDE/LONGITUDE                    
-     - CODE TABLE 2070         
+     - ORIGINAL SPECIFICATION OF LATITUDE/LONGITUDE
+     - CODE TABLE
      - 2 chars
    * - .. _B02121:
 
        B02121
-     - MEAN FREQUENCY                                                  
-     - Hz                      
+     - MEAN FREQUENCY
+     - Hz
      - ###00000000
    * - .. _B02125:
 
        B02125
-     - PULSE REPETITION FREQUENCY                                      
-     - Hz                      
+     - PULSE REPETITION FREQUENCY
+     - Hz
      - ###0
    * - .. _B04001:
 
        B04001
-     - YEAR                                                            
-     - YEAR                    
+     - YEAR
+     - YEAR
      - 4 digits
    * - .. _B04002:
 
        B04002
-     - MONTH                                                           
-     - MONTH                   
+     - MONTH
+     - MONTH
      - 2 digits
    * - .. _B04003:
 
        B04003
-     - DAY                                                             
-     - DAY                     
+     - DAY
+     - DAY
      - 2 digits
    * - .. _B04004:
 
        B04004
-     - HOUR                                                            
-     - HOUR                    
+     - HOUR
+     - HOUR
      - 2 digits
    * - .. _B04005:
 
        B04005
-     - MINUTE                                                          
-     - MINUTE                  
+     - MINUTE
+     - MINUTE
      - 2 digits
    * - .. _B04006:
 
        B04006
-     - SECOND                                                          
-     - SECOND                  
+     - SECOND
+     - SECOND
      - 2 digits
    * - .. _B04086:
 
        B04086
-     - LONG TIME PERIOD OR DISPLACEMENT                                
-     - SECOND                  
+     - LONG TIME PERIOD OR DISPLACEMENT
+     - SECOND
      - 5 digits
    * - .. _B04192:
 
        B04192
-     - Time range type                                                 
-     - Numeric                 
+     - Time range type
+     - Numeric
      - 4 digits
    * - .. _B04193:
 
        B04193
-     - Time range P1                                                   
-     - Numeric                 
+     - Time range P1
+     - Numeric
      - 10 digits
    * - .. _B04194:
 
        B04194
-     - Time range P2                                                   
-     - Numeric                 
+     - Time range P2
+     - Numeric
      - 10 digits
    * - .. _B04195:
 
        B04195
-     - Temperature event - time of occurrence                          
-     - MINUTE                  
+     - Temperature event - time of occurrence
+     - MINUTE
      - 4 digits
    * - .. _B04196:
 
        B04196
-     - Relative humidity event - time of occurrence                    
-     - MINUTE                  
+     - Relative humidity event - time of occurrence
+     - MINUTE
      - 4 digits
    * - .. _B04197:
 
        B04197
-     - Wind velocity event - time of occurrence                        
-     - MINUTE                  
+     - Wind velocity event - time of occurrence
+     - MINUTE
      - 4 digits
    * - .. _B04198:
 
        B04198
-     - Pressure event - time of occurrence                             
-     - MINUTE                  
+     - Pressure event - time of occurrence
+     - MINUTE
      - 4 digits
    * - .. _B05001:
 
        B05001
-     - LATITUDE (HIGH ACCURACY)                                        
-     - DEGREE                  
-     - ##.#####
+     - LATITUDE (HIGH ACCURACY)
+     - DEGREE
+     - ###.#####
    * - .. _B05015:
 
        B05015
-     - LATITUDE DISPLACEMENT (HIGH ACCURACY)                           
-     - DEGREE                  
-     - ##.#####
+     - LATITUDE DISPLACEMENT (HIGH ACCURACY)
+     - DEGREE
+     - ###.#####
    * - .. _B05021:
 
        B05021
-     - BEARING OR AZIMUTH                                              
-     - DEGREE TRUE             
+     - BEARING OR AZIMUTH
+     - DEGREE TRUE
      - ###.##
    * - .. _B05022:
 
        B05022
-     - SOLAR AZIMUTH                                                   
-     - DEGREE TRUE             
+     - SOLAR AZIMUTH
+     - DEGREE TRUE
      - ###.##
    * - .. _B05040:
 
        B05040
-     - ORBIT NUMBER                                                    
-     - Numeric                 
+     - ORBIT NUMBER
+     - Numeric
      - 8 digits
    * - .. _B05041:
 
        B05041
-     - SCAN LINE NUMBER                                                
-     - Numeric                 
+     - SCAN LINE NUMBER
+     - Numeric
      - 3 digits
    * - .. _B05043:
 
        B05043
-     - FIELD OF VIEW NUMBER                                            
-     - Numeric                 
+     - FIELD OF VIEW NUMBER
+     - Numeric
      - 3 digits
    * - .. _B06001:
 
        B06001
-     - LONGITUDE (HIGH ACCURACY)                                       
-     - DEGREE                  
+     - LONGITUDE (HIGH ACCURACY)
+     - DEGREE
      - ###.#####
    * - .. _B06015:
 
        B06015
-     - LONGITUDE DISPLACEMENT (HIGH ACCURACY)                          
-     - DEGREE                  
+     - LONGITUDE DISPLACEMENT (HIGH ACCURACY)
+     - DEGREE
      - ###.#####
    * - .. _B07002:
 
        B07002
-     - HEIGHT OR ALTITUDE                                              
-     - M                       
+     - HEIGHT OR ALTITUDE
+     - M
      - #####0
    * - .. _B07004:
 
        B07004
-     - PRESSURE                                                        
-     - PA                      
+     - PRESSURE
+     - PA
      - #####0
    * - .. _B07007:
 
        B07007
-     - HEIGHT                                                          
-     - M                       
+     - HEIGHT
+     - M
      - 6 digits
    * - .. _B07010:
 
        B07010
-     - FLIGHT LEVEL                                                    
-     - FT                      
-     - #####0
+     - FLIGHT LEVEL
+     - M
+     - 5 digits
    * - .. _B07024:
 
        B07024
-     - SATELLITE ZENITH ANGLE                                          
-     - DEGREE                  
+     - SATELLITE ZENITH ANGLE
+     - DEGREE
      - ###.##
    * - .. _B07025:
 
        B07025
-     - SOLAR ZENITH ANGLE                                              
-     - DEGREE                  
+     - SOLAR ZENITH ANGLE
+     - DEGREE
      - ###.##
    * - .. _B07030:
 
        B07030
-     - HEIGHT OF STATION GROUND ABOVE MEAN SEA LEVEL (SEE NOTE 3)      
-     - M                       
-     - ####.#
+     - HEIGHT OF STATION GROUND ABOVE MEAN SEA LEVEL (SEE NOTE 3)
+     - M
+     - #####.#
    * - .. _B07031:
 
        B07031
-     - HEIGHT OF BAROMETER ABOVE MEAN SEA LEVEL (SEE NOTE 4)           
-     - M                       
-     - ####.#
+     - HEIGHT OF BAROMETER ABOVE MEAN SEA LEVEL (SEE NOTE 4)
+     - M
+     - #####.#
    * - .. _B07032:
 
        B07032
-     - HEIGHT OF SENSOR ABOVE LOCAL GROUND (OR DECK OF MARINE PLATFORM)
-     - M                       
+     - HEIGHT OF SENSOR ABOVE LOCAL GROUND (OR DECK OF MARINE PLATFORM)M
+     - M
      - ###.##
    * - .. _B07192:
 
        B07192
-     - First level type                                                
-     - Numeric                 
+     - First level type
+     - Numeric
      - 4 digits
    * - .. _B07193:
 
        B07193
-     - Level L1                                                        
-     - Numeric                 
+     - Level L1
+     - Numeric
      - 10 digits
    * - .. _B07194:
 
        B07194
-     - Level L2                                                        
-     - Numeric                 
+     - Level L2
+     - Numeric
      - 10 digits
    * - .. _B07195:
 
        B07195
-     - Second level type                                               
-     - Numeric                 
-     - 4 digits
+     - Second level type
+     - Numeric
+     - 10 digits
    * - .. _B08002:
 
        B08002
-     - VERTICAL SIGNIFICANCE (SURFACE OBSERVATIONS)                    
-     - CODE TABLE 8002         
+     - VERTICAL SIGNIFICANCE (SURFACE OBSERVATIONS)
+     - CODE TABLE
      - 2 chars
    * - .. _B08004:
 
        B08004
-     - PHASE OF AIRCRAFT FLIGHT                                        
-     - CODE TABLE 8004         
+     - PHASE OF AIRCRAFT FLIGHT
+     - CODE TABLE
      - 1 chars
    * - .. _B08009:
 
        B08009
-     - DETAILED PHASE OF FLIGHT                                        
-     - CODE TABLE 8009         
+     - DETAILED PHASE OF FLIGHT
+     - CODE TABLE
      - 2 chars
    * - .. _B08021:
 
        B08021
-     - TIME SIGNIFICANCE                                               
-     - CODE TABLE 8021         
+     - TIME SIGNIFICANCE
+     - CODE TABLE
      - 2 chars
    * - .. _B08042:
 
        B08042
-     - EXTENDED VERTICAL SOUNDING SIGNIFICANCE                         
-     - FLAG TABLE 8042         
+     - EXTENDED VERTICAL SOUNDING SIGNIFICANCE
+     - FLAG TABLE
      - 6 digits
    * - .. _B08044:
 
        B08044
-     - (VAL) CAS REGISTRY NUMBER                                       
-     - Character               
-     - 11 chars
+     - (VAL) CAS REGISTRY NUMBER
+     - CCITTIA5
+     - 11 digits
    * - .. _B08192:
 
        B08192
-     - Number of wind velocity mean values present                     
-     - Numeric                 
+     - Number of wind velocity mean values present
+     - Numeric
      - 2 digits
    * - .. _B08193:
 
        B08193
-     - Number of wind velocity minimum values present                  
-     - Numeric                 
+     - Number of wind velocity minimum values present
+     - Numeric
      - 2 digits
    * - .. _B08194:
 
        B08194
-     - Number of wind velocity maximum values present                  
-     - Numeric                 
+     - Number of wind velocity maximum values present
+     - Numeric
      - 2 digits
    * - .. _B08195:
 
        B08195
-     - Number of wind prevalent direction values present               
-     - Numeric                 
+     - Number of wind prevalent direction values present
+     - Numeric
      - 2 digits
    * - .. _B08196:
 
        B08196
-     - Number of mean temperature values present                       
-     - Numeric                 
+     - Number of mean temperature values present
+     - Numeric
      - 2 digits
    * - .. _B08197:
 
        B08197
-     - Number of minimum temperature values present                    
-     - Numeric                 
+     - Number of minimum temperature values present
+     - Numeric
      - 2 digits
    * - .. _B08198:
 
        B08198
-     - Number of maximum temperature values present                    
-     - Numeric                 
+     - Number of maximum temperature values present
+     - Numeric
      - 2 digits
    * - .. _B08199:
 
        B08199
-     - Number of mean relative humidity values present                 
-     - Numeric                 
+     - Number of mean relative humidity values present
+     - Numeric
      - 2 digits
    * - .. _B08200:
 
        B08200
-     - Number of minimum relative humidity values present              
-     - Numeric                 
+     - Number of minimum relative humidity values present
+     - Numeric
      - 2 digits
    * - .. _B08201:
 
        B08201
-     - Number of maximum relative humidity values present              
-     - Numeric                 
+     - Number of maximum relative humidity values present
+     - Numeric
      - 2 digits
    * - .. _B08202:
 
        B08202
-     - Number of mean pressure values present                          
-     - Numeric                 
+     - Number of mean pressure values present
+     - Numeric
      - 2 digits
    * - .. _B08203:
 
        B08203
-     - Number of minimum pressure values present                       
-     - Numeric                 
+     - Number of minimum pressure values present
+     - Numeric
      - 2 digits
    * - .. _B08204:
 
        B08204
-     - Number of maximum pressure values present                       
-     - Numeric                 
+     - Number of maximum pressure values present
+     - Numeric
      - 2 digits
    * - .. _B08205:
 
        B08205
-     - Number of precipitation values present                          
-     - Numeric                 
+     - Number of precipitation values present
+     - Numeric
      - 2 digits
    * - .. _B08206:
 
        B08206
-     - Number of leaf wetness values present                           
-     - Numeric                 
+     - Number of leaf wetness values present
+     - Numeric
      - 2 digits
    * - .. _B08207:
 
        B08207
-     - Number of scalar wind velocity mean values present              
-     - Numeric                 
+     - Number of scalar wind velocity mean values present
+     - Numeric
      - 2 digits
    * - .. _B08208:
 
        B08208
-     - Number of cloud cover mean values present                       
-     - Numeric                 
+     - Number of cloud cover mean values present
+     - Numeric
      - 2 digits
    * - .. _B08209:
 
        B08209
-     - Number of cloud cover maximum values present                    
-     - Numeric                 
+     - Number of cloud cover maximum values present
+     - Numeric
      - 2 digits
    * - .. _B08210:
 
        B08210
-     - Number of cloud cover minimum values present                    
-     - Numeric                 
+     - Number of cloud cover minimum values present
+     - Numeric
      - 2 digits
    * - .. _B10004:
 
        B10004
-     - PRESSURE                                                        
-     - PA                      
+     - PRESSURE
+     - PA
      - #####0
    * - .. _B10007:
 
        B10007
-     - HEIGHT                                                          
-     - M                       
+     - HEIGHT
+     - M
      - 6 digits
    * - .. _B10008:
 
        B10008
-     - GEOPOTENTIAL                                                    
-     - M**2/S**2               
+     - GEOPOTENTIAL
+     - M**2/S**2
      - 7 digits
    * - .. _B10009:
 
        B10009
-     - GEOPOTENTIAL HEIGHT                                             
-     - GPM                     
-     - 5 digits
+     - GEOPOTENTIAL HEIGHT
+     - GPM
+     - 6 digits
    * - .. _B10051:
 
        B10051
-     - PRESSURE REDUCED TO MEAN SEA LEVEL                              
-     - PA                      
+     - PRESSURE REDUCED TO MEAN SEA LEVEL
+     - PA
      - #####0
    * - .. _B10052:
 
        B10052
-     - ALTIMETER SETTING (QNH)                                         
-     - PA                      
+     - ALTIMETER SETTING (QNH)
+     - PA
      - #####0
    * - .. _B10060:
 
        B10060
-     - PRESSURE CHANGE                                                 
-     - PA                      
+     - PRESSURE CHANGE
+     - PA
      - ####0
    * - .. _B10063:
 
        B10063
-     - CHARACTERISTIC OF PRESSURE TENDENCY                             
-     - CODE TABLE 10063        
+     - CHARACTERISTIC OF PRESSURE TENDENCY
+     - CODE TABLE
      - 2 chars
    * - .. _B10087:
 
        B10087
-     - Ocean depth/land elevation                                      
-     - M                       
+     - Ocean depth/land elevation
+     - M
      - #####.#
    * - .. _B10197:
 
        B10197
-     - ANEMOMETER HEIGHT                                               
-     - M                       
+     - ANEMOMETER HEIGHT
+     - M
      - 3 digits
    * - .. _B11001:
 
        B11001
-     - WIND DIRECTION                                                  
-     - DEGREE TRUE             
+     - WIND DIRECTION
+     - DEGREE TRUE
      - 3 digits
    * - .. _B11002:
 
        B11002
-     - WIND SPEED                                                      
-     - M/S                     
+     - WIND SPEED
+     - M/S
      - ###.#
    * - .. _B11003:
 
        B11003
-     - U-COMPONENT                                                     
-     - M/S                     
+     - U-COMPONENT
+     - M/S
      - ###.#
    * - .. _B11004:
 
        B11004
-     - V-COMPONENT                                                     
-     - M/S                     
+     - V-COMPONENT
+     - M/S
      - ###.#
    * - .. _B11005:
 
        B11005
-     - W-COMPONENT                                                     
-     - PA/S                    
+     - W-COMPONENT
+     - PA/S
      - ###.#
    * - .. _B11006:
 
        B11006
-     - W-COMPONENT                                                     
-     - M/S                     
+     - W-COMPONENT
+     - M/S
      - ##.##
    * - .. _B11016:
 
        B11016
-     - EXTREME COUNTERCLOCKWISE WIND DIRECTION OF A VARIABLE WIND      
-     - DEGREE TRUE             
+     - EXTREME COUNTERCLOCKWISE WIND DIRECTION OF A VARIABLE WIND
+     - DEGREE TRUE
      - 3 digits
    * - .. _B11017:
 
        B11017
-     - EXTREME CLOCKWISE WIND DIRECTION OF A VARIABLE WIND             
-     - DEGREE TRUE             
+     - EXTREME CLOCKWISE WIND DIRECTION OF A VARIABLE WIND
+     - DEGREE TRUE
      - 3 digits
    * - .. _B11031:
 
        B11031
-     - DEGREE OF TURBULENCE                                            
-     - CODE TABLE 11031        
+     - DEGREE OF TURBULENCE
+     - CODE TABLE
      - 2 chars
    * - .. _B11036:
 
        B11036
-     - MAXIMUM DERIVED EQUIVALENT VERTICAL GUST SPEED                  
-     - M/S                     
+     - MAXIMUM DERIVED EQUIVALENT VERTICAL GUST SPEED
+     - M/S
      - ###.#
    * - .. _B11037:
 
        B11037
-     - TURBULENCE INDEX                                                
-     - CODE TABLE 11037        
+     - TURBULENCE INDEX
+     - CODE TABLE
      - 2 chars
    * - .. _B11039:
 
        B11039
-     - EXTENDED TIME OF OCCURRENCE OF PEAK  EDDY DISSIPATION RATE      
-     - CODE TABLE 11039        
+     - EXTENDED TIME OF OCCURRENCE OF PEAK  EDDY DISSIPATION RATE
+     - CODE TABLE
      - 2 chars
    * - .. _B11041:
 
        B11041
-     - MAXIMUM WIND GUST SPEED                                         
-     - M/S                     
+     - MAXIMUM WIND GUST SPEED
+     - M/S
      - ###.#
    * - .. _B11043:
 
        B11043
-     - MAXIMUM WIND GUST DIRECTION                                     
-     - DEGREE TRUE             
+     - MAXIMUM WIND GUST DIRECTION
+     - DEGREE TRUE
      - 3 digits
    * - .. _B11050:
 
        B11050
-     - STANDARD DEVIATION OF HORIZONTAL WIND SPEED                     
-     - M/S                     
+     - STANDARD DEVIATION OF HORIZONTAL WIND SPEED
+     - M/S
      - ###.#
    * - .. _B11061:
 
        B11061
-     - ABSOLUTE WIND SHEAR IN 1 KM LAYER BELOW                         
-     - M/S                     
+     - ABSOLUTE WIND SHEAR IN 1 KM LAYER BELOW
+     - M/S
      - ###.#
    * - .. _B11062:
 
        B11062
-     - ABSOLUTE WIND SHEAR IN 1 KM LAYER ABOVE                         
-     - M/S                     
+     - ABSOLUTE WIND SHEAR IN 1 KM LAYER ABOVE
+     - M/S
      - ###.#
    * - .. _B11075:
 
        B11075
-     - MEAN TURBULENCE INTENSITY (EDDY DISSIPATION RATE)               
-     - M**(2/3)/S              
+     - MEAN TURBULENCE INTENSITY (EDDY DISSIPATION RATE)
+     - M**(2/3)/S
      - #.##
    * - .. _B11076:
 
        B11076
-     - PEAK TURBULENCE INTENSITY (EDDY DISSIPATION RATE)               
-     - M**(2/3)/S              
+     - PEAK TURBULENCE INTENSITY (EDDY DISSIPATION RATE)
+     - M**(2/3)/S
      - #.##
    * - .. _B11077:
 
        B11077
-     - REPORTING INTERVAL OR AVERAGING TIME FOR EDDY DISSIPATION RATE  
-     - S                       
+     - REPORTING INTERVAL OR AVERAGING TIME FOR EDDY DISSIPATION RATE
+     - S
      - 4 digits
    * - .. _B11192:
 
        B11192
-     - W-component terrain following                                   
-     - M/S                     
+     - W-component terrain following
+     - M/S
      - ##.##
    * - .. _B11193:
 
        B11193
-     - Stability class                                                 
-     - Numeric                 
+     - Stability class
+     - Numeric
      - 2 digits
    * - .. _B11194:
 
        B11194
-     - Friction velocity (calmet)                                      
-     - M/S                     
-     - #.###
+     - Friction velocity (calmet)
+     - M/S
+     - ##.###
    * - .. _B11195:
 
        B11195
-     - Mixing height (calmet)                                          
-     - M                       
+     - Mixing height (calmet)
+     - M
      - 4 digits
    * - .. _B11196:
 
        B11196
-     - Obukov lenght (calmet)                                          
-     - M                       
+     - Obukov lenght (calmet)
+     - M
      - ####.#
    * - .. _B11197:
 
        B11197
-     - Convective velocitiy scale (calmet)                             
-     - M/S                     
-     - #.###
+     - Convective velocitiy scale (calmet)
+     - M/S
+     - ##.###
    * - .. _B11198:
 
        B11198
-     - SQRT(2*TKE)                                                     
-     - M/S                     
-     - ##.####
+     - SQRT(2*TKE)
+     - M/S
+     - ###.####
    * - .. _B11199:
 
        B11199
-     - Surface Roughness                                               
-     - M                       
-     - ###.#
+     - Surface Roughness
+     - M
+     - ##.###
    * - .. _B11200:
 
        B11200
-     - U-component of momentum flux                                    
-     - N/M**2                  
-     - ##.####
+     - U-component of momentum flux
+     - N/M**2
+     - ###.####
    * - .. _B11201:
 
        B11201
-     - V-component of momentum flux                                    
-     - N/M**2                  
-     - ##.####
+     - V-component of momentum flux
+     - N/M**2
+     - ###.####
    * - .. _B11202:
 
        B11202
-     - Friction velocity (diagmet)                                     
-     - M/S                     
-     - #.###
+     - Friction velocity (diagmet)
+     - M/S
+     - ##.###
    * - .. _B11203:
 
        B11203
-     - Mixing height (diagmet)                                         
-     - M                       
+     - Mixing height (diagmet)
+     - M
      - 4 digits
    * - .. _B11204:
 
        B11204
-     - Obukov lenght (diagmet)                                         
-     - M                       
+     - Obukov lenght (diagmet)
+     - M
      - ####.#
    * - .. _B11205:
 
        B11205
-     - Convective velocitiy scale (diagmet)                            
-     - M/S                     
-     - #.###
+     - Convective velocitiy scale (diagmet)
+     - M/S
+     - ##.###
    * - .. _B11206:
 
        B11206
-     - Friction velocity (COSMO)                                       
-     - M/S                     
-     - #.###
+     - Friction velocity (COSMO)
+     - M/S
+     - ##.###
    * - .. _B11207:
 
        B11207
-     - Obukov lenght (COSMO)                                           
-     - M                       
+     - Obukov lenght (COSMO)
+     - M
      - ####.#
    * - .. _B11208:
 
        B11208
-     - Distance covered by the hourly mean wind                        
-     - M                       
+     - Distance covered by the hourly mean wind
+     - M
      - 7 digits
+   * - .. _B11209:
+
+       B11209
+     - Persistent wind gust speed
+     - M/S
+     - ###.#
+   * - .. _B11210:
+
+       B11210
+     - Maximum persistent wind gust direction
+     - DEGREE TRUE
+     - 3 digits
    * - .. _B12001:
 
        B12001
-     - TEMPERATURE/AIR TEMPERATURE                                     
-     - C                       
-     - ##.#
+     - TEMPERATURE/AIR TEMPERATURE
+     - K
+     - ###.#
    * - .. _B12003:
 
        B12003
-     - DEW-POINT TEMPERATURE                                           
-     - C                       
-     - ##.#
+     - DEW-POINT TEMPERATURE
+     - K
+     - ###.#
    * - .. _B12030:
 
        B12030
-     - SOIL TEMPERATURE                                                
-     - C                       
-     - ##.#
+     - SOIL TEMPERATURE
+     - K
+     - ###.#
    * - .. _B12049:
 
        B12049
-     - Temperature change over specified period                        
-     - C                       
+     - Temperature change over specified period
+     - K
      - 2 digits
    * - .. _B12061:
 
        B12061
-     - SKIN TEMPERATURE                                                
-     - K                       
+     - SKIN TEMPERATURE
+     - K
      - ###.#
    * - .. _B12063:
 
        B12063
-     - BRIGHTNESS TEMPERATURE                                          
-     - K                       
+     - BRIGHTNESS TEMPERATURE
+     - K
      - ###.#
    * - .. _B12101:
 
        B12101
-     - TEMPERATURE/DRY-BULB TEMPERATURE                                
-     - K                       
+     - TEMPERATURE/DRY-BULB TEMPERATURE
+     - K
      - ###.##
    * - .. _B12102:
 
        B12102
-     - WET-BULB TEMPERATURE                                            
-     - C                       
-     - ##.##
+     - WET-BULB TEMPERATURE
+     - K
+     - ###.##
    * - .. _B12103:
 
        B12103
-     - DEW-POINT TEMPERATURE                                           
-     - K                       
+     - DEW-POINT TEMPERATURE
+     - K
      - ###.##
    * - .. _B12121:
 
        B12121
-     - GROUND MINIMUM TEMPERATURE                                      
-     - C                       
-     - ##.##
+     - GROUND MINIMUM TEMPERATURE
+     - K
+     - ###.##
    * - .. _B12131:
 
        B12131
-     - SNOW TEMPERATURE                                                
-     - C                       
-     - ##.##
+     - SNOW TEMPERATURE
+     - K
+     - ###.##
    * - .. _B12192:
 
        B12192
-     - POTENTIAL TEMPERATURE                                           
-     - K                       
+     - POTENTIAL TEMPERATURE
+     - K
      - ###.##
    * - .. _B12193:
 
        B12193
-     - PSEUDO-EQUIVALENT POTENTIAL TEMPERATURE                         
-     - K                       
+     - PSEUDO-EQUIVALENT POTENTIAL TEMPERATURE
+     - K
      - ###.##
    * - .. _B12194:
 
        B12194
-     - Air density                                                     
-     - KG/M**3                 
-     - .######
+     - Air density
+     - KG/M**3
+     - #.######
    * - .. _B13001:
 
        B13001
-     - SPECIFIC HUMIDITY                                               
-     - KG/KG                   
+     - SPECIFIC HUMIDITY
+     - KG/KG
      - .#####
    * - .. _B13002:
 
        B13002
-     - MIXING RATIO                                                    
-     - KG/KG                   
+     - MIXING RATIO
+     - KG/KG
      - .#####
    * - .. _B13003:
 
        B13003
-     - RELATIVE HUMIDITY                                               
-     - %                       
+     - RELATIVE HUMIDITY
+     - %
      - 3 digits
    * - .. _B13011:
 
        B13011
-     - TOTAL PRECIPITATION / TOTAL WATER EQUIVALENT                    
-     - KG/M**2                 
+     - TOTAL PRECIPITATION / TOTAL WATER EQUIVALENT
+     - KG/M**2
      - ####.#
    * - .. _B13012:
 
        B13012
-     - DEPTH OF FRESH SNOW                                             
-     - M                       
+     - DEPTH OF FRESH SNOW
+     - M
      - ##.##
    * - .. _B13013:
 
        B13013
-     - TOTAL SNOW DEPTH                                                
-     - M                       
-     - ###.###
+     - TOTAL SNOW DEPTH
+     - M
+     - ####.###
    * - .. _B13031:
 
        B13031
-     - EVAPOTRANSPIRATION                                              
-     - KG/M**2                 
-     - 3 digits
+     - EVAPOTRANSPIRATION
+     - KG/M**2
+     - ##.#
    * - .. _B13033:
 
        B13033
-     - EVAPORATION/EVAPOTRANSPIRATION                                  
-     - KG/M**2                 
+     - EVAPORATION/EVAPOTRANSPIRATION
+     - KG/M**2
      - ###.#
    * - .. _B13080:
 
        B13080
-     - WATER PH                                                        
-     - pH                      
-     - ##.#
+     - WATER PH
+     - pH
+     - ###.#
    * - .. _B13081:
 
        B13081
-     - WATER CONDUCTIVITY                                              
-     - S/M                     
-     - #.###
+     - WATER CONDUCTIVITY
+     - S/M
+     - ##.###
    * - .. _B13082:
 
        B13082
-     - WATER TEMPERATURE                                               
-     - K                       
+     - WATER TEMPERATURE
+     - K
      - ###.#
    * - .. _B13083:
 
        B13083
-     - DISSOLVED OXYGEN                                                
-     - KG/M**3                 
+     - DISSOLVED OXYGEN
+     - KG/M**3
      - .######
    * - .. _B13192:
 
        B13192
-     - Cloud liquid water content                                      
-     - KG/KG                   
-     - .########
+     - Cloud liquid water content
+     - KG/KG
+     - #.########
    * - .. _B13193:
 
        B13193
-     - Cloud ice content                                               
-     - KG/KG                   
-     - .########
+     - Cloud ice content
+     - KG/KG
+     - #.########
    * - .. _B13194:
 
        B13194
-     - Water table depth                                               
-     - M                       
+     - Water table depth
+     - M
      - ###.###
    * - .. _B13195:
 
        B13195
-     - Precipitating liquid water                                      
-     - KG/KG                   
-     - .########
+     - Precipitating liquid water
+     - KG/KG
+     - #.########
    * - .. _B13196:
 
        B13196
-     - Precipitating ice                                               
-     - KG/KG                   
-     - .########
+     - Precipitating ice
+     - KG/KG
+     - #.########
    * - .. _B13197:
 
        B13197
-     - Total precipitating water+ice                                   
-     - KG/KG                   
-     - .########
+     - Total precipitating water+ice
+     - KG/KG
+     - #.########
    * - .. _B13198:
 
        B13198
-     - Total liquid water (cloud+precipitating)                        
-     - KG/KG                   
-     - .########
+     - Total liquid water (cloud+precipitating)
+     - KG/KG
+     - #.########
    * - .. _B13199:
 
        B13199
-     - Total ice (cloud+precipitating)                                 
-     - KG/KG                   
-     - .########
+     - Total ice (cloud+precipitating)
+     - KG/KG
+     - #.########
    * - .. _B13200:
 
        B13200
-     - Grid-scale liquid precipitation                                 
-     - KG/M**2                 
+     - Grid-scale liquid precipitation
+     - KG/M**2
      - ####.#
    * - .. _B13201:
 
        B13201
-     - Grid-scale snowfall                                             
-     - KG/M**2                 
+     - Grid-scale snowfall
+     - KG/M**2
      - ####.#
    * - .. _B13202:
 
        B13202
-     - Convective liquid precipitation                                 
-     - KG/M**2                 
+     - Convective liquid precipitation
+     - KG/M**2
      - ####.#
    * - .. _B13203:
 
        B13203
-     - Convective snowfall                                             
-     - KG/M**2                 
+     - Convective snowfall
+     - KG/M**2
      - ####.#
    * - .. _B13204:
 
        B13204
-     - Total convective precipitation (liquid + snow)                  
-     - KG/M**2                 
+     - Total convective precipitation (liquid + snow)
+     - KG/M**2
      - ####.#
    * - .. _B13205:
 
        B13205
-     - Snowfall (grid-scale + convective)                              
-     - KG/M**2                 
+     - Snowfall (grid-scale + convective)
+     - KG/M**2
      - ####.#
    * - .. _B13206:
 
        B13206
-     - Soil water content                                              
-     - KG/M**2                 
+     - Soil water content
+     - KG/M**2
      - ####.#
    * - .. _B13210:
 
        B13210
-     - Penetration of the probe in the snow                            
-     - M                       
+     - Penetration of the probe in the snow
+     - M
      - #.##
    * - .. _B13211:
 
        B13211
-     - Volume of basin                                                 
-     - M**3                    
+     - Volume of basin
+     - M**3
      - 12 digits
    * - .. _B13212:
 
        B13212
-     - Leaf wetness duration                                           
-     - S                       
-     - #######0
+     - Leaf wetness duration
+     - S
+     - ########0
    * - .. _B13215:
 
        B13215
-     - River level                                                     
-     - M                       
+     - River level
+     - M
      - ####.##
    * - .. _B13226:
 
        B13226
-     - River discharge                                                 
-     - M**3/S                  
+     - River discharge
+     - M**3/S
      - #####.##
    * - .. _B13227:
 
        B13227
-     - Soil volumetric water content                                   
-     - %                       
+     - Soil volumetric water content
+     - %
      - ###.#
    * - .. _B13228:
 
        B13228
-     - Piezometric level                                               
-     - M                       
+     - Piezometric level
+     - M
      - ###.###
    * - .. _B13229:
 
        B13229
-     - Density of snow                                                 
-     - KG/M**3                 
+     - Density of snow
+     - KG/M**3
      - ####.#
    * - .. _B13230:
 
        B13230
-     - Convective Available Potential Energy (CAPE)                    
-     - J/KG                    
-     - ####.#
+     - Convective Available Potential Energy (CAPE)
+     - J/KG
+     - #####.#
    * - .. _B13231:
 
        B13231
-     - Ossigeno disciolto sat                                          
-     - %                       
+     - Ossigeno disciolto sat
+     - %
      - ###.#
    * - .. _B13232:
 
        B13232
-     - Reference evapotranspiration according to Penman Monteith       
-     - KG/M**2                 
-     - 3 digits
+     - Reference evapotranspiration according to Penman Monteith
+     - KG/M**2
+     - ##.#
    * - .. _B13233:
 
        B13233
-     - Reference evapotranspiration according to Hargreav.-Samani      
-     - KG/M**2                 
-     - 3 digits
+     - Reference evapotranspiration according to Hargreav.-Samani
+     - KG/M**2
+     - ##.#
    * - .. _B14002:
 
        B14002
-     - Long-wave radiation, integrated over period specified           
-     - J/M**2                  
-     - #####000
+     - Long-wave radiation, integrated over period specified
+     - J/M**2
+     - ######000
    * - .. _B14004:
 
        B14004
-     - Short-wave radiation, integrated over period specified          
-     - J/M**2                  
-     - #####000
+     - Short-wave radiation, integrated over period specified
+     - J/M**2
+     - ######000
    * - .. _B14016:
 
        B14016
-     - NET RADIATION                                                   
-     - J/M**2                  
+     - NET RADIATION
+     - J/M**2
      - #####0000
    * - .. _B14017:
 
        B14017
-     - INSTANTANEOUS LONG-WAVE RADIATION (incoming)                    
-     - W/M**2                  
+     - INSTANTANEOUS LONG-WAVE RADIATION (incoming)
+     - W/M**2
      - 4 digits
    * - .. _B14018:
 
        B14018
-     - INSTANTANEOUS SHORT-WAVE RADIATION (incoming)                   
-     - W/M**2                  
-     - ####000
+     - INSTANTANEOUS SHORT-WAVE RADIATION (incoming)
+     - W/M**2
+     - 4 digits
    * - .. _B14019:
 
        B14019
-     - SURFACE ALBEDO                                                  
-     - %                       
+     - SURFACE ALBEDO
+     - %
      - 3 digits
    * - .. _B14021:
 
        B14021
-     - GLOBAL SOLAR RADIATION, INTEGRATED OVER PERIOD SPECIFIED        
-     - J/M**2                  
+     - GLOBAL SOLAR RADIATION, INTEGRATED OVER PERIOD SPECIFIED
+     - J/M**2
      - #####0000
    * - .. _B14028:
 
        B14028
-     - Global solar radiation (high accuracy), integrated over period s
-     - J/M**2                  
-     - ######00
+     - Global solar radiation (high accuracy), integrated over period sJ/M**2
+     - J/M**2
+     - #######00
    * - .. _B14029:
 
        B14029
-     - Diffuse solar radiation (high accuracy), integrated over period 
-     - J/M**2                  
-     - ######00
+     - Diffuse solar radiation (high accuracy), integrated over period
+     - J/M**2
+     - #######00
    * - .. _B14030:
 
        B14030
-     - Direct solar radiation (high accuracy), integrated over period s
-     - J/M**2                  
-     - ######00
+     - Direct solar radiation (high accuracy), integrated over period sJ/M**2
+     - J/M**2
+     - #######00
    * - .. _B14031:
 
        B14031
-     - TOTAL SUNSHINE                                                  
-     - MINUTE                  
+     - TOTAL SUNSHINE
+     - MINUTE
      - 4 digits
    * - .. _B14192:
 
        B14192
-     - Sensible heat flux                                              
-     - W/M**2                  
+     - Sensible heat flux
+     - W/m**2
      - 4 digits
    * - .. _B14193:
 
        B14193
-     - Latent heat flux                                                
-     - W/M**2                  
+     - Latent heat flux
+     - W/m**2
      - 4 digits
    * - .. _B14194:
 
        B14194
-     - Direct solar radiation flux                                     
-     - W/M**2                  
-     - ####000
+     - Direct solar radiation flux
+     - W/M**2
+     - 4 digits
    * - .. _B14195:
 
        B14195
-     - Diffuse solar radiation flux                                    
-     - W/M**2                  
-     - ####000
+     - Diffuse solar radiation flux
+     - W/M**2
+     - 4 digits
    * - .. _B14196:
 
        B14196
-     - NET LONG-WAVE RADIATION FLUX                                    
-     - W/M**2                  
+     - NET LONG-WAVE RADIATION FLUX
+     - W/M**2
      - 4 digits
    * - .. _B14197:
 
        B14197
-     - NET SHORT-WAVE RADIATION FLUX                                   
-     - W/M**2                  
-     - ####000
+     - NET SHORT-WAVE RADIATION FLUX
+     - W/M**2
+     - 4 digits
    * - .. _B14198:
 
        B14198
-     - Global radiation flux (downward)                                
-     - W/M**2                  
+     - Global radiation flux (downward)
+     - W/M**2
      - 4 digits
    * - .. _B14199:
 
        B14199
-     - Visible radiation flux (upward)                                 
-     - W/M**2                  
+     - Visible radiation flux (upward)
+     - W/M**2
      - 4 digits
    * - .. _B14200:
 
        B14200
-     - Infrared radiation flux (downward)                              
-     - W/M**2                  
+     - Infrared radiation flux (downward)
+     - W/M**2
      - 4 digits
    * - .. _B14201:
 
        B14201
-     - Infrared radiation flux (upward)                                
-     - W/M**2                  
+     - Infrared radiation flux (upward)
+     - W/M**2
      - 4 digits
    * - .. _B15192:
 
        B15192
-     - NO Concentration                                                
-     - KG/M**3                 
+     - NO Concentration
+     - KG/M**3
      - .##########
    * - .. _B15193:
 
        B15193
-     - NO2 Concentration                                               
-     - KG/M**3                 
+     - NO2 Concentration
+     - KG/M**3
      - .##########
    * - .. _B15194:
 
        B15194
-     - O3 Concentration                                                
-     - KG/M**3                 
+     - O3 Concentration
+     - KG/M**3
      - .##########
    * - .. _B15195:
 
        B15195
-     - PM10 Concentration                                              
-     - KG/M**3                 
+     - PM10 Concentration
+     - KG/M**3
      - .##########
    * - .. _B15196:
 
        B15196
-     - CO Concentration                                                
-     - KG/M**3                 
+     - CO Concentration
+     - KG/M**3
      - .##########
    * - .. _B15197:
 
        B15197
-     - SO2 Concentration                                               
-     - KG/M**3                 
+     - SO2 Concentration
+     - KG/M**3
      - .##########
    * - .. _B15198:
 
        B15198
-     - PM2.5 Concentration                                             
-     - KG/M**3                 
+     - PM2.5 Concentration
+     - KG/M**3
      - .##########
    * - .. _B15199:
 
        B15199
-     - NOY Concentration                                               
-     - KG/M**3                 
+     - NOY Concentration
+     - KG/M**3
      - .##########
    * - .. _B15200:
 
        B15200
-     - HCNM Concentration                                              
-     - KG/M**3                 
+     - HCNM Concentration
+     - KG/M**3
      - .##########
    * - .. _B15201:
 
        B15201
-     - ALDE Concentration                                              
-     - KG/M**3                 
+     - ALDE Concentration
+     - KG/M**3
      - .##########
    * - .. _B15202:
 
        B15202
-     - PM5 Concentration (tot. aerosol < 5 ug)                         
-     - KG/M**3                 
+     - PM5 Concentration (tot. aerosol < 5 ug)
+     - KG/M**3
      - .##########
    * - .. _B15203:
 
        B15203
-     - PM1 Concentration (tot. aerosol < 1.25 ug)                      
-     - KG/M**3                 
+     - PM1 Concentration (tot. aerosol < 1.25 ug)
+     - KG/M**3
      - .##########
    * - .. _B15204:
 
        B15204
-     - PM06 Concentration (tot. aerosol < 0.6 ug)                      
-     - KG/M**3                 
+     - PM06 Concentration (tot. aerosol < 0.6 ug)
+     - KG/M**3
      - .##########
    * - .. _B15205:
 
        B15205
-     - PM03 Concentration (tot. aerosol < 0.3 ug)                      
-     - KG/M**3                 
+     - PM03 Concentration (tot. aerosol < 0.3 ug)
+     - KG/M**3
      - .##########
    * - .. _B15206:
 
        B15206
-     - PM015 Concentration (tot. aerosol < 0.15 ug)                    
-     - KG/M**3                 
+     - PM015 Concentration (tot. aerosol < 0.15 ug)
+     - KG/M**3
      - .##########
    * - .. _B15207:
 
        B15207
-     - PM008 Concentration (tot. aerosol < 0.08 ug)                    
-     - KG/M**3                 
+     - PM008 Concentration (tot. aerosol < 0.08 ug)
+     - KG/M**3
      - .##########
    * - .. _B15208:
 
        B15208
-     - Concentration of primary particulate matter in PM10             
-     - KG/M**3                 
+     - Concentration of primary particulate matter in PM10
+     - KG/M**3
      - .##########
    * - .. _B15209:
 
        B15209
-     - Concentration of sulfate in PM10                                
-     - KG/M**3                 
+     - Concentration of sulfate in PM10
+     - KG/M**3
      - .##########
    * - .. _B15210:
 
        B15210
-     - Concentration of nitrate in PM10                                
-     - KG/M**3                 
+     - Concentration of nitrate in PM10
+     - KG/M**3
      - .##########
    * - .. _B15211:
 
        B15211
-     - Concentration of ammonium in PM10                               
-     - KG/M**3                 
+     - Concentration of ammonium in PM10
+     - KG/M**3
      - .##########
    * - .. _B15212:
 
        B15212
-     - Concentration of black carbon in PM10                           
-     - KG/M**3                 
+     - Concentration of black carbon in PM10
+     - KG/M**3
      - .##########
    * - .. _B15213:
 
        B15213
-     - Concentration of organic carbon in PM10                         
-     - KG/M**3                 
+     - Concentration of organic carbon in PM10
+     - KG/M**3
      - .##########
    * - .. _B15214:
 
        B15214
-     - Concentration of dust in PM10                                   
-     - KG/M**3                 
+     - Concentration of dust in PM10
+     - KG/M**3
      - .##########
    * - .. _B15215:
 
        B15215
-     - Concentration of anthrop. A1D in PM10                           
-     - KG/M**3                 
+     - Concentration of anthrop. A1D in PM10
+     - KG/M**3
      - .##########
    * - .. _B15216:
 
        B15216
-     - Concentration of anthrop. BmP in PM10                           
-     - KG/M**3                 
+     - Concentration of anthrop. BmP in PM10
+     - KG/M**3
      - .##########
    * - .. _B15217:
 
        B15217
-     - Concentration of biogenic A1D in PM10                           
-     - KG/M**3                 
+     - Concentration of biogenic A1D in PM10
+     - KG/M**3
      - .##########
    * - .. _B15218:
 
        B15218
-     - Concentration of biogenic BmP in PM10                           
-     - KG/M**3                 
+     - Concentration of biogenic BmP in PM10
+     - KG/M**3
      - .##########
    * - .. _B15219:
 
        B15219
-     - Concentration of water in PM10                                  
-     - KG/M**3                 
+     - Concentration of water in PM10
+     - KG/M**3
      - .##########
    * - .. _B15220:
 
        B15220
-     - Concentration of sea salt in PM10                               
-     - KG/M**3                 
+     - Concentration of sea salt in PM10
+     - KG/M**3
      - .##########
    * - .. _B15221:
 
        B15221
-     - Concentration of secondary organic aerosol in PM10              
-     - KG/M**3                 
+     - Concentration of secondary organic aerosol in PM10
+     - KG/M**3
      - .##########
    * - .. _B15222:
 
        B15222
-     - Total concentration of primary aerosol in PM10                  
-     - KG/M**3                 
+     - Total concentration of primary aerosol in PM10
+     - KG/M**3
      - .##########
    * - .. _B15223:
 
        B15223
-     - Total concentration of secondary aerosol in PM10                
-     - KG/M**3                 
+     - Total concentration of secondary aerosol in PM10
+     - KG/M**3
      - .##########
    * - .. _B15224:
 
        B15224
-     - Uncertainity in O3 estimate (Pesco)                             
-     - KG/M**3                 
+     - Uncertainity in O3 estimate (Pesco)
+     - KG/M**3
      - .##########
    * - .. _B15225:
 
        B15225
-     - Uncertainity in PM10 estimate (Pesco)                           
-     - KG/M**3                 
+     - Uncertainity in PM10 estimate (Pesco)
+     - KG/M**3
      - .##########
    * - .. _B15226:
 
        B15226
-     - Uncertainity in NO2 estimate (Pesco)                            
-     - KG/M**3                 
+     - Uncertainity in NO2 estimate (Pesco)
+     - KG/M**3
      - .##########
    * - .. _B15227:
 
        B15227
-     - Uncertainity in PM2.5 estimate (Pesco)                          
-     - KG/M**3                 
+     - Uncertainity in PM2.5 estimate (Pesco)
+     - KG/M**3
      - .##########
    * - .. _B15228:
 
        B15228
-     - NH3 Concentration                                               
-     - KG/M**3                 
+     - NH3 Concentration
+     - KG/M**3
      - .##########
    * - .. _B15229:
 
        B15229
-     - Concentration of primary part. matter in aerosol                
-     - KG/M**3                 
+     - Concentration of primary part. matter in aerosol
+     - KG/M**3
      - .##########
    * - .. _B15230:
 
        B15230
-     - Concentration of sulfate in aerosol                             
-     - KG/M**3                 
+     - Concentration of sulfate in aerosol
+     - KG/M**3
      - .##########
    * - .. _B15231:
 
        B15231
-     - Concentration of nitrate in aerosol                             
-     - KG/M**3                 
+     - Concentration of nitrate in aerosol
+     - KG/M**3
      - .##########
    * - .. _B15232:
 
        B15232
-     - Concentration of ammonium in aerosol                            
-     - KG/M**3                 
+     - Concentration of ammonium in aerosol
+     - KG/M**3
      - .##########
    * - .. _B15233:
 
        B15233
-     - Concentration of anthrop. sec. org. in aerosol                  
-     - KG/M**3                 
+     - Concentration of anthrop. sec. org. in aerosol
+     - KG/M**3
      - .##########
    * - .. _B15234:
 
        B15234
-     - Concentration of biogenic sec. org. in aerosol                  
-     - KG/M**3                 
+     - Concentration of biogenic sec. org. in aerosol
+     - KG/M**3
      - .##########
    * - .. _B15235:
 
        B15235
-     - Concentration of ISOPA1 in PM10                                 
-     - KG/M**3                 
+     - Concentration of ISOPA1 in PM10
+     - KG/M**3
      - .##########
    * - .. _B15236:
 
        B15236
-     - C6H6 Concentration                                              
-     - KG/M**3                 
+     - C6H6 Concentration
+     - KG/M**3
      - .##########
    * - .. _B15237:
 
        B15237
-     - Concentration of anthropogenic aerosol in PM10                  
-     - KG/M**3                 
+     - Concentration of anthropogenic aerosol in PM10
+     - KG/M**3
      - .##########
    * - .. _B15238:
 
        B15238
-     - Concentration of biogenic aerosol in PM10                       
-     - KG/M**3                 
+     - Concentration of biogenic aerosol in PM10
+     - KG/M**3
      - .##########
    * - .. _B15239:
 
        B15239
-     - Concentration of anthropogenic aerosol in PM2.5                 
-     - KG/M**3                 
+     - Concentration of anthropogenic aerosol in PM2.5
+     - KG/M**3
      - .##########
    * - .. _B15240:
 
        B15240
-     - Concentration of biogenic aerosol in PM2.5                      
-     - KG/M**3                 
+     - Concentration of biogenic aerosol in PM2.5
+     - KG/M**3
      - .##########
    * - .. _B15241:
 
        B15241
-     - Aerosol Optical Thickness                                       
-     - Numeric                 
+     - Aerosol Optical Thickness
+     - Numeric
      - #.####
    * - .. _B15242:
 
        B15242
-     - CO2 Concentration                                               
-     - KG/M**3                 
+     - CO2 Concentration
+     - KG/M**3
      - .######
    * - .. _B20001:
 
        B20001
-     - HORIZONTAL VISIBILITY                                           
-     - M                       
+     - HORIZONTAL VISIBILITY
+     - M
      - ####0
    * - .. _B20003:
 
        B20003
-     - PRESENT WEATHER (SEE NOTE 1)                                    
-     - CODE TABLE 20003        
+     - PRESENT WEATHER (SEE NOTE 1)
+     - CODE TABLE
      - 3 chars
    * - .. _B20004:
 
        B20004
-     - PAST WEATHER (1) (SEE NOTE 2)                                   
-     - CODE TABLE 20004        
+     - PAST WEATHER (1) (SEE NOTE 2)
+     - CODE TABLE
      - 2 chars
    * - .. _B20005:
 
        B20005
-     - PAST WEATHER (2) (SEE NOTE 2)                                   
-     - CODE TABLE 20005        
+     - PAST WEATHER (2) (SEE NOTE 2)
+     - CODE TABLE
      - 2 chars
    * - .. _B20009:
 
        B20009
-     - GENERAL WEATHER INDICATOR (TAF/METAR)                           
-     - CODE TABLE 20009        
+     - GENERAL WEATHER INDICATOR (TAF/METAR)
+     - CODE TABLE
      - 2 chars
    * - .. _B20010:
 
        B20010
-     - CLOUD COVER (TOTAL)                                             
-     - %                       
+     - CLOUD COVER (TOTAL)
+     - %
      - 3 digits
    * - .. _B20011:
 
        B20011
-     - CLOUD AMOUNT                                                    
-     - CODE TABLE 20011        
+     - CLOUD AMOUNT
+     - CODE TABLE
      - 2 chars
    * - .. _B20012:
 
        B20012
-     - CLOUD TYPE                                                      
-     - CODE TABLE 20012        
+     - CLOUD TYPE
+     - CODE TABLE
      - 2 chars
    * - .. _B20013:
 
        B20013
-     - HEIGHT OF BASE OF CLOUD                                         
-     - M                       
-     - 5 digits
+     - HEIGHT OF BASE OF CLOUD
+     - M
+     - 6 digits
    * - .. _B20017:
 
        B20017
-     - CLOUD TOP DESCRIPTION                                           
-     - CODE TABLE 20017        
+     - CLOUD TOP DESCRIPTION
+     - CODE TABLE
      - 2 chars
    * - .. _B20019:
 
        B20019
-     - SIGNIFICANT PRESENT OR FORECAST WEATHER                         
-     - Character               
-     - 9 chars
+     - SIGNIFICANT PRESENT OR FORECAST WEATHER
+     - CCITTIA5
+     - 9 digits
    * - .. _B20021:
 
        B20021
-     - TYPE OF PRECIPITATION                                           
-     - FLAG TABLE 20021        
+     - TYPE OF PRECIPITATION
+     - FLAG TABLE
      - 10 digits
    * - .. _B20031:
 
        B20031
-     - ICE DEPOSIT (THICKNESS)                                         
-     - M                       
+     - ICE DEPOSIT (THICKNESS)
+     - M
      - #.##
    * - .. _B20032:
 
        B20032
-     - RATE OF ICE ACCRETION                                           
-     - CODE TABLE 20032        
+     - RATE OF ICE ACCRETION
+     - CODE TABLE
      - 1 chars
    * - .. _B20033:
 
        B20033
-     - CAUSE OF ICE ACCRETION                                          
-     - FLAG TABLE 20033        
+     - CAUSE OF ICE ACCRETION
+     - FLAG TABLE
      - 2 digits
    * - .. _B20034:
 
        B20034
-     - SEA ICE CONCENTRATION                                           
-     - CODE TABLE 20034        
+     - SEA ICE CONCENTRATION
+     - CODE TABLE
      - 2 chars
    * - .. _B20035:
 
        B20035
-     - AMOUNT AND TYPE OF ICE                                          
-     - CODE TABLE 20035        
+     - AMOUNT AND TYPE OF ICE
+     - CODE TABLE
      - 2 chars
    * - .. _B20036:
 
        B20036
-     - ICE SITUATION                                                   
-     - CODE TABLE 20036        
+     - ICE SITUATION
+     - CODE TABLE
      - 2 chars
    * - .. _B20037:
 
        B20037
-     - ICE DEVELOPMENT                                                 
-     - CODE TABLE 20037        
+     - ICE DEVELOPMENT
+     - CODE TABLE
      - 2 chars
    * - .. _B20038:
 
        B20038
-     - BEARING OF ICE EDGE (SEE NOTE 3)                                
-     - DEGREE TRUE             
-     - 3 digits
+     - BEARING OF ICE EDGE (SEE NOTE 3)
+     - DEGREE TRUE
+     - 4 digits
    * - .. _B20042:
 
        B20042
-     - AIRFRAME ICING PRESENT                                          
-     - CODE TABLE 20042        
+     - AIRFRAME ICING PRESENT
+     - CODE TABLE
      - 1 chars
    * - .. _B20043:
 
        B20043
-     - PEAK LIQUID WATER CONTENT                                       
-     - KG/M**3                 
+     - PEAK LIQUID WATER CONTENT
+     - KG/M**3
      - .####
    * - .. _B20044:
 
        B20044
-     - AVERAGE LIQUID WATER CONTENT                                    
-     - KG/M**3                 
+     - AVERAGE LIQUID WATER CONTENT
+     - KG/M**3
      - .####
    * - .. _B20045:
 
        B20045
-     - SUPERCOOLED LARGE DROPLET (SLD) CONDITIONS                      
-     - CODE TABLE 20045        
-     - 2 chars
+     - SUPERCOOLED LARGE DROPLET (SLD) CONDITIONS
+     - CODE TABLE
+     - 1 chars
    * - .. _B20062:
 
        B20062
-     - STATE OF THE GROUND (WITH OR WITHOUT SNOW)                      
-     - CODE TABLE 20062        
+     - STATE OF THE GROUND (WITH OR WITHOUT SNOW)
+     - CODE TABLE
      - 2 chars
    * - .. _B20192:
 
        B20192
-     - Presence of rain > 1mm                                          
-     - BOOLEAN                 
+     - Presence of rain > 1mm
+     - BOOLEAN
      - 1 digits
    * - .. _B20193:
 
        B20193
-     - Cloud type (METAR)                                              
-     - Character               
-     - 2 chars
+     - Cloud type (METAR)
+     - CCITTIA5
+     - 2 digits
    * - .. _B20194:
 
        B20194
-     - Presence of shower                                              
-     - BOOLEAN                 
+     - Presence of shower
+     - BOOLEAN
      - 1 digits
    * - .. _B20195:
 
        B20195
-     - Presence of hail                                                
-     - BOOLEAN                 
+     - Presence of hail
+     - BOOLEAN
      - 1 digits
    * - .. _B20196:
 
        B20196
-     - Presence of thunderstorm                                        
-     - BOOLEAN                 
+     - Presence of thunderstorm
+     - BOOLEAN
      - 1 digits
    * - .. _B20197:
 
        B20197
-     - Presence of snow                                                
-     - BOOLEAN                 
+     - Presence of snow
+     - BOOLEAN
      - 1 digits
    * - .. _B20198:
 
        B20198
-     - Presence of frost                                               
-     - BOOLEAN                 
+     - Presence of frost
+     - BOOLEAN
      - 1 digits
    * - .. _B20199:
 
        B20199
-     - Presence of dew                                                 
-     - BOOLEAN                 
+     - Presence of dew
+     - BOOLEAN
      - 1 digits
    * - .. _B20200:
 
        B20200
-     - Presence of fog                                                 
-     - BOOLEAN                 
+     - Presence of fog
+     - BOOLEAN
      - 1 digits
    * - .. _B20201:
 
        B20201
-     - Presence of water-spout                                         
-     - BOOLEAN                 
+     - Presence of water-spout
+     - BOOLEAN
      - 1 digits
    * - .. _B20202:
 
        B20202
-     - State of the ground with snow                                   
-     - CODE TABLE              
+     - State of the ground with snow
+     - CODE TABLE
      - 2 chars
    * - .. _B20203:
 
        B20203
-     - Weather impact                                                  
-     - CODE TABLE 20203        
+     - Weather impact
+     - CODE TABLE
      - 3 chars
    * - .. _B22001:
 
        B22001
-     - DIRECTION OF WAVES                                              
-     - DEGREE TRUE             
+     - DIRECTION OF WAVES
+     - DEGREE TRUE
      - 3 digits
    * - .. _B22002:
 
        B22002
-     - DIRECTION OF WIND WAVES                                         
-     - DEGREE TRUE             
+     - DIRECTION OF WIND WAVES
+     - DEGREE TRUE
      - 3 digits
    * - .. _B22003:
 
        B22003
-     - DIRECTION OF SWELL WAVES                                        
-     - DEGREE TRUE             
+     - DIRECTION OF SWELL WAVES
+     - DEGREE TRUE
      - 3 digits
    * - .. _B22004:
 
        B22004
-     - DIRECTION OF CURRENT                                            
-     - DEGREE TRUE             
+     - DIRECTION OF CURRENT
+     - DEGREE TRUE
      - 3 digits
    * - .. _B22011:
 
        B22011
-     - PERIOD OF WAVES                                                 
-     - S                       
+     - PERIOD OF WAVES
+     - S
      - 2 digits
    * - .. _B22012:
 
        B22012
-     - PERIOD OF WIND WAVES                                            
-     - S                       
+     - PERIOD OF WIND WAVES
+     - S
      - 2 digits
    * - .. _B22013:
 
        B22013
-     - PERIOD OF SWELL WAVES                                           
-     - S                       
+     - PERIOD OF SWELL WAVES
+     - S
      - 2 digits
    * - .. _B22021:
 
        B22021
-     - HEIGHT OF WAVES                                                 
-     - M                       
+     - HEIGHT OF WAVES
+     - M
      - ###.#
    * - .. _B22022:
 
        B22022
-     - HEIGHT OF WIND WAVES                                            
-     - M                       
+     - HEIGHT OF WIND WAVES
+     - M
      - ###.#
    * - .. _B22023:
 
        B22023
-     - HEIGHT OF SWELL WAVES                                           
-     - M                       
+     - HEIGHT OF SWELL WAVES
+     - M
      - ###.#
    * - .. _B22031:
 
        B22031
-     - SPEED OF CURRENT                                                
-     - M/S                     
+     - SPEED OF CURRENT
+     - M/S
      - ##.##
    * - .. _B22032:
 
        B22032
-     - SPEED OF SEA SURFACE CURRENT                                    
-     - M/S                     
+     - SPEED OF SEA SURFACE CURRENT
+     - M/S
      - ##.##
    * - .. _B22037:
 
        B22037
-     - Tidal elevation with respect to national land datum             
-     - M                       
+     - Tidal elevation with respect to national land datum
+     - M
      - ##.###
    * - .. _B22038:
 
        B22038
-     - Tidal elevation with respect to local chart datum               
-     - M                       
+     - Tidal elevation with respect to local chart datum
+     - M
      - ##.###
    * - .. _B22043:
 
        B22043
-     - SEA/WATER TEMPERATURE                                           
-     - K                       
+     - SEA/WATER TEMPERATURE
+     - K
      - ###.##
    * - .. _B22049:
 
        B22049
-     - SEA-SURFACE TEMPERATURE                                         
-     - K                       
+     - SEA-SURFACE TEMPERATURE
+     - K
      - ###.##
    * - .. _B22062:
 
        B22062
-     - SALINITY                                                        
-     - PART PER THOUSAND       
+     - SALINITY
+     - PART PER THOUSAND
      - ###.##
    * - .. _B22063:
 
        B22063
-     - TOTAL WATER DEPTH                                               
-     - M                       
+     - TOTAL WATER DEPTH
+     - M
      - 5 digits
    * - .. _B22066:
 
        B22066
-     - WATER CONDUCTIVITY                                              
-     - S M-1                   
+     - WATER CONDUCTIVITY
+     - S M-1
      - ##.######
    * - .. _B22070:
 
        B22070
-     - SIGNIFICANT WAVE HEIGHT                                         
-     - M                       
+     - SIGNIFICANT WAVE HEIGHT
+     - M
      - ##.##
    * - .. _B22071:
 
        B22071
-     - SPECTRAL PEAK WAVE PERIOD                                       
-     - S                       
+     - SPECTRAL PEAK WAVE PERIOD
+     - S
      - ##.#
    * - .. _B22073:
 
        B22073
-     - MAXIMUM WAVE HEIGHT                                             
-     - M                       
+     - MAXIMUM WAVE HEIGHT
+     - M
      - ##.##
    * - .. _B22074:
 
        B22074
-     - AVERAGE WAVE PERIOD                                             
-     - S                       
+     - AVERAGE WAVE PERIOD
+     - S
      - ##.#
    * - .. _B22192:
 
        B22192
-     - Current X component                                             
-     - M/S                     
+     - Current X component
+     - M/S
      - ##.##
    * - .. _B22193:
 
        B22193
-     - Current Y component                                             
-     - M/S                     
+     - Current Y component
+     - M/S
      - ##.##
    * - .. _B22194:
 
        B22194
-     - Concentrazione clorofilla a                                     
-     - microg/l                
+     - Concentrazione clorofilla a
+     - microg/l
      - ####.##
    * - .. _B22195:
 
        B22195
-     - Depth below sea surface                                         
-     - M                       
+     - Depth below sea surface
+     - M
      - ####.###
    * - .. _B23192:
 
        B23192
-     - Dry deposition of H2SO4                                         
-     - MOL/M**3                
-     - #.#####
+     - Dry deposition of H2SO4
+     - MOL/M**2
+     - ##.#####
    * - .. _B23193:
 
        B23193
-     - Wet deposition of H2SO4                                         
-     - MOL/M**3                
-     - #.#####
+     - Wet deposition of H2SO4
+     - MOL/M**2
+     - ##.#####
    * - .. _B23194:
 
        B23194
-     - Dry deposition of NH4                                           
-     - MOL/M**3                
-     - #.#####
+     - Dry deposition of NH4
+     - MOL/M**2
+     - ##.#####
    * - .. _B23195:
 
        B23195
-     - Wet deposition of NH4                                           
-     - MOL/M**3                
-     - #.#####
+     - Wet deposition of NH4
+     - MOL/M**2
+     - ##.#####
    * - .. _B23196:
 
        B23196
-     - Dry deposition of HNO3                                          
-     - MOL/M**3                
-     - #.#####
+     - Dry deposition of HNO3
+     - MOL/M**2
+     - ##.#####
    * - .. _B23197:
 
        B23197
-     - Wet deposition of HNO3                                          
-     - MOL/M**3                
-     - #.#####
+     - Wet deposition of HNO3
+     - MOL/M**2
+     - ##.#####
    * - .. _B23198:
 
        B23198
-     - Solid transport by river                                        
-     - KG/S                    
+     - Solid transport by river
+     - KG/S
      - ######.##
    * - .. _B25025:
 
        B25025
-     - Battery voltage                                                 
-     - V                       
+     - Battery voltage
+     - V
      - ##.#
    * - .. _B25076:
 
        B25076
-     - LOG-10 OF (TEMP-RAD CENTRAL WAVENUMBER) FOR ATOVS               
-     - LOGM-1                  
+     - LOG-10 OF (TEMP-RAD CENTRAL WAVENUMBER) FOR ATOVS
+     - LOGM-1
      - ##.########
    * - .. _B25192:
 
        B25192
-     - Battery charge                                                  
-     - %                       
+     - Battery charge
+     - %
      - 3 digits
    * - .. _B25193:
 
        B25193
-     - Battery current                                                 
-     - A                       
+     - Battery current
+     - A
      - ##.###
    * - .. _B29192:
 
        B29192
-     - Land fraction                                                   
-     - %                       
+     - Land fraction
+     - %
      - ###.#
    * - .. _B31000:
 
        B31000
-     - SHORT DELAYED DESCRIPTOR REPLICATION FACTOR                     
-     - Numeric                 
+     - SHORT DELAYED DESCRIPTOR REPLICATION FACTOR
+     - Numeric
      - 1 digits
    * - .. _B31001:
 
        B31001
-     - DELAYED DESCRIPTOR REPLICATION FACTOR                           
-     - Numeric                 
+     - DELAYED DESCRIPTOR REPLICATION FACTOR
+     - Numeric
      - 3 digits
    * - .. _B31002:
 
        B31002
-     - EXTENDED DELAYED DESCRIPTOR REPLICATION FACTOR                  
-     - Numeric                 
+     - EXTENDED DELAYED DESCRIPTOR REPLICATION FACTOR
+     - Numeric
      - 5 digits
    * - .. _B31011:
 
        B31011
-     - DELAYED DESCRIPTOR AND DATA REPETITION FACTOR                   
-     - Numeric                 
+     - DELAYED DESCRIPTOR AND DATA REPETITION FACTOR
+     - Numeric
      - 3 digits
    * - .. _B31012:
 
        B31012
-     - EXTENDED DELAYED DESCRIPTOR AND DATA REPETITION FACTOR          
-     - Numeric                 
+     - EXTENDED DELAYED DESCRIPTOR AND DATA REPETITION FACTOR
+     - Numeric
      - 5 digits
    * - .. _B31021:
 
        B31021
-     - ASSOCIATED FIELD SIGNIFICANCE                                   
-     - CODE TABLE 31021        
+     - ASSOCIATED FIELD SIGNIFICANCE
+     - CODE TABLE
      - 2 chars
    * - .. _B31031:
 
        B31031
-     - DATA PRESENT INDICATOR                                          
-     - FLAG TABLE 31031        
+     - DATA PRESENT INDICATOR
+     - FLAG TABLE
      - 1 digits
    * - .. _B33002:
 
        B33002
-     - QUALITY INFORMATION                                             
-     - CODE TABLE 33002        
+     - QUALITY INFORMATION
+     - CODE TABLE
      - 1 chars
    * - .. _B33003:
 
        B33003
-     - QUALITY INFORMATION                                             
-     - CODE TABLE 33003        
+     - QUALITY INFORMATION
+     - CODE TABLE
      - 1 chars
    * - .. _B33005:
 
        B33005
-     - QUALITY INFORMATION (AWS DATA)                                  
-     - FLAG TABLE 33005        
+     - QUALITY INFORMATION (AWS DATA)
+     - FLAG TABLE
      - 10 digits
    * - .. _B33006:
 
        B33006
-     - INTERNAL MEASUREMENT STATUS INFORMATION (AWS)                   
-     - CODE TABLE 33006        
+     - INTERNAL MEASUREMENT STATUS INFORMATION (AWS)
+     - CODE TABLE
      - 1 chars
    * - .. _B33007:
 
        B33007
-     - PER CENT CONFIDENCE                                             
-     - %                       
+     - PER CENT CONFIDENCE
+     - %
      - 3 digits
    * - .. _B33015:
 
        B33015
-     - DATA QUALITY CHECK INDICATOR                                    
-     - CODE TABLE 33015        
+     - DATA QUALITY CHECK INDICATOR
+     - CODE TABLE
      - 2 chars
    * - .. _B33020:
 
        B33020
-     - QUALITY CONTROL INDICATION OF FOLLOWING VALUE                   
-     - CODE TABLE 33020        
+     - QUALITY CONTROL INDICATION OF FOLLOWING VALUE
+     - CODE TABLE
      - 1 chars
    * - .. _B33021:
 
        B33021
-     - QUALITY OF FOLLOWING VALUE                                      
-     - CODE TABLE 33021        
+     - QUALITY OF FOLLOWING VALUE
+     - CODE TABLE
      - 1 chars
    * - .. _B33022:
 
        B33022
-     - QUALITY OF BUOY SATELLITE TRANSMISSION                          
-     - CODE TABLE 33022        
+     - QUALITY OF BUOY SATELLITE TRANSMISSION
+     - CODE TABLE
      - 1 chars
    * - .. _B33023:
 
        B33023
-     - QUALITY OF BUOY LOCATION                                        
-     - CODE TABLE 33023        
+     - QUALITY OF BUOY LOCATION
+     - CODE TABLE
      - 1 chars
    * - .. _B33024:
 
        B33024
-     - STATION ELEVATION QUALITY MARK (FOR MOBILE STATIONS)            
-     - CODE TABLE 33024        
+     - STATION ELEVATION QUALITY MARK (FOR MOBILE STATIONS)
+     - CODE TABLE
      - 2 chars
    * - .. _B33025:
 
        B33025
-     - ACARS INTERPOLATED VALUES                                       
-     - CODE TABLE 33025        
+     - ACARS INTERPOLATED VALUES
+     - CODE TABLE
      - 1 chars
    * - .. _B33026:
 
        B33026
-     - MOISTURE QUALITY                                                
-     - CODE TABLE 33026        
+     - MOISTURE QUALITY
+     - CODE TABLE
      - 2 chars
    * - .. _B33027:
 
        B33027
-     - LOCATION QUALITY CLASS (RANGE OF RADIUS OF 66 % CONFIDENCE)     
-     - CODE TABLE 33027        
+     - LOCATION QUALITY CLASS (RANGE OF RADIUS OF 66 % CONFIDENCE)
+     - CODE TABLE
      - 1 chars
    * - .. _B33030:
 
        B33030
-     - SCAN LINE STATUS FLAGS FOR ATOVS                                
-     - FLAG TABLE 33030        
+     - SCAN LINE STATUS FLAGS FOR ATOVS
+     - FLAG TABLE
      - 8 digits
    * - .. _B33031:
 
        B33031
-     - SCAN LINE QUALITY FLAGS FOR ATOVS                               
-     - FLAG TABLE 33031        
+     - SCAN LINE QUALITY FLAGS FOR ATOVS
+     - FLAG TABLE
      - 8 digits
    * - .. _B33032:
 
        B33032
-     - CHANNEL QUALITY FLAGS FOR ATOVS                                 
-     - FLAG TABLE 33032        
+     - CHANNEL QUALITY FLAGS FOR ATOVS
+     - FLAG TABLE
      - 8 digits
    * - .. _B33033:
 
        B33033
-     - FIELD OF VIEW QUALITY FLAGS FOR ATOVS                           
-     - FLAG TABLE 33033        
+     - FIELD OF VIEW QUALITY FLAGS FOR ATOVS
+     - FLAG TABLE
      - 8 digits
    * - .. _B33035:
 
        B33035
-     - MANUAL/AUTOMATIC QUALITY CONTROL                                
-     - CODE TABLE 33035        
+     - MANUAL/AUTOMATIC QUALITY CONTROL
+     - CODE TABLE
      - 2 chars
    * - .. _B33036:
 
        B33036
-     - NOMINAL CONFIDENCE THRESHOLD                                    
-     - %                       
+     - NOMINAL CONFIDENCE THRESHOLD
+     - %
      - 3 digits
    * - .. _B33037:
 
        B33037
-     - WIND CORRELATION ERROR                                          
-     - FLAG TABLE 33037        
+     - WIND CORRELATION ERROR
+     - FLAG TABLE
      - 7 digits
    * - .. _B33038:
 
        B33038
-     - QUALITY FLAGS FOR GROUND-BASED GNSS DATA                        
-     - FLAG TABLE 33038        
+     - QUALITY FLAGS FOR GROUND-BASED GNSS DATA
+     - FLAG TABLE
      - 4 digits
    * - .. _B33040:
 
        B33040
-     - CONFIDENCE INTERVAL                                             
-     - PERCENT                 
+     - CONFIDENCE INTERVAL
+     - %
      - 3 digits
    * - .. _B33041:
 
        B33041
-     - ATTRIBUTE OF FOLLOWING VALUE                                    
-     - CODE TABLE 33041        
+     - ATTRIBUTE OF FOLLOWING VALUE
+     - CODE TABLE
      - 1 chars
    * - .. _B33050:
 
        B33050
-     - GLOBAL GTSPP QUALITY FLAG                                       
-     - CODE TABLE 33050        
+     - GLOBAL GTSPP QUALITY FLAG
+     - CODE TABLE
      - 2 chars
    * - .. _B33192:
 
        B33192
-     - Climatological and consistency check                            
-     - PERCENT                 
+     - Climatological and consistency check
+     - %
      - 3 digits
    * - .. _B33193:
 
        B33193
-     - Time consistency                                                
-     - PERCENT                 
+     - Time consistency
+     - %
      - 3 digits
    * - .. _B33194:
 
        B33194
-     - Space consistency                                               
-     - PERCENT                 
+     - Space consistency
+     - %
      - 3 digits
    * - .. _B33195:
 
        B33195
-     - MeteoDB variable ID                                             
-     - Numeric                 
+     - MeteoDB variable ID
+     - Numeric
      - 8 digits
    * - .. _B33196:
 
        B33196
-     - Data has been invalidated                                       
-     - CODE TABLE 33196        
+     - Data has been invalidated
+     - CODE TABLE
      - 1 chars
    * - .. _B33197:
 
        B33197
-     - Manual replacement in substitution                              
-     - CODE TABLE 33197        
+     - Manual replacement in substitution
+     - CODE TABLE
      - 1 chars
    * - .. _B33198:
 
        B33198
-     - Observation increment                                           
-     - Numeric                 
+     - Observation increment
+     - Numeric
      - ######.####
    * - .. _B33201:
 
        B33201
-     - Kalman coefficient, state vector (s.v.) x1                      
-     - Numeric                 
+     - Kalman coefficient, state vector (s.v.) x1
+     - Numeric
      - ######.####
    * - .. _B33202:
 
        B33202
-     - Kalman coefficient, state vector (s.v.) x2                      
-     - Numeric                 
+     - Kalman coefficient, state vector (s.v.) x2
+     - Numeric
      - ######.####
    * - .. _B33203:
 
        B33203
-     - Kalman coefficient, s.v. error covariance matrix(1,1)           
-     - Numeric                 
+     - Kalman coefficient, s.v. error covariance matrix(1,1)
+     - Numeric
      - ######.####
    * - .. _B33204:
 
        B33204
-     - Kalman coefficient, s.v. error covariance matrix(1,2)           
-     - Numeric                 
+     - Kalman coefficient, s.v. error covariance matrix(1,2)
+     - Numeric
      - ######.####
    * - .. _B33205:
 
        B33205
-     - Kalman coefficient, s.v. error covariance matrix(2,1)           
-     - Numeric                 
+     - Kalman coefficient, s.v. error covariance matrix(2,1)
+     - Numeric
      - ######.####
    * - .. _B33206:
 
        B33206
-     - Kalman coefficient, s.v. error covariance matrix(2,2)           
-     - Numeric                 
+     - Kalman coefficient, s.v. error covariance matrix(2,2)
+     - Numeric
      - ######.####
    * - .. _B33207:
 
        B33207
-     - Kalman observation sequential counter                           
-     - Numeric                 
+     - Kalman observation sequential counter
+     - Numeric
      - 3 digits
    * - .. _B33208:
 
        B33208
-     - Kalman osservation missing counter                              
-     - Numeric                 
+     - Kalman osservation missing counter
+     - Numeric
      - 3 digits
    * - .. _B33209:
 
        B33209
-     - Normalized Density Index                                        
-     - PERCENT                 
+     - Normalized Density Index
+     - %
      - 3 digits
    * - .. _B33210:
 
        B33210
-     - Data in the interval used to compute the value                  
-     - PERCENT                 
+     - Data in the interval used to compute the value
+     - %
      - 3 digits
    * - .. _B48001:
 
        B48001
-     - Graminacee_Graminacee indistinte                                
-     - POLLEN/M**3             
+     - Graminacee_Graminacee indistinte
+     - POLLEN/M**3
      - #######.#
    * - .. _B48002:
 
        B48002
-     - Betulacee_Ontano nero                                           
-     - POLLEN/M**3             
+     - Betulacee_Ontano nero
+     - POLLEN/M**3
      - #######.#
    * - .. _B48003:
 
        B48003
-     - Betulacee_Betulla                                               
-     - POLLEN/M**3             
+     - Betulacee_Betulla
+     - POLLEN/M**3
      - #######.#
    * - .. _B48004:
 
        B48004
-     - Betulacee_Betulacee indistinte                                  
-     - POLLEN/M**3             
+     - Betulacee_Betulacee indistinte
+     - POLLEN/M**3
      - #######.#
    * - .. _B48005:
 
        B48005
-     - Composite_Ambrosia                                              
-     - POLLEN/M**3             
+     - Composite_Ambrosia
+     - POLLEN/M**3
      - #######.#
    * - .. _B48006:
 
        B48006
-     - Composite_Artemisia                                             
-     - POLLEN/M**3             
+     - Composite_Artemisia
+     - POLLEN/M**3
      - #######.#
    * - .. _B48007:
 
        B48007
-     - Composite_Composite indistinte                                  
-     - POLLEN/M**3             
+     - Composite_Composite indistinte
+     - POLLEN/M**3
      - #######.#
    * - .. _B48008:
 
        B48008
-     - Corilacee_Nocciolo                                              
-     - POLLEN/M**3             
+     - Corilacee_Nocciolo
+     - POLLEN/M**3
      - #######.#
    * - .. _B48009:
 
        B48009
-     - Corilacee_Carpino bianco -Carpino nero                          
-     - POLLEN/M**3             
+     - Corilacee_Carpino bianco -Carpino nero
+     - POLLEN/M**3
      - #######.#
    * - .. _B48010:
 
        B48010
-     - Corilacee_Corilacee indistinte                                  
-     - POLLEN/M**3             
+     - Corilacee_Corilacee indistinte
+     - POLLEN/M**3
      - #######.#
    * - .. _B48011:
 
        B48011
-     - Fagacee_Castagno                                                
-     - POLLEN/M**3             
+     - Fagacee_Castagno
+     - POLLEN/M**3
      - #######.#
    * - .. _B48012:
 
        B48012
-     - Fagacee_Faggio                                                  
-     - POLLEN/M**3             
+     - Fagacee_Faggio
+     - POLLEN/M**3
      - #######.#
    * - .. _B48013:
 
        B48013
-     - Fagacee_Quercia                                                 
-     - POLLEN/M**3             
+     - Fagacee_Quercia
+     - POLLEN/M**3
      - #######.#
    * - .. _B48014:
 
        B48014
-     - Fagacee_Fagacee indistinte                                      
-     - POLLEN/M**3             
+     - Fagacee_Fagacee indistinte
+     - POLLEN/M**3
      - #######.#
    * - .. _B48015:
 
        B48015
-     - Oleacee_Olivo                                                   
-     - POLLEN/M**3             
+     - Oleacee_Olivo
+     - POLLEN/M**3
      - #######.#
    * - .. _B48016:
 
        B48016
-     - Oleacee_Frassino                                                
-     - POLLEN/M**3             
+     - Oleacee_Frassino
+     - POLLEN/M**3
      - #######.#
    * - .. _B48017:
 
        B48017
-     - Oleacee_Oleacee indistinte                                      
-     - POLLEN/M**3             
+     - Oleacee_Oleacee indistinte
+     - POLLEN/M**3
      - #######.#
    * - .. _B48018:
 
        B48018
-     - Plantaginacee_Plantaginacee indistinte                          
-     - POLLEN/M**3             
+     - Plantaginacee_Plantaginacee indistinte
+     - POLLEN/M**3
      - #######.#
    * - .. _B48019:
 
        B48019
-     - Urticacee_Urticacee indistinte                                  
-     - POLLEN/M**3             
+     - Urticacee_Urticacee indistinte
+     - POLLEN/M**3
      - #######.#
    * - .. _B48020:
 
        B48020
-     - Cupressacee - Taxacee indistinte_Cipresso comune                
-     - POLLEN/M**3             
+     - Cupressacee - Taxacee indistinte_Cipresso comune
+     - POLLEN/M**3
      - #######.#
    * - .. _B48021:
 
        B48021
-     - Cupressacee - Taxacee indistinte_Cupressacee - Taxacee ind      
-     - POLLEN/M**3             
+     - Cupressacee - Taxacee indistinte_Cupressacee - Taxacee ind
+     - POLLEN/M**3
      - #######.#
    * - .. _B48022:
 
        B48022
-     - Chenopodiacee - Amarantacee Indistinte_Amaranto                 
-     - POLLEN/M**3             
+     - Chenopodiacee - Amarantacee Indistinte_Amaranto
+     - POLLEN/M**3
      - #######.#
    * - .. _B48023:
 
        B48023
-     - Chenopodiacee - Amarantacee Indistinte_Chenopodiacee - Ama      
-     - POLLEN/M**3             
+     - Chenopodiacee - Amarantacee Indistinte_Chenopodiacee - Ama
+     - POLLEN/M**3
      - #######.#
    * - .. _B48024:
 
        B48024
-     - Poligonacee_Poligonacee indistinte                              
-     - POLLEN/M**3             
+     - Poligonacee_Poligonacee indistinte
+     - POLLEN/M**3
      - #######.#
    * - .. _B48025:
 
        B48025
-     - Euphorbiacee_Euforbiacee indistinte                             
-     - POLLEN/M**3             
+     - Euphorbiacee_Euforbiacee indistinte
+     - POLLEN/M**3
      - #######.#
    * - .. _B48026:
 
        B48026
-     - Mirtacee_Mirtacee indistinte                                    
-     - POLLEN/M**3             
+     - Mirtacee_Mirtacee indistinte
+     - POLLEN/M**3
      - #######.#
    * - .. _B48027:
 
        B48027
-     - Ulmacee_Bagolaro comune                                         
-     - POLLEN/M**3             
+     - Ulmacee_Bagolaro comune
+     - POLLEN/M**3
      - #######.#
    * - .. _B48028:
 
        B48028
-     - Ulmacee_Olmo campestre                                          
-     - POLLEN/M**3             
+     - Ulmacee_Olmo campestre
+     - POLLEN/M**3
      - #######.#
    * - .. _B48029:
 
        B48029
-     - Ulmacee_Ulmacee indistinte                                      
-     - POLLEN/M**3             
+     - Ulmacee_Ulmacee indistinte
+     - POLLEN/M**3
      - #######.#
    * - .. _B48030:
 
        B48030
-     - Platanacee_Platanacee indistinte                                
-     - POLLEN/M**3             
+     - Platanacee_Platanacee indistinte
+     - POLLEN/M**3
      - #######.#
    * - .. _B48031:
 
        B48031
-     - Aceraceae_Aceracee indistinte                                   
-     - POLLEN/M**3             
+     - Aceraceae_Aceracee indistinte
+     - POLLEN/M**3
      - #######.#
    * - .. _B48032:
 
        B48032
-     - Pinacee_Pinacee indistinte                                      
-     - POLLEN/M**3             
+     - Pinacee_Pinacee indistinte
+     - POLLEN/M**3
      - #######.#
    * - .. _B48033:
 
        B48033
-     - Salicacee_Salice comune                                         
-     - POLLEN/M**3             
+     - Salicacee_Salice comune
+     - POLLEN/M**3
      - #######.#
    * - .. _B48034:
 
        B48034
-     - Salicacee_Pioppo                                                
-     - POLLEN/M**3             
+     - Salicacee_Pioppo
+     - POLLEN/M**3
      - #######.#
    * - .. _B48035:
 
        B48035
-     - Salicacee_Salicacee indistinte                                  
-     - POLLEN/M**3             
+     - Salicacee_Salicacee indistinte
+     - POLLEN/M**3
      - #######.#
    * - .. _B48036:
 
        B48036
-     - Ciperacee_Ciperacee indistinte                                  
-     - POLLEN/M**3             
+     - Ciperacee_Ciperacee indistinte
+     - POLLEN/M**3
      - #######.#
    * - .. _B48037:
 
        B48037
-     - Juglandacee_Juglandacee indistinte                              
-     - POLLEN/M**3             
+     - Juglandacee_Juglandacee indistinte
+     - POLLEN/M**3
      - #######.#
    * - .. _B48038:
 
        B48038
-     - Ippocastanacee_Ippocastanacee indistinte                        
-     - POLLEN/M**3             
+     - Ippocastanacee_Ippocastanacee indistinte
+     - POLLEN/M**3
      - #######.#
    * - .. _B48039:
 
        B48039
-     - Spore fungine_Alternaria                                        
-     - POLLEN/M**3             
+     - Spore fungine_Alternaria
+     - POLLEN/M**3
      - #######.#
    * - .. _B48040:
 
        B48040
-     - Spore fungine_Botrytis                                          
-     - POLLEN/M**3             
+     - Spore fungine_Botrytis
+     - POLLEN/M**3
      - #######.#
    * - .. _B48041:
 
        B48041
-     - Spore fungine_Stemphylium                                       
-     - POLLEN/M**3             
+     - Spore fungine_Stemphylium
+     - POLLEN/M**3
      - #######.#
    * - .. _B48042:
 
        B48042
-     - Spore fungine_Cladosporium                                      
-     - POLLEN/M**3             
+     - Spore fungine_Cladosporium
+     - POLLEN/M**3
      - #######.#
    * - .. _B48043:
 
        B48043
-     - Spore fungine_Epicoccum                                         
-     - POLLEN/M**3             
+     - Spore fungine_Epicoccum
+     - POLLEN/M**3
      - #######.#
    * - .. _B48044:
 
        B48044
-     - Altri Pollini / Non Identificati_Altri pollini identificat      
-     - POLLEN/M**3             
+     - Altri Pollini / Non Identificati_Altri pollini identificat
+     - POLLEN/M**3
      - #######.#
    * - .. _B48045:
 
        B48045
-     - Altri Pollini / Non Identificati_Pollini non identificati       
-     - POLLEN/M**3             
+     - Altri Pollini / Non Identificati_Pollini non identificati
+     - POLLEN/M**3
      - #######.#
    * - .. _B48046:
 
        B48046
-     - Altre Spore / Non identificati_Altre spore fungine              
-     - POLLEN/M**3             
+     - Altre Spore / Non identificati_Altre spore fungine
+     - POLLEN/M**3
      - #######.#
    * - .. _B48047:
 
        B48047
-     - Altre Spore / Non identificati_Spore fungine non identific      
-     - POLLEN/M**3             
+     - Altre Spore / Non identificati_Spore fungine non identific
+     - POLLEN/M**3
      - #######.#
    * - .. _B48048:
 
        B48048
-     - Graminacee_Graminacee indistinte 1                              
-     - POLLEN/M**3             
+     - Graminacee_Graminacee indistinte 1
+     - POLLEN/M**3
      - #######.#
    * - .. _B48049:
 
        B48049
-     - Plantaginacee_Plantaginacee indistinte 1                        
-     - POLLEN/M**3             
+     - Plantaginacee_Plantaginacee indistinte 1
+     - POLLEN/M**3
      - #######.#
    * - .. _B48050:
 
        B48050
-     - Urticacee_Urticacee indistinte 1                                
-     - POLLEN/M**3             
+     - Urticacee_Urticacee indistinte 1
+     - POLLEN/M**3
      - #######.#
    * - .. _B48051:
 
        B48051
-     - Poligonacee_Poligonacee indistinte 1                            
-     - POLLEN/M**3             
+     - Poligonacee_Poligonacee indistinte 1
+     - POLLEN/M**3
      - #######.#
    * - .. _B48052:
 
        B48052
-     - Euphorbiacee_Euforbiacee indistinte 1                           
-     - POLLEN/M**3             
+     - Euphorbiacee_Euforbiacee indistinte 1
+     - POLLEN/M**3
      - #######.#
    * - .. _B48053:
 
        B48053
-     - Mirtacee_Mirtacee indistinte 1                                  
-     - POLLEN/M**3             
+     - Mirtacee_Mirtacee indistinte 1
+     - POLLEN/M**3
      - #######.#
    * - .. _B48054:
 
        B48054
-     - Platanacee_Platanacee indistinte 1                              
-     - POLLEN/M**3             
+     - Platanacee_Platanacee indistinte 1
+     - POLLEN/M**3
      - #######.#
    * - .. _B48055:
 
        B48055
-     - Aceraceae_Aceracee indistinte 1                                 
-     - POLLEN/M**3             
+     - Aceraceae_Aceracee indistinte 1
+     - POLLEN/M**3
      - #######.#
    * - .. _B48056:
 
        B48056
-     - Pinacee_Pinacee indistinte 1                                    
-     - POLLEN/M**3             
+     - Pinacee_Pinacee indistinte 1
+     - POLLEN/M**3
      - #######.#
    * - .. _B48057:
 
        B48057
-     - Ciperacee_Ciperacee indistinte 1                                
-     - POLLEN/M**3             
+     - Ciperacee_Ciperacee indistinte 1
+     - POLLEN/M**3
      - #######.#
    * - .. _B48058:
 
        B48058
-     - Juglandacee_Juglandacee indistinte 1                            
-     - POLLEN/M**3             
+     - Juglandacee_Juglandacee indistinte 1
+     - POLLEN/M**3
      - #######.#
    * - .. _B48059:
 
        B48059
-     - Ippocastanacee_Ippocastanacee indistinte 1                      
-     - POLLEN/M**3             
+     - Ippocastanacee_Ippocastanacee indistinte 1
+     - POLLEN/M**3
      - #######.#
    * - .. _B48060:
 
        B48060
-     - Oleacee_Ligustro                                                
-     - POLLEN/M**3             
+     - Oleacee_Ligustro
+     - POLLEN/M**3
      - #######.#
    * - .. _B48061:
 
        B48061
-     - Anacardiacee                                                    
-     - POLLEN/M**3             
+     - Anacardiacee
+     - POLLEN/M**3
      - #######.#
    * - .. _B48062:
 
        B48062
-     - Apocinacee                                                      
-     - POLLEN/M**3             
+     - Apocinacee
+     - POLLEN/M**3
      - #######.#
    * - .. _B48063:
 
        B48063
-     - Araliacee                                                       
-     - POLLEN/M**3             
+     - Araliacee
+     - POLLEN/M**3
      - #######.#
    * - .. _B48064:
 
        B48064
-     - Boraginacee                                                     
-     - POLLEN/M**3             
+     - Boraginacee
+     - POLLEN/M**3
      - #######.#
    * - .. _B48065:
 
        B48065
-     - Brassicacee                                                     
-     - POLLEN/M**3             
+     - Brassicacee
+     - POLLEN/M**3
      - #######.#
    * - .. _B48066:
 
        B48066
-     - Cannabacee                                                      
-     - POLLEN/M**3             
+     - Cannabacee
+     - POLLEN/M**3
      - #######.#
    * - .. _B48067:
 
        B48067
-     - Caprifoliacee                                                   
-     - POLLEN/M**3             
+     - Caprifoliacee
+     - POLLEN/M**3
      - #######.#
    * - .. _B48068:
 
        B48068
-     - Cariofillacee                                                   
-     - POLLEN/M**3             
+     - Cariofillacee
+     - POLLEN/M**3
      - #######.#
    * - .. _B48069:
 
        B48069
-     - Cornacee                                                        
-     - POLLEN/M**3             
+     - Cornacee
+     - POLLEN/M**3
      - #######.#
    * - .. _B48070:
 
        B48070
-     - Elaegnacee                                                      
-     - POLLEN/M**3             
+     - Elaegnacee
+     - POLLEN/M**3
      - #######.#
    * - .. _B48071:
 
        B48071
-     - Lauracee                                                        
-     - POLLEN/M**3             
+     - Lauracee
+     - POLLEN/M**3
      - #######.#
    * - .. _B48072:
 
        B48072
-     - Moracee                                                         
-     - POLLEN/M**3             
+     - Moracee
+     - POLLEN/M**3
      - #######.#
    * - .. _B48073:
 
        B48073
-     - Ramnacee                                                        
-     - POLLEN/M**3             
+     - Ramnacee
+     - POLLEN/M**3
      - #######.#
    * - .. _B48074:
 
        B48074
-     - Rosacee                                                         
-     - POLLEN/M**3             
+     - Rosacee
+     - POLLEN/M**3
      - #######.#
    * - .. _B48075:
 
        B48075
-     - Rubiacee                                                        
-     - POLLEN/M**3             
+     - Rubiacee
+     - POLLEN/M**3
      - #######.#
    * - .. _B48076:
 
        B48076
-     - Simaroubacee                                                    
-     - POLLEN/M**3             
+     - Simaroubacee
+     - POLLEN/M**3
      - #######.#
    * - .. _B48077:
 
        B48077
-     - Umbellifere                                                     
-     - POLLEN/M**3             
+     - Umbellifere
+     - POLLEN/M**3
      - #######.#
    * - .. _B48078:
 
        B48078
-     - Vitacee                                                         
-     - POLLEN/M**3             
+     - Vitacee
+     - POLLEN/M**3
      - #######.#
    * - .. _B48079:
 
        B48079
-     - Corilacee_Carpino                                               
-     - POLLEN/M**3             
+     - Corilacee_Carpino
+     - POLLEN/M**3
      - #######.#
    * - .. _B48080:
 
        B48080
-     - Corilacee_Ostria                                                
-     - POLLEN/M**3             
+     - Corilacee_Ostria
+     - POLLEN/M**3
      - #######.#
    * - .. _B48081:
 
        B48081
-     - Moracee - Broussonetia                                          
-     - POLLEN/M**3             
+     - Moracee - Broussonetia
+     - POLLEN/M**3
      - #######.#
    * - .. _B48082:
 
        B48082
-     - Moracee - Morus                                                 
-     - POLLEN/M**3             
+     - Moracee - Morus
+     - POLLEN/M**3
      - #######.#
    * - .. _B48083:
 
        B48083
-     - Leguminose                                                      
-     - POLLEN/M**3             
+     - Leguminose
+     - POLLEN/M**3
      - #######.#
    * - .. _B48084:
 
        B48084
-     - Arecacee                                                        
-     - POLLEN/M**3             
+     - Arecacee
+     - POLLEN/M**3
      - #######.#
    * - .. _B48128:
 
        B48128
-     - Conta Graminacee_Graminacee indistinte                          
-     - Numeric                 
+     - Conta Graminacee_Graminacee indistinte
+     - Numeric
      - 7 digits
    * - .. _B48129:
 
        B48129
-     - Conta Betulacee_Ontano nero                                     
-     - Numeric                 
+     - Conta Betulacee_Ontano nero
+     - Numeric
      - 7 digits
    * - .. _B48130:
 
        B48130
-     - Conta Betulacee_Betulla                                         
-     - Numeric                 
+     - Conta Betulacee_Betulla
+     - Numeric
      - 7 digits
    * - .. _B48131:
 
        B48131
-     - Conta Betulacee_Betulacee indistinte                            
-     - Numeric                 
+     - Conta Betulacee_Betulacee indistinte
+     - Numeric
      - 7 digits
    * - .. _B48132:
 
        B48132
-     - Conta Composite_Ambrosia                                        
-     - Numeric                 
+     - Conta Composite_Ambrosia
+     - Numeric
      - 7 digits
    * - .. _B48133:
 
        B48133
-     - Conta Composite_Artemisia                                       
-     - Numeric                 
+     - Conta Composite_Artemisia
+     - Numeric
      - 7 digits
    * - .. _B48134:
 
        B48134
-     - Conta Composite_Composite indistinte                            
-     - Numeric                 
+     - Conta Composite_Composite indistinte
+     - Numeric
      - 7 digits
    * - .. _B48135:
 
        B48135
-     - Conta Corilacee_Nocciolo                                        
-     - Numeric                 
+     - Conta Corilacee_Nocciolo
+     - Numeric
      - 7 digits
    * - .. _B48136:
 
        B48136
-     - Conta Corilacee_Carpino bianco -Carpino nero                    
-     - Numeric                 
+     - Conta Corilacee_Carpino bianco -Carpino nero
+     - Numeric
      - 7 digits
    * - .. _B48137:
 
        B48137
-     - Conta Corilacee_Corilacee indistinte                            
-     - Numeric                 
+     - Conta Corilacee_Corilacee indistinte
+     - Numeric
      - 7 digits
    * - .. _B48138:
 
        B48138
-     - Conta Fagacee_Castagno                                          
-     - Numeric                 
+     - Conta Fagacee_Castagno
+     - Numeric
      - 7 digits
    * - .. _B48139:
 
        B48139
-     - Conta Fagacee_Faggio                                            
-     - Numeric                 
+     - Conta Fagacee_Faggio
+     - Numeric
      - 7 digits
    * - .. _B48140:
 
        B48140
-     - Conta Fagacee_Quercia                                           
-     - Numeric                 
+     - Conta Fagacee_Quercia
+     - Numeric
      - 7 digits
    * - .. _B48141:
 
        B48141
-     - Conta Fagacee_Fagacee indistinte                                
-     - Numeric                 
+     - Conta Fagacee_Fagacee indistinte
+     - Numeric
      - 7 digits
    * - .. _B48142:
 
        B48142
-     - Conta Oleacee_Olivo                                             
-     - Numeric                 
+     - Conta Oleacee_Olivo
+     - Numeric
      - 7 digits
    * - .. _B48143:
 
        B48143
-     - Conta Oleacee_Frassino                                          
-     - Numeric                 
+     - Conta Oleacee_Frassino
+     - Numeric
      - 7 digits
    * - .. _B48144:
 
        B48144
-     - Conta Oleacee_Oleacee indistinte                                
-     - Numeric                 
+     - Conta Oleacee_Oleacee indistinte
+     - Numeric
      - 7 digits
    * - .. _B48145:
 
        B48145
-     - Conta Plantaginacee_Plantaginacee indistinte                    
-     - Numeric                 
+     - Conta Plantaginacee_Plantaginacee indistinte
+     - Numeric
      - 7 digits
    * - .. _B48146:
 
        B48146
-     - Conta Urticacee_Urticacee indistinte                            
-     - Numeric                 
+     - Conta Urticacee_Urticacee indistinte
+     - Numeric
      - 7 digits
    * - .. _B48147:
 
        B48147
-     - Conta Cupressacee - Taxacee indistinte_Cipresso comune          
-     - Numeric                 
+     - Conta Cupressacee - Taxacee indistinte_Cipresso comune
+     - Numeric
      - 7 digits
    * - .. _B48148:
 
        B48148
-     - Conta Cupressacee - Taxacee indistinte_Cupressacee - Taxac      
-     - Numeric                 
+     - Conta Cupressacee - Taxacee indistinte_Cupressacee - Taxac
+     - Numeric
      - 7 digits
    * - .. _B48149:
 
        B48149
-     - Conta Chenopodiacee - Amarantacee Indistinte_Amaranto           
-     - Numeric                 
+     - Conta Chenopodiacee - Amarantacee Indistinte_Amaranto
+     - Numeric
      - 7 digits
    * - .. _B48150:
 
        B48150
-     - Conta Chenopodiacee - Amarantacee Indistinte_Chenopodiacee      
-     - Numeric                 
+     - Conta Chenopodiacee - Amarantacee Indistinte_Chenopodiacee
+     - Numeric
      - 7 digits
    * - .. _B48151:
 
        B48151
-     - Conta Poligonacee_Poligonacee indistinte                        
-     - Numeric                 
+     - Conta Poligonacee_Poligonacee indistinte
+     - Numeric
      - 7 digits
    * - .. _B48152:
 
        B48152
-     - Conta Euphorbiacee_Euforbiacee indistinte                       
-     - Numeric                 
+     - Conta Euphorbiacee_Euforbiacee indistinte
+     - Numeric
      - 7 digits
    * - .. _B48153:
 
        B48153
-     - Conta Mirtacee_Mirtacee indistinte                              
-     - Numeric                 
+     - Conta Mirtacee_Mirtacee indistinte
+     - Numeric
      - 7 digits
    * - .. _B48154:
 
        B48154
-     - Conta Ulmacee_Bagolaro comune                                   
-     - Numeric                 
+     - Conta Ulmacee_Bagolaro comune
+     - Numeric
      - 7 digits
    * - .. _B48155:
 
        B48155
-     - Conta Ulmacee_Olmo campestre                                    
-     - Numeric                 
+     - Conta Ulmacee_Olmo campestre
+     - Numeric
      - 7 digits
    * - .. _B48156:
 
        B48156
-     - Conta Ulmacee_Ulmacee indistinte                                
-     - Numeric                 
+     - Conta Ulmacee_Ulmacee indistinte
+     - Numeric
      - 7 digits
    * - .. _B48157:
 
        B48157
-     - Conta Platanacee_Platanacee indistinte                          
-     - Numeric                 
+     - Conta Platanacee_Platanacee indistinte
+     - Numeric
      - 7 digits
    * - .. _B48158:
 
        B48158
-     - Conta Aceraceae_Aceracee indistinte                             
-     - Numeric                 
+     - Conta Aceraceae_Aceracee indistinte
+     - Numeric
      - 7 digits
    * - .. _B48159:
 
        B48159
-     - Conta Pinacee_Pinacee indistinte                                
-     - Numeric                 
+     - Conta Pinacee_Pinacee indistinte
+     - Numeric
      - 7 digits
    * - .. _B48160:
 
        B48160
-     - Conta Salicacee_Salice comune                                   
-     - Numeric                 
+     - Conta Salicacee_Salice comune
+     - Numeric
      - 7 digits
    * - .. _B48161:
 
        B48161
-     - Conta Salicacee_Pioppo                                          
-     - Numeric                 
+     - Conta Salicacee_Pioppo
+     - Numeric
      - 7 digits
    * - .. _B48162:
 
        B48162
-     - Conta Salicacee_Salicacee indistinte                            
-     - Numeric                 
+     - Conta Salicacee_Salicacee indistinte
+     - Numeric
      - 7 digits
    * - .. _B48163:
 
        B48163
-     - Conta Ciperacee_Ciperacee indistinte                            
-     - Numeric                 
+     - Conta Ciperacee_Ciperacee indistinte
+     - Numeric
      - 7 digits
    * - .. _B48164:
 
        B48164
-     - Conta Juglandacee_Juglandacee indistinte                        
-     - Numeric                 
+     - Conta Juglandacee_Juglandacee indistinte
+     - Numeric
      - 7 digits
    * - .. _B48165:
 
        B48165
-     - Conta Ippocastanacee_Ippocastanacee indistinte                  
-     - Numeric                 
+     - Conta Ippocastanacee_Ippocastanacee indistinte
+     - Numeric
      - 7 digits
    * - .. _B48166:
 
        B48166
-     - Conta Spore fungine_Alternaria                                  
-     - Numeric                 
+     - Conta Spore fungine_Alternaria
+     - Numeric
      - 7 digits
    * - .. _B48167:
 
        B48167
-     - Conta Spore fungine_Botrytis                                    
-     - Numeric                 
+     - Conta Spore fungine_Botrytis
+     - Numeric
      - 7 digits
    * - .. _B48168:
 
        B48168
-     - Conta Spore fungine_Stemphylium                                 
-     - Numeric                 
+     - Conta Spore fungine_Stemphylium
+     - Numeric
      - 7 digits
    * - .. _B48169:
 
        B48169
-     - Conta Spore fungine_Cladosporium                                
-     - Numeric                 
+     - Conta Spore fungine_Cladosporium
+     - Numeric
      - 7 digits
    * - .. _B48170:
 
        B48170
-     - Conta Spore fungine_Epicoccum                                   
-     - Numeric                 
+     - Conta Spore fungine_Epicoccum
+     - Numeric
      - 7 digits
    * - .. _B48171:
 
        B48171
-     - Conta Altri Pollini / Non Identificati_Altri pollini ident      
-     - Numeric                 
+     - Conta Altri Pollini / Non Identificati_Altri pollini ident
+     - Numeric
      - 7 digits
    * - .. _B48172:
 
        B48172
-     - Conta Altri Pollini / Non Identificati_Pollini non identif      
-     - Numeric                 
+     - Conta Altri Pollini / Non Identificati_Pollini non identif
+     - Numeric
      - 7 digits
    * - .. _B48173:
 
        B48173
-     - Conta Altre Spore / Non identificati_Altre spore fungine        
-     - Numeric                 
+     - Conta Altre Spore / Non identificati_Altre spore fungine
+     - Numeric
      - 7 digits
    * - .. _B48174:
 
        B48174
-     - Conta Altre Spore / Non identificati_Spore fungine non ide      
-     - Numeric                 
+     - Conta Altre Spore / Non identificati_Spore fungine non ide
+     - Numeric
      - 7 digits
    * - .. _B48175:
 
        B48175
-     - Conta Graminacee_Graminacee indistinte 1                        
-     - Numeric                 
+     - Conta Graminacee_Graminacee indistinte 1
+     - Numeric
      - 7 digits
    * - .. _B48176:
 
        B48176
-     - Conta Plantaginacee_Plantaginacee indistinte 1                  
-     - Numeric                 
+     - Conta Plantaginacee_Plantaginacee indistinte 1
+     - Numeric
      - 7 digits
    * - .. _B48177:
 
        B48177
-     - Conta Urticacee_Urticacee indistinte 1                          
-     - Numeric                 
+     - Conta Urticacee_Urticacee indistinte 1
+     - Numeric
      - 7 digits
    * - .. _B48178:
 
        B48178
-     - Conta Poligonacee_Poligonacee indistinte 1                      
-     - Numeric                 
+     - Conta Poligonacee_Poligonacee indistinte 1
+     - Numeric
      - 7 digits
    * - .. _B48179:
 
        B48179
-     - Conta Euphorbiacee_Euforbiacee indistinte 1                     
-     - Numeric                 
+     - Conta Euphorbiacee_Euforbiacee indistinte 1
+     - Numeric
      - 7 digits
    * - .. _B48180:
 
        B48180
-     - Conta Mirtacee_Mirtacee indistinte 1                            
-     - Numeric                 
+     - Conta Mirtacee_Mirtacee indistinte 1
+     - Numeric
      - 7 digits
    * - .. _B48181:
 
        B48181
-     - Conta Platanacee_Platanacee indistinte 1                        
-     - Numeric                 
+     - Conta Platanacee_Platanacee indistinte 1
+     - Numeric
      - 7 digits
    * - .. _B48182:
 
        B48182
-     - Conta Aceraceae_Aceracee indistinte 1                           
-     - Numeric                 
+     - Conta Aceraceae_Aceracee indistinte 1
+     - Numeric
      - 7 digits
    * - .. _B48183:
 
        B48183
-     - Conta Pinacee_Pinacee indistinte 1                              
-     - Numeric                 
+     - Conta Pinacee_Pinacee indistinte 1
+     - Numeric
      - 7 digits
    * - .. _B48184:
 
        B48184
-     - Conta Ciperacee_Ciperacee indistinte 1                          
-     - Numeric                 
+     - Conta Ciperacee_Ciperacee indistinte 1
+     - Numeric
      - 7 digits
    * - .. _B48185:
 
        B48185
-     - Conta Juglandacee_Juglandacee indistinte 1                      
-     - Numeric                 
+     - Conta Juglandacee_Juglandacee indistinte 1
+     - Numeric
      - 7 digits
    * - .. _B48186:
 
        B48186
-     - Conta Ippocastanacee_Ippocastanacee indistinte 1                
-     - Numeric                 
+     - Conta Ippocastanacee_Ippocastanacee indistinte 1
+     - Numeric
      - 7 digits
    * - .. _B48187:
 
        B48187
-     - Conta Oleacee_Ligustro                                          
-     - Numeric                 
+     - Conta Oleacee_Ligustro
+     - Numeric
      - 7 digits
    * - .. _B48188:
 
        B48188
-     - Conta Anacardiacee                                              
-     - Numeric                 
+     - Conta Anacardiacee
+     - Numeric
      - 7 digits
    * - .. _B48189:
 
        B48189
-     - Conta Apocinacee                                                
-     - Numeric                 
+     - Conta Apocinacee
+     - Numeric
      - 7 digits
    * - .. _B48190:
 
        B48190
-     - Conta Araliacee                                                 
-     - Numeric                 
+     - Conta Araliacee
+     - Numeric
      - 7 digits
    * - .. _B48191:
 
        B48191
-     - Conta Boraginacee                                               
-     - Numeric                 
+     - Conta Boraginacee
+     - Numeric
      - 7 digits
    * - .. _B48192:
 
        B48192
-     - Conta Brassicacee                                               
-     - Numeric                 
+     - Conta Brassicacee
+     - Numeric
      - 7 digits
    * - .. _B48193:
 
        B48193
-     - Conta Cannabacee                                                
-     - Numeric                 
+     - Conta Cannabacee
+     - Numeric
      - 7 digits
    * - .. _B48194:
 
        B48194
-     - Conta Caprifoliacee                                             
-     - Numeric                 
+     - Conta Caprifoliacee
+     - Numeric
      - 7 digits
    * - .. _B48195:
 
        B48195
-     - Conta Cariofillacee                                             
-     - Numeric                 
+     - Conta Cariofillacee
+     - Numeric
      - 7 digits
    * - .. _B48196:
 
        B48196
-     - Conta Cornacee                                                  
-     - Numeric                 
+     - Conta Cornacee
+     - Numeric
      - 7 digits
    * - .. _B48197:
 
        B48197
-     - Conta Elaegnacee                                                
-     - Numeric                 
+     - Conta Elaegnacee
+     - Numeric
      - 7 digits
    * - .. _B48198:
 
        B48198
-     - Conta Lauracee                                                  
-     - Numeric                 
+     - Conta Lauracee
+     - Numeric
      - 7 digits
    * - .. _B48199:
 
        B48199
-     - Conta Moracee                                                   
-     - Numeric                 
+     - Conta Moracee
+     - Numeric
      - 7 digits
    * - .. _B48200:
 
        B48200
-     - Conta Ramnacee                                                  
-     - Numeric                 
+     - Conta Ramnacee
+     - Numeric
      - 7 digits
    * - .. _B48201:
 
        B48201
-     - Conta Rosacee                                                   
-     - Numeric                 
+     - Conta Rosacee
+     - Numeric
      - 7 digits
    * - .. _B48202:
 
        B48202
-     - Conta Rubiacee                                                  
-     - Numeric                 
+     - Conta Rubiacee
+     - Numeric
      - 7 digits
    * - .. _B48203:
 
        B48203
-     - Conta Simaroubacee                                              
-     - Numeric                 
+     - Conta Simaroubacee
+     - Numeric
      - 7 digits
    * - .. _B48204:
 
        B48204
-     - Conta Umbellifere                                               
-     - Numeric                 
+     - Conta Umbellifere
+     - Numeric
      - 7 digits
    * - .. _B48205:
 
        B48205
-     - Conta Vitacee                                                   
-     - Numeric                 
+     - Conta Vitacee
+     - Numeric
      - 7 digits
    * - .. _B48206:
 
        B48206
-     - Conta Corilacee_Carpino                                         
-     - Numeric                 
+     - Conta Corilacee_Carpino
+     - Numeric
      - 7 digits
    * - .. _B48207:
 
        B48207
-     - Conta Corilacee_Ostria                                          
-     - Numeric                 
+     - Conta Corilacee_Ostria
+     - Numeric
      - 7 digits
    * - .. _B48208:
 
        B48208
-     - Conta Moracee - Broussonetia                                    
-     - Numeric                 
+     - Conta Moracee - Broussonetia
+     - Numeric
      - 7 digits
    * - .. _B48209:
 
        B48209
-     - Conta Moracee - Morus                                           
-     - Numeric                 
+     - Conta Moracee - Morus
+     - Numeric
      - 7 digits
    * - .. _B48210:
 
        B48210
-     - Conta Leguminose                                                
-     - Numeric                 
+     - Conta Leguminose
+     - Numeric
      - 7 digits
    * - .. _B48211:
 
        B48211
-     - Conta Arecacee                                                  
-     - Numeric                 
+     - Conta Arecacee
+     - Numeric
      - 7 digits
    * - .. _B49192:
 
        B49192
-     - Number of particles with diameter <= 0.3 um                     
-     - Numeric                 
-     - #####0
+     - Number of particles with diameter <= 0.3 um
+     - Numeric
+     - #####000
    * - .. _B49193:
 
        B49193
-     - Number of particles with diameter > 0.3 <= 0.5 um               
-     - Numeric                 
-     - #####0
+     - Number of particles with diameter > 0.3 <= 0.5 um
+     - Numeric
+     - #####000
    * - .. _B49194:
 
        B49194
-     - Number of particles with diameter > 0.5 <= 1.0 um               
-     - Numeric                 
-     - #####0
+     - Number of particles with diameter > 0.5 <= 1.0 um
+     - Numeric
+     - #####00
    * - .. _B49195:
 
        B49195
-     - Number of particles with diameter > 1.0 <= 2.5 um               
-     - Numeric                 
+     - Number of particles with diameter > 1.0 <= 2.5 um
+     - Numeric
      - #####0
    * - .. _B49196:
 
        B49196
-     - Number of particles with diameter > 2.5 <= 5.0 um               
-     - Numeric                 
-     - #####0
+     - Number of particles with diameter > 2.5 <= 5.0 um
+     - Numeric
+     - 5 digits
    * - .. _B49197:
 
        B49197
-     - Number of particles with diameter > 5.0 <= 10.0 um              
-     - Numeric                 
-     - #####0
+     - Number of particles with diameter > 5.0 <= 10.0 um
+     - Numeric
+     - ####.#
    * - .. _B49198:
 
        B49198
-     - Density of particles with diameter > 0.35 <= 0.46 um            
-     - Numeric/M**3            
+     - Density of particles with diameter > 0.35 <= 0.46 um
+     - Numeric/M**3
      - #####00000
    * - .. _B49199:
 
        B49199
-     - Density of particles with diameter > 0.46 <= 0.66 um            
-     - Numeric/M**3            
+     - Density of particles with diameter > 0.46 <= 0.66 um
+     - Numeric/M**3
      - #####00000
    * - .. _B49200:
 
        B49200
-     - Density of particles with diameter > 0.66 <= 1.0 um             
-     - Numeric/M**3            
+     - Density of particles with diameter > 0.66 <= 1.0 um
+     - Numeric/M**3
      - #####0000
    * - .. _B49201:
 
        B49201
-     - Density of particles with diameter > 1.0 <= 1.3 um              
-     - Numeric/M**3            
+     - Density of particles with diameter > 1.0 <= 1.3 um
+     - Numeric/M**3
      - #####0000
    * - .. _B49202:
 
        B49202
-     - Density of particles with diameter > 1.3 <= 1.7 um              
-     - Numeric/M**3            
+     - Density of particles with diameter > 1.3 <= 1.7 um
+     - Numeric/M**3
      - #####000
    * - .. _B49203:
 
        B49203
-     - Density of particles with diameter > 1.7 <= 2.3 um              
-     - Numeric/M**3            
+     - Density of particles with diameter > 1.7 <= 2.3 um
+     - Numeric/M**3
      - #####000
    * - .. _B49204:
 
        B49204
-     - Density of particles with diameter > 2.3 <= 3.0 um              
-     - Numeric/M**3            
+     - Density of particles with diameter > 2.3 <= 3.0 um
+     - Numeric/M**3
      - #####000
    * - .. _B49205:
 
        B49205
-     - Density of particles with diameter > 3.0 <= 4.0 um              
-     - Numeric/M**3            
+     - Density of particles with diameter > 3.0 <= 4.0 um
+     - Numeric/M**3
      - #####00
    * - .. _B49206:
 
        B49206
-     - Density of particles with diameter > 4.0 <= 5.2 um              
-     - Numeric/M**3            
+     - Density of particles with diameter > 4.0 <= 5.2 um
+     - Numeric/M**3
      - #####00
    * - .. _B49207:
 
        B49207
-     - Density of particles with diameter > 5.2 <= 6.5 um              
-     - Numeric/M**3            
+     - Density of particles with diameter > 5.2 <= 6.5 um
+     - Numeric/M**3
      - #####00
    * - .. _B49208:
 
        B49208
-     - Density of particles with diameter > 6.5 <= 8.0 um              
-     - Numeric/M**3            
+     - Density of particles with diameter > 6.5 <= 8.0 um
+     - Numeric/M**3
      - #####00
    * - .. _B49209:
 
        B49209
-     - Density of particles with diameter > 8.0 <= 10.0 um             
-     - Numeric/M**3            
+     - Density of particles with diameter > 8.0 <= 10.0 um
+     - Numeric/M**3
      - #####00
    * - .. _B49210:
 
        B49210
-     - Density of particles with diameter > 10 <= 12 um                
-     - Numeric/M**3            
+     - Density of particles with diameter > 10 <= 12 um
+     - Numeric/M**3
      - #####0
    * - .. _B49211:
 
        B49211
-     - Density of particles with diameter > 12 <= 14 um                
-     - Numeric/M**3            
+     - Density of particles with diameter > 12 <= 14 um
+     - Numeric/M**3
      - #####0
    * - .. _B49212:
 
        B49212
-     - Density of particles with diameter > 14 <= 16 um                
-     - Numeric/M**3            
+     - Density of particles with diameter > 14 <= 16 um
+     - Numeric/M**3
      - #####0
    * - .. _B49213:
 
        B49213
-     - Density of particles with diameter > 16 <= 18 um                
-     - Numeric/M**3            
+     - Density of particles with diameter > 16 <= 18 um
+     - Numeric/M**3
      - #####0
    * - .. _B49214:
 
        B49214
-     - Density of particles with diameter > 18 <= 20 um                
-     - Numeric/M**3            
+     - Density of particles with diameter > 18 <= 20 um
+     - Numeric/M**3
      - #####0
    * - .. _B49215:
 
        B49215
-     - Density of particles with diameter > 20 <= 22 um                
-     - Numeric/M**3            
+     - Density of particles with diameter > 20 <= 22 um
+     - Numeric/M**3
      - #####0
    * - .. _B49216:
 
        B49216
-     - Density of particles with diameter > 22 <= 25 um                
-     - Numeric/M**3            
+     - Density of particles with diameter > 22 <= 25 um
+     - Numeric/M**3
      - #####0
    * - .. _B49217:
 
        B49217
-     - Density of particles with diameter > 25 <= 28 um                
-     - Numeric/M**3            
+     - Density of particles with diameter > 25 <= 28 um
+     - Numeric/M**3
      - #####0
    * - .. _B49218:
 
        B49218
-     - Density of particles with diameter > 28 <= 31 um                
-     - Numeric/M**3            
+     - Density of particles with diameter > 28 <= 31 um
+     - Numeric/M**3
      - #####0
    * - .. _B49219:
 
        B49219
-     - Density of particles with diameter > 31 <= 34 um                
-     - Numeric/M**3            
+     - Density of particles with diameter > 31 <= 34 um
+     - Numeric/M**3
      - #####0
    * - .. _B49220:
 
        B49220
-     - Density of particles with diameter > 34 <= 37 um                
-     - Numeric/M**3            
+     - Density of particles with diameter > 34 <= 37 um
+     - Numeric/M**3
      - #####0
    * - .. _B49221:
 
        B49221
-     - Density of particles with diameter > 37 <= 40 um                
-     - Numeric/M**3            
+     - Density of particles with diameter > 37 <= 40 um
+     - Numeric/M**3
      - #####0
