@@ -1,10 +1,10 @@
-%global releaseno 2
+%global releaseno 1
 # Note: define _srcarchivename in Travis build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 8.11
+Version: 8.12
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -315,6 +315,16 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Mon Aug 10 2020 Emanuele Di Giacomo <edigiacomo@arpae.it> - 8.12-1
+- Improved documentation
+- Use BUFR unit in documentation (#222)
+- dballe.Message.query_data() error when the BUFR has only station data (#213)
+- Fixed bugs in Explorer (#217, #218, #228)
+- attr_filter supports != operator (#224)
+- Fixed JSON datetime parser (#230)
+- Fixed segmentation fault querying min and max datetimes in
+  dballe.CursorSummarySummary (#232)
+
 * Thu Apr 30 2020 Daniele Branchini <dbranchini@arpae.it> - 8.11-2
 - Fixed compilation error for gcc 10 (#211)
 
