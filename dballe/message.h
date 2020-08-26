@@ -25,7 +25,7 @@ namespace dballe {
  * The representation in Message is as connected as possible to physics rather
  * than to observations.
  */
-class Message
+class Message : public std::enable_shared_from_this<Message>
 {
 public:
     virtual ~Message();
@@ -46,7 +46,7 @@ public:
     virtual std::string get_report() const = 0;
 
     /// Return a copy of this message
-    virtual std::unique_ptr<Message> clone() const = 0;
+    virtual std::shared_ptr<Message> clone() const = 0;
 
     /**
      * Get a variable given its code, level and time range information.
@@ -191,7 +191,7 @@ public:
     /**
      * Create a new empty message
      */
-    static std::unique_ptr<Message> create(MessageType type);
+    static std::shared_ptr<Message> create(MessageType type);
 
 protected:
     /// Implementation of get(const Level&, const Trange&, wreport::Varcode)
