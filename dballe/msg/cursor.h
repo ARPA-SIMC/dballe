@@ -12,16 +12,17 @@ namespace msg {
 
 struct CursorStation : public impl::CursorStation
 {
+    std::shared_ptr<const impl::Message> msg;
     dballe::DBStation station;
     const Values& station_values;
     bool at_start = true;
 
-    CursorStation(const impl::Message& msg)
-        : station_values(msg.find_station_context())
+    CursorStation(std::shared_ptr<const impl::Message> msg)
+        : msg(msg), station_values(msg->find_station_context())
     {
-        station.report = msg.get_report();
-        station.coords = msg.get_coords();
-        station.ident = msg.get_ident();
+        station.report = msg->get_report();
+        station.coords = msg->get_coords();
+        station.ident = msg->get_ident();
     }
     ~CursorStation();
 
@@ -75,17 +76,18 @@ struct CursorStation : public impl::CursorStation
 
 struct CursorStationData : public impl::CursorStationData
 {
+    std::shared_ptr<const impl::Message> msg;
     dballe::DBStation station;
     const Values& station_values;
     bool at_start = true;
     Values::const_iterator cur;
 
-    CursorStationData(const impl::Message& msg)
-        : station_values(msg.find_station_context())
+    CursorStationData(std::shared_ptr<const impl::Message> msg)
+        : msg(msg), station_values(msg->find_station_context())
     {
-        station.report = msg.get_report();
-        station.coords = msg.get_coords();
-        station.ident = msg.get_ident();
+        station.report = msg->get_report();
+        station.coords = msg->get_coords();
+        station.ident = msg->get_ident();
     }
     ~CursorStationData();
 

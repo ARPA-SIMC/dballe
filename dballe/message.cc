@@ -15,11 +15,10 @@ namespace dballe {
 
 Message::~Message() {}
 
-std::unique_ptr<Message> Message::create(MessageType type)
+std::shared_ptr<Message> Message::create(MessageType type)
 {
-    impl::Message* msg;
-    std::unique_ptr<Message> res(msg = new impl::Message);
-    msg->type = type;
+    auto res = impl::Message::create();
+    res->type = type;
     return res;
 }
 

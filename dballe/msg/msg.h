@@ -143,16 +143,18 @@ protected:
     void setc(const Level& lev, const Trange& tr, wreport::Varcode code, const char* val, int conf);
 
 public:
-    /// Source of the data
-    MessageType type = MessageType::GENERIC;
-    Values station_data;
-    msg::Contexts data;
-
     Message() = default;
     Message(const Message&) = default;
     Message(Message&&) = default;
     Message& operator=(const Message& m) = default;
     Message& operator=(Message&& m) = default;
+
+    /// Source of the data
+    MessageType type = MessageType::GENERIC;
+    Values station_data;
+    msg::Contexts data;
+
+    static std::shared_ptr<Message> create();
 
     /**
      * Return a reference to \a o downcasted as an impl::Message.
@@ -175,7 +177,7 @@ public:
      */
     static std::shared_ptr<Message> downcast(std::shared_ptr<dballe::Message> o);
 
-    std::unique_ptr<dballe::Message> clone() const override;
+    std::shared_ptr<dballe::Message> clone() const override;
     Datetime get_datetime() const override;
     Coords get_coords() const override;
     Ident get_ident() const override;
