@@ -55,21 +55,16 @@ struct ProtoMessage
 
 struct Cursor : public impl::CursorMessage
 {
-    typedef std::vector<std::unique_ptr<dballe::Message>> Results;
+    typedef std::vector<std::shared_ptr<dballe::Message>> Results;
     Results results;
     Results::iterator cur;
     bool at_start = true;
 
     bool has_value() const { return !at_start && cur != results.end(); }
 
-    const Message& get_message() const override
+    std::shared_ptr<Message> get_message() const override
     {
-        return **cur;
-    }
-
-    std::unique_ptr<Message> detach_message() override
-    {
-        return std::move(*cur);
+        return *cur;
     }
 
     int remaining() const override
@@ -87,13 +82,17 @@ struct Cursor : public impl::CursorMessage
             at_start = false;
         }
         else if (cur != results.end())
+        {
+            cur->reset();
             ++cur;
+        }
         return cur != results.end();
 
     }
 
     void discard() override
     {
+        results.clear();
         cur = results.end();
     }
 

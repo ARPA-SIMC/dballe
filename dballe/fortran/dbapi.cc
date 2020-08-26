@@ -563,7 +563,7 @@ void DbAPI::messages_write_next(const char* template_name)
     while (cursor->next())
     {
         std::vector<std::shared_ptr<dballe::Message>> msgs;
-        msgs.emplace_back(cursor->detach_message());
+        msgs.emplace_back(cursor->get_message());
         out.write(exporter->to_binary(msgs));
     }
 }

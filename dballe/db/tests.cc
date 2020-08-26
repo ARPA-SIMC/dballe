@@ -23,7 +23,7 @@ impl::Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const dball
     impl::Messages res;
     auto cursor = tr->query_messages(query);
     while (cursor->next())
-        res.emplace_back(cursor->detach_message());
+        res.emplace_back(cursor->get_message());
     return res;
 }
 
@@ -32,7 +32,7 @@ impl::Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const char*
     impl::Messages res;
     auto cursor = tr->query_messages(*dballe::tests::query_from_string(query));
     while (cursor->next())
-        res.emplace_back(cursor->detach_message());
+        res.emplace_back(cursor->get_message());
     return res;
 }
 
