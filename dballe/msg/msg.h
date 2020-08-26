@@ -320,10 +320,10 @@ public:
     /// Output in CSV format
     void to_csv(CSVWriter& out) const;
 
-    std::unique_ptr<dballe::CursorStation> query_stations(const Query& query) const override;
-    std::unique_ptr<dballe::CursorStationData> query_station_data(const Query& query) const override;
-    std::unique_ptr<dballe::CursorData> query_data(const Query& query) const override;
-    std::unique_ptr<dballe::CursorData> query_station_and_data(const Query& query) const;
+    std::shared_ptr<dballe::CursorStation> query_stations(const Query& query) const override;
+    std::shared_ptr<dballe::CursorStationData> query_station_data(const Query& query) const override;
+    std::shared_ptr<dballe::CursorData> query_data(const Query& query) const override;
+    std::shared_ptr<dballe::CursorData> query_station_and_data(const Query& query) const;
 
     /// Output the CSV header
     static void csv_header(CSVWriter& out);

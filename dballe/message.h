@@ -152,7 +152,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<CursorStation> query_stations(const Query& query) const = 0;
+    virtual std::shared_ptr<CursorStation> query_stations(const Query& query) const = 0;
 
     /**
      * Query the station variables in the message.
@@ -162,7 +162,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<CursorStationData> query_station_data(const Query& query) const = 0;
+    virtual std::shared_ptr<CursorStationData> query_station_data(const Query& query) const = 0;
 
     /**
      * Query the variables in the message.
@@ -172,7 +172,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<CursorData> query_data(const Query& query) const = 0;
+    virtual std::shared_ptr<CursorData> query_data(const Query& query) const = 0;
 
     /// Print all the contents of this message to an output stream
     virtual void print(FILE* out) const = 0;

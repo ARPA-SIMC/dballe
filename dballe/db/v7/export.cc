@@ -108,7 +108,7 @@ struct Cursor : public impl::CursorMessage
 
 }
 
-std::unique_ptr<dballe::CursorMessage> Transaction::query_messages(const Query& query)
+std::shared_ptr<dballe::CursorMessage> Transaction::query_messages(const Query& query)
 {
     Tracer<> trc(this->trc ? this->trc->trace_export_msgs(query) : nullptr);
     v7::LevTr& lt = levtr();
@@ -156,7 +156,7 @@ std::unique_ptr<dballe::CursorMessage> Transaction::query_messages(const Query& 
 
     lt.prefetch_ids(trc, id_levtrs);
 
-    std::unique_ptr<Cursor> res(new Cursor);
+    auto res = std::make_shared<Cursor>();
     for (auto& r: results)
     {
         station_values.read(*this, r.first);
@@ -189,7 +189,7 @@ std::unique_ptr<dballe::CursorMessage> Transaction::query_messages(const Query& 
     }
     results.clear();
 
-    return std::unique_ptr<dballe::CursorMessage>(res.release());
+    return res;
 }
 
 }

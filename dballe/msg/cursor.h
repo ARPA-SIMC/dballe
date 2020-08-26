@@ -63,12 +63,12 @@ struct CursorStation : public impl::CursorStation
     }
 
     /// Downcast a unique_ptr pointer
-    inline static std::unique_ptr<CursorStation> downcast(std::unique_ptr<dballe::CursorStation> c)
+    inline static std::shared_ptr<CursorStation> downcast(std::shared_ptr<dballe::CursorStation> c)
     {
-        CursorStation* res = dynamic_cast<CursorStation*>(c.get());
-        if (!res) throw std::runtime_error("Attempted to downcast the wrong kind of cursor");
-        c.release();
-        return std::unique_ptr<CursorStation>(res);
+        auto res = std::dynamic_pointer_cast<CursorStation>(c);
+        if (!res)
+            throw std::runtime_error("Attempted to downcast the wrong kind of cursor");
+        return res;
     }
 };
 
@@ -132,12 +132,12 @@ struct CursorStationData : public impl::CursorStationData
     wreport::Var get_var() const override { return **cur; }
 
     /// Downcast a unique_ptr pointer
-    inline static std::unique_ptr<CursorStationData> downcast(std::unique_ptr<dballe::CursorStationData> c)
+    inline static std::shared_ptr<CursorStationData> downcast(std::shared_ptr<dballe::CursorStationData> c)
     {
-        CursorStationData* res = dynamic_cast<CursorStationData*>(c.get());
-        if (!res) throw std::runtime_error("Attempted to downcast the wrong kind of cursor");
-        c.release();
-        return std::unique_ptr<CursorStationData>(res);
+        auto res = std::dynamic_pointer_cast<CursorStationData>(c);
+        if (!res)
+            throw std::runtime_error("Attempted to downcast the wrong kind of cursor");
+        return res;
     }
 };
 
@@ -233,12 +233,12 @@ struct CursorData : public impl::CursorData
     Datetime get_datetime() const override { return datetime; }
 
     /// Downcast a unique_ptr pointer
-    inline static std::unique_ptr<CursorData> downcast(std::unique_ptr<dballe::CursorData> c)
+    inline static std::shared_ptr<CursorData> downcast(std::shared_ptr<dballe::CursorData> c)
     {
-        CursorData* res = dynamic_cast<CursorData*>(c.get());
-        if (!res) throw std::runtime_error("Attempted to downcast the wrong kind of cursor");
-        c.release();
-        return std::unique_ptr<CursorData>(res);
+        auto res = std::dynamic_pointer_cast<CursorData>(c);
+        if (!res)
+            throw std::runtime_error("Attempted to downcast the wrong kind of cursor");
+        return res;
     }
 };
 

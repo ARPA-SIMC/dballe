@@ -3,6 +3,8 @@
 * C++ api changed: `CursorMessage::get_message` has been unified with
   `CursorMessage::detach_message` and now returns a `std::shared_ptr<Message>`.
   `CursorMessage::detach_message` has been removed. (#171)
+* C++ api changed: it now uses `std::shared_ptr` instead of `std::unique_ptr`
+  to return and refer to cursors. (#171)
 
 # New in version 8.14
 
