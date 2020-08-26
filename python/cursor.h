@@ -121,7 +121,6 @@ extern PyTypeObject* dpy_CursorSummarySummary_Type;
 typedef struct {
     PyObject_HEAD
     std::shared_ptr<dballe::impl::CursorMessage> cur;
-    PyObject* curmsg;
 } dpy_CursorMessage;
 
 extern PyTypeObject* dpy_CursorMessage_Type;
