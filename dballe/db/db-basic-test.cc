@@ -167,7 +167,7 @@ this->add_method("stationdata", [](Fixture& f) {
     impl::Messages msgs;
     auto cursor = f.tr->query_messages(core::Query());
     while (cursor->next())
-        msgs.push_back(cursor->detach_message());
+        msgs.push_back(cursor->get_message());
     wassert(actual(msgs.size()) == 2);
 
     //msgs.print(stderr);

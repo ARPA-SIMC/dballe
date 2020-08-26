@@ -95,7 +95,7 @@ int Dbadb::do_export_dump(const Query& query, FILE* out)
 {
     auto cursor = db.query_messages(query);
     while (cursor->next())
-        cursor->get_message().print(out);
+        cursor->get_message()->print(out);
     return 0;
 }
 
@@ -139,7 +139,7 @@ int Dbadb::do_export(const Query& query, File& file, const char* output_template
     auto cursor = db.query_messages(query);
     while (cursor->next())
     {
-        auto msg = cursor->detach_message();
+        auto msg = cursor->get_message();
         /* Override the message type if the user asks for it */
         if (forced_repmemo != NULL)
         {

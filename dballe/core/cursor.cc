@@ -50,8 +50,7 @@ struct EmptyCursorSummary : public EmptyCursor<impl::CursorSummary>
 
 struct EmptyCursorMessage : public EmptyCursor<impl::CursorMessage>
 {
-    const Message& get_message() const override { throw wreport::error_notfound("cannot retrieve a message from an empty result set"); }
-    std::unique_ptr<Message> detach_message() override { throw wreport::error_notfound("cannot retrieve a message from an empty result set"); }
+    std::shared_ptr<Message> get_message() const override { throw wreport::error_notfound("cannot retrieve a message from an empty result set"); }
 };
 
 }
