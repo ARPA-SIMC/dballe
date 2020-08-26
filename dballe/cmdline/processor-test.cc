@@ -63,7 +63,7 @@ add_method("parse_index", [] {
 
 add_method("parse_json", [] {
     struct TestAction : public Action {
-        std::vector<std::unique_ptr<dballe::Message>> messages;
+        std::vector<std::shared_ptr<dballe::Message>> messages;
 
         virtual bool operator()(const Item& item) {
             for (auto& m: *(item.msgs)) {
