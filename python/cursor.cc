@@ -828,10 +828,10 @@ For example::
             ensure_valid_cursor(self);
             if (self->cur->next())
             {
-                std::unique_ptr<Message> msg = self->cur->detach_message();
+                auto msg = self->cur->get_message();
                 Py_XDECREF(self->curmsg);
                 self->curmsg = nullptr;
-                self->curmsg = (PyObject*)message_create(std::move(msg));
+                self->curmsg = (PyObject*)message_create(msg);
                 Py_INCREF(self);
                 return (PyObject*)self;
             } else {

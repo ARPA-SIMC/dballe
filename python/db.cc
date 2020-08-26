@@ -773,7 +773,7 @@ struct export_to_file : MethKwargs<export_to_file<Impl>, Impl>
                 while (cursor->next())
                 {
                     impl::Messages msgs;
-                    msgs.emplace_back(cursor->detach_message());
+                    msgs.emplace_back(cursor->get_message());
                     out->write(exporter->to_binary(msgs));
                 }
                 gil.lock();
@@ -789,7 +789,7 @@ struct export_to_file : MethKwargs<export_to_file<Impl>, Impl>
                 while (cursor->next())
                 {
                     impl::Messages msgs;
-                    msgs.emplace_back(cursor->detach_message());
+                    msgs.emplace_back(cursor->get_message());
                     std::string encoded = exporter->to_binary(msgs);
                     res = pyo_unique_ptr(PyObject_CallMethod(file, (char*)"write", (char*)"y#", encoded.data(), (int)encoded.size()));
                     if (!res)

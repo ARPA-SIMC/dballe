@@ -22,6 +22,12 @@
 
 # New in version 8.14
 
+* C++ api changed: `CursorMessage::get_message` has been unified with
+  `CursorMessage::detach_message` and now returns a `std::shared_ptr<Message>`.
+  `CursorMessage::detach_message` has been removed. (#171)
+
+# New in version 8.14
+
 * Added `dbadb import --domain-errors={unset|clamp}`. `clamp` is only available
   when compiling with wreport from version 3.28. (#241)
 * Fixed querying by datetime extremes in explorer (#242)
