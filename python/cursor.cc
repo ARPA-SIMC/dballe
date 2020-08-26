@@ -777,12 +777,7 @@ struct message : Getter<message<Impl>, Impl>
     {
         try {
             ensure_valid_iterating_cursor(self);
-            if (self->curmsg)
-            {
-                Py_INCREF(self->curmsg);
-                return self->curmsg;
-            }
-            Py_RETURN_NONE;
+            return (PyObject*)message_create(self->cur->get_message());
         } DBALLE_CATCH_RETURN_PYO
     }
 };
@@ -813,32 +808,6 @@ For example::
 
     GetSetters<remaining<Impl>, message<Impl>, query<Impl>> getsetters;
     Methods<MethGenericEnter<Impl>, __exit__<Impl>, enqi<Impl>, enqd<Impl>, enqs<Impl>, enqf<Impl>> methods;
-
-    static void _dealloc(Impl* self)
-    {
-        self->cur.~shared_ptr();
-        Py_XDECREF(self->curmsg);
-        Py_TYPE(self)->tp_free(self);
-    }
-
-    static PyObject* _iternext(Impl* self)
-    {
-        try {
-            ensure_valid_cursor(self);
-            if (self->cur->next())
-            {
-                auto msg = self->cur->get_message();
-                Py_XDECREF(self->curmsg);
-                self->curmsg = nullptr;
-                self->curmsg = (PyObject*)message_create(msg);
-                Py_INCREF(self);
-                return (PyObject*)self;
-            } else {
-                PyErr_SetNone(PyExc_StopIteration);
-                return nullptr;
-            }
-        } DBALLE_CATCH_RETURN_PYO
-    }
 };
 
 
@@ -925,7 +894,6 @@ dpy_CursorMessage* cursor_create(std::shared_ptr<dballe::CursorMessage> cur)
 {
     py_unique_ptr<dpy_CursorMessage> result(throw_ifnull(PyObject_New(dpy_CursorMessage, dpy_CursorMessage_Type)));
     new (&(result->cur)) std::shared_ptr<CursorMessage>(cur);
-    result->curmsg = nullptr;
     return result.release();
 }
 
