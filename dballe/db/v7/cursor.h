@@ -262,12 +262,12 @@ struct Base : public ImplTraits<Impl>::Parent
     unsigned test_iterate(FILE* dump=0) override;
 
     /// Downcast a unique_ptr pointer
-    inline static std::unique_ptr<Impl> downcast(std::unique_ptr<Interface> c)
+    inline static std::shared_ptr<Impl> downcast(std::shared_ptr<Interface> c)
     {
-        Impl* res = dynamic_cast<Impl*>(c.get());
-        if (!res) throw std::runtime_error("Attempted to downcast the wrong kind of cursor");
-        c.release();
-        return std::unique_ptr<Impl>(res);
+        auto res = std::dynamic_pointer_cast<Impl>(c);
+        if (!res)
+            throw std::runtime_error("Attempted to downcast the wrong kind of cursor");
+        return res;
     }
 };
 

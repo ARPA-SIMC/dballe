@@ -53,9 +53,9 @@ struct CursorTraits {};
 template<>
 struct CursorTraits<impl::msg::CursorStationData>
 {
-    static inline std::unique_ptr<impl::msg::CursorStationData> query(const dballe::impl::Message& msg, const core::Query& query)
+    static inline std::shared_ptr<impl::msg::CursorStationData> query(const dballe::impl::Message& msg, const core::Query& query)
     {
-        return std::unique_ptr<impl::msg::CursorStationData>(dynamic_cast<impl::msg::CursorStationData*>(msg.query_station_data(query).release()));
+        return std::dynamic_pointer_cast<impl::msg::CursorStationData>(msg.query_station_data(query));
     }
     /*
     static inline void attr_insert(db::Transaction& tr, int id, const Values& values)
@@ -68,9 +68,9 @@ struct CursorTraits<impl::msg::CursorStationData>
 template<>
 struct CursorTraits<impl::msg::CursorData>
 {
-    static inline std::unique_ptr<impl::msg::CursorData> query(const dballe::impl::Message& msg, const core::Query& query)
+    static inline std::shared_ptr<impl::msg::CursorData> query(const dballe::impl::Message& msg, const core::Query& query)
     {
-        return std::unique_ptr<impl::msg::CursorData>(dynamic_cast<impl::msg::CursorData*>(msg.query_data(query).release()));
+        return std::dynamic_pointer_cast<impl::msg::CursorData>(msg.query_data(query));
     }
     /*
     static inline void attr_insert(db::Transaction& tr, int id, const Values& values)

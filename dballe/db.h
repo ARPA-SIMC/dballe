@@ -173,7 +173,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<CursorStation> query_stations(const Query& query) = 0;
+    virtual std::shared_ptr<CursorStation> query_stations(const Query& query) = 0;
 
     /**
      * Query the station variables in the database.
@@ -186,7 +186,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<CursorStationData> query_station_data(const Query& query) = 0;
+    virtual std::shared_ptr<CursorStationData> query_station_data(const Query& query) = 0;
 
     /**
      * Query the database.
@@ -199,7 +199,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<CursorData> query_data(const Query& query) = 0;
+    virtual std::shared_ptr<CursorData> query_data(const Query& query) = 0;
 
     /**
      * Query a summary of what the result would be for a query.
@@ -209,7 +209,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<CursorSummary> query_summary(const Query& query) = 0;
+    virtual std::shared_ptr<CursorSummary> query_summary(const Query& query) = 0;
 
     /**
      * Query the database returning the matching data as Message objects.
@@ -219,7 +219,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<CursorMessage> query_messages(const Query& query) = 0;
+    virtual std::shared_ptr<CursorMessage> query_messages(const Query& query) = 0;
 
     /**
      * Remove all data from the database.
@@ -322,7 +322,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<CursorStation> query_stations(const Query& query);
+    virtual std::shared_ptr<CursorStation> query_stations(const Query& query);
 
     /**
      * Query the station variables in the database.
@@ -335,7 +335,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<CursorStationData> query_station_data(const Query& query);
+    virtual std::shared_ptr<CursorStationData> query_station_data(const Query& query);
 
     /**
      * Query the database.
@@ -348,7 +348,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<CursorData> query_data(const Query& query);
+    virtual std::shared_ptr<CursorData> query_data(const Query& query);
 
     /**
      * Query a summary of what the result would be for a query.
@@ -358,7 +358,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<CursorSummary> query_summary(const Query& query);
+    virtual std::shared_ptr<CursorSummary> query_summary(const Query& query);
 
     /**
      * Query the database returning the matching data as Message objects.
@@ -368,7 +368,7 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::unique_ptr<CursorMessage> query_messages(const Query& query);
+    virtual std::shared_ptr<CursorMessage> query_messages(const Query& query);
 
     /**
      * Remove all data from the database.

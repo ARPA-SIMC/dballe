@@ -77,7 +77,7 @@ this->add_method("repinfo", [](Fixture& f) {
 this->add_method("simple", [](Fixture& f) {
     // Test remove_all
     f.tr->remove_all();
-    std::unique_ptr<Cursor> cur = f.tr->query_data(core::Query());
+    auto cur = f.tr->query_data(core::Query());
     wassert(actual(cur->remaining()) == 0);
 
     // Check that it is idempotent

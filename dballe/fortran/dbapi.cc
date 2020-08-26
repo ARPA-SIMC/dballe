@@ -125,7 +125,7 @@ struct CursorTraits {};
 template<>
 struct CursorTraits<db::v7::cursor::StationData>
 {
-    static inline std::unique_ptr<db::v7::cursor::StationData> query(db::Transaction& tr, const core::Query& query)
+    static inline std::shared_ptr<db::v7::cursor::StationData> query(db::Transaction& tr, const core::Query& query)
     {
         return db::v7::cursor::StationData::downcast(tr.query_station_data(query));
     }
@@ -142,7 +142,7 @@ struct CursorTraits<db::v7::cursor::StationData>
 template<>
 struct CursorTraits<db::v7::cursor::Data>
 {
-    static inline std::unique_ptr<db::v7::cursor::Data> query(db::Transaction& tr, const core::Query& query)
+    static inline std::shared_ptr<db::v7::cursor::Data> query(db::Transaction& tr, const core::Query& query)
     {
         return db::v7::cursor::Data::downcast(tr.query_data(query));
     }

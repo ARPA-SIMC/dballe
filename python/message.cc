@@ -241,7 +241,7 @@ struct query_stations : MethQuery<query_stations>
         ReleaseGIL gil;
         auto res = self->message->query_stations(query);
         gil.lock();
-        return (PyObject*)cursor_create(impl::CursorStation::downcast(std::move(res)));
+        return (PyObject*)cursor_create(impl::CursorStation::downcast(res));
     }
 };
 
@@ -258,7 +258,7 @@ struct query_station_data : MethQuery<query_station_data>
         ReleaseGIL gil;
         auto res = self->message->query_station_data(query);
         gil.lock();
-        return (PyObject*)cursor_create(impl::CursorStationData::downcast(std::move(res)));
+        return (PyObject*)cursor_create(impl::CursorStationData::downcast(res));
     }
 };
 

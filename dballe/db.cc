@@ -125,35 +125,35 @@ std::shared_ptr<DB> DB::connect(const DBConnectOptions& opts)
     }
 }
 
-std::unique_ptr<CursorStation> DB::query_stations(const Query& query)
+std::shared_ptr<CursorStation> DB::query_stations(const Query& query)
 {
     auto t = transaction();
     auto res = t->query_stations(query);
     return res;
 }
 
-std::unique_ptr<CursorStationData> DB::query_station_data(const Query& query)
+std::shared_ptr<CursorStationData> DB::query_station_data(const Query& query)
 {
     auto t = transaction();
     auto res = t->query_station_data(query);
     return res;
 }
 
-std::unique_ptr<CursorData> DB::query_data(const Query& query)
+std::shared_ptr<CursorData> DB::query_data(const Query& query)
 {
     auto t = transaction();
     auto res = t->query_data(query);
     return res;
 }
 
-std::unique_ptr<CursorSummary> DB::query_summary(const Query& query)
+std::shared_ptr<CursorSummary> DB::query_summary(const Query& query)
 {
     auto t = transaction();
     auto res = t->query_summary(query);
     return res;
 }
 
-std::unique_ptr<CursorMessage> DB::query_messages(const Query& query)
+std::shared_ptr<CursorMessage> DB::query_messages(const Query& query)
 {
     auto t = transaction();
     auto res = t->query_messages(query);
