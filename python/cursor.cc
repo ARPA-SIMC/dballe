@@ -465,8 +465,7 @@ struct __exit__ : MethVarargs<__exit__<Impl>, Impl>
 
         try {
             ReleaseGIL gil;
-            delete self->cur;
-            self->cur = nullptr;
+            self->cur.reset();
         } DBALLE_CATCH_RETURN_PYO
         Py_RETURN_NONE;
     }
@@ -480,7 +479,7 @@ struct DefinitionBase : public Type<Definition, Impl>
 
     static void _dealloc(Impl* self)
     {
-        delete self->cur;
+        self->cur.~shared_ptr();
         Py_TYPE(self)->tp_free(self);
     }
 
@@ -817,7 +816,7 @@ For example::
 
     static void _dealloc(Impl* self)
     {
-        delete self->cur;
+        self->cur.~shared_ptr();
         Py_XDECREF(self->curmsg);
         Py_TYPE(self)->tp_free(self);
     }
@@ -859,73 +858,73 @@ DefinitionMessage*           definition_message = nullptr;
 namespace dballe {
 namespace python {
 
-dpy_CursorStation* cursor_create(std::unique_ptr<impl::CursorStation> cur)
+dpy_CursorStation* cursor_create(std::shared_ptr<impl::CursorStation> cur)
 {
     py_unique_ptr<dpy_CursorStation> result(throw_ifnull(PyObject_New(dpy_CursorStation, dpy_CursorStation_Type)));
-    result->cur = cur.release();
+    new (&(result->cur)) std::shared_ptr<CursorStation>(cur);
     return result.release();
 }
 
-dpy_CursorStationDB* cursor_create(std::unique_ptr<db::v7::cursor::Stations> cur)
+dpy_CursorStationDB* cursor_create(std::shared_ptr<db::v7::cursor::Stations> cur)
 {
     py_unique_ptr<dpy_CursorStationDB> result(throw_ifnull(PyObject_New(dpy_CursorStationDB, dpy_CursorStationDB_Type)));
-    result->cur = cur.release();
+    new (&(result->cur)) std::shared_ptr<CursorStation>(cur);
     return result.release();
 }
 
-dpy_CursorStationData* cursor_create(std::unique_ptr<impl::CursorStationData> cur)
+dpy_CursorStationData* cursor_create(std::shared_ptr<impl::CursorStationData> cur)
 {
     py_unique_ptr<dpy_CursorStationData> result(throw_ifnull(PyObject_New(dpy_CursorStationData, dpy_CursorStationData_Type)));
-    result->cur = cur.release();
+    new (&(result->cur)) std::shared_ptr<CursorStationData>(cur);
     return result.release();
 }
 
-dpy_CursorStationDataDB* cursor_create(std::unique_ptr<db::v7::cursor::StationData> cur)
+dpy_CursorStationDataDB* cursor_create(std::shared_ptr<db::v7::cursor::StationData> cur)
 {
     py_unique_ptr<dpy_CursorStationDataDB> result(throw_ifnull(PyObject_New(dpy_CursorStationDataDB, dpy_CursorStationDataDB_Type)));
-    result->cur = cur.release();
+    new (&(result->cur)) std::shared_ptr<CursorStationData>(cur);
     return result.release();
 }
 
-dpy_CursorData* cursor_create(std::unique_ptr<impl::CursorData> cur)
+dpy_CursorData* cursor_create(std::shared_ptr<impl::CursorData> cur)
 {
     py_unique_ptr<dpy_CursorData> result(throw_ifnull(PyObject_New(dpy_CursorData, dpy_CursorData_Type)));
-    result->cur = cur.release();
+    new (&(result->cur)) std::shared_ptr<CursorData>(cur);
     return result.release();
 }
 
-dpy_CursorDataDB* cursor_create(std::unique_ptr<db::v7::cursor::Data> cur)
+dpy_CursorDataDB* cursor_create(std::shared_ptr<db::v7::cursor::Data> cur)
 {
     py_unique_ptr<dpy_CursorDataDB> result(throw_ifnull(PyObject_New(dpy_CursorDataDB, dpy_CursorDataDB_Type)));
-    result->cur = cur.release();
+    new (&(result->cur)) std::shared_ptr<CursorData>(cur);
     return result.release();
 }
 
-dpy_CursorSummaryDB* cursor_create(std::unique_ptr<db::v7::cursor::Summary> cur)
+dpy_CursorSummaryDB* cursor_create(std::shared_ptr<db::v7::cursor::Summary> cur)
 {
     py_unique_ptr<dpy_CursorSummaryDB> result(throw_ifnull(PyObject_New(dpy_CursorSummaryDB, dpy_CursorSummaryDB_Type)));
-    result->cur = cur.release();
+    new (&(result->cur)) std::shared_ptr<CursorSummary>(cur);
     return result.release();
 }
 
-dpy_CursorSummarySummary* cursor_create(std::unique_ptr<db::summary::Cursor<Station>> cur)
+dpy_CursorSummarySummary* cursor_create(std::shared_ptr<db::summary::Cursor<Station>> cur)
 {
     py_unique_ptr<dpy_CursorSummarySummary> result(throw_ifnull(PyObject_New(dpy_CursorSummarySummary, dpy_CursorSummarySummary_Type)));
-    result->cur = cur.release();
+    new (&(result->cur)) std::shared_ptr<CursorSummary>(cur);
     return result.release();
 }
 
-dpy_CursorSummaryDBSummary* cursor_create(std::unique_ptr<db::summary::Cursor<DBStation>> cur)
+dpy_CursorSummaryDBSummary* cursor_create(std::shared_ptr<db::summary::Cursor<DBStation>> cur)
 {
     py_unique_ptr<dpy_CursorSummaryDBSummary> result(throw_ifnull(PyObject_New(dpy_CursorSummaryDBSummary, dpy_CursorSummaryDBSummary_Type)));
-    result->cur = cur.release();
+    new (&(result->cur)) std::shared_ptr<CursorSummary>(cur);
     return result.release();
 }
 
-dpy_CursorMessage* cursor_create(std::unique_ptr<dballe::CursorMessage> cur)
+dpy_CursorMessage* cursor_create(std::shared_ptr<dballe::CursorMessage> cur)
 {
     py_unique_ptr<dpy_CursorMessage> result(throw_ifnull(PyObject_New(dpy_CursorMessage, dpy_CursorMessage_Type)));
-    result->cur = impl::CursorMessage::downcast(std::move(cur)).release();
+    new (&(result->cur)) std::shared_ptr<CursorMessage>(cur);
     result->curmsg = nullptr;
     return result.release();
 }
