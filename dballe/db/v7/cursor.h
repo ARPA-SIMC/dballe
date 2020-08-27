@@ -155,6 +155,7 @@ struct Base : public ImplTraits<Impl>::Parent
     {
         at_start = false;
         results.clear();
+        tr.reset();
     }
 
     dballe::DBStation get_station() const override { return row().station; }
