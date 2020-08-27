@@ -117,14 +117,12 @@ struct StationRows : public Rows<StationRow>
     using Rows::Rows;
     const DBValues& values() const;
     void load(Tracer<>& trc, const StationQueryBuilder& qb);
-    void enq(impl::Enq& enq) const;
 };
 
 struct StationDataRows : public Rows<StationDataRow>
 {
     using Rows::Rows;
     void load(Tracer<>& trc, const DataQueryBuilder& qb);
-    void enq(impl::Enq& enq) const;
 };
 
 template<typename Row>
@@ -159,7 +157,6 @@ struct LevTrRows : public Rows<Row>
 struct BaseDataRows : public LevTrRows<DataRow>
 {
     using LevTrRows::LevTrRows;
-    void enq(impl::Enq& enq) const;
 };
 
 struct DataRows : public BaseDataRows
@@ -179,7 +176,6 @@ struct SummaryRows : public LevTrRows<SummaryRow>
 {
     using LevTrRows::LevTrRows;
     void load(Tracer<>& trc, const SummaryQueryBuilder& qb);
-    void enq(impl::Enq& enq) const;
 };
 
 
@@ -252,8 +248,6 @@ struct Base : public ImplTraits<Impl>::Parent
 
     dballe::DBStation get_station() const override { return rows->station; }
 
-    void enq(impl::Enq& enq) const override { return rows.enq(enq); }
-
     /**
      * Iterate the cursor until the end, returning the number of items.
      *
@@ -269,6 +263,9 @@ struct Base : public ImplTraits<Impl>::Parent
             throw std::runtime_error("Attempted to downcast the wrong kind of cursor");
         return res;
     }
+
+protected:
+    const Row& row() const { return rows.row(); }
 };
 
 extern template class Base<Stations>;
@@ -284,6 +281,8 @@ struct Stations : public Base<Stations>
     DBValues get_values() const override;
 
     void remove() override;
+    void enq(impl::Enq& enq) const override;
+
 };
 
 /// CursorStationData implementation
@@ -298,6 +297,7 @@ struct StationData : public Base<StationData>
     int attr_reference_id() const override { return rows->value.data_id; }
     void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read) override;
     void remove() override;
+    void enq(impl::Enq& enq) const override;
 };
 
 /// CursorData implementation
@@ -318,6 +318,7 @@ struct Data : public Base<Data>
 
     void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read) override;
     void remove() override;
+    void enq(impl::Enq& enq) const override;
 };
 
 /// CursorSummary implementation
@@ -334,6 +335,7 @@ struct Summary : public Base<Summary>
     wreport::Varcode get_varcode() const override { return rows->code; }
     size_t get_count() const override { return rows->count; }
     void remove() override;
+    void enq(impl::Enq& enq) const override;
 };
 
 
