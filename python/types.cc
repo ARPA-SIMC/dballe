@@ -924,7 +924,7 @@ DataPtr::DataPtr(PyObject* from_python)
         dpy_CursorStationDataDB* cur = (dpy_CursorStationDataDB*)from_python;
         data->station = cur->cur->get_station();
         data->station.id = MISSING_INT;
-        data->values.set(*cur->cur->rows->value.get());
+        data->values.set(*cur->cur->row().value.get());
         return;
     }
 
@@ -937,7 +937,7 @@ DataPtr::DataPtr(PyObject* from_python)
         data->datetime = cur->cur->get_datetime();
         data->level = cur->cur->get_level();
         data->trange = cur->cur->get_trange();
-        data->values.set(*cur->cur->rows->value.get());
+        data->values.set(*cur->cur->row().value.get());
         return;
     }
 
