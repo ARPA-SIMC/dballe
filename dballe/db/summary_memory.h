@@ -57,7 +57,7 @@ public:
      *   The cursor to use to iterate over the results. The results are the
      *   same as DB::query_summary.
      */
-    std::unique_ptr<dballe::CursorSummary> query_summary(const Query& query) const override;
+    std::shared_ptr<dballe::CursorSummary> query_summary(const Query& query) const override;
 
     bool iter(std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange&, size_t)>) const override;
     bool iter_filtered(const dballe::Query& query, std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange&, size_t)>) const override;

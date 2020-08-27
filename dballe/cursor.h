@@ -12,7 +12,7 @@ namespace dballe {
 /**
  * Base class for cursors that iterate over DB query results
  */
-class Cursor
+class Cursor : public std::enable_shared_from_this<Cursor>
 {
 public:
     virtual ~Cursor();
