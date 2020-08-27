@@ -23,7 +23,7 @@ void Stations::enq(impl::Enq& enq) const
     const auto len = enq.len;
 
     switch (key) { // mklookup
-        case "priority":    enq.set_int(rows.get_priority());
+        case "priority":    enq.set_int(get_priority());
         case "rep_memo":    enq.set_string(row().station.report);
         case "report":      enq.set_string(row().station.report);
         case "ana_id":      enq.set_dballe_int(row().station.id);
@@ -50,7 +50,7 @@ void StationData::enq(impl::Enq& enq) const
     const auto len = enq.len;
 
     switch (key) { // mklookup
-        case "priority":    enq.set_int(rows.get_priority());
+        case "priority":    enq.set_int(get_priority());
         case "rep_memo":    enq.set_string(row().station.report);
         case "report":      enq.set_string(row().station.report);
         case "ana_id":      enq.set_dballe_int(row().station.id);
@@ -80,7 +80,7 @@ void Data::enq(impl::Enq& enq) const
     const auto len = enq.len;
 
     switch (key) { // mklookup
-        case "priority":    enq.set_int(rows.get_priority());
+        case "priority":    enq.set_int(get_priority());
         case "rep_memo":    enq.set_string(row().station.report);
         case "report":      enq.set_string(row().station.report);
         case "ana_id":      enq.set_dballe_int(row().station.id);
@@ -124,7 +124,7 @@ void Summary::enq(impl::Enq& enq) const
     const auto len = enq.len;
 
     switch (key) { // mklookup
-        case "priority":    enq.set_int(rows.get_priority());
+        case "priority":    enq.set_int(get_priority());
         case "rep_memo":    enq.set_string(row().station.report);
         case "report":      enq.set_string(row().station.report);
         case "ana_id":      enq.set_dballe_int(row().station.id);
