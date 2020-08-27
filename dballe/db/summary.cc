@@ -27,9 +27,9 @@ BaseSummary<Station>::~BaseSummary()
 }
 
 template<typename Station>
-std::unique_ptr<dballe::CursorSummary> BaseSummary<Station>::query_summary(const Query& query) const
+std::shared_ptr<dballe::CursorSummary> BaseSummary<Station>::query_summary(const Query& query) const
 {
-    return std::unique_ptr<dballe::CursorSummary>(new summary::Cursor<Station>(*this, query));
+    return std::make_shared<summary::Cursor<Station>>(*this, query);
 }
 
 template<typename Station>

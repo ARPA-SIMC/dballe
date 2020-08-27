@@ -167,7 +167,6 @@ struct Base : public ImplTraits<Impl>::Parent
      */
     unsigned test_iterate(FILE* dump=0) override;
 
-    /// Downcast a unique_ptr pointer
     inline static std::shared_ptr<Impl> downcast(std::shared_ptr<Interface> c)
     {
         auto res = std::dynamic_pointer_cast<Impl>(c);
@@ -201,7 +200,7 @@ protected:
     const DBValues& values() const;
     void load(Tracer<>& trc, const StationQueryBuilder& qb);
 
-    friend std::unique_ptr<dballe::CursorStation> run_station_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool explain);
+    friend std::shared_ptr<dballe::CursorStation> run_station_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool explain);
 };
 
 /// CursorStationData implementation
@@ -221,7 +220,7 @@ struct StationData : public Base<StationData>
 protected:
     void load(Tracer<>& trc, const DataQueryBuilder& qb);
 
-    friend std::unique_ptr<dballe::CursorStationData> run_station_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool explain);
+    friend std::shared_ptr<dballe::CursorStationData> run_station_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool explain);
 };
 
 template<typename Impl>
@@ -286,7 +285,7 @@ public:
     void enq(impl::Enq& enq) const override;
 
 protected:
-    friend std::unique_ptr<dballe::CursorData> run_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool explain);
+    friend std::shared_ptr<dballe::CursorData> run_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool explain);
 };
 
 /// CursorSummary implementation
@@ -305,14 +304,14 @@ struct Summary : public LevTrBase<Summary>
 protected:
     void load(Tracer<>& trc, const SummaryQueryBuilder& qb);
 
-    friend std::unique_ptr<dballe::CursorSummary> run_summary_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool explain);
+    friend std::shared_ptr<dballe::CursorSummary> run_summary_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool explain);
 };
 
 
-std::unique_ptr<dballe::CursorStation> run_station_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool explain);
-std::unique_ptr<dballe::CursorStationData> run_station_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool explain);
-std::unique_ptr<dballe::CursorData> run_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool explain);
-std::unique_ptr<dballe::CursorSummary> run_summary_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool explain);
+std::shared_ptr<dballe::CursorStation> run_station_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool explain);
+std::shared_ptr<dballe::CursorStationData> run_station_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool explain);
+std::shared_ptr<dballe::CursorData> run_data_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool explain);
+std::shared_ptr<dballe::CursorSummary> run_summary_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool explain);
 void run_delete_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& query, bool station_vars, bool explain);
 
 }
