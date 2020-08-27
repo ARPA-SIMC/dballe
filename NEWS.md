@@ -31,6 +31,9 @@
   should always be used as `std::shared_ptr` (#171)
 * C++ API changed: dballe::Cursor now inherits `std::shared_from_this` and
   should always be used as `std::shared_ptr` (#171)
+* Now a cursor for a dballe transaction is invalidated when the transaction
+  commits/rolls back. This avoids the need for a context manager to handle the
+  cursor lifetime in the Python API (#171)
 
 # New in version 8.14
 
