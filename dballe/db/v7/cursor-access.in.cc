@@ -17,7 +17,7 @@ namespace cursor {
 
 void Stations::enq(impl::Enq& enq) const
 {
-    if (enq.search_b_values(rows.values())) return;
+    if (enq.search_b_values(values())) return;
 
     const auto key = enq.key;
     const auto len = enq.len;
@@ -33,7 +33,7 @@ void Stations::enq(impl::Enq& enq) const
         case "lon":         enq.set_lon(row().station.coords.lon);
         case "coords":      enq.set_coords(row().station.coords);
         case "station":     enq.set_station(row().station);
-        default:            enq.search_alias_values(rows.values());
+        default:            enq.search_alias_values(values());
     }
 }
 
