@@ -15,15 +15,15 @@ namespace cursor {
  * Stations
  */
 
-void StationRows::enq(impl::Enq& enq) const
+void Stations::enq(impl::Enq& enq) const
 {
-    if (enq.search_b_values(values())) return;
+    if (enq.search_b_values(rows.values())) return;
 
     const auto key = enq.key;
     const auto len = enq.len;
 
     switch (key) { // mklookup
-        case "priority":    enq.set_int(get_priority());
+        case "priority":    enq.set_int(rows.get_priority());
         case "rep_memo":    enq.set_string(row().station.report);
         case "report":      enq.set_string(row().station.report);
         case "ana_id":      enq.set_dballe_int(row().station.id);
@@ -33,7 +33,7 @@ void StationRows::enq(impl::Enq& enq) const
         case "lon":         enq.set_lon(row().station.coords.lon);
         case "coords":      enq.set_coords(row().station.coords);
         case "station":     enq.set_station(row().station);
-        default:            enq.search_alias_values(values());
+        default:            enq.search_alias_values(rows.values());
     }
 }
 
@@ -42,7 +42,7 @@ void StationRows::enq(impl::Enq& enq) const
  * StationData
  */
 
-void StationDataRows::enq(impl::Enq& enq) const
+void StationData::enq(impl::Enq& enq) const
 {
     if (enq.search_b_value(row().value)) return;
 
@@ -50,7 +50,7 @@ void StationDataRows::enq(impl::Enq& enq) const
     const auto len = enq.len;
 
     switch (key) { // mklookup
-        case "priority":    enq.set_int(get_priority());
+        case "priority":    enq.set_int(rows.get_priority());
         case "rep_memo":    enq.set_string(row().station.report);
         case "report":      enq.set_string(row().station.report);
         case "ana_id":      enq.set_dballe_int(row().station.id);
@@ -72,7 +72,7 @@ void StationDataRows::enq(impl::Enq& enq) const
  * Data
  */
 
-void BaseDataRows::enq(impl::Enq& enq) const
+void Data::enq(impl::Enq& enq) const
 {
     if (enq.search_b_value(row().value)) return;
 
@@ -80,7 +80,7 @@ void BaseDataRows::enq(impl::Enq& enq) const
     const auto len = enq.len;
 
     switch (key) { // mklookup
-        case "priority":    enq.set_int(get_priority());
+        case "priority":    enq.set_int(rows.get_priority());
         case "rep_memo":    enq.set_string(row().station.report);
         case "report":      enq.set_string(row().station.report);
         case "ana_id":      enq.set_dballe_int(row().station.id);
@@ -97,15 +97,15 @@ void BaseDataRows::enq(impl::Enq& enq) const
         case "hour":        enq.set_int(row().datetime.hour);
         case "min":         enq.set_int(row().datetime.minute);
         case "sec":         enq.set_int(row().datetime.second);
-        case "level":       enq.set_level(get_levtr().level);
-        case "leveltype1":  enq.set_dballe_int(get_levtr().level.ltype1);
-        case "l1":          enq.set_dballe_int(get_levtr().level.l1);
-        case "leveltype2":  enq.set_dballe_int(get_levtr().level.ltype2);
-        case "l2":          enq.set_dballe_int(get_levtr().level.l2);
-        case "trange":      enq.set_trange(get_levtr().trange);
-        case "pindicator":  enq.set_dballe_int(get_levtr().trange.pind);
-        case "p1":          enq.set_dballe_int(get_levtr().trange.p1);
-        case "p2":          enq.set_dballe_int(get_levtr().trange.p2);
+        case "level":       enq.set_level(rows.get_levtr().level);
+        case "leveltype1":  enq.set_dballe_int(rows.get_levtr().level.ltype1);
+        case "l1":          enq.set_dballe_int(rows.get_levtr().level.l1);
+        case "leveltype2":  enq.set_dballe_int(rows.get_levtr().level.ltype2);
+        case "l2":          enq.set_dballe_int(rows.get_levtr().level.l2);
+        case "trange":      enq.set_trange(rows.get_levtr().trange);
+        case "pindicator":  enq.set_dballe_int(rows.get_levtr().trange.pind);
+        case "p1":          enq.set_dballe_int(rows.get_levtr().trange.p1);
+        case "p2":          enq.set_dballe_int(rows.get_levtr().trange.p2);
         case "var":         enq.set_varcode(row().value.code());
         case "variable":    enq.set_var(row().value.get());
         case "attrs":       enq.set_attrs(row().value.get());
@@ -118,13 +118,13 @@ void BaseDataRows::enq(impl::Enq& enq) const
  * Summary
  */
 
-void SummaryRows::enq(impl::Enq& enq) const
+void Summary::enq(impl::Enq& enq) const
 {
     const auto key = enq.key;
     const auto len = enq.len;
 
     switch (key) { // mklookup
-        case "priority":    enq.set_int(get_priority());
+        case "priority":    enq.set_int(rows.get_priority());
         case "rep_memo":    enq.set_string(row().station.report);
         case "report":      enq.set_string(row().station.report);
         case "ana_id":      enq.set_dballe_int(row().station.id);
@@ -148,15 +148,15 @@ void SummaryRows::enq(impl::Enq& enq) const
         case "minumin":     if (row().dtrange.is_missing()) return; else enq.set_int(row().dtrange.min.minute);
         case "secmax":      if (row().dtrange.is_missing()) return; else enq.set_int(row().dtrange.max.second);
         case "secmin":      if (row().dtrange.is_missing()) return; else enq.set_int(row().dtrange.min.second);
-        case "level":       enq.set_level(get_levtr().level);
-        case "leveltype1":  enq.set_dballe_int(get_levtr().level.ltype1);
-        case "l1":          enq.set_dballe_int(get_levtr().level.l1);
-        case "leveltype2":  enq.set_dballe_int(get_levtr().level.ltype2);
-        case "l2":          enq.set_dballe_int(get_levtr().level.l2);
-        case "trange":      enq.set_trange(get_levtr().trange);
-        case "pindicator":  enq.set_dballe_int(get_levtr().trange.pind);
-        case "p1":          enq.set_dballe_int(get_levtr().trange.p1);
-        case "p2":          enq.set_dballe_int(get_levtr().trange.p2);
+        case "level":       enq.set_level(rows.get_levtr().level);
+        case "leveltype1":  enq.set_dballe_int(rows.get_levtr().level.ltype1);
+        case "l1":          enq.set_dballe_int(rows.get_levtr().level.l1);
+        case "leveltype2":  enq.set_dballe_int(rows.get_levtr().level.ltype2);
+        case "l2":          enq.set_dballe_int(rows.get_levtr().level.l2);
+        case "trange":      enq.set_trange(rows.get_levtr().trange);
+        case "pindicator":  enq.set_dballe_int(rows.get_levtr().trange.pind);
+        case "p1":          enq.set_dballe_int(rows.get_levtr().trange.p1);
+        case "p2":          enq.set_dballe_int(rows.get_levtr().trange.p2);
         case "var":         enq.set_varcode(row().code);
         case "context_id":  enq.set_int(row().count);
         case "count":       enq.set_int(row().count);
