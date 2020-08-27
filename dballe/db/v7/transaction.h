@@ -26,7 +26,11 @@ protected:
     /// Variable data
     v7::Data* m_data = nullptr;
 
+    /// Track active cursors to invalidate them on commit/rollback
+    std::vector<std::weak_ptr<dballe::Cursor>> tracked_cursors;
+
     void add_msg_to_batch(Tracer<>& trc, const Message& message, const dballe::DBImportOptions& opts);
+    void track_cursor(std::weak_ptr<dballe::Cursor> cursor);
 
 public:
     typedef v7::DB DB;
