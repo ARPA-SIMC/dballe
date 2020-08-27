@@ -128,29 +128,6 @@ template<typename Row>
 struct LevTrRows : public Rows<Row>
 {
     using Rows<Row>::Rows;
-
-    // Cached levtr for the current row
-    mutable const LevTrEntry* levtr = nullptr;
-
-    bool next()
-    {
-        levtr = nullptr;
-        return Rows<Row>::next();
-    }
-
-    void discard()
-    {
-        levtr = nullptr;
-        Rows<Row>::discard();
-    }
-
-    const LevTrEntry& get_levtr() const
-    {
-        if (levtr == nullptr)
-            // We prefetch levtr info for all IDs, so we do not need to hit the database here
-            levtr = &(this->tr->levtr().lookup_cache(this->results.front().id_levtr));
-        return *levtr;
-    }
 };
 
 struct BaseDataRows : public LevTrRows<DataRow>
@@ -301,8 +278,39 @@ struct StationData : public Base<StationData>
     void enq(impl::Enq& enq) const override;
 };
 
+template<typename Impl>
+struct LevTrBase : public Base<Impl>
+{
+protected:
+    // Cached levtr for the current row
+    mutable const LevTrEntry* levtr = nullptr;
+
+    const LevTrEntry& get_levtr() const
+    {
+        if (levtr == nullptr)
+            // We prefetch levtr info for all IDs, so we do not need to hit the database here
+            levtr = &(this->rows.tr->levtr().lookup_cache(this->rows.results.front().id_levtr));
+        return *levtr;
+    }
+
+public:
+    using Base<Impl>::Base;
+
+    bool next() override
+    {
+        levtr = nullptr;
+        return Base<Impl>::next();
+    }
+
+    void discard() override
+    {
+        levtr = nullptr;
+        Base<Impl>::discard();
+    }
+};
+
 /// CursorData implementation
-struct Data : public Base<Data>
+struct Data : public LevTrBase<Data>
 {
     bool with_attributes;
 
@@ -314,8 +322,8 @@ struct Data : public Base<Data>
     wreport::Varcode get_varcode() const override { return rows->value.code(); }
     wreport::Var get_var() const override { return *rows->value; }
     int attr_reference_id() const override { return rows->value.data_id; }
-    Level get_level() const override { return rows.get_levtr().level; }
-    Trange get_trange() const override { return rows.get_levtr().trange; }
+    Level get_level() const override { return get_levtr().level; }
+    Trange get_trange() const override { return get_levtr().trange; }
 
     void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read) override;
     void remove() override;
@@ -323,16 +331,16 @@ struct Data : public Base<Data>
 };
 
 /// CursorSummary implementation
-struct Summary : public Base<Summary>
+struct Summary : public LevTrBase<Summary>
 {
-    using Base<Summary>::Base;
+    using LevTrBase<Summary>::LevTrBase;
 
     DatetimeRange get_datetimerange() const override
     {
         return this->rows->dtrange;
     }
-    Level get_level() const override { return rows.get_levtr().level; }
-    Trange get_trange() const override { return rows.get_levtr().trange; }
+    Level get_level() const override { return get_levtr().level; }
+    Trange get_trange() const override { return get_levtr().trange; }
     wreport::Varcode get_varcode() const override { return rows->code; }
     size_t get_count() const override { return rows->count; }
     void remove() override;

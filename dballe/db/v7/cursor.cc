@@ -227,7 +227,7 @@ void StationData::remove()
 
 
 Data::Data(DataQueryBuilder& qb, bool with_attributes)
-    : Base(qb.tr), with_attributes(with_attributes) {}
+    : LevTrBase(qb.tr), with_attributes(with_attributes) {}
 
 void Data::query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read)
 {
@@ -250,7 +250,7 @@ void Summary::remove()
 {
     core::Query query;
     query.ana_id = rows->station.id;
-    auto levtr = rows.get_levtr();
+    const auto& levtr = get_levtr();
     query.level = levtr.level;
     query.trange = levtr.trange;
     query.varcodes.insert(rows->code);
