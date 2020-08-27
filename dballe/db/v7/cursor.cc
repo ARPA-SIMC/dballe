@@ -43,21 +43,20 @@ void StationRows::load(Tracer<>& trc, const StationQueryBuilder& qb)
         results.emplace_back(desc);
     });
     at_start = true;
-    cur = results.begin();
 }
 
 const DBValues& StationRows::values() const
 {
-    if (!cur->values.get())
+    if (!results.front().values.get())
     {
-        cur->values.reset(new DBValues);
+        results.front().values.reset(new DBValues);
         Tracer<> trc(tr->trc ? tr->trc->trace_add_station_vars() : nullptr);
         // FIXME: this could be made more efficient by querying all matching
         // station values, and merging rows during load, so it would only do
         // one query to the database
-        tr->station().add_station_vars(trc, cur->station.id, *cur->values);
+        tr->station().add_station_vars(trc, results.front().station.id, *results.front().values);
     }
-    return *cur->values;
+    return *results.front().values;
 }
 
 
@@ -68,7 +67,6 @@ void StationDataRows::load(Tracer<>& trc, const DataQueryBuilder& qb)
         results.emplace_back(station, id_data, std::move(var));
     });
     at_start = true;
-    cur = results.begin();
 }
 
 void DataRows::load(Tracer<>& trc, const DataQueryBuilder& qb)
@@ -80,7 +78,6 @@ void DataRows::load(Tracer<>& trc, const DataQueryBuilder& qb)
         ids.insert(id_levtr);
     });
     at_start = true;
-    cur = results.begin();
 
     tr->levtr().prefetch_ids(trc, ids);
 }
@@ -119,7 +116,6 @@ void DataRows::load_best(Tracer<>& trc, const DataQueryBuilder& qb)
             ids.insert(id_levtr);
     });
     at_start = true;
-    cur = results.begin();
 
     tr->levtr().prefetch_ids(trc, ids);
 }
@@ -133,7 +129,6 @@ void SummaryRows::load(Tracer<>& trc, const SummaryQueryBuilder& qb)
         ids.insert(id_levtr);
     });
     at_start = true;
-    cur = results.begin();
 
     tr->levtr().prefetch_ids(trc, ids);
 }
@@ -145,7 +140,7 @@ int Base<Impl>::remaining() const
     if (rows.at_start)
         return rows.results.size();
     else
-        return rows.results.end() - rows.cur - 1;
+        return rows.results.size() - 1;
 }
 
 template<typename Impl>

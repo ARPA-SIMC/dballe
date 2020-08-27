@@ -8,6 +8,7 @@
 #include <dballe/db/v7/levtr.h>
 #include <dballe/values.h>
 #include <memory>
+#include <deque>
 
 namespace dballe {
 namespace db {
@@ -82,33 +83,32 @@ struct Rows
     std::shared_ptr<v7::Transaction> tr;
 
     /// Storage for the raw database results
-    std::vector<Row> results;
-
-    /// Iterator to the current position in results
-    typename std::vector<Row>::const_iterator cur;
+    std::deque<Row> results;
 
     /// True if we are at the start of the iteration
     bool at_start = true;
 
     Rows(std::shared_ptr<v7::Transaction> tr) : tr(tr) {}
 
-    const Row* operator->() const { return &*cur; }
+    const Row& row() const { return results.front(); }
 
-    int get_priority() const { return tr->repinfo().get_priority(cur->station.report); }
+    const Row* operator->() const { return &results.front(); }
+
+    int get_priority() const { return tr->repinfo().get_priority(results.front().station.report); }
 
     bool next()
     {
         if (at_start)
             at_start = false;
-        else if (cur != results.end())
-            ++cur;
-        return cur != results.end();
+        else if (!results.empty())
+            results.pop_front();
+        return !results.empty();
     }
 
     void discard()
     {
         at_start = false;
-        cur = results.end();
+        results.clear();
     }
 };
 
@@ -151,7 +151,7 @@ struct LevTrRows : public Rows<Row>
     {
         if (levtr == nullptr)
             // We prefetch levtr info for all IDs, so we do not need to hit the database here
-            levtr = &(this->tr->levtr().lookup_cache(this->cur->id_levtr));
+            levtr = &(this->tr->levtr().lookup_cache(this->results.front().id_levtr));
         return *levtr;
     }
 };
@@ -246,7 +246,7 @@ struct Base : public ImplTraits<Impl>::Parent
     virtual ~Base() {}
 
     int remaining() const override;
-    bool has_value() const { return !rows.at_start && rows.cur != rows.results.end(); }
+    bool has_value() const { return !rows.at_start && !rows.results.empty(); }
     bool next() override { return rows.next(); }
     void discard() override;
 
