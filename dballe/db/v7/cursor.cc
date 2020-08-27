@@ -45,20 +45,6 @@ void StationRows::load(Tracer<>& trc, const StationQueryBuilder& qb)
     at_start = true;
 }
 
-const DBValues& StationRows::values() const
-{
-    if (!results.front().values.get())
-    {
-        results.front().values.reset(new DBValues);
-        Tracer<> trc(tr->trc ? tr->trc->trace_add_station_vars() : nullptr);
-        // FIXME: this could be made more efficient by querying all matching
-        // station values, and merging rows during load, so it would only do
-        // one query to the database
-        tr->station().add_station_vars(trc, results.front().station.id, *results.front().values);
-    }
-    return *results.front().values;
-}
-
 
 void StationDataRows::load(Tracer<>& trc, const DataQueryBuilder& qb)
 {
@@ -192,9 +178,23 @@ void SummaryRow::dump(FILE* out) const
             station.id, station.report.c_str(), station.coords.dlat(), station.coords.dlon(), station.ident.get(), id_levtr, WR_VAR_FXY(code));
 }
 
+const DBValues& Stations::values() const
+{
+    if (!rows.results.front().values.get())
+    {
+        rows.results.front().values.reset(new DBValues);
+        Tracer<> trc(rows.tr->trc ? rows.tr->trc->trace_add_station_vars() : nullptr);
+        // FIXME: this could be made more efficient by querying all matching
+        // station values, and merging rows during load, so it would only do
+        // one query to the database
+        rows.tr->station().add_station_vars(trc, rows.results.front().station.id, *rows.results.front().values);
+    }
+    return *rows.results.front().values;
+}
+
 DBValues Stations::get_values() const
 {
-    return rows.values();
+    return values();
 }
 
 void Stations::remove()

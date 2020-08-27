@@ -115,7 +115,6 @@ struct Rows
 struct StationRows : public Rows<StationRow>
 {
     using Rows::Rows;
-    const DBValues& values() const;
     void load(Tracer<>& trc, const StationQueryBuilder& qb);
 };
 
@@ -283,6 +282,8 @@ struct Stations : public Base<Stations>
     void remove() override;
     void enq(impl::Enq& enq) const override;
 
+protected:
+    const DBValues& values() const;
 };
 
 /// CursorStationData implementation
