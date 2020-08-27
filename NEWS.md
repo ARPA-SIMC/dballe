@@ -29,6 +29,8 @@
   to return and refer to cursors. (#171)
 * C++ API changed: dballe::Message now inherits `std::shared_from_this` and
   should always be used as `std::shared_ptr` (#171)
+* C++ API changed: dballe::Cursor now inherits `std::shared_from_this` and
+  should always be used as `std::shared_ptr` (#171)
 
 # New in version 8.14
 
