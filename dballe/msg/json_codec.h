@@ -20,7 +20,7 @@ public:
 
     Encoding encoding() const override { return Encoding::JSON; }
 
-    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<dballe::Message>)> dest) const override;
+    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::shared_ptr<dballe::Message>)> dest) const override;
 };
 
 

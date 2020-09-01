@@ -115,7 +115,7 @@ public:
      *   The function that consumes the decoded messages.
      * @returns true if it got to the end of decoding, false if dest returned false.
      */
-    virtual bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<Message>)> dest) const = 0;
+    virtual bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::shared_ptr<Message>)> dest) const = 0;
 
     /**
      * Instantiate an importer

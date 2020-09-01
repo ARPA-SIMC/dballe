@@ -174,7 +174,7 @@ struct PrendiloOperation : public Operation
     void run()
     {
         if (!api.msgs) api.msgs = new std::vector<std::shared_ptr<dballe::Message>>;
-        if (!api.wmsg) api.wmsg = new impl::Message;
+        if (!api.wmsg) api.wmsg = std::make_shared<impl::Message>();
 
         // Store record metainfo
         if (!api.input_data.station.report.empty())
@@ -299,9 +299,7 @@ MsgAPI::~MsgAPI()
 
 void MsgAPI::flushSubset()
 {
-    unique_ptr<Message> awmsg(wmsg);
-    wmsg = nullptr;
-    msgs->emplace_back(move(awmsg));
+    msgs->emplace_back(std::move(wmsg));
 }
 
 void MsgAPI::flushMessage()
