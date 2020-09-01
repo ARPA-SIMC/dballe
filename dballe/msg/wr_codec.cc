@@ -22,7 +22,7 @@ BufrImporter::BufrImporter(const dballe::ImporterOptions& opts)
     : WRImporter(opts) {}
 BufrImporter::~BufrImporter() {}
 
-bool BufrImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<dballe::Message>)> dest) const
+bool BufrImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::shared_ptr<dballe::Message>)> dest) const
 {
     unique_ptr<BufrBulletin> bulletin(BufrBulletin::decode(msg.data));
     return foreach_decoded_bulletin(*bulletin, dest);
@@ -32,7 +32,7 @@ CrexImporter::CrexImporter(const dballe::ImporterOptions& opts)
     : WRImporter(opts) {}
 CrexImporter::~CrexImporter() {}
 
-bool CrexImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<dballe::Message>)> dest) const
+bool CrexImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::shared_ptr<dballe::Message>)> dest) const
 {
     unique_ptr<CrexBulletin> bulletin(CrexBulletin::decode(msg.data));
     return foreach_decoded_bulletin(*bulletin, dest);
@@ -41,11 +41,11 @@ bool CrexImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(
 Messages WRImporter::from_bulletin(const wreport::Bulletin& msg) const
 {
     Messages res;
-    foreach_decoded_bulletin(msg, [&](unique_ptr<dballe::Message>&& m) { res.emplace_back(move(m)); return true; });
+    foreach_decoded_bulletin(msg, [&](std::shared_ptr<dballe::Message>&& m) { res.emplace_back(move(m)); return true; });
     return res;
 }
 
-bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<dballe::Message>)> dest) const
+bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::shared_ptr<dballe::Message>)> dest) const
 {
     auto lo1(options::local_override(options::var_silent_domain_errors, opts.domain_errors == ImporterOptions::DomainErrors::UNSET));
     auto lo2(options::local_override(options::var_clamp_domain_errors, opts.domain_errors == ImporterOptions::DomainErrors::CLAMP));
@@ -95,10 +95,10 @@ bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::fun
     MessageType type = importer->scanType(msg);
     for (unsigned i = 0; i < msg.subsets.size(); ++i)
     {
-        std::unique_ptr<Message> newmsg(new Message);
+        auto newmsg = std::make_shared<Message>();
         newmsg->type = type;
         importer->import(msg.subsets[i], *newmsg);
-        if (!dest(move(newmsg)))
+        if (!dest(newmsg))
             return false;
     }
     return true;

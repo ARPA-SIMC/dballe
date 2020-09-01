@@ -22,7 +22,7 @@ add_method("read", []() {
     auto importer = Importer::create(Encoding::JSON);
     unsigned count = 0;
     wassert_true(file->foreach([&](const BinaryMessage& bmsg) {
-        return importer->foreach_decoded(bmsg, [&](std::unique_ptr<Message> dest) {
+        return importer->foreach_decoded(bmsg, [&](std::shared_ptr<Message> dest) {
             ++count;
             return true;
         });
