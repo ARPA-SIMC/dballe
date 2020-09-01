@@ -42,7 +42,7 @@ public:
      *   The function that consumes the interpreted messages.
      * @returns true if it got to the end of decoding, false if dest returned false.
      */
-    bool foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<dballe::Message>)> dest) const;
+    bool foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::shared_ptr<dballe::Message>)> dest) const;
 };
 
 class BufrImporter : public WRImporter
@@ -53,7 +53,7 @@ public:
 
     Encoding encoding() const override { return Encoding::BUFR; }
 
-    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<dballe::Message>)> dest) const override;
+    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::shared_ptr<dballe::Message>)> dest) const override;
 };
 
 class CrexImporter : public WRImporter
@@ -64,7 +64,7 @@ public:
 
     Encoding encoding() const override { return Encoding::CREX; }
 
-    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<dballe::Message>)> dest) const override;
+    bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::shared_ptr<dballe::Message>)> dest) const override;
 };
 
 namespace wr {

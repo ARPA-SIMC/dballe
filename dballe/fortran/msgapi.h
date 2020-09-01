@@ -53,7 +53,7 @@ protected:
 
 public:
     /// Message subset being written
-    impl::Message* wmsg = nullptr;
+    std::shared_ptr<impl::Message> wmsg = nullptr;
     /// Message being written
     std::vector<std::shared_ptr<dballe::Message>>* msgs = nullptr;
 
