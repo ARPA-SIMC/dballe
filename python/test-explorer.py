@@ -243,14 +243,9 @@ class BaseExplorerTestMixin(DballeDBMixin):
             cur["yearmin"]
 
     def test_issue235(self):
-        explorer = dballe.Explorer()
-        with explorer.update() as updater:
-            with open(test_pathname("json/issue235.json"), "rt") as fd:
-                updater.add_json(fd.read())
-
-        query = {"var": "B12101"}
-        for cur in explorer.query_summary(query):
-            cur["datetimemin"]
+        with dballe.Explorer(test_pathname("json/issue235.json")) as explorer:
+            for cur in explorer.query_summary({"var": "B12101"}):
+                cur["datetimemax"]
 
 
 class ExplorerTestMixin(BaseExplorerTestMixin):
