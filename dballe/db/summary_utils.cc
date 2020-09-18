@@ -208,25 +208,19 @@ void StationEntries<Station>::add_filtered(const StationEntries& entries, const 
 {
     StationFilter<Station> filter(query);
 
-    if (filter.has_flt_station)
+    for (auto entry: entries)
     {
-        for (auto entry: entries)
-        {
-            if (!filter.matches_station(entry.station))
-                continue;
+        if (!filter.matches_station(entry.station))
+            continue;
 
-            iterator cur = this->find(entry.station);
-            if (cur != end())
-                cur->add_filtered(entry, query);
-            else {
-                StationEntry<Station> se(entry, query);
-                if (!se.empty())
-                    Parent::add(std::move(se));
-            }
+        iterator cur = this->find(entry.station);
+        if (cur != end())
+            cur->add_filtered(entry, query);
+        else {
+            StationEntry<Station> se(entry, query);
+            if (!se.empty())
+                Parent::add(std::move(se));
         }
-    } else {
-        for (auto entry: entries)
-            Parent::add(StationEntry<Station>(entry, query));
     }
 }
 
