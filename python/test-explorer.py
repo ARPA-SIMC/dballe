@@ -245,7 +245,7 @@ class BaseExplorerTestMixin(DballeDBMixin):
     def test_issue235(self):
         explorer = dballe.Explorer()
         with explorer.update() as updater:
-            with open(test_pathname("json/issue235.json"), "t") as fd:
+            with open(test_pathname("json/issue235.json"), "rt") as fd:
                 updater.add_json(fd.read())
 
         query = {"var": "B12101"}
