@@ -4,7 +4,7 @@
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 8.12
+Version: 8.13
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -315,6 +315,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Wed Sep 23 2020 Daniele Branchini <dbranchini@arpae.it> - 8.13-1
+- Always ignore stations without contexts (#235)
+
 * Mon Aug 10 2020 Emanuele Di Giacomo <edigiacomo@arpae.it> - 8.12-1
 - Improved documentation
 - Use BUFR unit in documentation (#222)

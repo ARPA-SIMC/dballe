@@ -1,5 +1,21 @@
+# New in version 8.13
+
+* Always ignore stations without contexts (#235)
+
+# New in version 8.12
+
+* Improved documentation
+* Use BUFR unit in documentation (#222)
+* dballe.Message.query_data() error when the BUFR has only station data (#213)
+* Fixed bugs in Explorer (#217, #218, #228)
+* attr_filter supports != operator (#224)
+* Fixed JSON datetime parser (#230)
+* Fixed segmentation fault querying min and max datetimes in
+* dballe.CursorSummarySummary (#232)
+
 # New in version 8.11
 
+* Fixed compilation error for gcc 10 (#211)
 * Fix errors after failed starting of transactions and raise clear errors if using a db connection in a forked process (#210)
 
 # New in version 8.10
