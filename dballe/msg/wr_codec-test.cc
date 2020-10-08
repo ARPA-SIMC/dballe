@@ -20,6 +20,13 @@ class Tests : public TestCase
 void Tests::register_tests() {
 
 add_method("issue239", []() {
+    auto v = newvar(WR_VAR(0, 13, 211), 12.123);
+    wassert(actual(v->code()) == WR_VAR(0, 13, 211));
+    wassert(actual(v->enqi()) == 12);
+
+    auto vencoded = v->info()->encode_binary(12.123);
+    wassert(actual(vencoded) == 12);
+
     auto msg = std::make_shared<impl::Message>();
     msg->set_datetime(Datetime(2020, 10, 8, 0, 0, 0));
     msg->set_rep_memo("test");
