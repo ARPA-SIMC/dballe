@@ -38,6 +38,8 @@ Stations are uniquely identified by:
 * *rep_memo*
 
 
+.. _station_values:
+
 Station values
 --------------
 
@@ -46,6 +48,8 @@ like measured variables, but lack date, time, level, and time range
 information. They can be used to store station attributes, like the height
 above sea level, or the center operating it.
 
+
+.. _level:
 
 Level or layer
 --------------
@@ -62,6 +66,8 @@ A layer is defined univocally by its two bounding levels (``leveltype1``,
 See :ref:`levels` for a description of the level types and
 associated level values.
 
+
+.. _timerange:
 
 Time range
 ----------
@@ -102,6 +108,8 @@ Every datum is univocally defined by a system of coordinates with 7 dimensions:
 5. The vertical coordinates in space, as a description of the *level*.
 6. The *time range* of the measurement.
 
+
+.. _attributes:
 
 Attributes
 ----------

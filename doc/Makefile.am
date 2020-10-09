@@ -47,6 +47,7 @@ sphinx_packaged_sources =  \
     general_ref/parms/filters.rst \
     general_ref/env.rst \
     general_ref/connect.rst \
+    general_ref/json.rst \
     cpp_ref/index.rst \
     cpp_ref/messages.rst \
     cpp_ref/cursors.rst \

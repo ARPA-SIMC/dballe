@@ -14,3 +14,4 @@ General reference
    aliases
    env
    msg_vars
+   json
