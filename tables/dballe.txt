@@ -191,7 +191,7 @@
  013205 Snowfall (grid-scale + convective)                               KG/M**2                    1           -1  14 KG/M**2                   1          5
  013206 Soil water content                                               KG/M**2                    1            0  14 KG/M**2                   1          5
  013210 Penetration of the probe in the snow                             M                          2            0   9 M                         2          3
- 013211 Volume of basin                                                  M**3                       0            0  37 M**3                      0         12
+ 013211 Volume of basin                                                  M**3                       0            0  32 M**3                      0         10
  013212 Leaf wetness duration                                            S                         -1            0  24 S                        -1          7
  013215 River level                                                      M                          2      -100000  18 M                         2          6
  013226 River discharge                                                  M**3/S                     2            0  21 M**3/S                    2          7
