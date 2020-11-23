@@ -6,6 +6,7 @@
 #include "dballe/core/varmatch.h"
 #include "dballe/var.h"
 #include "dballe/db/v7/repinfo.h"
+#include "dballe/sql/sql.h"
 #include <wreport/var.h>
 #include <regex.h>
 #include <cstring>
