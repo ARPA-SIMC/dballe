@@ -193,7 +193,7 @@ namespace sc {
 }""", file=file)
 
     def print_shortcuts_access_in_cc(self, file):
-        print("""#include "shortcuts.h"
+        print("""#include "dballe/core/shortcuts.h"
 #include <wreport/error.h>
 #include <cstring>
 
