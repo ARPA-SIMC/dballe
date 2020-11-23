@@ -2,6 +2,9 @@
 # Autobuilt files
 #
 
+# Note: as of at least meson 0.49.2, files are generated all inside the same
+# directory. This means that all generated input files must have different
+# basenames.
 mklookup = generator(find_program('./mklookup'), output: '@BASENAME@.cc', arguments: [ '@INPUT@', '-o', '@OUTPUT@' ])
 
 mkvars = find_program('./mkvars')

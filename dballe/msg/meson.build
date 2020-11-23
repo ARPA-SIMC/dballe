@@ -25,5 +25,5 @@ libdballe_sources += files(
 )
 
 libdballe_sources += [
-        mklookup.process('cursor-access.in.cc'),
+        mklookup.process('msg-cursor-access.in.cc'),
 ]
