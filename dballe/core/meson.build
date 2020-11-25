@@ -23,9 +23,12 @@ libdballe_sources += files(
         'string.cc',
 )
 
+foreach f: [[shortcuts_access_in_cc, 'shortcuts-access.cc'],
+                ['data-access.in.cc', 'data-access.cc'],
+                ['query-access.in.cc', 'query-access.cc']]
+    libdballe_sources += custom_target(f[1], output: f[1], input: f[0], command: [mklookup, '@INPUT@', '-o', '@OUTPUT@'])
+endforeach
+
 libdballe_sources += [
         shortcuts_cc,
-        mklookup.process(shortcuts_access_in_cc),
-        mklookup.process('data-access.in.cc'),
-        mklookup.process('query-access.in.cc'),
 ]

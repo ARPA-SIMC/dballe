@@ -2,11 +2,7 @@
 # Autobuilt files
 #
 
-# Note: as of at least meson 0.49.2, files are generated all inside the same
-# directory. This means that all generated input files must have different
-# basenames.
-mklookup = generator(find_program('./mklookup'), output: '@BASENAME@.cc', arguments: [ '@INPUT@', '-o', '@OUTPUT@' ])
-
+mklookup = find_program('./mklookup')
 mkvars = find_program('./mkvars')
 
 libdballe_sources = [
@@ -30,17 +26,12 @@ libdballe_sources = [
         'cmdline/processor.cc',
         'cmdline/conversion.cc',
         'cmdline/dbadb.cc',
-        'fortran/api.cc',
-        'fortran/traced.cc',
-        'fortran/commonapi.cc',
-        mklookup.process('fortran/commonapi-access.in.cc'),
-        'fortran/msgapi.cc',
-        'fortran/dbapi.cc',
 ]
 
 subdir('core')
 subdir('msg')
 subdir('db')
+subdir('fortran')
 
 if libpq_dep.found()
         libdballe_sources += [
@@ -84,6 +75,7 @@ libdballe = both_libraries('dballe',
                 xapian_dep,
                 popt_dep,
         ])
+
 
 #
 # Unit testing

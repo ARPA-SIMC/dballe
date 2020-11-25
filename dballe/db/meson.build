@@ -25,7 +25,8 @@ libdballe_sources += files(
         'summary_memory.cc',
 )
 
-libdballe_sources += [
-        mklookup.process('v7/cursor-access.in.cc'),
-        mklookup.process('summary-access.in.cc'),
-]
+foreach f: [['summary-access.in.cc', 'summary-access.cc']]
+    libdballe_sources += custom_target(f[1], output: f[1], input: f[0], command: [mklookup, '@INPUT@', '-o', '@OUTPUT@'])
+endforeach
+
+subdir('v7')

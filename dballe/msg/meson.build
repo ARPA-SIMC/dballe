@@ -24,6 +24,6 @@ libdballe_sources += files(
         'wr_exporters/pollution.cc',
 )
 
-libdballe_sources += [
-        mklookup.process('msg-cursor-access.in.cc'),
-]
+foreach f: [['msg-cursor-access.in.cc', 'msg-cursor-access.cc']]
+    libdballe_sources += custom_target(f[1], output: f[1], input: f[0], command: [mklookup, '@INPUT@', '-o', '@OUTPUT@'])
+endforeach
