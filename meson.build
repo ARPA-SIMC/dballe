@@ -14,6 +14,7 @@ conf_data.set('HAVE_MYSQL', mariadb_dep.found())
 xapian_dep = dependency('xapian-core', version: '>= 1.4', required: false)
 conf_data.set('HAVE_XAPIAN', xapian_dep.found())
 popt_dep = dependency('popt')
+gperf = find_program('gperf')
 
 table_dir = get_option('datadir') / 'wreport'
 

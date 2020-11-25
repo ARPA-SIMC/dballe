@@ -27,3 +27,5 @@ libdballe_sources += files(
 foreach f: [['msg-cursor-access.in.cc', 'msg-cursor-access.cc']]
     libdballe_sources += custom_target(f[1], output: f[1], input: f[0], command: [mklookup, '@INPUT@', '-o', '@OUTPUT@'])
 endforeach
+
+libdballe_sources += custom_target('msg-extravars.h', input: '../vars.csv', output: 'msg-extravars.h', command: [mkvars, '-t', 'msg-extravars.h', '@INPUT@', '-o', '@OUTPUT@'])
