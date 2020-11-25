@@ -66,7 +66,7 @@ libdballe = both_libraries('dballe',
         libdballe_sources,
         install: true,
         include_directories: toplevel_inc,
-        cpp_args: '-DTABLE_DIR="."',
+        cpp_args: '-DTABLE_DIR="${table_dir}"',
         dependencies: [
                 libwreport_dep,
                 sqlite3_dep,

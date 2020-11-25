@@ -15,7 +15,10 @@ xapian_dep = dependency('xapian-core', version: '>= 1.4', required: false)
 conf_data.set('HAVE_XAPIAN', xapian_dep.found())
 popt_dep = dependency('popt')
 
+table_dir = get_option('datadir') / 'wreport'
+
 # Generate config.h
 configure_file(output: 'config.h', configuration: conf_data)
 
 subdir('dballe')
+
