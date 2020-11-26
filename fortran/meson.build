@@ -1,5 +1,6 @@
 libdballef = both_libraries('dballef',
     'error.cc', 'binding.cc', 'dballef.f90',
+    version: libdballef_so_version,
     install: true,
     include_directories: toplevel_inc,
     link_with: [libdballe],

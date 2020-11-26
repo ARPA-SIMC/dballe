@@ -64,6 +64,7 @@ endif
 
 libdballe = both_libraries('dballe',
         libdballe_sources,
+        version: libdballe_so_version,
         install: true,
         include_directories: toplevel_inc,
         dependencies: [

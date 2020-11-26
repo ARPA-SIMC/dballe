@@ -1,5 +1,8 @@
 project('dballe', 'cpp', 'fortran', version: '8.13', license : 'GPL-2.0-or-later')
 
+libdballe_so_version = '8.0.0'
+libdballef_so_version = '5.0.0'
+
 table_dir = get_option('datadir') / 'wreport'
 
 conf_data = configuration_data()
