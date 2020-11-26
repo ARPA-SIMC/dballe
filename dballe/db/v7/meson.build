@@ -21,6 +21,50 @@ libdballe_sources += files(
     'export.cc',
 )
 
+install_headers(
+    'fwd.h',
+    'utils.h',
+    'trace.h',
+    'transaction.h',
+    'batch.h',
+    'cache.h',
+    'internals.h',
+    'repinfo.h',
+    'station.h',
+    'levtr.h',
+    'data.h',
+    'driver.h',
+    'sqlite/repinfo.h',
+    'sqlite/station.h',
+    'sqlite/levtr.h',
+    'sqlite/data.h',
+    'sqlite/driver.h',
+    'db.h',
+    'cursor.h',
+    'qbuilder.h',
+    subdir: 'dballe/db/v7',
+)
+if libpq_dep.found()
+    install_headers(
+	'postgresql/repinfo.h',
+	'postgresql/station.h',
+	'postgresql/levtr.h',
+	'postgresql/data.h',
+	'postgresql/driver.h',
+        subdir: 'dballe/db/v7/postgresql',
+    )
+endif
+if mariadb_dep.found()
+    install_headers(
+	'mysql/repinfo.h',
+	'mysql/station.h',
+	'mysql/levtr.h',
+	'mysql/data.h',
+	'mysql/driver.h',
+        subdir: 'dballe/db/v7/mysql',
+    )
+endif
+
 foreach f: [['cursor-access.in.cc', 'cursor-access.cc']]
     libdballe_sources += custom_target(f[1], output: f[1], input: f[0], command: [mklookup, '@INPUT@', '-o', '@OUTPUT@'])
 endforeach

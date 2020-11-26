@@ -24,6 +24,23 @@ libdballe_sources += files(
         'wr_exporters/pollution.cc',
 )
 
+install_headers(
+    'fwd.h',
+    'bulletin.h',
+    'context.h',
+    'msg.h',
+    'msg-extravars.h',
+    'cursor.h',
+    'json_codec.h',
+    'wr_codec.h',
+    subdir: 'dballe/msg',
+)
+
+install_headers(
+    'wr_exporters/common.h',
+    subdir: 'dballe/msg/wr_exporters',
+)
+
 foreach f: [['msg-cursor-access.in.cc', 'msg-cursor-access.cc']]
     libdballe_sources += custom_target(f[1], output: f[1], input: f[0], command: [mklookup, '@INPUT@', '-o', '@OUTPUT@'])
 endforeach

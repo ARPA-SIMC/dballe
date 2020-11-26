@@ -28,6 +28,52 @@ libdballe_sources = [
         'cmdline/dbadb.cc',
 ]
 
+install_headers(
+    'fwd.h',
+    'file.h',
+    'importer.h',
+    'exporter.h',
+    'message.h',
+    'types.h',
+    'value.h',
+    'values.h',
+    'data.h',
+    'query.h',
+    'var.h',
+    'cursor.h',
+    'db.h',
+    'python.h',
+    subdir: 'dballe',
+)
+
+install_headers(
+    'sql/fwd.h',
+    'sql/sql.h',
+    'sql/querybuf.h',
+    'sql/sqlite.h',
+    subdir: 'dballe/sql',
+)
+if libpq_dep.found()
+    install_headers(
+        'sql/postgresql.h',
+        subdir: 'dballe/sql',
+    )
+endif
+if mariadb_dep.found()
+    install_headers(
+        'sql/mysql.h',
+        subdir: 'dballe/sql',
+    )
+endif
+
+install_headers(
+    'cmdline/cmdline.h',
+    'cmdline/conversion.h',
+    'cmdline/processor.h',
+    'cmdline/dbadb.h',
+    subdir: 'dballe/cmdline',
+)
+
 subdir('core')
 subdir('msg')
 subdir('db')

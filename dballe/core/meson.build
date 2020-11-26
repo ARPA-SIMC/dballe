@@ -22,6 +22,33 @@ libdballe_sources += files(
         'string.cc',
 )
 
+install_headers(
+	'fwd.h',
+	'error.h',
+	'shortcuts.h',
+	'enq.h',
+	'cursor.h',
+	'aliases.h',
+	'benchmark.h',
+	'defs.h',
+	'var.h',
+	'values.h',
+	'file.h',
+	'arrayfile.h',
+	'csv.h',
+	'data.h',
+	'query.h',
+	'structbuf.h',
+	'matcher.h',
+	'match-wreport.h',
+	'smallset.h',
+	'varmatch.h',
+	'string.h',
+	'trace.h',
+	'json.h',
+        subdir: 'dballe/core',
+)
+
 foreach f: [[shortcuts_access_in_cc, 'shortcuts-access.cc'],
                 ['data-access.in.cc', 'data-access.cc'],
                 ['query-access.in.cc', 'query-access.cc']]
