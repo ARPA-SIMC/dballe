@@ -84,3 +84,9 @@ pkg.generate(libdballef,
     filebase: 'libdballef',
     requires: [libwreport_dep],
 )
+
+
+# Install old m4 macro files
+
+m4_dir = get_option('datadir') / 'aclocal'
+install_data('libdballe.m4', 'libdballef.m4', install_dir: m4_dir)
