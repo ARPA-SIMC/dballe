@@ -59,12 +59,18 @@ then
     WREPORT_DOXYGEN_DIR=/usr/share/doc/wreport/html/doxygen
     test -e "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR="/usr/share/doc/libwreport-doc/apidocs/"
     test -e "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR="/usr/share/doc/libwreport-doc/html/doxygen/"
+    test -e "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR="/usr/share/doc/libwreport-dev/html/doxygen/"
 fi
 AC_ARG_VAR([WREPORT_DOXYGEN_TAGFILE], [path of libwreport.doxytags])
 if test x$WREPORT_DOXYGEN_TAGFILE = x
 then
-    WREPORT_DOXYGEN_TAGFILE="/usr/share/doc/wreport/libwreport.doxytags"
-    test -e "$WREPORT_DOXYGEN_TAGFILE" || WREPORT_DOXYGEN_TAGFILE="/usr/share/doc/libwreport-doc/libwreport.doxytags.gz"
+    for location in libwreport-doc libwreport-dev wreport
+    do
+        WREPORT_DOXYGEN_TAGFILE="/usr/share/doc/${location}/libwreport.doxytags"
+	test -e "$WREPORT_DOXYGEN_TAGFILE" && break
+	WREPORT_DOXYGEN_TAGFILE="/usr/share/doc/${location}/libwreport.doxytags.gz"
+	test -e "$WREPORT_DOXYGEN_TAGFILE" && break
+    done
 fi
 if test x$enable_docs = xyes
 then
