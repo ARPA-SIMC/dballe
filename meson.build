@@ -3,6 +3,7 @@ project('dballe', 'cpp', 'fortran', version: '8.13', license : 'GPL-2.0-or-later
 table_dir = get_option('datadir') / 'wreport'
 
 conf_data = configuration_data()
+conf_data.set_quoted('PACKAGE_VERSION', meson.project_version())
 conf_data.set_quoted('TABLE_DIR', get_option('prefix') / table_dir)
 
 toplevel_inc = include_directories('.')
@@ -19,9 +20,43 @@ conf_data.set('HAVE_XAPIAN', xapian_dep.found())
 popt_dep = dependency('popt')
 gperf = find_program('gperf')
 
+pymod = import('python')
+python3 = pymod.find_installation('python3', required: false)
+
+#if test x$enable_dballe_python = xyes
+#then
+#    PYTHON_CFLAGS=`unset CFLAGS; $PYTHON-config --cflags`
+#    AC_SUBST(PYTHON_CFLAGS)
+#    AX_PYTHON_MODULE_VERSION(wreport, 3.22)
+#    AX_PYTHON_MODULE(numpy, yes)
+#fi
+
+if python3.found()
+    # FIXME: python3.path() is only available from meson 0.50: this is a workaround
+    python3_path = python3.get_variable('BINDIR') / python3.get_variable('PYTHON') + python3.language_version()
+
+    sphinx = find_program('sphinx-build', 'sphinx-build-3', 'sphinx-build-' + python3.language_version(), required: false)
+
+    # TODO: check if breathe is installed
+    # TODO AX_PYTHON_MODULE(breathe)
+    # See https://gitlab.freedesktop.org/wayland/weston/-/blob/master/doc/sphinx/meson.build
+
+    doxygen = find_program('doxygen', required : false)
+
+    build_docs = sphinx.found() and doxygen.found()
+    docdir = get_option('datadir') / 'doc' / meson.project_name()
+else
+    warning('Documentation disabled, requires doxygen, sphinx, and the breathe python module')
+    build_docs = false
+endif
+
 # Generate config.h
 configure_file(output: 'config.h', configuration: conf_data)
 
 subdir('dballe')
 subdir('fortran')
 subdir('src')
+
+if python3.found()
+    subdir('python')
+endif
