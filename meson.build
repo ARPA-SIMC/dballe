@@ -65,7 +65,7 @@ if build_docs
     subdir('doc')
 endif
 
-# subdir('tables')
+subdir('tables')
 
 
 # Generate pkg-config metadata
