@@ -60,3 +60,17 @@ subdir('src')
 if python3.found()
     subdir('python')
 endif
+
+# Generate pkg-config metadata
+pkg = import('pkgconfig')
+pkg.generate(libdballe,
+    description: 'Database for point-based meteorological data (C++ library)',
+    filebase: 'libdballe',
+    requires: [libwreport_dep],
+)
+
+pkg.generate(libdballef,
+    description: 'Database for point-based meteorological data (Fortran library)',
+    filebase: 'libdballef',
+    requires: [libwreport_dep],
+)
