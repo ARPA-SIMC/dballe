@@ -24,14 +24,6 @@ doxygen_doc_sources += custom_target('tranges',
     capture: true,
 )
 
-# 'libwreport.doxytags',
-# libwreport.doxytags:
-# 	if test x$(suffix @WREPORT_DOXYGEN_TAGFILE@) = x.gz ; then \
-# 	        zcat @WREPORT_DOXYGEN_TAGFILE@ > $@ ; \
-# 	else \
-# 	        cat @WREPORT_DOXYGEN_TAGFILE@ > $@ ; \
-# 	fi
-
 sphinx_doc_sources = [
     'conf.py',
     'index.rst',
@@ -80,6 +72,7 @@ libdballe_dox = configure_file(output: 'libdballe.dox', input: 'libdballe.dox.in
     'top_srcdir': meson.source_root(),
     'builddir': meson.current_build_dir(),
     'DOXYGEN_OUTPUT_DIR': meson.current_build_dir(),
+    'WREPORT_DOXYGEN_DIR': '.',
 })
 
 #
