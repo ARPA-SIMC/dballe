@@ -95,10 +95,11 @@ build_docs = configure_file(output: 'build-docs', input: 'build-docs.in', config
 
 built_docs = custom_target('built_docs',
     input: [libdballe_dox, sphinx_doc_sources, doxygen_doc_sources],
-    output: ['libdballe.doxytags', 'xml', 'html'],
+    output: ['libdballe.doxytags', 'html'],
     depends: [libdballe, py_dballe],
     command: [build_docs],
     build_by_default: true,
     install_dir: docdir,
     install: true,
+    console: true,
 )

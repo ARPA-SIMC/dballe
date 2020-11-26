@@ -18,7 +18,7 @@ install_headers(
 fc = meson.get_compiler('fortran')
 
 dballef_mod = custom_target('dballef.mod',
-    input: 'dballef.f90', output: 'dballef.mod', command: fc.cmd_array() + ['-c', '@INPUT@'],
+    input: 'dballef.f90', output: 'dballef.mod', command: fc.cmd_array() + ['-c', '@INPUT@', '-J', '@OUTDIR@'],
     install: true,
     install_dir: get_option('includedir') / 'dballe',
 )
