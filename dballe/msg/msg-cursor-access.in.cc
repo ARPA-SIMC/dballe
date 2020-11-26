@@ -1,4 +1,4 @@
-#include "cursor.h"
+#include "dballe/msg/cursor.h"
 #include <cstring>
 
 using namespace wreport;

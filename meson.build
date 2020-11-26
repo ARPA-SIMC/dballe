@@ -1,0 +1,92 @@
+project('dballe', 'cpp', 'fortran', version: '8.13', license : 'GPL-2.0-or-later')
+
+libdballe_so_version = '8.0.0'
+libdballef_so_version = '5.0.0'
+
+table_dir = get_option('datadir') / 'wreport'
+
+conf_data = configuration_data()
+conf_data.set_quoted('PACKAGE_VERSION', meson.project_version())
+conf_data.set_quoted('TABLE_DIR', get_option('prefix') / table_dir)
+
+toplevel_inc = include_directories('.')
+
+# Dependencies
+libwreport_dep = dependency('libwreport', version: '>= 3.22')
+sqlite3_dep = dependency('sqlite3')
+libpq_dep = dependency('libpq', required: false)
+conf_data.set('HAVE_LIBPQ', libpq_dep.found())
+mariadb_dep = dependency('mariadb', required: false)
+conf_data.set('HAVE_MYSQL', mariadb_dep.found())
+xapian_dep = dependency('xapian-core', version: '>= 1.4', required: false)
+conf_data.set('HAVE_XAPIAN', xapian_dep.found())
+popt_dep = dependency('popt')
+gperf = find_program('gperf')
+
+pymod = import('python')
+python3 = pymod.find_installation('python3', required: false)
+
+#if test x$enable_dballe_python = xyes
+#then
+#    PYTHON_CFLAGS=`unset CFLAGS; $PYTHON-config --cflags`
+#    AC_SUBST(PYTHON_CFLAGS)
+#    AX_PYTHON_MODULE_VERSION(wreport, 3.22)
+#    AX_PYTHON_MODULE(numpy, yes)
+#fi
+
+if python3.found()
+    # FIXME: python3.path() is only available from meson 0.50: this is a workaround
+    python3_path = python3.get_variable('BINDIR') / python3.get_variable('PYTHON') + python3.language_version()
+
+    sphinx = find_program('sphinx-build', 'sphinx-build-3', 'sphinx-build-' + python3.language_version(), required: false)
+
+    # TODO: check if breathe is installed
+    # TODO AX_PYTHON_MODULE(breathe)
+    # See https://gitlab.freedesktop.org/wayland/weston/-/blob/master/doc/sphinx/meson.build
+
+    doxygen = find_program('doxygen', required : false)
+
+    build_docs = sphinx.found() and doxygen.found()
+    docdir = get_option('datadir') / 'doc' / meson.project_name()
+else
+    warning('Documentation disabled, requires doxygen, sphinx, and the breathe python module')
+    build_docs = false
+endif
+
+# Generate config.h
+configure_file(output: 'config.h', configuration: conf_data)
+
+subdir('dballe')
+subdir('fortran')
+subdir('src')
+
+if python3.found()
+    subdir('python')
+endif
+
+if build_docs
+    subdir('doc')
+endif
+
+subdir('tables')
+
+
+# Generate pkg-config metadata
+pkg = import('pkgconfig')
+pkg.generate(libdballe,
+    description: 'Database for point-based meteorological data (C++ library)',
+    filebase: 'libdballe',
+    requires: [libwreport_dep],
+)
+
+pkg.generate(libdballef,
+    description: 'Database for point-based meteorological data (Fortran library)',
+    filebase: 'libdballef',
+    requires: [libwreport_dep],
+)
+
+
+# Install old m4 macro files
+
+m4_dir = get_option('datadir') / 'aclocal'
+install_data('libdballe.m4', 'libdballef.m4', install_dir: m4_dir)

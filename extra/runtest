@@ -41,7 +41,11 @@ class Environment:
         self.env["DBA_TABLES"] = os.path.join(self.top_srcdir, "tables")
         self.env["DBA_TESTDATA"] = os.path.join(self.top_srcdir, "extra")
         self.env["DBA_INSECURE_SQLITE"] = "1"
-        self.env["PYTHONPATH"] = os.path.join(self.top_srcdir, "python/.libs")
+        pythonpath = self.env.get("PYTHONPATH")
+        if pythonpath is None:
+            self.env["PYTHONPATH"] = os.path.join(self.top_srcdir, "python/.libs")
+        else:
+            self.env["PYTHONPATH"] += ":" + os.path.join(self.top_srcdir, "python/.libs")
 
         # Run under eatmydata if available
         libeatmydata = "/usr/lib/libeatmydata/libeatmydata.so"
@@ -162,7 +166,8 @@ def main():
             description="run DB-All.e unit tests")
     parser.add_argument("--verbose", "-v", action="store_true", help="verbose output")
     parser.add_argument("--debug", action="store_true", help="debug output")
-    parser.add_argument("-C", "--command-dir", action="store", default=".", help="directory where tests to run are found (default: .)")
+    parser.add_argument("-C", "--command-dir", action="store", default=".",
+                        help="directory where tests to run are found (default: .)")
     parser.add_argument("test", nargs="+", help="test executable(s) to run")
     args = parser.parse_args()
 

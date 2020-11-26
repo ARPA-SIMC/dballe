@@ -1,5 +1,5 @@
 #define _DBALLE_LIBRARY_CODE
-#include "summary_utils.h"
+#include "dballe/db/summary_utils.h"
 #include <cstring>
 
 using namespace wreport;

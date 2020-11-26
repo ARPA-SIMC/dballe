@@ -1,0 +1,34 @@
+#!/bin/sh
+
+set -uxe
+
+# Generate documentation with doxygen and sphynx
+
+# Locate wreport's doxygen tags
+WREPORT_DOXYGEN_DIR=/usr/share/doc/wreport/html/doxygen
+test -e "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR="/usr/share/doc/libwreport-doc/apidocs/"
+test -e "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR="/usr/share/doc/libwreport-doc/html/doxygen/"
+test -e "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR="/usr/share/doc/libwreport-dev/"
+
+if [ -e "${WREPORT_DOXYGEN_DIR}/libwreport.doxytags" ]
+then
+    cp "${WREPORT_DOXYGEN_DIR}/libwreport.doxytags" .
+elif [ -e "${WREPORT_DOXYGEN_DIR}/libwreport.doxytags.gz" ]
+then
+    gzip -cd "${WREPORT_DOXYGEN_DIR}/libwreport.doxytags.gz" > libwreport.doxytags
+else
+    echo "wreport doxygen tags not found in ${WREPORT_DOXYGEN_DIR}" >&2
+    exit 1
+fi
+
+
+OUTDIR="@doc_build@/html"
+
+rm -rf "$OUTDIR"
+mkdir -p "$OUTDIR"
+
+export PYTHONPATH="@pythonpath_src@:@pythonpath_build@"
+export top_builddir="@top_builddir@"
+
+"@doxygen@" "@doc_build@/libdballe.dox"
+TEST_CODE_OUTPUT=test_code.json "@sphinx_build@" -b html "@doc_src@" "$OUTDIR"
