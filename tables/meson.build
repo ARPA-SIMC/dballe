@@ -5,6 +5,8 @@ bufrbtables = files('B000000002001200.txt')
 bufrdtables = files('D000000002001200.txt')
 
 install_data(
+    'repinfo.csv',
+    'dballe.txt',
     crexbtables,
     crexdtables,
     bufrbtables,
