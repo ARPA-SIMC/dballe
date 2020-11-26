@@ -22,4 +22,4 @@ table_dir = get_option('datadir') / 'wreport'
 configure_file(output: 'config.h', configuration: conf_data)
 
 subdir('dballe')
-
+subdir('src')
