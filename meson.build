@@ -61,6 +61,13 @@ if python3.found()
     subdir('python')
 endif
 
+if build_docs
+    subdir('doc')
+endif
+
+# subdir('tables')
+
+
 # Generate pkg-config metadata
 pkg = import('pkgconfig')
 pkg.generate(libdballe,

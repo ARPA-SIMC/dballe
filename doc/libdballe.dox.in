@@ -58,7 +58,7 @@ PROJECT_LOGO           =
 # entered, it will be relative to the location where doxygen was started. If
 # left blank the current directory will be used.
 
-OUTPUT_DIRECTORY       =
+OUTPUT_DIRECTORY       = @DOXYGEN_OUTPUT_DIR@
 
 # If the CREATE_SUBDIRS tag is set to YES then doxygen will create 4096 sub-
 # directories (in 2 levels) under the output directory of each output format and
@@ -771,7 +771,7 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ../dballe \
+INPUT                  = @top_srcdir@/dballe \
                          .
 
 # This tag can be used to specify the character encoding of the source files
@@ -2091,7 +2091,7 @@ TAGFILES               = libwreport.doxytags=@WREPORT_DOXYGEN_DIR@
 # tag file that is based on the input files it reads. See section "Linking to
 # external documentation" for more information about the usage of tag files.
 
-GENERATE_TAGFILE       = libdballe.doxytags
+GENERATE_TAGFILE       = @builddir@/libdballe.doxytags
 
 # If the ALLEXTERNALS tag is set to YES, all external class will be listed in
 # the class index. If set to NO, only the inherited external classes will be

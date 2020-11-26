@@ -159,6 +159,9 @@ then
 		AC_MSG_WARN([doxygen was not found: documentation will not be built])
 		enable_docs=no
 	fi
+
+        DOXYGEN_OUTPUT_DIR="$ac_abs_confdir/doc/"
+        AC_SUBST(DOXYGEN_OUTPUT_DIR)
 fi
 
 dnl Check for gperf
