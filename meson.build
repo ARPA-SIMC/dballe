@@ -16,10 +16,9 @@ conf_data.set('HAVE_XAPIAN', xapian_dep.found())
 popt_dep = dependency('popt')
 gperf = find_program('gperf')
 
-table_dir = get_option('datadir') / 'wreport'
-
 # Generate config.h
 configure_file(output: 'config.h', configuration: conf_data)
 
 subdir('dballe')
+subdir('fortran')
 subdir('src')
