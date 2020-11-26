@@ -1,6 +1,9 @@
 project('dballe', 'cpp', 'fortran', version: '8.13', license : 'GPL-2.0-or-later')
 
+table_dir = get_option('datadir') / 'wreport'
+
 conf_data = configuration_data()
+conf_data.set_quoted('TABLE_DIR', get_option('prefix') / table_dir)
 
 toplevel_inc = include_directories('.')
 
