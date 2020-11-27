@@ -2,7 +2,7 @@
 crexbtables = files('B990203.txt')
 crexdtables = files('D990203.txt')
 bufrbtables = files('B000000002001200.txt')
-bufrdtables = files('D000000002001200.txt')
+bufrdtables = files('D000000002001200.txt', 'D000000002001400.txt', 'D0000000000200014001.txt')
 
 install_data(
     'repinfo.csv',
