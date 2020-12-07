@@ -64,9 +64,9 @@ python_tests = [
 
 runtest = find_program('../extra/runtest')
 
-foreach t: python_tests
-    test(t, runtest, args: ['-v', files(t)], env: [
-        'PYTHON=' + python3_path,
-        'PYTHONPATH=' + meson.current_build_dir(),
-    ])
-endforeach
+test('python', runtest, args: ['NOSE'],
+     env: [
+         'PYTHON=' + python3_path,
+         'PYTHONPATH=' + meson.current_source_dir() + ':' + meson.current_build_dir(),
+     ],
+)
