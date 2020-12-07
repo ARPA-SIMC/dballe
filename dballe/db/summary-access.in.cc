@@ -33,8 +33,8 @@ void Cursor<Station>::enq(impl::Enq& enq) const
         case "lon":         enq.set_lon(station_entry->station.coords.lon);
         case "coords":      enq.set_coords(station_entry->station.coords);
         case "station":     enq.set_station(station_entry->station);
-        case "datetimemax": if (var_entry->dtrange.is_missing()) return; else enq.set_datetime(var_entry->dtrange.max.year);
-        case "datetimemin": if (var_entry->dtrange.is_missing()) return; else enq.set_datetime(var_entry->dtrange.min.year);
+        case "datetimemax": if (var_entry->dtrange.is_missing()) return; else enq.set_datetime(var_entry->dtrange.max);
+        case "datetimemin": if (var_entry->dtrange.is_missing()) return; else enq.set_datetime(var_entry->dtrange.min);
         case "yearmax":     if (var_entry->dtrange.is_missing()) return; else enq.set_int(var_entry->dtrange.max.year);
         case "yearmin":     if (var_entry->dtrange.is_missing()) return; else enq.set_int(var_entry->dtrange.min.year);
         case "monthmax":    if (var_entry->dtrange.is_missing()) return; else enq.set_int(var_entry->dtrange.max.month);
