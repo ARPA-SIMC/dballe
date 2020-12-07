@@ -29,6 +29,7 @@ endforeach
 
 py_dballe = python3.extension_module('_dballe',
     py_dballe_sources,
+    cpp_pch: '../dballe/pch/dballe_pch.h',
     include_directories: toplevel_inc,
     dependencies: python3.dependency(),
     link_with: libdballe,

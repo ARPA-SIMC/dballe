@@ -110,6 +110,7 @@ endif
 
 libdballe = both_libraries('dballe',
         libdballe_sources,
+        cpp_pch: 'pch/dballe_pch.h',
         version: libdballe_so_version,
         install: true,
         include_directories: toplevel_inc,
@@ -218,6 +219,7 @@ endif
 
 test_dballe = executable('test-dballe', test_dballe_sources,
         include_directories: toplevel_inc,
+        cpp_pch: 'pch/dballe_pch.h',
         link_with: [
                 libdballe,
         ],
