@@ -234,4 +234,4 @@ test_dballe = executable('test-dballe', test_dballe_sources,
 
 runtest = find_program('../extra/runtest')
 
-test('dballe', runtest, args: [test_dballe])
+test('dballe', runtest, args: [test_dballe], timeout: 600)
