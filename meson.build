@@ -55,6 +55,19 @@ else
     build_docs = false
 endif
 
+compiler = meson.get_compiler('cpp')
+if compiler.has_function('strcasestr', prefix : '#include <string.h>')
+    # This does not currently work.
+    # See https://github.com/mesonbuild/meson/issues/8075
+    conf_data.set('HAVE_STRCASESTR', true)
+endif
+if not compiler.has_function('bswap_32', prefix : '#include <byteswap.h>')
+    conf_data.set('USE_OWN_BSWAP', true)
+endif
+if not compiler.has_function('vasprintf', prefix : '#include <cstdio>')
+    conf_data.set('USE_OWN_VASPRINTF', true)
+endif
+
 # Generate config.h
 configure_file(output: 'config.h', configuration: conf_data)
 

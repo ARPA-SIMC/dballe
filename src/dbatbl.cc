@@ -212,7 +212,7 @@ struct Grep : public VarinfoPrinter
 #if HAVE_STRCASESTR
             if (strcasestr(info->desc, pattern) != NULL)
 #else
-#warning dbatbl grep is case sensite on this sytstem, since strcasestr is not available
+#warning dbatbl grep is case sensitive on this sytstem, since strcasestr is not available
             if (strstr(info->desc, pattern) != NULL)
 #endif
                 print_varinfo(info);
