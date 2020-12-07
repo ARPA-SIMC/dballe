@@ -56,6 +56,17 @@ endif
 # Generate config.h
 configure_file(output: 'config.h', configuration: conf_data)
 
+# Generate the builddir's version of run-local
+run_local_cfg = configure_file(output: 'run-local', input: 'run-local.in', configuration: {
+    'top_srcdir': meson.source_root(),
+    'top_builddir': meson.build_root(),
+})
+# Just using the configure_file object in a custom_target command gives:
+#   'AttributeError: 'File' object has no attribute 'replace'
+# Using find_program on the resulting file works around that
+# See https://github.com/mesonbuild/meson/issues/8039
+run_local = find_program(run_local_cfg)
+
 subdir('dballe')
 subdir('fortran')
 subdir('src')
