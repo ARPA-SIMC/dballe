@@ -21,6 +21,7 @@ BuildRequires: python3-rpm-macros >= 3-23
 BuildRequires: libtool
 BuildRequires: gcc-c++
 BuildRequires: gperf
+BuildRequires: which
 BuildRequires: doxygen
 BuildRequires: pkgconfig(lua) > 5.1.1
 BuildRequires: pkgconfig(libwreport) >= 3.22
