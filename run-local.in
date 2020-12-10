@@ -1,20 +1,11 @@
 #!/bin/bash
 
-export ARKI_SCAN="@top_srcdir@/conf/scan/"
-export ARKI_SCAN_GRIB1="@top_srcdir@/conf/scan-grib1/"
-export ARKI_SCAN_GRIB2="@top_srcdir@/conf/scan-grib2/"
-export ARKI_SCAN_BUFR="@top_srcdir@/conf/scan-bufr/"
-export ARKI_SCAN_ODIMH5="@top_srcdir@/conf/scan-odimh5/"
-export ARKI_FORMATTER="@top_srcdir@/conf/format/"
-export ARKI_REPORT="@top_srcdir@/conf/report/"
-export ARKI_BBOX="@top_srcdir@/conf/bbox/"
-export ARKI_QMACRO="@top_srcdir@/conf/qmacro/"
-export ARKI_ALIASES="@top_srcdir@/conf/match-alias.conf"
-export PATH="@top_srcdir@/src:$PATH"
-export ARKI_POSTPROC="@top_srcdir@/test/postproc"
 export LD_LIBRARY_PATH="@top_builddir@/arki:$LD_LIBRARY_PATH"
-export METEO_VM2_SOURCE="@top_srcdir@/conf/vm2/source.lua"
+export WREPORT_EXTRA_TABLES="@top_srcdir@/tables"
+export DBA_REPINFO="@top_srcdir@/tables/repinfo.csv"
+export DBA_TABLES="@top_srcdir@/tables/"
 export PYTHONPATH="@top_srcdir@/python:@top_builddir@/python"
+export PATH="@top_builddir@/src:@top_srcdir@/src:$PATH"
 
 #ulimit -v 1048576
 
