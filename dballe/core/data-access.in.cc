@@ -1,5 +1,5 @@
-#include "data.h"
-#include "var.h"
+#include "dballe/core/data.h"
+#include "dballe/core/var.h"
 #include <cstring>
 
 using namespace wreport;

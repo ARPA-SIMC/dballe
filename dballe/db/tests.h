@@ -59,7 +59,7 @@ struct BaseDBFixture : public Fixture
     bool destroys_db = false;
 
     BaseDBFixture(const char* backend);
-    ~BaseDBFixture();
+    virtual ~BaseDBFixture();
 
     void test_setup();
     void test_teardown();

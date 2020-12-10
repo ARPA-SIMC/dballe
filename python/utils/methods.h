@@ -27,7 +27,10 @@ struct BaseMethod
 
     static constexpr PyMethodDef def()
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
         return PyMethodDef {const_cast<char*>(Child::name), (PyCFunction)Child::run, Child::flags, Child::doc};
+#pragma GCC diagnostic pop
     }
 
     static std::string docstring()
@@ -112,7 +115,9 @@ struct Methods
     typedef std::array<PyMethodDef, sizeof...(METHODS) + 1> Defs;
     Docstrings docstrings;
     Defs m_defs;
-    Methods() : docstrings({METHODS::docstring()...}), m_defs({METHODS::def()..., nullptr})
+    Methods() :
+        docstrings({METHODS::docstring()...}),
+        m_defs({METHODS::def()..., PyMethodDef()})
     {
         for (unsigned i = 0; i < m_defs.size() - 1; ++i)
             m_defs[i].ml_doc = docstrings[i].c_str();
