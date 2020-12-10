@@ -6,6 +6,7 @@
 #include "wr_importers/base.h"
 #include <wreport/bulletin.h>
 #include <wreport/vartable.h>
+#include <wreport/options.h>
 
 using namespace wreport;
 using namespace std;
@@ -46,6 +47,9 @@ Messages WRImporter::from_bulletin(const wreport::Bulletin& msg) const
 
 bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<dballe::Message>)> dest) const
 {
+    auto lo1(options::local_override(options::var_silent_domain_errors, opts.domain_errors == ImporterOptions::DomainErrors::UNSET));
+    auto lo2(options::local_override(options::var_clamp_domain_errors, opts.domain_errors == ImporterOptions::DomainErrors::CLAMP));
+
     // Infer the right importer. See Common Code Table C-13
     std::unique_ptr<wr::Importer> importer;
     switch (msg.data_category)
