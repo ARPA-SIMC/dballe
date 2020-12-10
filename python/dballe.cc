@@ -139,7 +139,7 @@ Return a string description for a level)" },
 describe_trange(pind: int, p1: int=None, p2: int=None) -> str
 
 Return a string description for a time range)" },
-    { NULL }
+    PyMethodDef(),
 };
 
 
