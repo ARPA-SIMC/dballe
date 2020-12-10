@@ -6,6 +6,7 @@
 #include <dballe/msg/msg.h>
 #include <dballe/db/db.h>
 #include <wreport/error.h>
+#include <wreport/options.h>
 #include <wreport/utils/string.h>
 
 #include <cstdlib>
@@ -25,6 +26,7 @@ const char* op_url = "";
 const char* op_user = "";
 const char* op_pass = "";
 const char* op_varlist = "";
+const char* op_domain_errors = "";
 int op_wipe_first = 0;
 int op_dump = 0;
 int op_overwrite = 0;
@@ -287,6 +289,13 @@ struct ImportCmd : public DatabaseCmd
             "import messages using precise contexts instead of standard ones", 0 });
         opts.push_back({ "varlist", 0, POPT_ARG_STRING, &op_varlist, 0,
             "only import variables with the given varcode(s)", "varlist" });
+        opts.push_back({ "domain-errors", 0, POPT_ARG_STRING, &op_domain_errors, 0,
+            "recovery strategy to use when importing values outside a variable domain."
+            " Possible values: 'unset' (ignore error and consider the value as unset)"
+#ifdef WREPORT_OPTIONS_HAS_VAR_CLAMP_DOMAIN_ERRORS
+            ", 'clamp' (ignore error and replace the value with the closest extreme of the valid domain)"
+#endif
+            , "varlist" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
             "Options used to filter messages", 0 });
     }
@@ -297,6 +306,20 @@ struct ImportCmd : public DatabaseCmd
         poptGetArg(optCon);
         cmdline::Reader reader(readeropts);
         reader.verbose = op_verbose;
+
+        if (strcmp(op_domain_errors, "") == 0)
+        {
+            ; // Nothing to do, leave defaults
+        } else if (strcmp(op_domain_errors, "unset") == 0) {
+            wreport::options::var_silent_domain_errors = true;
+#ifdef WREPORT_OPTIONS_HAS_VAR_CLAMP_DOMAIN_ERRORS
+        } else if (strcmp(op_domain_errors, "clamp") == 0) {
+            wreport::options::var_clamp_domain_errors = true;
+#endif
+        } else {
+            error_consistency::throwf("valore '%s' per --domain-errors non supportato", op_domain_errors);
+        }
+
 
         // Configure the reader
         core::Query query;
@@ -348,7 +371,7 @@ struct ExportCmd : public DatabaseCmd
         opts.push_back({ "report", 'r', POPT_ARG_STRING, &op_report, 0,
             "force exported data to be of this type of report", "rep" });
         opts.push_back({ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
-            "format of the data in output ('bufr', 'crex')", "type" });
+            "format of the data in output ('bufr', 'crex', 'json')", "type" });
         opts.push_back({ "template", 't', POPT_ARG_STRING, &op_output_template, 0,
             "template of the data in output (autoselect if not specified, 'list' gives a list)", "name" });
         opts.push_back({ "dump", 0, POPT_ARG_NONE, &op_dump, 0,
