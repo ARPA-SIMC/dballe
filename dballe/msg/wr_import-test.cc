@@ -324,7 +324,7 @@ class Tests : public TestCase
 
         // BUFR that has a variable that goes out of range when converted to local B
         // table
-        add_method("outofrange", []() {
+        add_method("outofrange", [] {
             try
             {
                 // Read and interpretate the message
@@ -337,8 +337,9 @@ class Tests : public TestCase
             }
 
             {
-                wreport::options::LocalOverride<bool> o(wreport::options::var_silent_domain_errors, true);
-                impl::Messages msgs = read_msgs("bufr/interpreted-range.bufr", Encoding::BUFR);
+                auto opts = ImporterOptions::create();
+                opts->domain_errors = ImporterOptions::DomainErrors::UNSET;
+                impl::Messages msgs = read_msgs("bufr/interpreted-range.bufr", Encoding::BUFR, *opts);
                 wassert(actual(msgs.size()) == 1u);
                 const impl::Message& msg = impl::Message::downcast(*msgs[0]);
                 wassert(actual(msg.type) == MessageType::SHIP);
