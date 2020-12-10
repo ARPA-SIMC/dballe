@@ -35,7 +35,7 @@ Stations are uniquely identified by:
 * *latitude*.
 * *longitude*.
 * *station identifier* (if the station is mobile).
-* *rep_memo*
+* *report*
 
 
 .. _station_values:
