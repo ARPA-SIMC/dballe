@@ -32,7 +32,6 @@ add_method("read", []() {
 });
 
 add_method("domain_throw", []() {
-    // TODO: bufr/interpreted-range.bufr for BUFR
     auto file = File::create(Encoding::JSON, tests::datafile("json/issue241.json"), "r");
     auto options = ImporterOptions::create();
     options->domain_errors = ImporterOptions::DomainErrors::THROW;
