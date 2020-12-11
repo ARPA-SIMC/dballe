@@ -3,6 +3,7 @@
 #include "dballe/file.h"
 #include "dballe/msg/msg.h"
 #include <wreport/error.h>
+#include <wreport/options.h>
 #include <sstream>
 #include <stack>
 
@@ -434,6 +435,9 @@ JsonImporter::~JsonImporter() {}
 
 bool JsonImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<dballe::Message>)> dest) const
 {
+    auto lo1(wreport::options::local_override(wreport::options::var_silent_domain_errors, opts.domain_errors == ImporterOptions::DomainErrors::UNSET));
+    auto lo2(wreport::options::local_override(wreport::options::var_clamp_domain_errors, opts.domain_errors == ImporterOptions::DomainErrors::CLAMP));
+
     JSONMsgReader jsonreader;
     return jsonreader.parse_msgs(msg.data, dest);
 }

@@ -185,7 +185,7 @@ using a uniform data model.
 Note that one binary message is often decoded to multiple data messages, in
 case, for example, of compressed BUFR files.
 
-Constructor: Importer(encoding: str, simplified: bool=True)
+Constructor: Importer(encoding: str, simplified: bool=True, domain_errors="raise")
 
 :arg encoding: can be :code:`"BUFR"` or :code:`"CREX"`.
 :arg simplified: controls whether messages are constructed using standard levels and
@@ -195,6 +195,11 @@ Constructor: Importer(encoding: str, simplified: bool=True)
                  2M above ground, regardless of the reported sensor height. A
                  non-simplified import will place the temperature reading at
                  the reported sensor height.
+:arg domain_errors: controls what to do when a value in the message is outside
+                    the range for its variable. "raise" (the default) raises an
+                    exception. "unset" changes the value to be unset. "clamp"
+                    changes the value to the nearest valid extreme of the
+                    domain.
 
 When a message is imported in simplified mode, the actual context information
 will be stored as data attributes.
@@ -226,16 +231,28 @@ Example usage::
 
     static int _init(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { "encoding", "simplified", nullptr };
+        static const char* kwlist[] = { "encoding", "simplified", "domain_errors", nullptr };
         const char* encoding = nullptr;
         int simplified = -1;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "s|p", const_cast<char**>(kwlist), &encoding, &simplified))
+        const char* domain_errors = "raise";
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "s|ps", const_cast<char**>(kwlist), &encoding, &simplified, &domain_errors))
             return -1;
 
         try {
             impl::ImporterOptions opts;
             if (simplified != -1)
                 opts.simplified = simplified;
+            if (strcmp(domain_errors, "raise") == 0)
+                opts.domain_errors = ImporterOptions::DomainErrors::THROW;
+            else if (strcmp(domain_errors, "unset") == 0)
+                opts.domain_errors = ImporterOptions::DomainErrors::UNSET;
+            else if (strcmp(domain_errors, "clamp") == 0)
+                opts.domain_errors = ImporterOptions::DomainErrors::CLAMP;
+            else
+            {
+                PyErr_Format(PyExc_ValueError, "domain_errors argument has unsupported value '%s'", domain_errors);
+                throw PythonException();
+            }
             self->importer = Importer::create(File::parse_encoding(encoding), opts).release();
         } DBALLE_CATCH_RETURN_INT
         return 0;
