@@ -1,8 +1,9 @@
-dballe (8.9-1) UNRELEASED; urgency=medium
+dballe (9.0-1) UNRELEASED; urgency=medium
 
   * New upstream version, see NEWS.md for what's new.
+  * libdballe soname bump due to C++ ABI changes
 
- -- Enrico Zini <enrico@debian.org>  Mon, 10 Feb 2020 13:21:18 +0100
+ -- Enrico Zini <enrico@debian.org>  Mon, 14 Dec 2020 16:04:44 +0100
 
 dballe (8.6-1) unstable; urgency=medium
 
