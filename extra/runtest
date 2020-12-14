@@ -58,7 +58,7 @@ export DBA_TABLES=$TOP_SRCDIR/tables
 export DBA_TESTDATA=$TOP_SRCDIR/extra
 export DBA_INSECURE_SQLITE=1
 
-export PYTHONPATH=$TOP_SRCDIR/python/:$ORIGDIR:$ORIGDIR/python
+export PYTHONPATH=$TOP_SRCDIR/python/:$ORIGDIR:$ORIGDIR/python:$ORIGDIR/.libs:$ORIGDIR/python/.libs
 export TOP_SRCDIR
 ulimit -v 1048576 || true
 ulimit -n 1024 || true
