@@ -1,4 +1,20 @@
+# New in version 9.0
+
+* C++ API changed: `CursorMessage::get_message` has been unified with
+  `CursorMessage::detach_message` and now returns a `std::shared_ptr<Message>`.
+  `CursorMessage::detach_message` has been removed. (#171)
+* C++ API changed: it now uses `std::shared_ptr` instead of `std::unique_ptr`
+  to return and refer to cursors. (#171)
+* C++ API changed: dballe::Message now inherits `std::shared_from_this` and
+  should always be used as `std::shared_ptr` (#171)
+* C++ API changed: dballe::Cursor now inherits `std::shared_from_this` and
+  should always be used as `std::shared_ptr` (#171)
+* Now a cursor for a dballe transaction is invalidated when the transaction
+  commits/rolls back. This avoids the need for a context manager to handle the
+  cursor lifetime in the Python API (#171)
+
 # New in version 8.20
+
 * Added UV index variable
 
 # New in version 8.19
@@ -19,21 +35,6 @@
 * Added Lifted, virtual T and Skin Temperature variables
 * Added support for python 3.9 in nose2 tests
 * Dropped support for nose1
-
-# New in version 8.14
-
-* C++ API changed: `CursorMessage::get_message` has been unified with
-  `CursorMessage::detach_message` and now returns a `std::shared_ptr<Message>`.
-  `CursorMessage::detach_message` has been removed. (#171)
-* C++ API changed: it now uses `std::shared_ptr` instead of `std::unique_ptr`
-  to return and refer to cursors. (#171)
-* C++ API changed: dballe::Message now inherits `std::shared_from_this` and
-  should always be used as `std::shared_ptr` (#171)
-* C++ API changed: dballe::Cursor now inherits `std::shared_from_this` and
-  should always be used as `std::shared_ptr` (#171)
-* Now a cursor for a dballe transaction is invalidated when the transaction
-  commits/rolls back. This avoids the need for a context manager to handle the
-  cursor lifetime in the Python API (#171)
 
 # New in version 8.14
 
