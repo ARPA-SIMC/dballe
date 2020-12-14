@@ -1,4 +1,4 @@
-# New in version 8.14
+# New in version 9.0
 
 * C++ API changed: `CursorMessage::get_message` has been unified with
   `CursorMessage::detach_message` and now returns a `std::shared_ptr<Message>`.
