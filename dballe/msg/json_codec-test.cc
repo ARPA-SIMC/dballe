@@ -38,7 +38,7 @@ add_method("domain_throw", []() {
     options->domain_errors = ImporterOptions::DomainErrors::THROW;
     auto importer = Importer::create(Encoding::JSON, *options);
     file->foreach([&](const BinaryMessage& bmsg) {
-        wassert_throws(wreport::error_domain, importer->foreach_decoded(bmsg, [&](std::unique_ptr<Message> dest) { return true; }));
+        wassert_throws(wreport::error_domain, importer->foreach_decoded(bmsg, [&](std::shared_ptr<Message> dest) { return true; }));
         return true;
     });
 });
@@ -50,7 +50,7 @@ add_method("domain_unset", []() {
     auto importer = Importer::create(Encoding::JSON, *options);
     unsigned count = 0;
     wassert_true(file->foreach([&](const BinaryMessage& bmsg) {
-        return importer->foreach_decoded(bmsg, [&](std::unique_ptr<Message> dest) {
+        return importer->foreach_decoded(bmsg, [&](std::shared_ptr<Message> dest) {
             // Would throw: wreport::error_domain Value -30 is outside the range [-20,1048554] for 013013 (TOTAL SNOW DEPTH)
             const wreport::Var* val = dest->get(Level(1), Trange::instant(), WR_VAR(0, 13, 13));
             wassert_true(val);
@@ -70,7 +70,7 @@ add_method("domain_clamp", []() {
     auto importer = Importer::create(Encoding::JSON, *options);
     unsigned count = 0;
     wassert_true(file->foreach([&](const BinaryMessage& bmsg) {
-        return importer->foreach_decoded(bmsg, [&](std::unique_ptr<Message> dest) {
+        return importer->foreach_decoded(bmsg, [&](std::shared_ptr<Message> dest) {
             // Would throw: wreport::error_domain Value -30 is outside the range [-20,1048554] for 013013 (TOTAL SNOW DEPTH)
             const wreport::Var* val = dest->get(Level(1), Trange::instant(), WR_VAR(0, 13, 13));
             wassert_true(val);
@@ -92,7 +92,7 @@ add_method("domain_tag", []() {
     auto importer = Importer::create(Encoding::JSON, *options);
     unsigned count = 0;
     wassert_true(file->foreach([&](const BinaryMessage& bmsg) {
-        return importer->foreach_decoded(bmsg, [&](std::unique_ptr<Message> dest) {
+        return importer->foreach_decoded(bmsg, [&](std::shared_ptr<Message> dest) {
             // Would throw: wreport::error_domain Value -30 is outside the range [-20,1048554] for 013013 (TOTAL SNOW DEPTH)
             const wreport::Var* val = dest->get(Level(1), Trange::instant(), WR_VAR(0, 13, 13));
             wassert_true(val);

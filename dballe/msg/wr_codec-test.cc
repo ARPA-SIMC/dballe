@@ -57,7 +57,7 @@ add_method("domain_throw", []() {
     options->domain_errors = ImporterOptions::DomainErrors::THROW;
     auto importer = Importer::create(Encoding::BUFR, *options);
     file->foreach([&](const BinaryMessage& bmsg) {
-        wassert_throws(wreport::error_domain, importer->foreach_decoded(bmsg, [&](std::unique_ptr<Message> dest) { return true; }));
+        wassert_throws(wreport::error_domain, importer->foreach_decoded(bmsg, [&](std::shared_ptr<Message> dest) { return true; }));
         return true;
     });
 });
@@ -69,7 +69,7 @@ add_method("domain_unset", []() {
     auto importer = Importer::create(Encoding::BUFR, *options);
     unsigned count = 0;
     wassert_true(file->foreach([&](const BinaryMessage& bmsg) {
-        return importer->foreach_decoded(bmsg, [&](std::unique_ptr<Message> dest) {
+        return importer->foreach_decoded(bmsg, [&](std::shared_ptr<Message> dest) {
             // Would throw: wreport::error_domain: Value 329.2 is outside the range [0,327.66] for B22043 (SEA/WATER TEMPERATURE)
             const wreport::Var* val = dest->get(Level(1), Trange::instant(), WR_VAR(0, 22, 43));
             wassert_true(val);
@@ -89,7 +89,7 @@ add_method("domain_clamp", []() {
     auto importer = Importer::create(Encoding::BUFR, *options);
     unsigned count = 0;
     wassert_true(file->foreach([&](const BinaryMessage& bmsg) {
-        return importer->foreach_decoded(bmsg, [&](std::unique_ptr<Message> dest) {
+        return importer->foreach_decoded(bmsg, [&](std::shared_ptr<Message> dest) {
             // Would throw: wreport::error_domain: Value 329.2 is outside the range [0,327.66] for B22043 (SEA/WATER TEMPERATURE)
             const wreport::Var* val = dest->get(Level(1), Trange::instant(), WR_VAR(0, 22, 43));
             wassert_true(val);
@@ -111,7 +111,7 @@ add_method("domain_tag", []() {
     auto importer = Importer::create(Encoding::BUFR, *options);
     unsigned count = 0;
     wassert_true(file->foreach([&](const BinaryMessage& bmsg) {
-        return importer->foreach_decoded(bmsg, [&](std::unique_ptr<Message> dest) {
+        return importer->foreach_decoded(bmsg, [&](std::shared_ptr<Message> dest) {
             // Would throw: wreport::error_domain: Value 329.2 is outside the range [0,327.66] for B22043 (SEA/WATER TEMPERATURE)
             const wreport::Var* val = dest->get(Level(1), Trange::instant(), WR_VAR(0, 22, 43));
             wassert_true(val);
