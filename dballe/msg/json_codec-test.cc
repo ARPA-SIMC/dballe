@@ -1,5 +1,6 @@
 #include "tests.h"
 #include "json_codec.h"
+#include <wreport/options.h>
 #include <cstring>
 
 using namespace std;
@@ -61,6 +62,7 @@ add_method("domain_unset", []() {
     wassert(actual(count) == 1);
 });
 
+#ifdef WREPORT_OPTIONS_HAS_VAR_CLAMP_DOMAIN_ERRORS
 add_method("domain_clamp", []() {
     auto file = File::create(Encoding::JSON, tests::datafile("json/issue241.json"), "r");
     auto options = ImporterOptions::create();
@@ -80,6 +82,7 @@ add_method("domain_clamp", []() {
 
     wassert(actual(count) == 1);
 });
+#endif
 
 }
 
