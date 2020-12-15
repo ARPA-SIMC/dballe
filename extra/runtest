@@ -6,7 +6,7 @@ PYTHON=${PYTHON:-$(which python3)}
 if [ "$1" = "NOSE" ]
 then
     NOSE="${NOSE:-nose2-3}"
-    for n in "$NOSE" nose2-3 nose2-3.8 nose2-3.7 nose2-3.6
+    for n in "$NOSE" nose2-3 nose2-3.9 nose2-3.8 nose2-3.7 nose2-3.6
     do
         if which "$n" > /dev/null
         then

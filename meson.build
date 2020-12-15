@@ -118,3 +118,34 @@ pkg.generate(libdballef,
 
 m4_dir = get_option('datadir') / 'aclocal'
 install_data('libdballe.m4', 'libdballef.m4', install_dir: m4_dir)
+
+
+#    AC_MSG_CHECKING([for wreport documentation dir $WREPORT_DOXYGEN_DIR])
+#    AC_MSG_RESULT([$wreport_doxygen_dir_result])
+#    AC_MSG_CHECKING([for wreport doxytag file $WREPORT_DOXYGEN_TAGFILE])
+#    AC_MSG_RESULT([$wreport_doxygen_tagfile_result])
+#    if test x$wreport_doxygen_dir_result = xno
+#    then
+#        AC_MSG_WARN([WREPORT_DOXYGEN_DIR not found, documentation will not be built.])
+#        enable_docs=no
+#    fi
+#    if test x$wreport_doxygen_tagfile_result = xno
+#    then
+#        AC_MSG_WARN([WREPORT_DOXYGEN_TAGFILE not found, documentation will not be built.])
+#        enable_docs=no
+#    fi
+#
+#    AX_PYTHON_MODULE(breathe)
+#    if test x$HAVE_PYMOD_BREATHE != xyes
+#    then
+#        enable_docs=no
+#    fi
+
+#AC_PROG_FC([gfortran pgf90 ifort g95 xlf90 f90])
+#
+#dnl Enable extra compiler warnings
+#AX_CHECK_COMPILE_FLAG([-Wredundant-move], [has_redundant_move=yes], [has_redundant_move=no])
+#if test $has_redundant_move = yes
+#then
+#       AX_APPEND_FLAG([-Wno-error=redundant-move])
+#fi
