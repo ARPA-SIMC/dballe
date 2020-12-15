@@ -4,7 +4,7 @@
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 8.13
+Version: 8.14
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -313,6 +313,12 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Tue Dec 15 2020 Daniele Branchini <dbranchini@arpae.it> - 8.14-1
+- Added `dbadb import --domain-errors={unset|clamp}`. `clamp` is only available
+  when compiling with wreport from version 3.28. (#241)
+- Fixed querying by datetime extremes in explorer (#242)
+- Added alternative meson build system
+
 * Wed Sep 23 2020 Daniele Branchini <dbranchini@arpae.it> - 8.13-1
 - Always ignore stations without contexts (#235)
 
