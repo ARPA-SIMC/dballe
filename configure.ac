@@ -44,6 +44,12 @@ then
     AC_SUBST(PYTHON_CFLAGS)
     AX_PYTHON_MODULE_VERSION(wreport, 3.22)
     AX_PYTHON_MODULE(numpy, yes)
+
+    AC_CHECK_PROGS(NOSE, [nose2-$PYTHON_VERSION nose2-3])
+    if test x$NOSE = x
+    then
+        AC_MSG_ERROR([Python nose not found])
+    fi
 fi
 
 dnl Export information about the current major python version
