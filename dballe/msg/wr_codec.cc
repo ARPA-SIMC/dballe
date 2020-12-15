@@ -48,7 +48,9 @@ Messages WRImporter::from_bulletin(const wreport::Bulletin& msg) const
 bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::unique_ptr<dballe::Message>)> dest) const
 {
     auto lo1(options::local_override(options::var_silent_domain_errors, opts.domain_errors == ImporterOptions::DomainErrors::UNSET));
+#ifdef WREPORT_OPTIONS_HAS_VAR_CLAMP_DOMAIN_ERRORS
     auto lo2(options::local_override(options::var_clamp_domain_errors, opts.domain_errors == ImporterOptions::DomainErrors::CLAMP));
+#endif
 
     // Infer the right importer. See Common Code Table C-13
     std::unique_ptr<wr::Importer> importer;
