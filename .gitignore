@@ -75,7 +75,7 @@ Makefile
 /debian/dballe/
 /debian/libdballe-dev/
 /debian/libdballe-doc/
-/debian/libdballe8/
+/debian/libdballe?/
 /debian/libdballef-dev/
 /debian/libdballef5/
 /debian/python3-dballe/
