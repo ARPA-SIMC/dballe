@@ -4,7 +4,7 @@ VERSION=$(shell debian/vercheck)
 RELEASE_PACKAGE=dballe
 
 %:
-	dh $@ --with python3,sphinxdoc --without autoreconf -Smeson --parallel
+	dh $@ --with fortran_mod,python3,sphinxdoc --without autoreconf -Smeson --parallel
 
 # #DEB_MAKE_CHECK_TARGET := check
 
