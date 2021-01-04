@@ -158,11 +158,13 @@
  012101 TEMPERATURE/DRY-BULB TEMPERATURE                                 K                          2            0  16 K                         2          5
  012102 WET-BULB TEMPERATURE                                             K                          2            0  16 C                         2          4
  012103 DEW-POINT TEMPERATURE                                            K                          2            0  16 K                         2          5
+ 012107 VIRTUAL TEMPERATURE                                              K                          2            0  16 C                         2          4
  012121 GROUND MINIMUM TEMPERATURE                                       K                          2            0  16 C                         2          4
  012131 SNOW TEMPERATURE                                                 K                          2            0  16 C                         2          4
  012192 POTENTIAL TEMPERATURE                                            K                          2            0  16 K                         2          5
  012193 PSEUDO-EQUIVALENT POTENTIAL TEMPERATURE                          K                          2            0  16 K                         2          5
  012194 Air density                                                      KG/M**3                    6            0  20 KG/M**3                   6          6
+ 012195 INFRARED SNOW TEMPERATURE                                        K                          2            0  16 C                         2          4
  013001 SPECIFIC HUMIDITY                                                KG/KG                      5            0  14 KG/KG                     5          5
  013002 MIXING RATIO                                                     KG/KG                      5            0  14 KG/KG                     5          5
  013003 RELATIVE HUMIDITY                                                %                          0            0   7 %                         0          3
