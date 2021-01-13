@@ -4,7 +4,7 @@
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 8.14
+Version: 8.15
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -313,6 +313,11 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Wed Jan 13 2021 Daniele Branchini <dbranchini@arpae.it> - 8.15-1
+- Added Lifted, virtual T and Skin Temperature variables
+- Added support for python 3.9 in nose2 tests
+- Dropped support for nose1
+
 * Tue Dec 15 2020 Daniele Branchini <dbranchini@arpae.it> - 8.14-1
 - Added `dbadb import --domain-errors={unset|clamp}`. `clamp` is only available
   when compiling with wreport from version 3.28. (#241)

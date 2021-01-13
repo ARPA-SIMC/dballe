@@ -1,3 +1,8 @@
+# New in version 8.15
+* Added Lifted, virtual T and Skin Temperature variables
+* Added support for python 3.9 in nose2 tests
+* Dropped support for nose1
+
 # New in version 8.14
 
 * Added `dbadb import --domain-errors={unset|clamp}`. `clamp` is only available
