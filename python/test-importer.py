@@ -144,6 +144,14 @@ class TestImporter(MessageTestMixin, unittest.TestCase):
         val = msgs[0].get(dballe.Level(1), dballe.Trange(254, 0, 0), "B22043")
         self.assertEqual(val.enqd(), 327.66)
 
+        importer = dballe.Importer("BUFR", domain_errors="tag")
+        msgs = importer.from_binary(binmsg)
+        val = msgs[0].get(dballe.Level(1), dballe.Trange(254, 0, 0), "B22043")
+        self.assertFalse(val.isset)
+        a = val.enqa("B33192")
+        self.assertTrue(a)
+        self.assertEqual(a.enqi(), 0)
+
 
 if __name__ == "__main__":
     from testlib import main

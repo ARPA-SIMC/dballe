@@ -7,6 +7,7 @@
 #include "dballe/file.h"
 #include "dballe/msg/msg.h"
 #include "utils/type.h"
+#include "wreport/options.h"
 
 using namespace std;
 using namespace dballe;
@@ -199,7 +200,7 @@ Constructor: Importer(encoding: str, simplified: bool=True, domain_errors="raise
                     the range for its variable. "raise" (the default) raises an
                     exception. "unset" changes the value to be unset. "clamp"
                     changes the value to the nearest valid extreme of the
-                    domain.
+                    domain. "tag" unsets the value and sets attribute B33192=0
 
 When a message is imported in simplified mode, the actual context information
 will be stored as data attributes.
@@ -246,8 +247,14 @@ Example usage::
                 opts.domain_errors = ImporterOptions::DomainErrors::THROW;
             else if (strcmp(domain_errors, "unset") == 0)
                 opts.domain_errors = ImporterOptions::DomainErrors::UNSET;
+#ifdef WREPORT_OPTIONS_HAS_VAR_CLAMP_DOMAIN_ERRORS
             else if (strcmp(domain_errors, "clamp") == 0)
                 opts.domain_errors = ImporterOptions::DomainErrors::CLAMP;
+#endif
+#ifdef WREPORT_OPTIONS_HAS_VAR_HOOK_DOMAIN_ERRORS
+            else if (strcmp(domain_errors, "tag") == 0)
+                opts.domain_errors = ImporterOptions::DomainErrors::TAG;
+#endif
             else
             {
                 PyErr_Format(PyExc_ValueError, "domain_errors argument has unsupported value '%s'", domain_errors);

@@ -70,6 +70,31 @@ add_method("domain_clamp", []() {
 });
 #endif
 
+#ifdef WREPORT_OPTIONS_HAS_VAR_CLAMP_DOMAIN_ERRORS
+add_method("domain_tag", []() {
+    auto file = File::create(Encoding::BUFR, tests::datafile("bufr/interpreted-range.bufr"), "r");
+    auto options = ImporterOptions::create();
+    options->domain_errors = ImporterOptions::DomainErrors::TAG;
+    auto importer = Importer::create(Encoding::BUFR, *options);
+    unsigned count = 0;
+    wassert_true(file->foreach([&](const BinaryMessage& bmsg) {
+        return importer->foreach_decoded(bmsg, [&](std::unique_ptr<Message> dest) {
+            // Would throw: wreport::error_domain: Value 329.2 is outside the range [0,327.66] for B22043 (SEA/WATER TEMPERATURE)
+            const wreport::Var* val = dest->get(Level(1), Trange::instant(), WR_VAR(0, 22, 43));
+            wassert_true(val);
+            wassert_false(val->isset());
+            const wreport::Var* a = val->enqa(WR_VAR(0, 33, 192));
+            wassert_true(a);
+            wassert(actual(a->enqi()) == 0);
+            ++count;
+            return true;
+        });
+    }));
+
+    wassert(actual(count) == 1);
+});
+#endif
+
 }
 
 }

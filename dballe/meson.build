@@ -165,6 +165,7 @@ test_dballe_sources = [
         'msg/context-test.cc',
         'msg/msg-test.cc',
         'msg/cursor-test.cc',
+        'msg/domain_errors-test.cc',
         'msg/json_codec-test.cc',
         'msg/wr_codec_generic-test.cc',
         'msg/wr_codec-test.cc',

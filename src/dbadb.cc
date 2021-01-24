@@ -295,6 +295,9 @@ struct ImportCmd : public DatabaseCmd
 #ifdef WREPORT_OPTIONS_HAS_VAR_CLAMP_DOMAIN_ERRORS
             ", 'clamp' (ignore error and replace the value with the closest extreme of the valid domain)"
 #endif
+#ifdef WREPORT_OPTIONS_HAS_VAR_TAG_DOMAIN_ERRORS
+            ", 'tag' (unset variable and add attribute B33192=0)"
+#endif
             , "varlist" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
             "Options used to filter messages", 0 });
@@ -307,25 +310,29 @@ struct ImportCmd : public DatabaseCmd
         cmdline::Reader reader(readeropts);
         reader.verbose = op_verbose;
 
-        if (strcmp(op_domain_errors, "") == 0)
-        {
-            ; // Nothing to do, leave defaults
-        } else if (strcmp(op_domain_errors, "unset") == 0) {
-            wreport::options::var_silent_domain_errors = true;
-#ifdef WREPORT_OPTIONS_HAS_VAR_CLAMP_DOMAIN_ERRORS
-        } else if (strcmp(op_domain_errors, "clamp") == 0) {
-            wreport::options::var_clamp_domain_errors = true;
-#endif
-        } else {
-            error_consistency::throwf("valore '%s' per --domain-errors non supportato", op_domain_errors);
-        }
-
-
         // Configure the reader
         core::Query query;
         if (dba_cmdline_get_query(optCon, query) > 0)
             reader.filter.matcher_from_record(query);
         reader.import_opts.simplified = !op_precise_import;
+
+        if (strcmp(op_domain_errors, "") == 0)
+        {
+            ; // Nothing to do, leave defaults
+        } else if (strcmp(op_domain_errors, "unset") == 0) {
+            reader.import_opts.domain_errors = ImporterOptions::DomainErrors::UNSET;
+#ifdef WREPORT_OPTIONS_HAS_VAR_CLAMP_DOMAIN_ERRORS
+        } else if (strcmp(op_domain_errors, "clamp") == 0) {
+            reader.import_opts.domain_errors = ImporterOptions::DomainErrors::CLAMP;
+#endif
+#ifdef WREPORT_OPTIONS_HAS_VAR_HOOK_DOMAIN_ERRORS
+        } else if (strcmp(op_domain_errors, "tag") == 0) {
+            reader.import_opts.domain_errors = ImporterOptions::DomainErrors::TAG;
+#endif
+        } else {
+            error_consistency::throwf("valore '%s' per --domain-errors non supportato", op_domain_errors);
+        }
+
 
         // Configure the importer
         auto opts = DBImportOptions::create();
