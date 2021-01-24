@@ -7,6 +7,7 @@
 #include "dballe/file.h"
 #include "dballe/msg/msg.h"
 #include "utils/type.h"
+#include "wreport/options.h"
 
 using namespace std;
 using namespace dballe;
@@ -250,7 +251,7 @@ Example usage::
             else if (strcmp(domain_errors, "clamp") == 0)
                 opts.domain_errors = ImporterOptions::DomainErrors::CLAMP;
 #endif
-#ifdef WREPORT_OPTIONS_HAS_VAR_TAG_DOMAIN_ERRORS
+#ifdef WREPORT_OPTIONS_HAS_VAR_HOOK_DOMAIN_ERRORS
             else if (strcmp(domain_errors, "tag") == 0)
                 opts.domain_errors = ImporterOptions::DomainErrors::TAG;
 #endif

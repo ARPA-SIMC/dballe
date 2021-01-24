@@ -1,4 +1,5 @@
 #include "json_codec.h"
+#include "domain_errors.h"
 #include "dballe/core/json.h"
 #include "dballe/file.h"
 #include "dballe/msg/msg.h"
@@ -435,10 +436,7 @@ JsonImporter::~JsonImporter() {}
 
 bool JsonImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<dballe::Message>)> dest) const
 {
-    auto lo1(wreport::options::local_override(wreport::options::var_silent_domain_errors, opts.domain_errors == ImporterOptions::DomainErrors::UNSET));
-#ifdef WREPORT_OPTIONS_HAS_VAR_CLAMP_DOMAIN_ERRORS
-    auto lo2(wreport::options::local_override(wreport::options::var_clamp_domain_errors, opts.domain_errors == ImporterOptions::DomainErrors::CLAMP));
-#endif
+    WreportVarOptionsForImport wreport_config(opts.domain_errors);
 
     JSONMsgReader jsonreader;
     return jsonreader.parse_msgs(msg.data, dest);
