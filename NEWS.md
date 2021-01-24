@@ -1,3 +1,8 @@
+# New in version 8.16
+
+* Added `dbadb import --domain-errors={unset|clamp|tag}`. `tag` is only
+  available when compiling with wreport from version 3.29. (#241)
+
 # New in version 8.15
 * Added Lifted, virtual T and Skin Temperature variables
 * Added support for python 3.9 in nose2 tests

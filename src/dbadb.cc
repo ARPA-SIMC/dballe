@@ -295,6 +295,9 @@ struct ImportCmd : public DatabaseCmd
 #ifdef WREPORT_OPTIONS_HAS_VAR_CLAMP_DOMAIN_ERRORS
             ", 'clamp' (ignore error and replace the value with the closest extreme of the valid domain)"
 #endif
+#ifdef WREPORT_OPTIONS_HAS_VAR_TAG_DOMAIN_ERRORS
+            ", 'tag' (unset variable and add attribute B33192=0)"
+#endif
             , "varlist" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
             "Options used to filter messages", 0 });
