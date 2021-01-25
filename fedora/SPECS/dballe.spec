@@ -1,4 +1,4 @@
-%global releaseno 1
+%global releaseno 2
 # Note: define _srcarchivename in Travis build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
@@ -142,6 +142,7 @@ Group: Applications/Meteo
 Summary:   DB-ALL.e core shared library
 Group:    Applications/Meteo
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
+Requires: pkgconfig(libwreport) >= 3.29
 
 %description -n libdballe6
 DB-ALL.e C shared library
@@ -313,6 +314,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Mon Jan 25 2021 Emanuele Di Giacomo <edigiacomo@arpae.it> - 8.17-2
+- Explicit requires wreport > 3.29-1
+
 * Mon Jan 25 2021 Emanuele Di Giacomo <edigiacomo@arpae.it> - 8.17-1
 - `dbadb import --domain-errors=tag` clamps the value instead of
   unsetting it (#241)
