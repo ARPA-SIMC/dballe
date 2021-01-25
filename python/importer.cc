@@ -200,7 +200,8 @@ Constructor: Importer(encoding: str, simplified: bool=True, domain_errors="raise
                     the range for its variable. "raise" (the default) raises an
                     exception. "unset" changes the value to be unset. "clamp"
                     changes the value to the nearest valid extreme of the
-                    domain. "tag" unsets the value and sets attribute B33192=0
+                    domain. "tag" changes the value to the nearest valid
+                    extreme of the domain and sets attribute B33192=0
 
 When a message is imported in simplified mode, the actual context information
 will be stored as data attributes.

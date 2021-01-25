@@ -13,13 +13,13 @@ class TagDomainErrors : public wreport::options::DomainErrorHook
 {
     void handle_domain_error_int(wreport::Var& var, int32_t val) override
     {
-        var.unset();
+        var.set(val < var.info()->imin ? var.info()->imin : var.info()->imax);
         var.seta(newvar(WR_VAR(0, 33, 192), 0));
     }
 
     void handle_domain_error_double(wreport::Var& var, double val) override
     {
-        var.unset();
+        var.set(val < var.info()->dmin ? var.info()->dmin : var.info()->dmax);
         var.seta(newvar(WR_VAR(0, 33, 192), 0));
     }
 } domain_errors_tag;
