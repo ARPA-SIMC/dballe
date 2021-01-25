@@ -315,7 +315,7 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 %changelog
 * Mon Jan 25 2021 Emanuele Di Giacomo <edigiacomo@arpae.it> - 8.17-2
-- Explicit requires wreport > 3.29-1
+- Explicit requires wreport >= 3.29-1
 
 * Mon Jan 25 2021 Emanuele Di Giacomo <edigiacomo@arpae.it> - 8.17-1
 - `dbadb import --domain-errors=tag` clamps the value instead of
