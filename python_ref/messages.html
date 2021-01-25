@@ -252,7 +252,7 @@ message will be encoded by the exporter.</p>
 using a uniform data model.</p>
 <p>Note that one binary message is often decoded to multiple data messages, in
 case, for example, of compressed BUFR files.</p>
-<p>Constructor: Importer(encoding: str, simplified: bool=True)</p>
+<p>Constructor: Importer(encoding: str, simplified: bool=True, domain_errors=”raise”)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -264,6 +264,12 @@ intepretation of a synop message will place the temperature at
 2M above ground, regardless of the reported sensor height. A
 non-simplified import will place the temperature reading at
 the reported sensor height.</p></li>
+<li><p><strong>domain_errors</strong> – controls what to do when a value in the message is outside
+the range for its variable. “raise” (the default) raises an
+exception. “unset” changes the value to be unset. “clamp”
+changes the value to the nearest valid extreme of the
+domain. “tag” changes the value to the nearest valid
+extreme of the domain and sets attribute B33192=0</p></li>
 </ul>
 </dd>
 </dl>

@@ -948,12 +948,6 @@ digits and description.
      - Temperature change over specified period
      - K
      - 2 digits
-   * - .. _B12061:
-
-       B12061
-     - SKIN TEMPERATURE
-     - K
-     - ###.#
    * - .. _B12063:
 
        B12063
@@ -978,6 +972,12 @@ digits and description.
      - DEW-POINT TEMPERATURE
      - K
      - ###.##
+   * - .. _B12107:
+
+       B12107
+     - VIRTUAL TEMPERATURE
+     - K
+     - ###.##
    * - .. _B12121:
 
        B12121
@@ -988,6 +988,12 @@ digits and description.
 
        B12131
      - SNOW TEMPERATURE
+     - K
+     - ###.##
+   * - .. _B12161:
+
+       B12161
+     - SKIN TEMPERATURE
      - K
      - ###.##
    * - .. _B12192:
@@ -1242,6 +1248,12 @@ digits and description.
      - Reference evapotranspiration according to Hargreav.-Samani
      - KG/M**2
      - ##.#
+   * - .. _B13234:
+
+       B13234
+     - Lifted Index
+     - K
+     - ###.##
    * - .. _B14002:
 
        B14002

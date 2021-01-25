@@ -55,18 +55,18 @@ database.</p>
 <li><p><em>latitude</em>.</p></li>
 <li><p><em>longitude</em>.</p></li>
 <li><p><em>station identifier</em> (if the station is mobile).</p></li>
-<li><p><em>rep_memo</em></p></li>
+<li><p><em>report</em></p></li>
 </ul>
 </div>
 <div class="section" id="station-values">
-<h2>Station values<a class="headerlink" href="#station-values" title="Permalink to this headline">¶</a></h2>
+<span id="id3"></span><h2>Station values<a class="headerlink" href="#station-values" title="Permalink to this headline">¶</a></h2>
 <p>Each station entry can have zero or more values associated to it. They are just
 like measured variables, but lack date, time, level, and time range
 information. They can be used to store station attributes, like the height
 above sea level, or the center operating it.</p>
 </div>
 <div class="section" id="level-or-layer">
-<h2>Level or layer<a class="headerlink" href="#level-or-layer" title="Permalink to this headline">¶</a></h2>
+<span id="level"></span><h2>Level or layer<a class="headerlink" href="#level-or-layer" title="Permalink to this headline">¶</a></h2>
 <p>The vertical coordinate of a value in DB-All.e is described using a level
 description or a layer description.</p>
 <p>A level is defined univocally by a code table (<code class="docutils literal notranslate"><span class="pre">leveltype1</span></code>) and a
@@ -77,7 +77,7 @@ numerical value (<code class="docutils literal notranslate"><span class="pre">l1
 associated level values.</p>
 </div>
 <div class="section" id="time-range">
-<h2>Time range<a class="headerlink" href="#time-range" title="Permalink to this headline">¶</a></h2>
+<span id="timerange"></span><h2>Time range<a class="headerlink" href="#time-range" title="Permalink to this headline">¶</a></h2>
 <p>A value in DB-All.e is also defined by the time period to which the datum
 refers: it can be, for example, a value measured in a specific instant, or a
 cumulated or averaged value over an interval of time.</p>
@@ -108,7 +108,7 @@ and y coordinates).</p></li>
 </ol>
 </div>
 <div class="section" id="attributes">
-<h2>Attributes<a class="headerlink" href="#attributes" title="Permalink to this headline">¶</a></h2>
+<span id="id4"></span><h2>Attributes<a class="headerlink" href="#attributes" title="Permalink to this headline">¶</a></h2>
 <p>Values in DB-All.e are also associated to zero or more <em>attributes</em>.  An
 attribute is a value that describes an aspect of a variable, like for example a
 confidence interval.</p>

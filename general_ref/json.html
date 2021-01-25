@@ -1,0 +1,317 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>JSON import/export format &#8212; dballe 3.23 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Python reference" href="../python_ref/index.html" />
+    <link rel="prev" title="Message shortcuts" href="msg_vars.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="json-import-export-format">
+<span id="format-json"></span><h1>JSON import/export format<a class="headerlink" href="#json-import-export-format" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>DB-All.e can import and export streams of messages encoded in JSON format.
+Since such streams of messages could be potentially very long, and benefit from
+being processed as they are streamed, streams are composed of
+<a class="reference external" href="https://jsonlines.org/">one self-contained JSON per line</a>.</p>
+<p>Each JSON line contains an <em>Object</em> with these keywords:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">version</span></code> (String): version of the JSON structure used for messages. For now
+this is always <code class="docutils literal notranslate"><span class="pre">&quot;0.1&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">network</span></code> (String): report name (see <a class="reference internal" href="concepts.html#report"><span class="std std-ref">Report</span></a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ident</span></code> (String or null): station identifier (see <a class="reference internal" href="concepts.html#station"><span class="std std-ref">Station</span></a>) for mobile
+stations, or <code class="docutils literal notranslate"><span class="pre">null</span></code> for fixed stations</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lon</span></code> (Number): station longitude</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lat</span></code> (Number): station latitude</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">date</span></code> (String): date and time, always in UTC, in the format
+<code class="docutils literal notranslate"><span class="pre">YYYY-MM-DDTHH:MM:SSZ</span></code>. Because of some flexibility in the date parser, a
+space can be accepted instead of <code class="docutils literal notranslate"><span class="pre">T</span></code>, and the trailing <code class="docutils literal notranslate"><span class="pre">Z</span></code> can be
+omitted. When generating JSON for DB-All.e, please always use the format
+<code class="docutils literal notranslate"><span class="pre">YYYY-MM-DDTHH:MM:SSZ</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code> (Array of Objects): list of variables in the message.</p></li>
+</ul>
+<p>Each data variable is an <em>Object</em> with these keywords:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">level</span></code> (Array of 4 x (Number or null)): the 4 values indicating the level
+or layer for a group of variables. See <a class="reference internal" href="concepts.html#level"><span class="std std-ref">Level or layer</span></a>. When parsing, an array
+shorter than 4 elements is considered <code class="docutils literal notranslate"><span class="pre">null</span></code>-padded. <code class="docutils literal notranslate"><span class="pre">level</span></code> is missing
+for station values (see <a class="reference internal" href="concepts.html#station-values"><span class="std std-ref">Station values</span></a>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">timerange</span></code> (Array of 3 x (Number or null)): the 3 values indicating the time range
+for a group of variables. See <a class="reference internal" href="concepts.html#timerange"><span class="std std-ref">Time range</span></a>. When parsing, an array
+shorter than 3 elements is considered <code class="docutils literal notranslate"><span class="pre">null</span></code>-padded. <code class="docutils literal notranslate"><span class="pre">timerange</span></code> is missing
+for station values (see <a class="reference internal" href="concepts.html#station-values"><span class="std std-ref">Station values</span></a>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vars</span></code> (Object): station variables, or variables at this level/layer and
+time range.</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">vars</span></code> Object contains an entry per variable, whose key is the <code class="docutils literal notranslate"><span class="pre">Bxxyyy</span></code>
+variable code (see <a class="reference internal" href="concepts.html#varcode"><span class="std std-ref">Variable code (varcode)</span></a>). Each entry is in turn an <em>Object</em> with
+these keywords:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">v</span></code> (String or Number or null): variable value. For values with decimal
+scaling (like <code class="docutils literal notranslate"><span class="pre">B12101</span></code>), the number is written properly scaled and with the
+correct number of decimal digits. Trailing zeroes after the decimal dot are
+not written, and missing trailing decimal digits are assumed to be zero.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">a</span></code>: (Object): attributes for the variable (see <a class="reference internal" href="concepts.html#attributes"><span class="std std-ref">Attributes</span></a>). If the
+variable has no attributes, the <code class="docutils literal notranslate"><span class="pre">a</span></code> key can be omitted. The attributes
+object is a mapping of <code class="docutils literal notranslate"><span class="pre">Bxxyyy</span></code> variable codes to variable values as
+Strings, Numbers, or nulls, as with the <code class="docutils literal notranslate"><span class="pre">v</span></code> values.</p></li>
+</ul>
+<div class="section" id="example-json-message">
+<h2>Example JSON message<a class="headerlink" href="#example-json-message" title="Permalink to this headline">¶</a></h2>
+<p>This is the BUFR file <code class="docutils literal notranslate"><span class="pre">extra/bufr/gts-synop-linate.bufr</span></code> exported to JSON and
+indented for readability:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;0.1&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;network&quot;</span><span class="p">:</span> <span class="s2">&quot;synop&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;ident&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+  <span class="s2">&quot;lon&quot;</span><span class="p">:</span> <span class="mi">927833</span><span class="p">,</span>
+  <span class="s2">&quot;lat&quot;</span><span class="p">:</span> <span class="mi">4544944</span><span class="p">,</span>
+  <span class="s2">&quot;date&quot;</span><span class="p">:</span> <span class="s2">&quot;2015-05-27T06:00:00Z&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;vars&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;B01001&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">16</span> <span class="p">},</span>
+        <span class="s2">&quot;B01002&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">80</span> <span class="p">},</span>
+        <span class="s2">&quot;B01019&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="s2">&quot;MILANO/LINATE&quot;</span> <span class="p">},</span>
+        <span class="s2">&quot;B02001&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="p">},</span>
+        <span class="s2">&quot;B02002&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">12</span> <span class="p">},</span>
+        <span class="s2">&quot;B04001&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">2015</span> <span class="p">},</span>
+        <span class="s2">&quot;B04002&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">5</span> <span class="p">},</span>
+        <span class="s2">&quot;B04003&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">27</span> <span class="p">},</span>
+        <span class="s2">&quot;B04004&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">6</span> <span class="p">},</span>
+        <span class="s2">&quot;B04005&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">0</span> <span class="p">},</span>
+        <span class="s2">&quot;B05001&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mf">45.44944</span> <span class="p">},</span>
+        <span class="s2">&quot;B06001&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mf">9.27833</span> <span class="p">},</span>
+        <span class="s2">&quot;B07030&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">108</span> <span class="p">},</span>
+        <span class="s2">&quot;B07031&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">103</span> <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;timerange&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">43200</span> <span class="p">],</span>
+      <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span> <span class="p">],</span>
+      <span class="s2">&quot;vars&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;B13011&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;B07032&quot;</span><span class="p">:</span> <span class="mi">2</span> <span class="p">}</span> <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;timerange&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">86400</span> <span class="p">],</span>
+      <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span> <span class="p">],</span>
+      <span class="s2">&quot;vars&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;B13011&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mf">4.4</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;B07032&quot;</span><span class="p">:</span> <span class="mi">2</span> <span class="p">}</span> <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;timerange&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">43200</span> <span class="p">],</span>
+      <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span> <span class="p">],</span>
+      <span class="s2">&quot;vars&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;B12101&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mf">284.75</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;B07032&quot;</span><span class="p">:</span> <span class="mi">2</span> <span class="p">}</span> <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;timerange&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10800</span> <span class="p">],</span>
+      <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span> <span class="p">],</span>
+      <span class="s2">&quot;vars&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;B10060&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">150</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;B07031&quot;</span><span class="p">:</span> <span class="mi">103</span> <span class="p">}</span> <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;timerange&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">205</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10800</span> <span class="p">],</span>
+      <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span> <span class="p">],</span>
+      <span class="s2">&quot;vars&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;B10063&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;B07031&quot;</span><span class="p">:</span> <span class="mi">103</span> <span class="p">}</span> <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;timerange&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">254</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span> <span class="p">],</span>
+      <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span> <span class="p">],</span>
+      <span class="s2">&quot;vars&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;B10004&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">100310</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;B07031&quot;</span><span class="p">:</span> <span class="mi">103</span> <span class="p">}</span> <span class="p">},</span>
+        <span class="s2">&quot;B20001&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">20000</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;B07032&quot;</span><span class="p">:</span> <span class="mi">2</span> <span class="p">}</span> <span class="p">},</span>
+        <span class="s2">&quot;B20003&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">508</span> <span class="p">},</span>
+        <span class="s2">&quot;B20062&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;timerange&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">254</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span> <span class="p">],</span>
+      <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">101</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span> <span class="p">],</span>
+      <span class="s2">&quot;vars&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;B10051&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">101530</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;B07031&quot;</span><span class="p">:</span> <span class="mi">103</span> <span class="p">}</span> <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;timerange&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">254</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span> <span class="p">],</span>
+      <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">103</span><span class="p">,</span> <span class="mi">2000</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span> <span class="p">],</span>
+      <span class="s2">&quot;vars&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;B12101&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mf">289.85</span> <span class="p">},</span>
+        <span class="s2">&quot;B12103&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mf">286.45</span> <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;timerange&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">254</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span> <span class="p">],</span>
+      <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">103</span><span class="p">,</span> <span class="mi">10000</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span> <span class="p">],</span>
+      <span class="s2">&quot;vars&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;B11001&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">220</span> <span class="p">},</span>
+        <span class="s2">&quot;B11002&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;timerange&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">254</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span> <span class="p">],</span>
+      <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">256</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="mi">258</span><span class="p">,</span> <span class="mi">0</span> <span class="p">],</span>
+      <span class="s2">&quot;vars&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;B08002&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">7</span> <span class="p">},</span>
+        <span class="s2">&quot;B20011&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="p">},</span>
+        <span class="s2">&quot;B20013&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">1750</span> <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;timerange&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">254</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span> <span class="p">],</span>
+      <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">256</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="mi">258</span><span class="p">,</span> <span class="mi">1</span> <span class="p">],</span>
+      <span class="s2">&quot;vars&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;B20012&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">34</span> <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;timerange&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">254</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span> <span class="p">],</span>
+      <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">256</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="mi">258</span><span class="p">,</span> <span class="mi">2</span> <span class="p">],</span>
+      <span class="s2">&quot;vars&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;B20012&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">20</span> <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;timerange&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">254</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span> <span class="p">],</span>
+      <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">256</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="mi">258</span><span class="p">,</span> <span class="mi">3</span> <span class="p">],</span>
+      <span class="s2">&quot;vars&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;B20012&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">10</span> <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;timerange&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">254</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span> <span class="p">],</span>
+      <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">256</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="mi">259</span><span class="p">,</span> <span class="mi">1</span> <span class="p">],</span>
+      <span class="s2">&quot;vars&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;B08002&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="p">},</span>
+        <span class="s2">&quot;B20011&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="p">},</span>
+        <span class="s2">&quot;B20012&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">6</span> <span class="p">},</span>
+        <span class="s2">&quot;B20013&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">1500</span> <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;timerange&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">254</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span> <span class="p">],</span>
+      <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="mi">256</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span> <span class="p">],</span>
+      <span class="s2">&quot;vars&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;B20010&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="mi">12</span> <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">dballe</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../howtos.html">How-to guides</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../reference.html">Reference documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">General reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../python_ref/index.html">Python reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cpp_ref/index.html">C++ reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fortran_ref/index.html">Fortran reference</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../reference.html">Reference documentation</a><ul>
+  <li><a href="index.html">General reference</a><ul>
+      <li>Previous: <a href="msg_vars.html" title="previous chapter">Message shortcuts</a></li>
+      <li>Next: <a href="../python_ref/index.html" title="next chapter">Python reference</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Enrico Zini.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/general_ref/json.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
