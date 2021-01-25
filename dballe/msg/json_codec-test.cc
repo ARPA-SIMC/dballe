@@ -96,7 +96,7 @@ add_method("domain_tag", []() {
             // Would throw: wreport::error_domain Value -30 is outside the range [-20,1048554] for 013013 (TOTAL SNOW DEPTH)
             const wreport::Var* val = dest->get(Level(1), Trange::instant(), WR_VAR(0, 13, 13));
             wassert_true(val);
-            wassert_false(val->isset());
+            wassert(actual(*val) == -20);
             const wreport::Var* a = val->enqa(WR_VAR(0, 33, 192));
             wassert_true(a);
             wassert(actual(a->enqi()) == 0);
