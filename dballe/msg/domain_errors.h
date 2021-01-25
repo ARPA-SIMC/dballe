@@ -26,6 +26,16 @@ public:
     ~WreportVarOptionsForImport();
 };
 
+/**
+ * Hook for out of range values
+ */
+class TagDomainErrors : public wreport::options::DomainErrorHook
+{
+    void handle_domain_error_int(wreport::Var& var, int32_t val) override;
+    void handle_domain_error_double(wreport::Var& var, double val) override;
+};
+
+
 }
 }
 }
