@@ -4,7 +4,7 @@
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 8.16
+Version: 8.17
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -313,6 +313,10 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Mon Jan 25 2021 Emanuele Di Giacomo <edigiacomo@arpae.it> - 8.17-1
+- `dbadb import --domain-errors=tag` clamps the value instead of
+  unsetting it (#241)
+
 * Mon Jan 25 2021 Daniele Branchini <dbranchini@arpae.it> - 8.16-1
 - Added `dbadb import --domain-errors={unset|clamp|tag}`. `tag` is only
   available when compiling with wreport from version 3.29. (#241)
