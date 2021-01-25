@@ -82,7 +82,7 @@ add_method("domain_tag", []() {
             // Would throw: wreport::error_domain: Value 329.2 is outside the range [0,327.66] for B22043 (SEA/WATER TEMPERATURE)
             const wreport::Var* val = dest->get(Level(1), Trange::instant(), WR_VAR(0, 22, 43));
             wassert_true(val);
-            wassert_false(val->isset());
+            wassert(actual(*val) == 327.66);
             const wreport::Var* a = val->enqa(WR_VAR(0, 33, 192));
             wassert_true(a);
             wassert(actual(a->enqi()) == 0);
