@@ -1,3 +1,25 @@
+# New in version 8.17
+
+* Added variables 025194 011211 011212 011213 011214 011215 011216
+
+# New in version 8.16
+
+* Added `dbadb import --domain-errors={unset|clamp|tag}`. `tag` is only
+  available when compiling with wreport from version 3.29. (#241)
+
+# New in version 8.15
+
+* Added Lifted, virtual T and Skin Temperature variables
+* Added support for python 3.9 in nose2 tests
+* Dropped support for nose1
+
+# New in version 8.14
+
+* Added `dbadb import --domain-errors={unset|clamp}`. `clamp` is only available
+  when compiling with wreport from version 3.28. (#241)
+* Fixed querying by datetime extremes in explorer (#242)
+* Added alternative meson build system
+
 # New in version 8.13
 
 * Always ignore stations without contexts (#235)
@@ -6,9 +28,9 @@
 
 * Improved documentation
 * Use BUFR unit in documentation (#222)
-* dballe.Message.query_data() error when the BUFR has only station data (#213)
+* `dballe.Message.query_data()` error when the BUFR has only station data (#213)
 * Fixed bugs in Explorer (#217, #218, #228)
-* attr_filter supports != operator (#224)
+* `attr_filter` supports != operator (#224)
 * Fixed JSON datetime parser (#230)
 * Fixed segmentation fault querying min and max datetimes in
 * dballe.CursorSummarySummary (#232)
@@ -124,7 +146,7 @@
 * fixed various bugs (#82, #85, #86, #87, #91, #93, #98, #103, #105, #107)
 * added new variables to dballe.txt
 * various performance optimizations (#112, #116)
-* DBA_FORTRAN_TRANSACTION is now the default (#67)
+* `DBA_FORTRAN_TRANSACTION` is now the default (#67)
 * improved handling of rejected messages and consistency errors
 * fixed PostgreSQL support when pkg-config is missing
 * dependency on newer sqlite is now conditional
@@ -138,12 +160,12 @@
 
 # New in version 4.0.4
 
-* Store rep_cod information in generic messages
+* Store `rep_cod` information in generic messages
 * Allow to create messages without having to set leveltype2 and l2 if not needed
 * Implemented working with messages with the Fortran API
 * Refactored the code for the Fortran API
-* Fixed TOT_PREC12 time range values
-* Implemented bufrex_msg_reset_sections
+* Fixed `TOT_PREC12` time range values
+* Implemented `bufrex_msg_reset_sections`
 * Implemented Bufrex::resetSections and same in Python
 * Test against NaN on setr and setd
 * Use clean program name in manpages
@@ -164,12 +186,12 @@
 * Fixed the problem in provami that fails when the only restriction used is the ana filter
 * Drafted support for pollution data
 * Use standard floating point huge values to exchange missing values with Fortran
-* Fortran API: idba_elencamele now properly cleans old values from the output record
+* Fortran API: `idba_elencamele` now properly cleans old values from the output record
 * Fixed handling of varlist when querying attributes from fortran
 * Documentation improvements for fapi.tex
 * Hack a way to sync the values of missing values between Fortran and C
 * Fixed bufr decoder to work on ARM
-* Clean records before reading in new data in fortran idba_dammelo
+* Clean records before reading in new data in fortran `idba_dammelo`
 
 # New in version 3.5
 
@@ -183,14 +205,14 @@
 * dbadb manpage: refer to report code and report memo instead of just
   'type'
 * dbadb manpage: mention what are the query parameters that can be used
-* dba_var_set* and idba_set* operations now check for overflows and report
-  DBA_ERR_TOOLONG if it happens
-* fortran API: idba_spiegab now formats the values with the right amount of
+* `dba_var_set*` and `idba_set*` operations now check for overflows and report
+  `DBA_ERR_TOOLONG` if it happens
+* fortran API: `idba_spiegab` now formats the values with the right amount of
   decimal digits
 * fortran API: added another predefined callback
-  (idba_error_handle_tolerating_overflows) that only prints a warning in case
+  (`idba_error_handle_tolerating_overflows`) that only prints a warning in case
   of overflow
 * fapi.tex: documented that setting a variable to a missing value is
-  equivalent to an idba_unset
+  equivalent to an `idba_unset`
 * fapi.tex: documented the use of the dballef.h Fortran 90 interface file
 * README: rewritten to only provide quick start information

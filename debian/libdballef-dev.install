@@ -1,4 +1,5 @@
 usr/include/dballe/dballef.h
+usr/include/dballe/dballeff.h
 usr/lib/*/libdballef*.a
 usr/lib/*/libdballef*.so
 usr/lib/*/pkgconfig/libdballef*

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+export LD_LIBRARY_PATH="@top_builddir@/arki:$LD_LIBRARY_PATH"
+export WREPORT_EXTRA_TABLES="@top_srcdir@/tables"
+export DBA_REPINFO="@top_srcdir@/tables/repinfo.csv"
+export DBA_TABLES="@top_srcdir@/tables/"
+export PYTHONPATH="@top_srcdir@/python:@top_builddir@/python"
+export PATH="@top_builddir@/src:@top_srcdir@/src:$PATH"
+
+#ulimit -v 1048576
+
+exec "$@"

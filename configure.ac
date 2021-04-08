@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(dballe, [8.13], [enrico@enricozini.org])
+AC_INIT(dballe, [8.18], [enrico@enricozini.org])
 AC_CONFIG_SRCDIR([configure.ac])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_CONFIG_HEADER(config.h)
@@ -44,6 +44,12 @@ then
     AC_SUBST(PYTHON_CFLAGS)
     AX_PYTHON_MODULE_VERSION(wreport, 3.22)
     AX_PYTHON_MODULE(numpy, yes)
+
+    AC_CHECK_PROGS(NOSE, [nose2-$PYTHON_VERSION nose2-3])
+    if test x$NOSE = x
+    then
+        AC_MSG_ERROR([Python nose not found])
+    fi
 fi
 
 dnl Export information about the current major python version
@@ -59,12 +65,18 @@ then
     WREPORT_DOXYGEN_DIR=/usr/share/doc/wreport/html/doxygen
     test -e "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR="/usr/share/doc/libwreport-doc/apidocs/"
     test -e "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR="/usr/share/doc/libwreport-doc/html/doxygen/"
+    test -e "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR="/usr/share/doc/libwreport-dev/html/doxygen/"
 fi
 AC_ARG_VAR([WREPORT_DOXYGEN_TAGFILE], [path of libwreport.doxytags])
 if test x$WREPORT_DOXYGEN_TAGFILE = x
 then
-    WREPORT_DOXYGEN_TAGFILE="/usr/share/doc/wreport/libwreport.doxytags"
-    test -e "$WREPORT_DOXYGEN_TAGFILE" || WREPORT_DOXYGEN_TAGFILE="/usr/share/doc/libwreport-doc/libwreport.doxytags.gz"
+    for location in libwreport-doc libwreport-dev wreport
+    do
+        WREPORT_DOXYGEN_TAGFILE="/usr/share/doc/${location}/libwreport.doxytags"
+	test -e "$WREPORT_DOXYGEN_TAGFILE" && break
+	WREPORT_DOXYGEN_TAGFILE="/usr/share/doc/${location}/libwreport.doxytags.gz"
+	test -e "$WREPORT_DOXYGEN_TAGFILE" && break
+    done
 fi
 if test x$enable_docs = xyes
 then
@@ -103,7 +115,7 @@ then
         enable_docs=no
     fi
 
-    AC_CHECK_PROGS(SPHINX_BUILD, [sphinx-build sphinx-build-3 sphinx-build-3.6], [no])
+    AC_CHECK_PROGS(SPHINX_BUILD, [sphinx-build sphinx-build-3 sphinx-build-$PYTHON_VERSION], [no])
     if test $SPHINX_BUILD = no
     then
         enable_docs=no
@@ -159,6 +171,9 @@ then
 		AC_MSG_WARN([doxygen was not found: documentation will not be built])
 		enable_docs=no
 	fi
+
+        DOXYGEN_OUTPUT_DIR="$ac_abs_confdir/doc/"
+        AC_SUBST(DOXYGEN_OUTPUT_DIR)
 fi
 
 dnl Check for gperf

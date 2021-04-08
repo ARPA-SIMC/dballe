@@ -1,6 +1,6 @@
-#include "cursor.h"
-#include "repinfo.h"
-#include "levtr.h"
+#include "dballe/db/v7/cursor.h"
+#include "dballe/db/v7/repinfo.h"
+#include "dballe/db/v7/levtr.h"
 #include <cstring>
 
 using namespace wreport;

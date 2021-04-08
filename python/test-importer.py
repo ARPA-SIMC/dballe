@@ -122,6 +122,36 @@ class TestImporter(MessageTestMixin, unittest.TestCase):
                 m.data
             self.assertEqual(str(e.exception), "cannot access values on a cursor before or after iteration")
 
+    def test_domain_errors(self):
+        pathname = test_pathname("bufr/interpreted-range.bufr")
+        with dballe.File(pathname) as f:
+            binmsg = next(f)
+
+        with self.assertRaises(ValueError):
+            dballe.Importer("BUFR", domain_errors="throw")
+
+        importer = dballe.Importer("BUFR", domain_errors="raise")
+        with self.assertRaises(OverflowError):
+            importer.from_binary(binmsg)
+
+        importer = dballe.Importer("BUFR", domain_errors="unset")
+        msgs = importer.from_binary(binmsg)
+        val = msgs[0].get(dballe.Level(1), dballe.Trange(254, 0, 0), "B22043")
+        self.assertFalse(val.isset)
+
+        importer = dballe.Importer("BUFR", domain_errors="clamp")
+        msgs = importer.from_binary(binmsg)
+        val = msgs[0].get(dballe.Level(1), dballe.Trange(254, 0, 0), "B22043")
+        self.assertEqual(val.enqd(), 327.66)
+
+        importer = dballe.Importer("BUFR", domain_errors="tag")
+        msgs = importer.from_binary(binmsg)
+        val = msgs[0].get(dballe.Level(1), dballe.Trange(254, 0, 0), "B22043")
+        self.assertEqual(val.enqd(), 327.66)
+        a = val.enqa("B33192")
+        self.assertTrue(a)
+        self.assertEqual(a.enqi(), 0)
+
 
 if __name__ == "__main__":
     from testlib import main

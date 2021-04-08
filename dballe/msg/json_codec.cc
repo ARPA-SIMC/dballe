@@ -1,8 +1,10 @@
 #include "json_codec.h"
+#include "domain_errors.h"
 #include "dballe/core/json.h"
 #include "dballe/file.h"
 #include "dballe/msg/msg.h"
 #include <wreport/error.h>
+#include <wreport/options.h>
 #include <sstream>
 #include <stack>
 
@@ -434,6 +436,8 @@ JsonImporter::~JsonImporter() {}
 
 bool JsonImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::unique_ptr<dballe::Message>)> dest) const
 {
+    WreportVarOptionsForImport wreport_config(opts.domain_errors);
+
     JSONMsgReader jsonreader;
     return jsonreader.parse_msgs(msg.data, dest);
 }

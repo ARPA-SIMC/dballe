@@ -2,7 +2,7 @@ Source: dballe
 Section: misc
 Priority: optional
 Maintainer: Enrico Zini <enrico@debian.org>
-Build-Depends: debhelper (>= 10), dh-python,
+Build-Depends: debhelper (>= 10), dh-python, dh-fortran-mod (>= 0.11),
   pkg-config, libtool,
   doxygen, help2man, python3-sphinx, python3-breathe,
   libsqlite3-dev (>= 3.14), libpq-dev, default-libmysqlclient-dev,

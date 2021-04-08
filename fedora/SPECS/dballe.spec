@@ -4,7 +4,7 @@
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 8.13
+Version: 8.18
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -21,14 +21,11 @@ BuildRequires: python3-rpm-macros >= 3-23
 BuildRequires: libtool
 BuildRequires: gcc-c++
 BuildRequires: gperf
+BuildRequires: which
 BuildRequires: doxygen
 BuildRequires: pkgconfig(lua) > 5.1.1
-BuildRequires: pkgconfig(libwreport) >= 3.22
+BuildRequires: pkgconfig(libwreport) >= 3.29
 BuildRequires: %{python3_vers}-devel
-%if ! 0%{?rhel}
-BuildRequires: %{python3_vers}-sphinx
-BuildRequires: %{python3_vers}-breathe
-%endif
 %if 0%{?rhel} == 7
 BuildRequires: popt-devel
 BuildRequires: postgresql-devel
@@ -44,6 +41,7 @@ BuildRequires: libwreport-doc
 BuildRequires: %{python3_vers}-wreport3
 BuildRequires: gcc-gfortran
 BuildRequires: %{python3_vers}-numpy
+BuildRequires: %{python3_vers}-nose2
 %if ! 0%{?rhel}
 BuildRequires: %{python3_vers}-sphinx
 BuildRequires: %{python3_vers}-breathe
@@ -144,6 +142,7 @@ Group: Applications/Meteo
 Summary:   DB-ALL.e core shared library
 Group:    Applications/Meteo
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
+Requires: pkgconfig(libwreport) >= 3.29
 
 %description -n libdballe6
 DB-ALL.e C shared library
@@ -315,6 +314,31 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Tue Mar  2 2021 Daniele Branchini <dbranchini@arpae.it> - 8.18-1
+- Added variables 025194 011211 011212 011213 011214 011215 011216
+
+* Mon Jan 25 2021 Emanuele Di Giacomo <edigiacomo@arpae.it> - 8.17-2
+- Explicit requires wreport >= 3.29-1
+
+* Mon Jan 25 2021 Emanuele Di Giacomo <edigiacomo@arpae.it> - 8.17-1
+- `dbadb import --domain-errors=tag` clamps the value instead of
+  unsetting it (#241)
+
+* Mon Jan 25 2021 Daniele Branchini <dbranchini@arpae.it> - 8.16-1
+- Added `dbadb import --domain-errors={unset|clamp|tag}`. `tag` is only
+  available when compiling with wreport from version 3.29. (#241)
+
+* Wed Jan 13 2021 Daniele Branchini <dbranchini@arpae.it> - 8.15-1
+- Added Lifted, virtual T and Skin Temperature variables
+- Added support for python 3.9 in nose2 tests
+- Dropped support for nose1
+
+* Tue Dec 15 2020 Daniele Branchini <dbranchini@arpae.it> - 8.14-1
+- Added `dbadb import --domain-errors={unset|clamp}`. `clamp` is only available
+  when compiling with wreport from version 3.28. (#241)
+- Fixed querying by datetime extremes in explorer (#242)
+- Added alternative meson build system
+
 * Wed Sep 23 2020 Daniele Branchini <dbranchini@arpae.it> - 8.13-1
 - Always ignore stations without contexts (#235)
 

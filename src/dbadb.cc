@@ -6,6 +6,7 @@
 #include <dballe/msg/msg.h>
 #include <dballe/db/db.h>
 #include <wreport/error.h>
+#include <wreport/options.h>
 #include <wreport/utils/string.h>
 
 #include <cstdlib>
@@ -25,6 +26,7 @@ const char* op_url = "";
 const char* op_user = "";
 const char* op_pass = "";
 const char* op_varlist = "";
+const char* op_domain_errors = "";
 int op_wipe_first = 0;
 int op_dump = 0;
 int op_overwrite = 0;
@@ -287,6 +289,16 @@ struct ImportCmd : public DatabaseCmd
             "import messages using precise contexts instead of standard ones", 0 });
         opts.push_back({ "varlist", 0, POPT_ARG_STRING, &op_varlist, 0,
             "only import variables with the given varcode(s)", "varlist" });
+        opts.push_back({ "domain-errors", 0, POPT_ARG_STRING, &op_domain_errors, 0,
+            "recovery strategy to use when importing values outside a variable domain."
+            " Possible values: 'unset' (ignore error and consider the value as unset)"
+#ifdef WREPORT_OPTIONS_HAS_VAR_CLAMP_DOMAIN_ERRORS
+            ", 'clamp' (ignore error and replace the value with the closest extreme of the valid domain)"
+#endif
+#ifdef WREPORT_OPTIONS_HAS_VAR_TAG_DOMAIN_ERRORS
+            ", 'tag' (unset variable and add attribute B33192=0)"
+#endif
+            , "varlist" });
         opts.push_back({ NULL, 0, POPT_ARG_INCLUDE_TABLE, &grepTable, 0,
             "Options used to filter messages", 0 });
     }
@@ -303,6 +315,24 @@ struct ImportCmd : public DatabaseCmd
         if (dba_cmdline_get_query(optCon, query) > 0)
             reader.filter.matcher_from_record(query);
         reader.import_opts.simplified = !op_precise_import;
+
+        if (strcmp(op_domain_errors, "") == 0)
+        {
+            ; // Nothing to do, leave defaults
+        } else if (strcmp(op_domain_errors, "unset") == 0) {
+            reader.import_opts.domain_errors = ImporterOptions::DomainErrors::UNSET;
+#ifdef WREPORT_OPTIONS_HAS_VAR_CLAMP_DOMAIN_ERRORS
+        } else if (strcmp(op_domain_errors, "clamp") == 0) {
+            reader.import_opts.domain_errors = ImporterOptions::DomainErrors::CLAMP;
+#endif
+#ifdef WREPORT_OPTIONS_HAS_VAR_HOOK_DOMAIN_ERRORS
+        } else if (strcmp(op_domain_errors, "tag") == 0) {
+            reader.import_opts.domain_errors = ImporterOptions::DomainErrors::TAG;
+#endif
+        } else {
+            error_consistency::throwf("valore '%s' per --domain-errors non supportato", op_domain_errors);
+        }
+
 
         // Configure the importer
         auto opts = DBImportOptions::create();
@@ -348,7 +378,7 @@ struct ExportCmd : public DatabaseCmd
         opts.push_back({ "report", 'r', POPT_ARG_STRING, &op_report, 0,
             "force exported data to be of this type of report", "rep" });
         opts.push_back({ "dest", 'd', POPT_ARG_STRING, &op_output_type, 0,
-            "format of the data in output ('bufr', 'crex')", "type" });
+            "format of the data in output ('bufr', 'crex', 'json')", "type" });
         opts.push_back({ "template", 't', POPT_ARG_STRING, &op_output_template, 0,
             "template of the data in output (autoselect if not specified, 'list' gives a list)", "name" });
         opts.push_back({ "dump", 0, POPT_ARG_NONE, &op_dump, 0,

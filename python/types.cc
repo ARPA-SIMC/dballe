@@ -138,10 +138,10 @@ Constructor: Level(ltype1: int=None, l1: int=None, ltype2: int=None, l2: int=Non
     {
         try {
             py_unique_ptr<PyTupleObject> res((PyTupleObject*)throw_ifnull(PyTuple_New(4)));
-            PyTuple_SET_ITEM(res, 0, dballe_int_to_python(self->val.ltype1));
-            PyTuple_SET_ITEM(res, 1, dballe_int_to_python(self->val.l1));
-            PyTuple_SET_ITEM(res, 2, dballe_int_to_python(self->val.ltype2));
-            PyTuple_SET_ITEM(res, 3, dballe_int_to_python(self->val.l2));
+            PyTuple_SET_ITEM(res.get(), 0, dballe_int_to_python(self->val.ltype1));
+            PyTuple_SET_ITEM(res.get(), 1, dballe_int_to_python(self->val.l1));
+            PyTuple_SET_ITEM(res.get(), 2, dballe_int_to_python(self->val.ltype2));
+            PyTuple_SET_ITEM(res.get(), 3, dballe_int_to_python(self->val.l2));
             return PyObject_GetIter((PyObject*)res.get());
         } DBALLE_CATCH_RETURN_PYO
     }
@@ -282,9 +282,9 @@ Constructor: Trange(pind: int=None, p1: int=None, p2: int=None)
     {
         try {
             py_unique_ptr<PyTupleObject> res((PyTupleObject*)throw_ifnull(PyTuple_New(3)));
-            PyTuple_SET_ITEM(res, 0, dballe_int_to_python(self->val.pind));
-            PyTuple_SET_ITEM(res, 1, dballe_int_to_python(self->val.p1));
-            PyTuple_SET_ITEM(res, 2, dballe_int_to_python(self->val.p2));
+            PyTuple_SET_ITEM(res.get(), 0, dballe_int_to_python(self->val.pind));
+            PyTuple_SET_ITEM(res.get(), 1, dballe_int_to_python(self->val.p1));
+            PyTuple_SET_ITEM(res.get(), 2, dballe_int_to_python(self->val.p2));
             return PyObject_GetIter((PyObject*)res.get());
         } DBALLE_CATCH_RETURN_PYO
     }

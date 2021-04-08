@@ -559,6 +559,7 @@ void Stream::parse_object(std::function<void(const std::string& key)> on_value)
             in.get();
         else
             throw JSONParseException("':' expected after object key");
+        skip_spaces();
         on_value(key);
         if (in.peek() == ',')
             in.get();

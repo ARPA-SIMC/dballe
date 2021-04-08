@@ -6,6 +6,7 @@
 #include "dballe/core/varmatch.h"
 #include "dballe/var.h"
 #include "dballe/db/v7/repinfo.h"
+#include "dballe/sql/sql.h"
 #include <wreport/var.h>
 #include <regex.h>
 #include <cstring>
@@ -536,13 +537,13 @@ bool QueryBuilder::add_pa_where(const char* tbl)
             // This is only here to move the other optional bits into else ifs
             // that can be compiled out
             ;
-#if HAVE_LIBPQ
+#ifdef HAVE_LIBPQ
         } else if (dynamic_cast<dballe::sql::PostgreSQLConnection*>(&conn)) {
             sql_where.append_listf("%s.ident=$1::text", tbl);
             bind_in_ident = query.ident.get();
             TRACE("found ident: adding AND %s.ident=$1::text.  val is %s\n", tbl, query.ident.get());
 #endif
-#if HAVE_MYSQL
+#ifdef HAVE_MYSQL
         } else if (dballe::sql::MySQLConnection* c = dynamic_cast<dballe::sql::MySQLConnection*>(&conn)) {
             string escaped = c->escape(query.ident.get());
             sql_where.append_listf("%s.ident='%s'", tbl, escaped.c_str());

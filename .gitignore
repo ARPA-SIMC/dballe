@@ -45,7 +45,7 @@ Makefile
 /dballe/core/shortcuts.cc
 /dballe/msg/msg-extravars.h
 /dballe/msg/context-extravars.h
-/dballe/msg/cursor-access.cc
+/dballe/msg/msg-cursor-access.cc
 /dballe/db/v7/cursor-access.cc
 /dballe/db/summary-access.cc
 /dballe/fortran/commonapi-access.cc
@@ -75,7 +75,7 @@ Makefile
 /debian/dballe/
 /debian/libdballe-dev/
 /debian/libdballe-doc/
-/debian/libdballe8/
+/debian/libdballe?/
 /debian/libdballef-dev/
 /debian/libdballef5/
 /debian/python3-dballe/

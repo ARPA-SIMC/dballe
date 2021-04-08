@@ -7,7 +7,9 @@ usr/include/dballe/msg
 usr/include/dballe/sql
 usr/include/dballe/db
 usr/include/dballe/cmdline
+usr/include/dballe/fortran
 usr/lib/*/libdballe.a
 usr/lib/*/libdballe.so
 usr/lib/*/pkgconfig/libdballe.pc
 usr/share/aclocal/libdballe.m4
+usr/share/doc/dballe/libdballe.doxytags

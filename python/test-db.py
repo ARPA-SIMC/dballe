@@ -17,6 +17,7 @@ class CommonDBTestMixin(DballeDBMixin):
         DeprecationWarning
         """
         with warnings.catch_warnings(record=True) as warning_list:
+            warnings.simplefilter("always")
             yield
         if self.raise_db_method_deprecation_warnings:
             for w in warning_list:
@@ -35,6 +36,7 @@ class CommonDBTestMixin(DballeDBMixin):
         Make sure this function raises DeprecationWarning
         """
         with warnings.catch_warnings(record=True) as warning_list:
+            warnings.simplefilter("always")
             yield
 
         for w in warning_list:
@@ -907,10 +909,10 @@ class FullDBTestMixin(CommonDBTestMixin):
     def test_transaction_creation_error(self):
         self.db.disappear()
         with self.assertRaisesRegex(OSError, r"^cannot compile query"):
-            with self.db.transaction() as tr:
+            with self.db.transaction():
                 pass
         with self.assertRaisesRegex(OSError, r"^cannot compile query"):
-            with self.db.transaction() as tr:
+            with self.db.transaction():
                 pass
 
 

@@ -26,6 +26,15 @@ class ImporterOptions
 public:
     bool simplified = true;
 
+    enum class DomainErrors
+    {
+        THROW = 0,
+        UNSET = 1,
+        CLAMP = 2,
+        TAG = 3,
+    } domain_errors = DomainErrors::THROW;
+
+
     bool operator==(const ImporterOptions&) const;
     bool operator!=(const ImporterOptions&) const;
 

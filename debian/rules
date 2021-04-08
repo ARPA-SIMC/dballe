@@ -4,7 +4,7 @@ VERSION=$(shell debian/vercheck)
 RELEASE_PACKAGE=dballe
 
 %:
-	dh $@ --with autoreconf,python3,sphinxdoc
+	dh $@ --with fortran_mod,python3,sphinxdoc --without autoreconf -Smeson --parallel
 
 # #DEB_MAKE_CHECK_TARGET := check
 
@@ -14,14 +14,6 @@ override_dh_makeshlibs:
 
 override_dh_auto_install:
 	dh_auto_install
-	# Build and install the python bindings for each different python version
-	for ver in `py3versions -vr`; do \
-		dh_auto_configure -- PYTHON=/usr/bin/python$$ver ; \
-		make clean -C python ; \
-		make install -C python DESTDIR=`pwd`/debian/tmp ; \
-	done
-	# Remove python modules .la files
-	rm -f debian/tmp/usr/lib/python*/dist-packages/*.la
 
 vercheck:
 	debian/vercheck > /dev/null
