@@ -231,6 +231,7 @@
  014199 Visible radiation flux (upward)                                  W/M**2                     0          -50  11 W/M**2                    0          4
  014200 Infrared radiation flux (downward)                               W/M**2                     0            0  11 W/M**2                    0          4
  014201 Infrared radiation flux (upward)                                 W/M**2                     0            0  11 W/M**2                    0          4
+ 014202 UV index                                                         NUMERIC                    2            0  11 NUMERIC                   2          4
  015192 NO Concentration                                                 KG/M**3                   10            0  20 KG/M**3                  10          6
  015193 NO2 Concentration                                                KG/M**3                   10            0  20 KG/M**3                  10          6
  015194 O3 Concentration                                                 KG/M**3                   10            0  20 KG/M**3                  10          6
