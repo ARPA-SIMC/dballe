@@ -1,0 +1,139 @@
+# This repository adheres to the publiccode.yml standard by including this 
+# metadata file that makes public software easily discoverable.
+# More info at https://github.com/italia/publiccode.yml
+
+publiccodeYmlVersion: '0.2'
+categories:
+  - data-analytics
+  - data-collection
+dependsOn:
+  open:
+    - name: Python
+      optional: false
+      version: ''
+      versionMax: ''
+      versionMin: ''
+    - name: SQLite
+      optional: false
+      version: ''
+      versionMax: ''
+      versionMin: ''
+    - name: MySQL
+      optional: false
+      version: ''
+      versionMax: ''
+      versionMin: ''
+    - name: PostgreSQL
+      optional: false
+      version: ''
+      versionMax: ''
+      versionMin: ''
+description:
+  it:
+    documentation: 'https://arpa-simc.github.io/dballe/'
+    features:
+      - database
+      - BUFR import/export
+      - CREX import/export
+    genericName: DB-All.e
+    longDescription: |
+      DB-All.e is a fast on-disk database where meteorological observed and
+      forecast data can be stored, searched, retrieved and updated.
+
+
+      This framework allows to manage large amounts of data using its simple
+      Application Program Interface, and provides tools to visualise, import and
+      export in the standard formats BUFR, and CREX.
+
+
+      The main characteristics of DB-ALL.e are:
+
+
+      - Fortran, C, C++ and Python APIs are provided.
+
+      - To make computation easier, data is stored as physical quantities, that
+      is, as measures of a variable in a specific point of space and time,
+      rather than as a sequence of report.
+
+      - Internal representation is similar to BUFR and CREX WMO standard (table
+      code driven) and utility for import and export are included (generic and
+      ECMWF template).
+
+      - Representation is in 7 dimensions: latitude and longitude geographic
+      coordinates, table driven vertical coordinate, reference time, table
+      driven observation and forecast specification, table driven data type.
+
+      - It allows to store extra information linked to the data, such as
+      confidence intervals for quality control.
+
+      - It allows to store extra information linked to the stations.
+
+      - Variables can be represented as real, integer and characters, with
+      appropriate precision for the type of measured value.
+
+      - It is based on physical principles, that is, the data it contains are
+      defined in terms of homogeneous and consistent physical data. For example,
+      it is impossible for two incompatible values to exist in the same point in
+      space and time.
+
+      - It can manage fixed stations and moving stations such as airplanes or
+      ships.
+
+      - It can manage both observational and forecast data.
+
+      - It can manage data along all three dimensions in space, such as data
+      from soundings and airplanes.
+
+      - Report information is preserved. It can work based on physical
+      parameters or on report types.
+
+      - It is temporary, to be used for a limited time and then be deleted.
+
+      - Does not need backup, since it only contains replicated or derived data.
+
+      - Write access is enabled for its users.
+    shortDescription: |-
+      DB-All.e is a fast on-disk database where meteorological observed and
+      forecast data can be stored, searched, retrieved and updated.
+developmentStatus: stable
+intendedAudience:
+  scope:
+    - agriculture
+    - environment
+    - research
+    - science-and-technology
+    - tourism
+it:
+  conforme:
+    gdpr: false
+    lineeGuidaDesign: false
+    misureMinimeSicurezza: false
+    modelloInteroperabilita: false
+  countryExtensionVersion: '0.2'
+  piattaforme:
+    anpr: false
+    cie: false
+    pagopa: false
+    spid: false
+  riuso:
+    codiceIPA: arpa
+legal:
+  license: GPL-2.0-only
+  mainCopyrightOwner: ARPA-SIM
+  repoOwner: ARPA-SIM
+localisation:
+  availableLanguages:
+    - en
+  localisationReady: false
+maintenance:
+  contacts:
+    - email: enrico@enricozini.com
+      name: Enrico Zini
+  type: internal
+name: DB-All.e
+platforms:
+  - linux
+releaseDate: '2020-10-19'
+softwareType: standalone/backend
+softwareVersion: v8.13
+url: 'https://github.com/ARPA-SIMC/dballe'
