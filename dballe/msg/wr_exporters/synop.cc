@@ -58,7 +58,7 @@ struct Synop : public Template
                     switch (ctx.trange.pind)
                     {
                         case 1:
-                            for (const auto v: ctx.values)
+                            for (const auto& v: ctx.values)
                             {
                                 switch (v->code())
                                 {

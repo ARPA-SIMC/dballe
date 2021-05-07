@@ -128,7 +128,7 @@ void StationEntry<Station>::to_json(core::JSONWriter& writer) const
     writer.add(station);
     writer.add("v");
     writer.start_list();
-    for (const auto entry: *this)
+    for (const auto& entry: *this)
         entry.to_json(writer);
     writer.end_list();
     writer.end_mapping();
