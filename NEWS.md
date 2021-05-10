@@ -1,4 +1,11 @@
-# New in version 8.17
+# New in version 8.20
+* Added UV index variable
+
+# New in version 8.19
+
+* Fixed B13211 length (#239)
+
+# New in version 8.18
 
 * Added variables 025194 011211 011212 011213 011214 011215 011216
 
