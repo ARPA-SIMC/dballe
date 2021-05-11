@@ -1,4 +1,4 @@
-%global releaseno 1
+%global releaseno 2
 # Note: define _srcarchivename in Travis build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
@@ -222,7 +222,7 @@ CPPFLAGS="-Wno-error=attributes"
 %else
 CPPFLAGS=""
 %endif
-%configure FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs --disable-static CPPFLAGS="$CPPFLAGS"
+%configure FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs --disable-static CPPFLAGS="$CPPFLAGS -Wno-error=cpp"
 make
 make check
 
@@ -314,6 +314,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Tue May 11 2021 Daniele Branchini <dbranchini@arpae.it> - 8.20-2
+- Handling cpp warnings for F34
+
 * Mon May 10 2021 Daniele Branchini <dbranchini@arpae.it> - 8.20-1
 - Added UV index variable
 - Fixed -Werror=range-loop-construct in F34
