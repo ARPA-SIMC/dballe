@@ -81,6 +81,11 @@ def test_trentadue():
     run_test("trentadue")
 
 
+@hosts("trentaquattro")
+def test_trentaquattro():
+    run_test("trentaquattro")
+
+
 def test():
     test_venti()
     test_ventiquattro()
