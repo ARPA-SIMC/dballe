@@ -56,6 +56,7 @@ INTERFACE
   FUNCTION idba_disconnect(dbahandle) BIND(C,name='idba_disconnect')
   IMPORT
   INTEGER(kind=c_int) :: dbahandle
+  INTEGER(kind=c_int) :: idba_disconnect
   END FUNCTION idba_disconnect
 END INTERFACE
 
@@ -63,6 +64,7 @@ INTERFACE
   FUNCTION idba_arrivederci(dbahandle) BIND(C,name='idba_arrivederci')
   IMPORT
   INTEGER(kind=c_int) :: dbahandle
+  INTEGER(kind=c_int) :: idba_arrivederci
   END FUNCTION idba_arrivederci
 END INTERFACE
 
@@ -621,6 +623,7 @@ INTERFACE
   TYPE(c_funptr),VALUE :: func
   INTEGER(kind=c_int),VALUE :: dat
   INTEGER(kind=c_int) :: handle
+  INTEGER(kind=c_int) :: idba_error_set_callback
   END FUNCTION idba_error_set_callback
 END INTERFACE
 
@@ -628,6 +631,7 @@ INTERFACE
   FUNCTION idba_default_error_handler(debug) BIND(C,name='idba_default_error_handler')
   IMPORT
   INTEGER(kind=c_int) :: debug
+  INTEGER(kind=c_int) :: idba_default_error_handler
   END FUNCTION idba_default_error_handler
 END INTERFACE
 
@@ -635,6 +639,7 @@ INTERFACE
   FUNCTION idba_default_error_handle_tolerating_overflows(debug) BIND(C,name='idba_default_error_handle_tolerating_overflows')
   IMPORT
   INTEGER(kind=c_int) :: debug
+  INTEGER(kind=c_int) :: idba_default_error_handle_tolerating_overflows
   END FUNCTION idba_default_error_handle_tolerating_overflows
 END INTERFACE
 
