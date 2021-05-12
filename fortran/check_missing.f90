@@ -7,10 +7,10 @@
       use dbtest
       use dballef
 
-      integer dbahandle, handle, ival
+      integer dbahandle, handle, ival, ierr
       integer (kind=dba_int_b):: bval
       real rval
-      real*8 dval
+      double precision dval
       character cval*255
       external testcb
 

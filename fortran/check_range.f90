@@ -6,15 +6,15 @@ program check_range
 
       use dbtest
       use dballef
-      
-      integer :: handle,idbhandle,handle_err, errcode, i
+
+      integer :: handle,idbhandle,errcode,i,ierr
       real :: rval
       !data var/ "B22070", "B22074", "B22001", "B22071", "B22042"/
       integer debug
       data debug/1/
-      
+
       !call idba_error_set_callback(0,idba_default_error_handler,debug,handle_err)
-  
+
 !     Database login
       call dbinit(idbhandle)
 

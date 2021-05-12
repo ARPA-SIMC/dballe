@@ -7,11 +7,8 @@
       use dbtest
       use dballef
 
-      integer dbahandle, handle, ival
+      integer dbahandle, handle, ierr
       integer (kind=dba_int_b):: bval
-      real rval
-      real*8 dval
-      character cval*255
       external testcb
 
 !      call fdba_error_set_callback(0, testcb, 2, i)

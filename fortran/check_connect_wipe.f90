@@ -7,12 +7,7 @@
       use dbtest
       use dballef
 
-      integer :: dbahandle, handle,i,i1,i2,i3,i4,i5,i6,ival,saved_id
-      real :: rval
-      double precision :: dval
-      character (len=10) :: param
-      character (len=255) :: cval
-      external :: testcb
+      integer :: dbahandle,handle,i,ierr
 
       ierr = idba_connect(dbahandle, &
                   "sqlite:test-check-connect-wipe.sqlite?wipe=1")

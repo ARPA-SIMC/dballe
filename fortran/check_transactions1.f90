@@ -8,10 +8,6 @@
       use dballef
 
       integer :: dbahandle, handle_read, handle_write, ierr, ival
-      real :: rval
-      double precision :: dval
-      character (len=10) :: param
-      character (len=255) :: cval
       external :: testcb
 
 !     Database login
