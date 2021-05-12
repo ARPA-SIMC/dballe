@@ -359,7 +359,7 @@ AX_CXXFLAGS_WARN_ALL
 dnl warnings="-Wall -Wextra -Werror=return-type -Werror=empty-body"
 dnl CFLAGS="$warnings $CFLAGS"
 dnl CXXFLAGS="$warnings $CXXFLAGS"
-AX_APPEND_FLAG([-Wextra -Wno-unused-parameter])
+AX_APPEND_FLAG([-Wextra -Wno-unused-parameter -Wno-error=cpp])
 AX_CHECK_COMPILE_FLAG([-Wredundant-move], [has_redundant_move=yes], [has_redundant_move=no])
 if test $has_redundant_move = yes
 then
