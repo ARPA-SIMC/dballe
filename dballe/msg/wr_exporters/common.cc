@@ -274,7 +274,7 @@ void CommonSynopExporter::scan_context(const msg::Context& c)
             }
             break;
     }
-};
+}
 
 void CommonSynopExporter::add_D02001()
 {
