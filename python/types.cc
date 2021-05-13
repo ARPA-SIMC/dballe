@@ -572,24 +572,41 @@ PyObject* datetime_to_python(const Datetime& dt)
             dt.hour, dt.minute, dt.second, 0));
 }
 
+static int get_attr_int(PyObject* o, const char* name)
+{
+    pyo_unique_ptr res(throw_ifnull(PyObject_GetAttrString(o, name)));
+    return from_python<int>(res);
+}
+
 Datetime datetime_from_python(PyObject* dt)
 {
     if (dt == NULL || dt == Py_None)
         return Datetime();
 
-    if (!PyDateTime_Check(dt))
+    if (PyDateTime_Check(dt))
     {
-        PyErr_SetString(PyExc_TypeError, "value must be an instance of datetime.datetime");
-        throw PythonException();
+        return Datetime(
+            PyDateTime_GET_YEAR((PyDateTime_DateTime*)dt),
+            PyDateTime_GET_MONTH((PyDateTime_DateTime*)dt),
+            PyDateTime_GET_DAY((PyDateTime_DateTime*)dt),
+            PyDateTime_DATE_GET_HOUR((PyDateTime_DateTime*)dt),
+            PyDateTime_DATE_GET_MINUTE((PyDateTime_DateTime*)dt),
+            PyDateTime_DATE_GET_SECOND((PyDateTime_DateTime*)dt));
     }
 
+    // Fall back to duck typing, to catch creative cases such as
+    // cftime.datetime instances. See https://unidata.github.io/cftime/api.html
     return Datetime(
-        PyDateTime_GET_YEAR((PyDateTime_DateTime*)dt),
-        PyDateTime_GET_MONTH((PyDateTime_DateTime*)dt),
-        PyDateTime_GET_DAY((PyDateTime_DateTime*)dt),
-        PyDateTime_DATE_GET_HOUR((PyDateTime_DateTime*)dt),
-        PyDateTime_DATE_GET_MINUTE((PyDateTime_DateTime*)dt),
-        PyDateTime_DATE_GET_SECOND((PyDateTime_DateTime*)dt));
+        get_attr_int(dt, "year"),
+        get_attr_int(dt, "month"),
+        get_attr_int(dt, "day"),
+        get_attr_int(dt, "hour"),
+        get_attr_int(dt, "minute"),
+        get_attr_int(dt, "second")
+    );
+
+    // PyErr_SetString(PyExc_TypeError, "value must be an instance of datetime.datetime");
+    // throw PythonException();
 }
 
 DatetimeRange datetimerange_from_python(PyObject* val)
