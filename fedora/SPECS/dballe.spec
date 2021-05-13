@@ -173,6 +173,8 @@ Summary:  DB-ALL.e Fortran shared library
 Group:    Applications/Meteo
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
 Requires: libdballe9 = %{?epoch:%epoch:}%{version}-%{release}
+Provides: lidballef4 = %{?epoch:%epoch:}%{version}-%{release}
+Obsoletes: libdballef4 < 8.21
 
 %description -n libdballef5
  DB-All.e is a fast on-disk database where meteorological observed and
