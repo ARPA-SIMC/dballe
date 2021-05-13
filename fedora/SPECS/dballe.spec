@@ -1,10 +1,10 @@
-%global releaseno 2
+%global releaseno 1
 # Note: define _srcarchivename in Travis build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 8.20
+Version: 9.0
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -138,13 +138,13 @@ Group: Applications/Meteo
  This is the documentation for the core DB_All.e development library.
 
 
-%package  -n libdballe6
+%package  -n libdballe9
 Summary:   DB-ALL.e core shared library
 Group:    Applications/Meteo
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
 Requires: pkgconfig(libwreport) >= 3.29
 
-%description -n libdballe6
+%description -n libdballe9
 DB-ALL.e C shared library
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
@@ -167,14 +167,14 @@ Requires: libdballe-devel = %{?epoch:%epoch:}%{version}-%{release}
  database as a smart working area for meteorological software.
 
 
-%package -n libdballef4
+%package -n libdballef5
 
 Summary:  DB-ALL.e Fortran shared library
 Group:    Applications/Meteo
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
-Requires: libdballe6 = %{?epoch:%epoch:}%{version}-%{release}
+Requires: libdballe9 = %{?epoch:%epoch:}%{version}-%{release}
 
-%description -n libdballef4
+%description -n libdballef5
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
  .
@@ -256,7 +256,7 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 %{_datadir}/wreport/dballe.txt
 %{_datadir}/wreport/repinfo.csv
 
-%files -n libdballe6
+%files -n libdballe9
 %defattr(-,root,root,-)
 %{_libdir}/libdballe.so.*
 
@@ -287,7 +287,7 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 %{_fmoddir}/*.mod
 
 
-%files -n libdballef4
+%files -n libdballef5
 %defattr(-,root,root,-)
 %{_libdir}/libdballef*.so.*
 
@@ -314,6 +314,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Thu May 13 2021 Daniele Branchini <dbranchini@arpae.it> - 9.0-1
+- C++ API changes (#171)
+
 * Tue May 11 2021 Daniele Branchini <dbranchini@arpae.it> - 8.20-2
 - Handling cpp warnings for F34
 
