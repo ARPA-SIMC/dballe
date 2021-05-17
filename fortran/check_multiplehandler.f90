@@ -7,7 +7,7 @@
       use dbtest
       use dballef
 
-      integer :: dbahandler, dbahandlew, handler, handlew,i,i1,i2,i3,i4,i5,i6,ival,saved_id
+      integer :: dbahandler, dbahandlew, handler, handlew,i,i1,i2,i3,i4,i5,i6,ival,ierr
       real :: rval
       double precision :: dval
       character (len=10) :: param

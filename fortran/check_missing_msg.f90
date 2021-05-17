@@ -7,11 +7,11 @@
       use test
       use dballef
 
-      integer handle, ival, ndata, n, i, ltype1, l1, ltype2, l2
+      integer handle, ival, n, i, ltype1, l1, ltype2, l2, ierr
       integer have_station, have_data
       integer (kind=dba_int_b):: bval
       real rval
-      real*8 dval
+      double precision dval
       character cval*255, btable*8
       character(len=1024) :: fname
       external testcb

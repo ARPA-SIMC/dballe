@@ -55,21 +55,16 @@ struct ProtoMessage
 
 struct Cursor : public impl::CursorMessage
 {
-    typedef std::vector<std::unique_ptr<dballe::Message>> Results;
+    typedef std::vector<std::shared_ptr<dballe::Message>> Results;
     Results results;
     Results::iterator cur;
     bool at_start = true;
 
     bool has_value() const { return !at_start && cur != results.end(); }
 
-    const Message& get_message() const override
+    std::shared_ptr<Message> get_message() const override
     {
-        return **cur;
-    }
-
-    std::unique_ptr<Message> detach_message() override
-    {
-        return std::move(*cur);
+        return *cur;
     }
 
     int remaining() const override
@@ -87,13 +82,17 @@ struct Cursor : public impl::CursorMessage
             at_start = false;
         }
         else if (cur != results.end())
+        {
+            cur->reset();
             ++cur;
+        }
         return cur != results.end();
 
     }
 
     void discard() override
     {
+        results.clear();
         cur = results.end();
     }
 
@@ -109,7 +108,7 @@ struct Cursor : public impl::CursorMessage
 
 }
 
-std::unique_ptr<dballe::CursorMessage> Transaction::query_messages(const Query& query)
+std::shared_ptr<dballe::CursorMessage> Transaction::query_messages(const Query& query)
 {
     Tracer<> trc(this->trc ? this->trc->trace_export_msgs(query) : nullptr);
     v7::LevTr& lt = levtr();
@@ -157,7 +156,7 @@ std::unique_ptr<dballe::CursorMessage> Transaction::query_messages(const Query& 
 
     lt.prefetch_ids(trc, id_levtrs);
 
-    std::unique_ptr<Cursor> res(new Cursor);
+    auto res = std::make_shared<Cursor>();
     for (auto& r: results)
     {
         station_values.read(*this, r.first);
@@ -190,7 +189,7 @@ std::unique_ptr<dballe::CursorMessage> Transaction::query_messages(const Query& 
     }
     results.clear();
 
-    return std::unique_ptr<dballe::CursorMessage>(res.release());
+    return res;
 }
 
 }

@@ -7,7 +7,7 @@
       use dbtest
       use dballef
 
-      integer :: handle,idbhandle,handle_err, ierr
+      integer :: handle,idbhandle, ierr
       !data var/ "B22070", "B22074", "B22001", "B22071", "B22042"/
       !integer debug
       !data debug/1/

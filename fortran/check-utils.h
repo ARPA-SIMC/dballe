@@ -5,7 +5,7 @@
       subroutine testcb(val)
       USE,INTRINSIC :: iso_c_binding
       include "dballeff.h"
-      integer :: val
+      integer :: val, ier
       character (len=1000) :: buf
 
       ier = idba_error_code()

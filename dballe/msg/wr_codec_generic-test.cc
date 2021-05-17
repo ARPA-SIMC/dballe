@@ -19,8 +19,8 @@ class Tests : public TestCase
     {
         add_method("empty", []() {
             // Try encoding and decoding an empty generic message
-            unique_ptr<Importer> importer = Importer::create(Encoding::BUFR);
-            unique_ptr<Exporter> exporter = Exporter::create(Encoding::BUFR);
+            auto importer = Importer::create(Encoding::BUFR);
+            auto exporter = Exporter::create(Encoding::BUFR);
 
             impl::Messages msgs;
             msgs.emplace_back(make_shared<impl::Message>());
@@ -40,10 +40,10 @@ class Tests : public TestCase
         });
         add_method("known", []() {
             // Try encoding and decoding a generic message
-            unique_ptr<Importer> importer = Importer::create(Encoding::BUFR);
-            unique_ptr<Exporter> exporter = Exporter::create(Encoding::BUFR);
+            auto importer = Importer::create(Encoding::BUFR);
+            auto exporter = Exporter::create(Encoding::BUFR);
 
-            unique_ptr<impl::Message> msg(new impl::Message);
+            auto msg = std::make_shared<impl::Message>();
 
             /* Fill up msg */
             msg->set_press(			15,	45);
@@ -145,11 +145,11 @@ class Tests : public TestCase
         });
         add_method("attrs", []() {
             // Check that attributes are properly exported
-            unique_ptr<Importer> importer = Importer::create(Encoding::BUFR);
-            unique_ptr<Exporter> exporter = Exporter::create(Encoding::BUFR);
+            auto importer = Importer::create(Encoding::BUFR);
+            auto exporter = Exporter::create(Encoding::BUFR);
 
             /* Create a new message */
-            unique_ptr<impl::Message> msg(new impl::Message);
+            auto msg = std::make_shared<impl::Message>();
             msg->type = MessageType::GENERIC;
 
             // Set some metadata
@@ -158,7 +158,7 @@ class Tests : public TestCase
             msg->set_longitude(12.0);
 
             /* Create a variable to add to the message */
-            unique_ptr<Var> var = newvar(WR_VAR(0, 12, 101), 270.15);
+            auto var = newvar(WR_VAR(0, 12, 101), 270.15);
 
             /* Add some attributes to the variable */
             var->seta(newvar(WR_VAR(0, 33, 2), 1));
@@ -206,8 +206,8 @@ class Tests : public TestCase
             impl::Message::downcast(msgs[0])->set_rep_memo("ship");
 
             // Export it
-            unique_ptr<Exporter> exporter = Exporter::create(Encoding::BUFR);
-            unique_ptr<Bulletin> bulletin = dynamic_cast<const BulletinExporter*>(exporter.get())->to_bulletin(msgs);
+            auto exporter = Exporter::create(Encoding::BUFR);
+            std::unique_ptr<Bulletin> bulletin(dynamic_cast<const BulletinExporter*>(exporter.get())->to_bulletin(msgs));
 
             // Ensure that B01194 only appears once
             wassert(actual(bulletin->subsets.size()) == 1u);

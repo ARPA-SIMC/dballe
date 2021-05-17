@@ -87,9 +87,9 @@ bool BaseSummaryMemory<Station>::varcodes(std::function<bool(const wreport::Varc
 }
 
 template<typename Station>
-std::unique_ptr<dballe::CursorSummary> BaseSummaryMemory<Station>::query_summary(const Query& query) const
+std::shared_ptr<dballe::CursorSummary> BaseSummaryMemory<Station>::query_summary(const Query& query) const
 {
-    return std::unique_ptr<dballe::CursorSummary>(new summary::Cursor<Station>(entries, query));
+    return std::make_shared<summary::Cursor<Station>>(entries, query);
 }
 
 template<typename Station>

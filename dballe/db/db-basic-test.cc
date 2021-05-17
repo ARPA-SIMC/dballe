@@ -77,7 +77,7 @@ this->add_method("repinfo", [](Fixture& f) {
 this->add_method("simple", [](Fixture& f) {
     // Test remove_all
     f.tr->remove_all();
-    std::unique_ptr<Cursor> cur = f.tr->query_data(core::Query());
+    auto cur = f.tr->query_data(core::Query());
     wassert(actual(cur->remaining()) == 0);
 
     // Check that it is idempotent
@@ -167,7 +167,7 @@ this->add_method("stationdata", [](Fixture& f) {
     impl::Messages msgs;
     auto cursor = f.tr->query_messages(core::Query());
     while (cursor->next())
-        msgs.push_back(cursor->detach_message());
+        msgs.push_back(cursor->get_message());
     wassert(actual(msgs.size()) == 2);
 
     //msgs.print(stderr);

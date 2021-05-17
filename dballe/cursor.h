@@ -12,7 +12,7 @@ namespace dballe {
 /**
  * Base class for cursors that iterate over DB query results
  */
-class Cursor
+class Cursor : public std::enable_shared_from_this<Cursor>
 {
 public:
     virtual ~Cursor();
@@ -117,8 +117,7 @@ public:
 class CursorMessage : public Cursor
 {
 public:
-    virtual const Message& get_message() const = 0;
-    virtual std::unique_ptr<Message> detach_message() = 0;
+    virtual std::shared_ptr<Message> get_message() const = 0;
 };
 
 }

@@ -51,7 +51,11 @@ TESTDIR="`mktemp -d`"
 echo "Moving to test directory $TESTDIR"
 cd "$TESTDIR"
 
-export WREPORT_EXTRA_TABLES=$TOP_SRCDIR/tables
+mkdir tables
+cp "$TOP_SRCDIR"/tables/*.txt tables/
+test -d "$ORIGDIR/tables" && cp "$ORIGDIR"/tables/*.txt tables/
+
+export WREPORT_EXTRA_TABLES="$TESTDIR/tables"
 export WREPORT_TESTDATA=$TOP_SRCDIR/extra
 export DBA_REPINFO=$TOP_SRCDIR/tables/repinfo.csv
 export DBA_TABLES=$TOP_SRCDIR/tables

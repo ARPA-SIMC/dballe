@@ -12,16 +12,17 @@ namespace msg {
 
 struct CursorStation : public impl::CursorStation
 {
+    std::shared_ptr<const impl::Message> msg;
     dballe::DBStation station;
     const Values& station_values;
     bool at_start = true;
 
-    CursorStation(const impl::Message& msg)
-        : station_values(msg.find_station_context())
+    CursorStation(std::shared_ptr<const impl::Message> msg)
+        : msg(msg), station_values(msg->find_station_context())
     {
-        station.report = msg.get_report();
-        station.coords = msg.get_coords();
-        station.ident = msg.get_ident();
+        station.report = msg->get_report();
+        station.coords = msg->get_coords();
+        station.ident = msg->get_ident();
     }
     ~CursorStation();
 
@@ -63,29 +64,30 @@ struct CursorStation : public impl::CursorStation
     }
 
     /// Downcast a unique_ptr pointer
-    inline static std::unique_ptr<CursorStation> downcast(std::unique_ptr<dballe::CursorStation> c)
+    inline static std::shared_ptr<CursorStation> downcast(std::shared_ptr<dballe::CursorStation> c)
     {
-        CursorStation* res = dynamic_cast<CursorStation*>(c.get());
-        if (!res) throw std::runtime_error("Attempted to downcast the wrong kind of cursor");
-        c.release();
-        return std::unique_ptr<CursorStation>(res);
+        auto res = std::dynamic_pointer_cast<CursorStation>(c);
+        if (!res)
+            throw std::runtime_error("Attempted to downcast the wrong kind of cursor");
+        return res;
     }
 };
 
 
 struct CursorStationData : public impl::CursorStationData
 {
+    std::shared_ptr<const impl::Message> msg;
     dballe::DBStation station;
     const Values& station_values;
     bool at_start = true;
     Values::const_iterator cur;
 
-    CursorStationData(const impl::Message& msg)
-        : station_values(msg.find_station_context())
+    CursorStationData(std::shared_ptr<const impl::Message> msg)
+        : msg(msg), station_values(msg->find_station_context())
     {
-        station.report = msg.get_report();
-        station.coords = msg.get_coords();
-        station.ident = msg.get_ident();
+        station.report = msg->get_report();
+        station.coords = msg->get_coords();
+        station.ident = msg->get_ident();
     }
     ~CursorStationData();
 
@@ -132,12 +134,12 @@ struct CursorStationData : public impl::CursorStationData
     wreport::Var get_var() const override { return **cur; }
 
     /// Downcast a unique_ptr pointer
-    inline static std::unique_ptr<CursorStationData> downcast(std::unique_ptr<dballe::CursorStationData> c)
+    inline static std::shared_ptr<CursorStationData> downcast(std::shared_ptr<dballe::CursorStationData> c)
     {
-        CursorStationData* res = dynamic_cast<CursorStationData*>(c.get());
-        if (!res) throw std::runtime_error("Attempted to downcast the wrong kind of cursor");
-        c.release();
-        return std::unique_ptr<CursorStationData>(res);
+        auto res = std::dynamic_pointer_cast<CursorStationData>(c);
+        if (!res)
+            throw std::runtime_error("Attempted to downcast the wrong kind of cursor");
+        return res;
     }
 };
 
@@ -233,12 +235,12 @@ struct CursorData : public impl::CursorData
     Datetime get_datetime() const override { return datetime; }
 
     /// Downcast a unique_ptr pointer
-    inline static std::unique_ptr<CursorData> downcast(std::unique_ptr<dballe::CursorData> c)
+    inline static std::shared_ptr<CursorData> downcast(std::shared_ptr<dballe::CursorData> c)
     {
-        CursorData* res = dynamic_cast<CursorData*>(c.get());
-        if (!res) throw std::runtime_error("Attempted to downcast the wrong kind of cursor");
-        c.release();
-        return std::unique_ptr<CursorData>(res);
+        auto res = std::dynamic_pointer_cast<CursorData>(c);
+        if (!res)
+            throw std::runtime_error("Attempted to downcast the wrong kind of cursor");
+        return res;
     }
 };
 

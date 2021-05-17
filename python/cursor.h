@@ -12,7 +12,7 @@ extern "C" {
 
 typedef struct {
     PyObject_HEAD
-    dballe::impl::CursorStation* cur;
+    std::shared_ptr<dballe::impl::CursorStation> cur;
 } dpy_CursorStation;
 
 extern PyTypeObject* dpy_CursorStation_Type;
@@ -24,7 +24,7 @@ extern PyTypeObject* dpy_CursorStation_Type;
 
 typedef struct {
     PyObject_HEAD
-    dballe::db::v7::cursor::Stations* cur;
+    std::shared_ptr<dballe::db::v7::cursor::Stations> cur;
 } dpy_CursorStationDB;
 
 extern PyTypeObject* dpy_CursorStationDB_Type;
@@ -36,7 +36,7 @@ extern PyTypeObject* dpy_CursorStationDB_Type;
 
 typedef struct {
     PyObject_HEAD
-    dballe::impl::CursorStationData* cur;
+    std::shared_ptr<dballe::impl::CursorStationData> cur;
 } dpy_CursorStationData;
 
 extern PyTypeObject* dpy_CursorStationData_Type;
@@ -48,7 +48,7 @@ extern PyTypeObject* dpy_CursorStationData_Type;
 
 typedef struct {
     PyObject_HEAD
-    dballe::db::v7::cursor::StationData* cur;
+    std::shared_ptr<dballe::db::v7::cursor::StationData> cur;
 } dpy_CursorStationDataDB;
 
 extern PyTypeObject* dpy_CursorStationDataDB_Type;
@@ -60,7 +60,7 @@ extern PyTypeObject* dpy_CursorStationDataDB_Type;
 
 typedef struct {
     PyObject_HEAD
-    dballe::impl::CursorData* cur;
+    std::shared_ptr<dballe::impl::CursorData> cur;
 } dpy_CursorData;
 
 extern PyTypeObject* dpy_CursorData_Type;
@@ -72,7 +72,7 @@ extern PyTypeObject* dpy_CursorData_Type;
 
 typedef struct {
     PyObject_HEAD
-    dballe::db::v7::cursor::Data* cur;
+    std::shared_ptr<dballe::db::v7::cursor::Data> cur;
 } dpy_CursorDataDB;
 
 extern PyTypeObject* dpy_CursorDataDB_Type;
@@ -84,7 +84,7 @@ extern PyTypeObject* dpy_CursorDataDB_Type;
 
 typedef struct {
     PyObject_HEAD
-    dballe::db::v7::cursor::Summary* cur;
+    std::shared_ptr<dballe::db::v7::cursor::Summary> cur;
 } dpy_CursorSummaryDB;
 
 extern PyTypeObject* dpy_CursorSummaryDB_Type;
@@ -96,7 +96,7 @@ extern PyTypeObject* dpy_CursorSummaryDB_Type;
 
 typedef struct {
     PyObject_HEAD
-    dballe::db::summary::Cursor<dballe::Station>* cur;
+    std::shared_ptr<dballe::db::summary::Cursor<dballe::Station>> cur;
 } dpy_CursorSummarySummary;
 
 extern PyTypeObject* dpy_CursorSummarySummary_Type;
@@ -108,7 +108,7 @@ extern PyTypeObject* dpy_CursorSummarySummary_Type;
 
 typedef struct {
     PyObject_HEAD
-    dballe::db::summary::Cursor<dballe::DBStation>* cur;
+    std::shared_ptr<dballe::db::summary::Cursor<dballe::DBStation>> cur;
 } dpy_CursorSummaryDBSummary;
 
 extern PyTypeObject* dpy_CursorSummarySummary_Type;
@@ -120,8 +120,7 @@ extern PyTypeObject* dpy_CursorSummarySummary_Type;
 
 typedef struct {
     PyObject_HEAD
-    dballe::impl::CursorMessage* cur;
-    PyObject* curmsg;
+    std::shared_ptr<dballe::impl::CursorMessage> cur;
 } dpy_CursorMessage;
 
 extern PyTypeObject* dpy_CursorMessage_Type;
@@ -150,16 +149,16 @@ PyObject* enqpy(CursorMessage& cur, const char* key, unsigned len);
 /**
  * Create a new dpy_Cursor, taking ownership of memory management
  */
-dpy_CursorStation* cursor_create(std::unique_ptr<impl::CursorStation> cur);
-dpy_CursorStationDB* cursor_create(std::unique_ptr<db::v7::cursor::Stations> cur);
-dpy_CursorStationData* cursor_create(std::unique_ptr<impl::CursorStationData> cur);
-dpy_CursorStationDataDB* cursor_create(std::unique_ptr<db::v7::cursor::StationData> cur);
-dpy_CursorData* cursor_create(std::unique_ptr<impl::CursorData> cur);
-dpy_CursorDataDB* cursor_create(std::unique_ptr<db::v7::cursor::Data> cur);
-dpy_CursorSummaryDB* cursor_create(std::unique_ptr<db::v7::cursor::Summary> cur);
-dpy_CursorSummarySummary* cursor_create(std::unique_ptr<db::summary::Cursor<Station>> cur);
-dpy_CursorSummaryDBSummary* cursor_create(std::unique_ptr<db::summary::Cursor<DBStation>> cur);
-dpy_CursorMessage* cursor_create(std::unique_ptr<dballe::CursorMessage> cur);
+dpy_CursorStation* cursor_create(std::shared_ptr<impl::CursorStation> cur);
+dpy_CursorStationDB* cursor_create(std::shared_ptr<db::v7::cursor::Stations> cur);
+dpy_CursorStationData* cursor_create(std::shared_ptr<impl::CursorStationData> cur);
+dpy_CursorStationDataDB* cursor_create(std::shared_ptr<db::v7::cursor::StationData> cur);
+dpy_CursorData* cursor_create(std::shared_ptr<impl::CursorData> cur);
+dpy_CursorDataDB* cursor_create(std::shared_ptr<db::v7::cursor::Data> cur);
+dpy_CursorSummaryDB* cursor_create(std::shared_ptr<db::v7::cursor::Summary> cur);
+dpy_CursorSummarySummary* cursor_create(std::shared_ptr<db::summary::Cursor<Station>> cur);
+dpy_CursorSummaryDBSummary* cursor_create(std::shared_ptr<db::summary::Cursor<DBStation>> cur);
+dpy_CursorMessage* cursor_create(std::shared_ptr<dballe::CursorMessage> cur);
 
 void register_cursor(PyObject* m);
 

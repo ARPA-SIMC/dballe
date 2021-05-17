@@ -26,7 +26,11 @@ protected:
     /// Variable data
     v7::Data* m_data = nullptr;
 
+    /// Track active cursors to invalidate them on commit/rollback
+    std::vector<std::weak_ptr<dballe::Cursor>> tracked_cursors;
+
     void add_msg_to_batch(Tracer<>& trc, const Message& message, const dballe::DBImportOptions& opts);
+    void track_cursor(std::weak_ptr<dballe::Cursor> cursor);
 
 public:
     typedef v7::DB DB;
@@ -64,11 +68,11 @@ public:
     void rollback_nothrow() noexcept override;
     void clear_cached_state() override;
 
-    std::unique_ptr<dballe::CursorStation> query_stations(const Query& query);
-    std::unique_ptr<dballe::CursorStationData> query_station_data(const Query& query) override;
-    std::unique_ptr<dballe::CursorData> query_data(const Query& query);
-    std::unique_ptr<dballe::CursorSummary> query_summary(const Query& query);
-    std::unique_ptr<dballe::CursorMessage> query_messages(const Query& query);
+    std::shared_ptr<dballe::CursorStation> query_stations(const Query& query);
+    std::shared_ptr<dballe::CursorStationData> query_station_data(const Query& query) override;
+    std::shared_ptr<dballe::CursorData> query_data(const Query& query);
+    std::shared_ptr<dballe::CursorSummary> query_summary(const Query& query);
+    std::shared_ptr<dballe::CursorMessage> query_messages(const Query& query);
     void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
 

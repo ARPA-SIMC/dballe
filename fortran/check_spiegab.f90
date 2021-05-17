@@ -3,7 +3,7 @@ program test
 use dballef
 
 integer :: handle
-integer :: error_handle
+integer :: error_handle, ierr
 character(len=255) :: prettyvalue
 
 ierr = idba_error_set_callback(0, C_FUNLOC(idba_default_error_handler), 42, error_handle)

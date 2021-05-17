@@ -50,35 +50,34 @@ struct EmptyCursorSummary : public EmptyCursor<impl::CursorSummary>
 
 struct EmptyCursorMessage : public EmptyCursor<impl::CursorMessage>
 {
-    const Message& get_message() const override { throw wreport::error_notfound("cannot retrieve a message from an empty result set"); }
-    std::unique_ptr<Message> detach_message() override { throw wreport::error_notfound("cannot retrieve a message from an empty result set"); }
+    std::shared_ptr<Message> get_message() const override { throw wreport::error_notfound("cannot retrieve a message from an empty result set"); }
 };
 
 }
 
-std::unique_ptr<CursorStation> CursorStation::make_empty()
+std::shared_ptr<CursorStation> CursorStation::make_empty()
 {
-    return std::unique_ptr<CursorStation>(new EmptyCursorStation);
+    return std::make_shared<EmptyCursorStation>();
 }
 
-std::unique_ptr<CursorStationData> CursorStationData::make_empty()
+std::shared_ptr<CursorStationData> CursorStationData::make_empty()
 {
-    return std::unique_ptr<CursorStationData>(new EmptyCursorStationData);
+    return std::make_shared<EmptyCursorStationData>();
 }
 
-std::unique_ptr<CursorData> CursorData::make_empty()
+std::shared_ptr<CursorData> CursorData::make_empty()
 {
-    return std::unique_ptr<CursorData>(new EmptyCursorData);
+    return std::make_shared<EmptyCursorData>();
 }
 
-std::unique_ptr<CursorSummary> CursorSummary::make_empty()
+std::shared_ptr<CursorSummary> CursorSummary::make_empty()
 {
-    return std::unique_ptr<CursorSummary>(new EmptyCursorSummary);
+    return std::make_shared<EmptyCursorSummary>();
 }
 
-std::unique_ptr<CursorMessage> CursorMessage::make_empty()
+std::shared_ptr<CursorMessage> CursorMessage::make_empty()
 {
-    return std::unique_ptr<CursorMessage>(new EmptyCursorMessage);
+    return std::make_shared<EmptyCursorMessage>();
 }
 
 }

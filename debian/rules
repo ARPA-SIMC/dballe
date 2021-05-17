@@ -10,7 +10,7 @@ RELEASE_PACKAGE=dballe
 
 override_dh_makeshlibs:
 	# For new symbols when compiled with GCC 7. See: #871272
-	dh_makeshlibs -V'libdballe (>= 8.3-1~)'
+	dh_makeshlibs -V'libdballe (>= 9.0-1~)'
 
 override_dh_auto_install:
 	dh_auto_install

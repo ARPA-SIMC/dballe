@@ -102,7 +102,7 @@ struct DBFixture : public BaseDBFixture<DB>
 };
 
 
-struct ActualCursor : public Actual<dballe::Cursor&>
+struct ActualCursor : public Actual<std::shared_ptr<dballe::Cursor>>
 {
     using Actual::Actual;
 
@@ -118,16 +118,16 @@ struct ActualCursor : public Actual<dballe::Cursor&>
     }
     /// Check cursor data variable(s) after a query_data
     void data_var_matches(const DBValues& expected) {
-        if (auto c = dynamic_cast<dballe::db::CursorStation*>(&_actual))
+        if (auto c = std::dynamic_pointer_cast<dballe::db::CursorStation>(_actual))
         {
             DBValues actual_values = c->get_values();
             if (!actual_values.vars_equal(expected))
                 // Quick hack to get proper formatting of mismatch
                 wassert(actual(c->get_values()) == expected);
         }
-        else if (auto c = dynamic_cast<dballe::CursorStationData*>(&_actual))
+        else if (auto c = std::dynamic_pointer_cast<dballe::CursorStationData>(_actual))
             data_var_matches(expected.var(c->get_varcode()));
-        else if (auto c = dynamic_cast<dballe::CursorData*>(&_actual))
+        else if (auto c = std::dynamic_pointer_cast<dballe::CursorData>(_actual))
             data_var_matches(expected.var(c->get_varcode()));
         else
             throw wreport::error_consistency("cannot call data_var_matches on this kind of cursor");
@@ -142,9 +142,9 @@ struct ActualCursor : public Actual<dballe::Cursor&>
     /// Check cursor data context and variable after a query_data
     void data_matches(const Data& ds)
     {
-        if (auto c = dynamic_cast<dballe::CursorStationData*>(&_actual))
+        if (auto c = std::dynamic_pointer_cast<dballe::CursorStationData>(_actual))
             data_matches(ds, c->get_varcode());
-        else if (auto c = dynamic_cast<dballe::CursorData*>(&_actual))
+        else if (auto c = std::dynamic_pointer_cast<dballe::CursorData>(_actual))
             data_matches(ds, c->get_varcode());
         else
             throw wreport::error_consistency("cannot call data_matches on this kind of cursor");
@@ -173,16 +173,11 @@ struct ActualDB : public Actual<std::shared_ptr<DB>>
     void try_summary_query(const std::string& query, unsigned expected, result_checker checker=nullptr);
 };
 
-inline ActualCursor actual(dballe::Cursor& actual) { return ActualCursor(actual); }
-inline ActualCursor actual(dballe::CursorStation& actual) { return ActualCursor(actual); }
-inline ActualCursor actual(dballe::CursorStationData& actual) { return ActualCursor(actual); }
-inline ActualCursor actual(dballe::CursorData& actual) { return ActualCursor(actual); }
-inline ActualCursor actual(dballe::CursorSummary& actual) { return ActualCursor(actual); }
-inline ActualCursor actual(std::unique_ptr<dballe::Cursor>& actual) { return ActualCursor(*actual); }
-inline ActualCursor actual(std::unique_ptr<dballe::CursorStation>& actual) { return ActualCursor(*actual); }
-inline ActualCursor actual(std::unique_ptr<dballe::CursorStationData>& actual) { return ActualCursor(*actual); }
-inline ActualCursor actual(std::unique_ptr<dballe::CursorData>& actual) { return ActualCursor(*actual); }
-inline ActualCursor actual(std::unique_ptr<dballe::CursorSummary>& actual) { return ActualCursor(*actual); }
+inline ActualCursor actual(std::shared_ptr<dballe::Cursor>& actual) { return ActualCursor(actual); }
+inline ActualCursor actual(std::shared_ptr<dballe::CursorStation>& actual) { return ActualCursor(actual); }
+inline ActualCursor actual(std::shared_ptr<dballe::CursorStationData>& actual) { return ActualCursor(actual); }
+inline ActualCursor actual(std::shared_ptr<dballe::CursorData>& actual) { return ActualCursor(actual); }
+inline ActualCursor actual(std::shared_ptr<dballe::CursorSummary>& actual) { return ActualCursor(actual); }
 inline ActualDB<dballe::DB> actual(std::shared_ptr<dballe::DB> actual) { return ActualDB<dballe::DB>(actual); }
 ActualDB<dballe::DB> actual(std::shared_ptr<dballe::db::v7::DB> actual);
 inline ActualDB<dballe::db::Transaction> actual(std::shared_ptr<dballe::db::Transaction> actual) { return ActualDB<dballe::db::Transaction>(actual); }

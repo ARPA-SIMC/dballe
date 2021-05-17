@@ -346,7 +346,7 @@ void Reader::read_csv(const std::list<std::string>& fnames, Action& action)
         while (true)
         {
             // Read input message
-            unique_ptr<impl::Message> msg(new impl::Message);
+            auto msg = std::make_shared<impl::Message>();
             if (!msg->from_csv(*csvin))
                 break;
 

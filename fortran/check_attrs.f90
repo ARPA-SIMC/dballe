@@ -7,12 +7,9 @@
 ! * Dump the contents of a dballe database
 ! *****************************************
 
-      integer dbahandle, handle, handleinit, nstaz, ndata, nattr
-      integer i, i1, i2, tmp
-      integer id,height,codrete
-      character cname*20,rete*20,value*255,avalue*255
-      character btable*10,starbtable*10
-      real dlat,dlon
+      integer dbahandle, handle, handleinit, nattr
+      integer ierr
+      character btable*10
       external errorrep
 
 !      ierr = idba_error_set_callback(0, errorrep, 2, i)

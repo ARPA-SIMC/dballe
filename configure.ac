@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(dballe, [8.20], [enrico@enricozini.org])
+AC_INIT(dballe, [9.0], [enrico@enricozini.org])
 AC_CONFIG_SRCDIR([configure.ac])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_CONFIG_HEADER(config.h)
@@ -349,7 +349,7 @@ dnl
 dnl  6. If any interfaces have been removed since the last public release,
 dnl     then set AGE to 0.
 
-LIBDBALLE_VERSION_INFO="8:0:0"
+LIBDBALLE_VERSION_INFO="9:0:0"
 LIBDBALLEF_VERSION_INFO="5:0:0"
 AC_SUBST(LIBDBALLE_VERSION_INFO)
 AC_SUBST(LIBDBALLEF_VERSION_INFO)
@@ -359,7 +359,7 @@ AX_CXXFLAGS_WARN_ALL
 dnl warnings="-Wall -Wextra -Werror=return-type -Werror=empty-body"
 dnl CFLAGS="$warnings $CFLAGS"
 dnl CXXFLAGS="$warnings $CXXFLAGS"
-AX_APPEND_FLAG([-Wextra -Wno-unused-parameter])
+AX_APPEND_FLAG([-Wextra -Wno-unused-parameter -Wno-error=cpp])
 AX_CHECK_COMPILE_FLAG([-Wredundant-move], [has_redundant_move=yes], [has_redundant_move=no])
 if test $has_redundant_move = yes
 then

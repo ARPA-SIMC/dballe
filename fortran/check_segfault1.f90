@@ -2,8 +2,8 @@ program test
 
 use dballef
 
-integer :: idbhandle1,handle1
-integer :: i,anaid
+integer :: idbhandle1,handle1,ierr
+integer :: i
 integer :: error_handle
 
 ierr = idba_error_set_callback(0, C_FUNLOC(idba_default_error_handler), 42, error_handle)

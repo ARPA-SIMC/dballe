@@ -23,7 +23,7 @@ impl::Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const dball
     impl::Messages res;
     auto cursor = tr->query_messages(query);
     while (cursor->next())
-        res.emplace_back(cursor->detach_message());
+        res.emplace_back(cursor->get_message());
     return res;
 }
 
@@ -32,19 +32,19 @@ impl::Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const char*
     impl::Messages res;
     auto cursor = tr->query_messages(*dballe::tests::query_from_string(query));
     while (cursor->next())
-        res.emplace_back(cursor->detach_message());
+        res.emplace_back(cursor->get_message());
     return res;
 }
 
 
 void ActualCursor::station_keys_match(const DBStation& expected)
 {
-    wassert(actual(_actual.get_station()) == expected);
+    wassert(actual(_actual->get_station()) == expected);
 }
 
 void ActualCursor::data_context_matches(const Data& expected)
 {
-    db::CursorData* c = dynamic_cast<db::CursorData*>(&_actual);
+    auto c = std::dynamic_pointer_cast<db::CursorData>(_actual);
     if (!c) throw TestFailed("cursor is not an instance of CursorData");
 
     const core::Data& exp = core::Data::downcast(expected);
@@ -61,12 +61,12 @@ void ActualCursor::data_context_matches(const Data& expected)
 
 void ActualCursor::data_var_matches(const wreport::Var& expected)
 {
-    if (db::CursorStationData* c = dynamic_cast<db::CursorStationData*>(&_actual))
+    if (auto c = std::dynamic_pointer_cast<db::CursorStationData>(_actual))
     {
         wassert(actual(c->get_varcode()) == expected.code());
         wassert(actual(c->get_var()) == expected);
     }
-    else if (db::CursorData* c = dynamic_cast<db::CursorData*>(&_actual))
+    else if (auto c = std::dynamic_pointer_cast<db::CursorData>(_actual))
     {
         wassert(actual(c->get_varcode()) == expected.code());
         wassert(actual(c->get_var()) == expected);
@@ -93,7 +93,7 @@ template<typename DB>
 void ActualDB<DB>::try_data_query(const Query& query, unsigned expected)
 {
     // Run the query
-    unique_ptr<Cursor> cur = this->_actual->query_data(query);
+    auto cur = this->_actual->query_data(query);
 
     // Check the number of results
     wassert(actual(cur->remaining()) == expected);
@@ -105,7 +105,7 @@ template<typename DB>
 void ActualDB<DB>::try_station_query(const std::string& query, unsigned expected)
 {
     // Run the query
-    unique_ptr<Cursor> cur = this->_actual->query_stations(core_query_from_string(query));
+    auto cur = this->_actual->query_stations(core_query_from_string(query));
 
     // Check the number of results
     wassert(actual(cur->remaining()) == expected);

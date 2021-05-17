@@ -94,11 +94,18 @@ void Transaction::rollback_nothrow() noexcept
 
 void Transaction::clear_cached_state()
 {
+    // TODO: ideally drop it here, to load only on demand
+    //       otherwise we're doing an extra query at the end of each transaction
     repinfo().read_cache();
     levtr().clear_cache();
     station_data().clear_cache();
     data().clear_cache();
     batch.clear();
+
+    // Invalidate all active cursors
+    for (auto& c: tracked_cursors)
+        if (auto cur = c.lock())
+            cur->discard();
 }
 
 Transaction& Transaction::downcast(dballe::db::Transaction& transaction)
@@ -205,31 +212,40 @@ void Transaction::remove_data_by_id(int id)
     batch.clear();
 }
 
-std::unique_ptr<dballe::CursorStation> Transaction::query_stations(const Query& query)
+void Transaction::track_cursor(std::weak_ptr<dballe::Cursor> cursor)
+{
+    tracked_cursors.emplace_back(cursor);
+}
+
+std::shared_ptr<dballe::CursorStation> Transaction::query_stations(const Query& query)
 {
     Tracer<> trc(this->trc ? this->trc->trace_query_stations(query) : nullptr);
     auto res = cursor::run_station_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
+    track_cursor(res);
     return res;
 }
 
-std::unique_ptr<dballe::CursorStationData> Transaction::query_station_data(const Query& query)
+std::shared_ptr<dballe::CursorStationData> Transaction::query_station_data(const Query& query)
 {
     Tracer<> trc(this->trc ? this->trc->trace_query_station_data(query) : nullptr);
     auto res = cursor::run_station_data_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
+    track_cursor(res);
     return res;
 }
 
-std::unique_ptr<dballe::CursorData> Transaction::query_data(const Query& query)
+std::shared_ptr<dballe::CursorData> Transaction::query_data(const Query& query)
 {
     Tracer<> trc(this->trc ? this->trc->trace_query_data(query) : nullptr);
     auto res = cursor::run_data_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
+    track_cursor(res);
     return res;
 }
 
-std::unique_ptr<dballe::CursorSummary> Transaction::query_summary(const Query& query)
+std::shared_ptr<dballe::CursorSummary> Transaction::query_summary(const Query& query)
 {
     Tracer<> trc(this->trc ? this->trc->trace_query_summary(query) : nullptr);
     auto res = cursor::run_summary_query(trc, dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), db->explain_queries);
+    track_cursor(res);
     return res;
 }
 

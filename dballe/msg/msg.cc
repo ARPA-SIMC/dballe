@@ -121,9 +121,9 @@ Messages messages_from_csv(CSVReader& in)
             // If Report changes, we are done
             break;
 
-        auto msg = make_shared<impl::Message>();
+        auto msg = impl::Message::create();
         bool has_next = msg->from_csv(in);
-        res.emplace_back(std::move(msg));
+        res.emplace_back(msg);
         if (!has_next)
             break;
     }
@@ -162,6 +162,10 @@ void messages_print(const Messages& msgs, FILE* out)
 
 }
 
+std::shared_ptr<Message> Message::create()
+{
+    return std::make_shared<Message>();
+}
 
 const Message& Message::downcast(const dballe::Message& o)
 {
@@ -187,9 +191,9 @@ std::shared_ptr<Message> Message::downcast(std::shared_ptr<dballe::Message> o)
     return ptr;
 }
 
-std::unique_ptr<dballe::Message> Message::clone() const
+std::shared_ptr<dballe::Message> Message::clone() const
 {
-    return unique_ptr<dballe::Message>(new Message(*this));
+    return std::make_shared<impl::Message>(*this);
 }
 
 Datetime Message::get_datetime() const
@@ -350,24 +354,24 @@ const Var* Message::get(const Shortcut& shortcut) const
     return get(shortcut.level, shortcut.trange, shortcut.code);
 }
 
-std::unique_ptr<dballe::CursorStation> Message::query_stations(const Query& query) const
+std::shared_ptr<dballe::CursorStation> Message::query_stations(const Query& query) const
 {
-    return std::unique_ptr<dballe::CursorStation>(new msg::CursorStation(*this));
+    return std::make_shared<msg::CursorStation>(std::static_pointer_cast<const impl::Message>(shared_from_this()));
 }
 
-std::unique_ptr<dballe::CursorStationData> Message::query_station_data(const Query& query) const
+std::shared_ptr<dballe::CursorStationData> Message::query_station_data(const Query& query) const
 {
-    return std::unique_ptr<dballe::CursorStationData>(new msg::CursorStationData(*this));
+    return std::make_shared<msg::CursorStationData>(std::static_pointer_cast<const impl::Message>(shared_from_this()));
 }
 
-std::unique_ptr<dballe::CursorData> Message::query_data(const Query& query) const
+std::shared_ptr<dballe::CursorData> Message::query_data(const Query& query) const
 {
-    return std::unique_ptr<dballe::CursorData>(new msg::CursorData(*this));
+    return std::make_shared<msg::CursorData>(*this);
 }
 
-std::unique_ptr<dballe::CursorData> Message::query_station_and_data(const Query& query) const
+std::shared_ptr<dballe::CursorData> Message::query_station_and_data(const Query& query) const
 {
-    return std::unique_ptr<dballe::CursorData>(new msg::CursorData(*this, true));
+    return std::make_shared<msg::CursorData>(*this, true);
 }
 
 namespace {

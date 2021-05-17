@@ -98,14 +98,14 @@ this->add_method("export", [](Fixture& f) {
     wassert(actual(impl::Message::downcast(messages[synmsg])->type) == MessageType::SYNOP);
     wassert(actual_var(*messages[synmsg], sc::latitude) == 12.34560);
     wassert(actual_var(*messages[synmsg], sc::longitude) == 76.54321);
-    wassert(actual_var(*messages[synmsg], sc::ident), "ciao");
+    wassert(actual_var(*messages[synmsg], sc::ident) == "ciao");
     wassert(actual(messages[synmsg]->get_datetime()) == Datetime(1945, 4, 26, 8, 0, 0));
     wassert(actual_var(*messages[synmsg], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)) == 300);
 
     wassert(actual(impl::Message::downcast(messages[metmsg])->type) == MessageType::METAR);
     wassert(actual_var(*messages[metmsg], sc::latitude) == 12.34560);
     wassert(actual_var(*messages[metmsg], sc::longitude) == 76.54321);
-    wassert(actual_var(*messages[metmsg], sc::ident), "ciao");
+    wassert(actual_var(*messages[metmsg], sc::ident) == "ciao");
     wassert(actual(messages[metmsg]->get_datetime()) == Datetime(1945, 4, 26, 8, 0, 0));
     wassert(actual_var(*messages[metmsg], WR_VAR(0, 1, 12), Level(1, 2, 0, 3), Trange(4, 5, 6)) == 200);
 });

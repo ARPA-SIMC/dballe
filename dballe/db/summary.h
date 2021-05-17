@@ -81,7 +81,7 @@ public:
      *   The cursor to use to iterate over the results. The results are the
      *   same as DB::query_summary.
      */
-    virtual std::unique_ptr<dballe::CursorSummary> query_summary(const Query& query) const;
+    virtual std::shared_ptr<dballe::CursorSummary> query_summary(const Query& query) const;
 
     /// Completely empty the summary
     virtual void clear() = 0;

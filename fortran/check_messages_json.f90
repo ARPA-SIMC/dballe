@@ -7,11 +7,7 @@
       use dbtest
       use dballef
 
-      integer :: dbahandle, handle,i,i1,i2,i3,i4,i5,i6,ival,saved_id
-      real :: rval
-      double precision :: dval
-      character (len=10) :: param
-      character (len=255) :: cval
+      integer :: dbahandle,handle,i,ier
       character (len=512) :: infile
       external :: testcb
       logical :: status

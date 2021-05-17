@@ -65,7 +65,7 @@ Importer::~Importer()
 std::vector<std::shared_ptr<Message>> Importer::from_binary(const BinaryMessage& msg) const
 {
     std::vector<std::shared_ptr<Message>> res;
-    foreach_decoded(msg, [&](unique_ptr<Message> m) { res.emplace_back(move(m)); return true; });
+    foreach_decoded(msg, [&](std::shared_ptr<Message> m) { res.emplace_back(m); return true; });
     return res;
 }
 
@@ -79,11 +79,11 @@ std::unique_ptr<Importer> Importer::create(Encoding type, const ImporterOptions&
     switch (type)
     {
         case Encoding::BUFR:
-            return unique_ptr<Importer>(new impl::msg::BufrImporter(opts));
+            return std::unique_ptr<Importer>(new impl::msg::BufrImporter(opts));
         case Encoding::CREX:
-            return unique_ptr<Importer>(new impl::msg::CrexImporter(opts));
+            return std::unique_ptr<Importer>(new impl::msg::CrexImporter(opts));
         case Encoding::JSON:
-            return unique_ptr<Importer>(new impl::msg::JsonImporter(opts));
+            return std::unique_ptr<Importer>(new impl::msg::JsonImporter(opts));
         default:
             error_unimplemented::throwf("%s importer is not implemented yet", File::encoding_name(type));
     }
