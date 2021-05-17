@@ -1,4 +1,4 @@
-%global releaseno 1
+%global releaseno 2
 # Note: define _srcarchivename in Travis build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
@@ -93,7 +93,7 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
 %package  -n libdballe-devel
 Summary:  DB-ALL.e core C development library
 Group:    Applications/Meteo
-Requires: lib%{name}6 = %{?epoch:%epoch:}%{version}-%{release}
+Requires: libdballe9 = %{?epoch:%epoch:}%{version}-%{release}
 %if 0%{?rhel} == 7
 Requires: popt-devel
 Requires: postgresql-devel
@@ -316,6 +316,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Mon May 17 2021 Daniele Branchini <dbranchini@arpae.it> - 9.0-2
+- fixed dependency error in libdballe-devel
+
 * Thu May 13 2021 Daniele Branchini <dbranchini@arpae.it> - 9.0-1
 - C++ API changes (#171)
 
