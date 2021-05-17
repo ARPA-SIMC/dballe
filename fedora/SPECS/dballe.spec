@@ -1,4 +1,4 @@
-%global releaseno 2
+%global releaseno 3
 # Note: define _srcarchivename in Travis build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
@@ -141,8 +141,9 @@ Group: Applications/Meteo
 %package  -n libdballe9
 Summary:   DB-ALL.e core shared library
 Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
+Requires: %{name}-common >= %{?epoch:%epoch:}%{version}-%{release}
 Requires: pkgconfig(libwreport) >= 3.29
+Obsoletes: libdballe6 < 8.21
 
 %description -n libdballe9
 DB-ALL.e C shared library
@@ -171,7 +172,7 @@ Requires: libdballe-devel = %{?epoch:%epoch:}%{version}-%{release}
 
 Summary:  DB-ALL.e Fortran shared library
 Group:    Applications/Meteo
-Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
+Requires: %{name}-common >= %{?epoch:%epoch:}%{version}-%{release}
 Requires: libdballe9 = %{?epoch:%epoch:}%{version}-%{release}
 Provides: lidballef4 = %{?epoch:%epoch:}%{version}-%{release}
 Obsoletes: libdballef4 < 8.21
@@ -316,6 +317,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Mon May 17 2021 Daniele Branchini <dbranchini@arpae.it> - 9.0-3
+- Resolving dballe-common conflicts by obsoleting lidballe6
+
 * Mon May 17 2021 Daniele Branchini <dbranchini@arpae.it> - 9.0-2
 - fixed dependency error in libdballe-devel
 
