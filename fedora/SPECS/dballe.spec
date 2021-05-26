@@ -1,5 +1,5 @@
 %global releaseno 3
-# Note: define _srcarchivename in Travis build only.
+# Note: define _srcarchivename in CI build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
