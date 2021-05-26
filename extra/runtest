@@ -64,7 +64,7 @@ export DBA_INSECURE_SQLITE=1
 
 export PYTHONPATH=$TOP_SRCDIR/python/:$ORIGDIR:$ORIGDIR/python:$ORIGDIR/.libs:$ORIGDIR/python/.libs
 export TOP_SRCDIR
-ulimit -v 1048576 || true
+ulimit -v 2097152 || true
 ulimit -n 1024 || true
 
 
