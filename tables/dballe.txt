@@ -223,14 +223,14 @@
  014031 TOTAL SUNSHINE                                                   MINUTE                     0            0  11 MINUTE                    0          4
  014192 Sensible heat flux                                               W/m**2                     0        -1024  11 W/M**2                    0          4
  014193 Latent heat flux                                                 W/m**2                     0        -1024  11 W/M**2                    0          4
- 014194 Direct solar radiation flux                                      W/M**2                     0        -2048  12 W/M**2                   -3          4
- 014195 Diffuse solar radiation flux                                     W/M**2                     0        -2048  12 W/M**2                   -3          4
- 014196 NET LONG-WAVE RADIATION FLUX                                     W/M**2                     0        -2048  12 W/M**2                    0          4
- 014197 NET SHORT-WAVE RADIATION FLUX                                    W/M**2                     0        -2048  12 W/M**2                   -3          4
- 014198 Global radiation flux (downward)                                 W/M**2                     0          -50  11 W/M**2                    0          4
- 014199 Visible radiation flux (upward)                                  W/M**2                     0          -50  11 W/M**2                    0          4
- 014200 Infrared radiation flux (downward)                               W/M**2                     0            0  11 W/M**2                    0          4
- 014201 Infrared radiation flux (upward)                                 W/M**2                     0            0  11 W/M**2                    0          4
+ 014194 Direct solar irradiance                                          W/M**2                     0        -2048  12 W/M**2                   -3          4
+ 014195 Diffuse solar irradiance                                         W/M**2                     0        -2048  12 W/M**2                   -3          4
+ 014196 Net long-wave irradiance                                         W/M**2                     0        -2048  12 W/M**2                    0          4
+ 014197 Net short-wave irradiance                                        W/M**2                     0        -2048  12 W/M**2                   -3          4
+ 014198 Global (visible) irradiance (downward)                           W/M**2                     0          -50  11 W/M**2                    0          4
+ 014199 Visible irradiance (upward)                                      W/M**2                     0          -50  11 W/M**2                    0          4
+ 014200 Infrared irradiance (downward)                                   W/M**2                     0            0  11 W/M**2                    0          4
+ 014201 Infrared irradiance (upward)                                     W/M**2                     0            0  11 W/M**2                    0          4
  014202 UV index                                                         NUMERIC                    2            0  11 NUMERIC                   2          4
  015192 NO Concentration                                                 KG/M**3                   10            0  20 KG/M**3                  10          6
  015193 NO2 Concentration                                                KG/M**3                   10            0  20 KG/M**3                  10          6
