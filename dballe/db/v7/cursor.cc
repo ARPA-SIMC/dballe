@@ -209,13 +209,35 @@ void Data::load_best(Tracer<>& trc, const DataQueryBuilder& qb)
     tr->levtr().prefetch_ids(trc, ids);
 }
 
+bool Data::add_to_last_results(const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)
+{
+    if (results.empty()) goto append;
+    if (station.id != results.back().station.id) goto append;
+    if (id_levtr != results.back().id_levtr) goto append;
+    if (var->code() != results.back().value.code()) goto append;
+
+    if (datetime <= results.back().datetime)
+        // Ignore older values than what we have
+        return false;
+
+    // Replace
+    results.back().station = station;
+    results.back().id_levtr = id_levtr;
+    results.back().datetime = datetime;
+    results.back().value = DBValue(id_data, std::move(var));
+    return true;
+
+append:
+    results.emplace_back(station, id_levtr, datetime, id_data, std::move(var));
+    return true;
+}
+
 void Data::load_last(Tracer<>& trc, const DataQueryBuilder& qb)
 {
-    // TODO: this is the same as load_best, as a starting point for a TDD implementation of #80
     results.clear();
     set<int> ids;
     tr->data().run_data_query(trc, qb, [&](const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
-        if (add_to_best_results(station, id_levtr, datetime, id_data, move(var)))
+        if (add_to_last_results(station, id_levtr, datetime, id_data, move(var)))
             ids.insert(id_levtr);
     });
     at_start = true;

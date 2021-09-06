@@ -426,13 +426,14 @@ bool DataQueryBuilder::add_attrfilter_where(const char* tbl)
 
 void DataQueryBuilder::build_order_by()
 {
-    if (modifiers & (DBA_DB_MODIFIER_BEST | DBA_DB_MODIFIER_LAST))
+    if (modifiers & DBA_DB_MODIFIER_BEST)
         sql_query.append(" ORDER BY s.lat, s.lon, s.ident");
     else
         sql_query.append(" ORDER BY d.id_station");
 
     if (!query_station_vars)
     {
+        // Query=last falls here, since it is only useable to query querying non-station values
         sql_query.append(", d.datetime");
         sql_query.append(", ltr.ltype1, ltr.l1, ltr.ltype2, ltr.l2, ltr.pind, ltr.p1, ltr.p2");
     }

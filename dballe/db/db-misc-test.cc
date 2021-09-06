@@ -295,7 +295,6 @@ this->add_method("query_last", [](Fixture& f) {
 
     // Prepare a query
     core::Query query;
-    query.latrange = LatRange(LatRange::DMIN, 13.0);
     query.varcodes.insert(WR_VAR(0, 12, 101));
     query.query = "last";
 
@@ -324,7 +323,7 @@ this->add_method("query_last", [](Fixture& f) {
     wassert(actual(cur->get_level()) == Level(103, 2000));
     wassert(actual(cur->get_trange()) == Trange::instant());
     wassert(actual(cur->get_varcode()) == WR_VAR(0, 12, 101));
-    wassert(actual(cur->get_datetime()) == Datetime(2014, 1, 2, 0, 0, 0));
+    wassert(actual(cur->get_datetime()) == Datetime(2014, 1, 2, 1, 0, 0));
     wassert(actual(cur->get_var().code()) == WR_VAR(0, 12, 101));
     wassert(actual(cur->get_var()) == 276.15);
 
