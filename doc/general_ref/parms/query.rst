@@ -152,6 +152,7 @@ comma-separated list of these values:
 Name        Description
 =========== =======================================================================================
 ``best``    When the same datum exists in multiple networks, return only the one with the highest priority.
+``last``    When the same datum exists at different times, return only the most recent one.
 ``attrs``   Optimize for when data attributes will be read on the query result. See `issue114`_.
 ``bigana``  Not used anymore.
 ``nosort``  Run the query faster, but give no guarantees on the ordering of the results.

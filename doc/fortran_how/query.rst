@@ -90,6 +90,9 @@ parameter.  The available options are:
   physical space, do not return them all, but only return the one of the record
   type with the highest priority.
 
+* ``last``: When measures exist in the same physical space at different datetimes,
+  only return the most recent one.
+
 
 Shortcuts to stations and data
 ------------------------------

@@ -1,3 +1,7 @@
+# New in version 9.1
+
+* Implemented new query modifier `query=last` (#80)
+
 # New in version 9.0
 
 * C++ API changed: `CursorMessage::get_message` has been unified with
