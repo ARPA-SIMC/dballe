@@ -1,5 +1,4 @@
 #include "dballe/db/tests.h"
-#include "dballe/db/v7/utils.h"
 #include "config.h"
 
 using namespace dballe;

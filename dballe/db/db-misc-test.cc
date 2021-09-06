@@ -220,6 +220,7 @@ this->add_method("query_station", [](Fixture& f) {
     wassert(actual(cur->remaining()) == 0);
     wassert(actual(cur->next()).isfalse());
 });
+
 this->add_method("query_best", [](Fixture& f) {
     // Test querybest
     OldDballeTestDataSet oldf;

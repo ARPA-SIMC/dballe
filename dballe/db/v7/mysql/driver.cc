@@ -78,7 +78,7 @@ void Driver::create_tables_v7()
     conn.exec_no_data(R"(
         CREATE TABLE station (
            id         INTEGER auto_increment PRIMARY KEY,
-           rep        INTEGER NOT NULL REFERENCES repinfo (id) ON DELETE CASCADE,
+           rep        SMALLINT NOT NULL REFERENCES repinfo (id) ON DELETE CASCADE,
            lat        INTEGER NOT NULL,
            lon        INTEGER NOT NULL,
            ident      CHAR(64),
@@ -131,8 +131,8 @@ void Driver::delete_tables_v7()
     conn.drop_table_if_exists("data");
     conn.drop_table_if_exists("station_data");
     conn.drop_table_if_exists("levtr");
-    conn.drop_table_if_exists("repinfo");
     conn.drop_table_if_exists("station");
+    conn.drop_table_if_exists("repinfo");
     conn.drop_settings();
 }
 void Driver::vacuum_v7()
