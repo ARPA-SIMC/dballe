@@ -262,9 +262,12 @@ protected:
 
     /// Append or replace the last result according to priority. Returns false if the value has been ignored.
     bool add_to_best_results(const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var);
+    /// Append or replace the last result according to datetime. Returns false if the value has been ignored.
+    bool add_to_last_results(const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var);
 
     void load(Tracer<>& trc, const DataQueryBuilder& qb);
     void load_best(Tracer<>& trc, const DataQueryBuilder& qb);
+    void load_last(Tracer<>& trc, const DataQueryBuilder& qb);
 
 public:
     bool with_attributes;

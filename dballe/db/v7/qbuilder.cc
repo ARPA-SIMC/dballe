@@ -433,10 +433,11 @@ void DataQueryBuilder::build_order_by()
 
     if (!query_station_vars)
     {
+        // Query=last falls here, since it is only useable to query querying non-station values
         sql_query.append(", d.datetime");
         sql_query.append(", ltr.ltype1, ltr.l1, ltr.ltype2, ltr.l2, ltr.pind, ltr.p1, ltr.p2");
     }
-    if (modifiers & DBA_DB_MODIFIER_BEST)
+    if (modifiers & (DBA_DB_MODIFIER_BEST | DBA_DB_MODIFIER_LAST))
         sql_query.append(", s.rep");
     sql_query.append(", d.code");
 }
