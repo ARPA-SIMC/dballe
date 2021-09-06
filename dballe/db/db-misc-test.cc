@@ -260,6 +260,79 @@ this->add_method("query_best", [](Fixture& f) {
     // Now there should not be anything anymore
     wassert(actual(cur->next()).isfalse());
 });
+
+this->add_method("query_last", [](Fixture& f) {
+    // Test query="last"
+
+    core::Data vals;
+    vals.station.coords = Coords(12.077, 44.600);
+    vals.station.report = "synop";
+    vals.level = Level(103, 2000);
+    vals.trange = Trange::instant();
+    vals.datetime = Datetime(2014, 1, 1, 0, 0, 0);
+    vals.values.set("B12101", 273.15);
+    vals.values.set("B12103", 253.15);
+    f.tr->insert_data(vals);
+
+    vals.clear_ids();
+    vals.datetime = Datetime(2014, 1, 2, 0, 0, 0);
+    vals.values.set("B12101", 274.15);
+    vals.values.set("B12103", 254.15);
+    f.tr->insert_data(vals);
+
+    vals.clear_ids();
+    vals.station.coords = Coords(13.077, 45.600);
+    vals.datetime = Datetime(2014, 1, 1, 1, 0, 0);
+    vals.values.set("B12101", 275.15);
+    vals.values.set("B12103", 255.15);
+    f.tr->insert_data(vals);
+
+    vals.clear_ids();
+    vals.datetime = Datetime(2014, 1, 2, 1, 0, 0);
+    vals.values.set("B12101", 276.15);
+    vals.values.set("B12103", 256.15);
+    f.tr->insert_data(vals);
+
+    // Prepare a query
+    core::Query query;
+    query.latrange = LatRange(LatRange::DMIN, 13.0);
+    query.varcodes.insert(WR_VAR(0, 12, 101));
+    query.query = "last";
+
+    // Make the query
+    auto cur = f.tr->query_data(query);
+
+    wassert(actual(cur->remaining()) == 2);
+    wassert(actual(cur->next()).istrue());
+    DBStation station = cur->get_station();
+    wassert(actual(station.coords) == Coords(12.077, 44.600));
+    wassert(actual(station.ident.is_missing()).istrue());
+    wassert(actual(station.report) == "synop");
+    wassert(actual(cur->get_level()) == Level(103, 2000));
+    wassert(actual(cur->get_trange()) == Trange::instant());
+    wassert(actual(cur->get_varcode()) == WR_VAR(0, 12, 101));
+    wassert(actual(cur->get_datetime()) == Datetime(2014, 1, 2, 0, 0, 0));
+    wassert(actual(cur->get_var().code()) == WR_VAR(0, 12, 101));
+    wassert(actual(cur->get_var()) == 274.15);
+
+    wassert(actual(cur->remaining()) == 1);
+    wassert(actual(cur->next()).istrue());
+    station = cur->get_station();
+    wassert(actual(station.coords) == Coords(13.077, 45.600));
+    wassert(actual(station.ident.is_missing()).istrue());
+    wassert(actual(station.report) == "synop");
+    wassert(actual(cur->get_level()) == Level(103, 2000));
+    wassert(actual(cur->get_trange()) == Trange::instant());
+    wassert(actual(cur->get_varcode()) == WR_VAR(0, 12, 101));
+    wassert(actual(cur->get_datetime()) == Datetime(2014, 1, 2, 0, 0, 0));
+    wassert(actual(cur->get_var().code()) == WR_VAR(0, 12, 101));
+    wassert(actual(cur->get_var()) == 276.15);
+
+    // Now there should not be anything anymore
+    wassert(actual(cur->remaining()) == 0);
+    wassert(actual(cur->next()).isfalse());
+});
+
 this->add_method("delete", [](Fixture& f) {
     // Test deletion
     OldDballeTestDataSet oldf;

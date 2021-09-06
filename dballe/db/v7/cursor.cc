@@ -209,6 +209,20 @@ void Data::load_best(Tracer<>& trc, const DataQueryBuilder& qb)
     tr->levtr().prefetch_ids(trc, ids);
 }
 
+void Data::load_last(Tracer<>& trc, const DataQueryBuilder& qb)
+{
+    // TODO: this is the same as load_best, as a starting point for a TDD implementation of #80
+    results.clear();
+    set<int> ids;
+    tr->data().run_data_query(trc, qb, [&](const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
+        if (add_to_best_results(station, id_levtr, datetime, id_data, move(var)))
+            ids.insert(id_levtr);
+    });
+    at_start = true;
+
+    tr->levtr().prefetch_ids(trc, ids);
+}
+
 void Data::query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read)
 {
     if (!force_read && with_attributes)
@@ -279,9 +293,9 @@ std::shared_ptr<dballe::CursorStationData> run_station_data_query(Tracer<>& trc,
         tr->db->conn->explain(qb.sql_query, stderr);
     }
 
-    if (modifiers & DBA_DB_MODIFIER_BEST)
+    if (modifiers & (DBA_DB_MODIFIER_BEST | DBA_DB_MODIFIER_LAST))
     {
-        throw error_unimplemented("best queries of station vars");
+        throw error_unimplemented("best or last queries of station values are not implemented");
         //auto resptr = new Best(tr, modifiers);
         //res.reset(resptr);
         //resptr->load(qb);
@@ -307,6 +321,8 @@ std::shared_ptr<dballe::CursorData> run_data_query(Tracer<>& trc, std::shared_pt
     auto res = std::make_shared<Data>(qb, modifiers & DBA_DB_MODIFIER_WITH_ATTRIBUTES);
     if (modifiers & DBA_DB_MODIFIER_BEST)
         res->load_best(trc, qb);
+    else if (modifiers & DBA_DB_MODIFIER_LAST)
+        res->load_last(trc, qb);
     else
         res->load(trc, qb);
     return res;
@@ -315,8 +331,8 @@ std::shared_ptr<dballe::CursorData> run_data_query(Tracer<>& trc, std::shared_pt
 std::shared_ptr<dballe::CursorSummary> run_summary_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
-    if (modifiers & DBA_DB_MODIFIER_BEST)
-        throw error_consistency("cannot use query=best on summary queries");
+    if (modifiers & (DBA_DB_MODIFIER_BEST | DBA_DB_MODIFIER_LAST))
+        throw error_consistency("cannot use query=best or query=last on summary queries");
 
     SummaryQueryBuilder qb(tr, q, modifiers, false);
     qb.build();
@@ -335,8 +351,8 @@ std::shared_ptr<dballe::CursorSummary> run_summary_query(Tracer<>& trc, std::sha
 void run_delete_query(Tracer<>& trc, std::shared_ptr<v7::Transaction> tr, const core::Query& q, bool station_vars, bool explain)
 {
     unsigned int modifiers = q.get_modifiers();
-    if (modifiers & DBA_DB_MODIFIER_BEST)
-        throw error_consistency("cannot use query=best on delete queries");
+    if (modifiers & (DBA_DB_MODIFIER_BEST | DBA_DB_MODIFIER_LAST))
+        throw error_consistency("cannot use query=best or query=last on delete queries");
 
     IdQueryBuilder qb(tr, q, modifiers, station_vars);
     qb.build();

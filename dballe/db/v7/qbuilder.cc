@@ -426,7 +426,7 @@ bool DataQueryBuilder::add_attrfilter_where(const char* tbl)
 
 void DataQueryBuilder::build_order_by()
 {
-    if (modifiers & DBA_DB_MODIFIER_BEST)
+    if (modifiers & (DBA_DB_MODIFIER_BEST | DBA_DB_MODIFIER_LAST))
         sql_query.append(" ORDER BY s.lat, s.lon, s.ident");
     else
         sql_query.append(" ORDER BY d.id_station");
@@ -436,7 +436,7 @@ void DataQueryBuilder::build_order_by()
         sql_query.append(", d.datetime");
         sql_query.append(", ltr.ltype1, ltr.l1, ltr.ltype2, ltr.l2, ltr.pind, ltr.p1, ltr.p2");
     }
-    if (modifiers & DBA_DB_MODIFIER_BEST)
+    if (modifiers & (DBA_DB_MODIFIER_BEST | DBA_DB_MODIFIER_LAST))
         sql_query.append(", s.rep");
     sql_query.append(", d.code");
 }

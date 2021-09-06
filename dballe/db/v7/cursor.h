@@ -265,6 +265,7 @@ protected:
 
     void load(Tracer<>& trc, const DataQueryBuilder& qb);
     void load_best(Tracer<>& trc, const DataQueryBuilder& qb);
+    void load_last(Tracer<>& trc, const DataQueryBuilder& qb);
 
 public:
     bool with_attributes;

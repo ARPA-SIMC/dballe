@@ -220,8 +220,9 @@ bool Query::is_subquery(const dballe::Query& other_gen) const
     unsigned omods = parse_modifiers(other.query.c_str());
     if (mods != omods)
     {
-        // The only relevant bits is query=best, all the rest we can safely ignore
+        // The only relevant bits is query=best or query=last, all the rest we can safely ignore
         if (!(mods & DBA_DB_MODIFIER_BEST) && (omods & DBA_DB_MODIFIER_BEST)) return false;
+        if (!(mods & DBA_DB_MODIFIER_LAST) && (omods & DBA_DB_MODIFIER_LAST)) return false;
     }
     if (removed_or_changed(ana_filter, other.ana_filter)) return false;
     if (removed_or_changed(data_filter, other.data_filter)) return false;
@@ -446,6 +447,8 @@ unsigned Query::parse_modifiers(const char* s)
                    best one */
                 if (strncmp(s, "best", 4) == 0)
                     modifiers |= DBA_DB_MODIFIER_BEST;
+                else if (strncmp(s, "last", 4) == 0)
+                    modifiers |= DBA_DB_MODIFIER_LAST;
                 else
                     got = 0;
                 break;

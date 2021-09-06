@@ -21,6 +21,9 @@
 #define DBA_DB_MODIFIER_SUMMARY_DETAILS (1 << 8)
 /// Also get attributes alongside data
 #define DBA_DB_MODIFIER_WITH_ATTRIBUTES (1 << 9)
+/** When values from different reports exist on the same point, only report the
+ * one with the highest datetime. See issue #80 for details */
+#define DBA_DB_MODIFIER_LAST        (1 << 10)
 
 namespace dballe {
 namespace core {

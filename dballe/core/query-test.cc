@@ -216,6 +216,7 @@ add_method("modifiers", []() {
     wassert(actual(core::Query::parse_modifiers("details")) == DBA_DB_MODIFIER_SUMMARY_DETAILS);
     wassert(actual(core::Query::parse_modifiers("attrs")) == DBA_DB_MODIFIER_WITH_ATTRIBUTES);
     wassert(actual(core::Query::parse_modifiers("best,attrs")) == (DBA_DB_MODIFIER_BEST | DBA_DB_MODIFIER_WITH_ATTRIBUTES));
+    wassert(actual(core::Query::parse_modifiers("last")) == DBA_DB_MODIFIER_LAST);
 });
 
 add_method("issue107", []() {
