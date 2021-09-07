@@ -42,7 +42,7 @@ BuildRequires: %{python3_vers}-wreport3
 BuildRequires: gcc-gfortran
 BuildRequires: %{python3_vers}-numpy
 BuildRequires: %{python3_vers}-nose2
-%if ! 0%{?rhel}
+%if ! 0%{?el7}
 BuildRequires: %{python3_vers}-sphinx
 BuildRequires: %{python3_vers}-breathe
 %endif
@@ -297,7 +297,7 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 %files -n libdballe-doc
 %defattr(-,root,root,-)
-%if ! 0%{?rhel}
+%if ! 0%{?el7}
 %doc %{_docdir}/%{name}/*
 %endif
 
