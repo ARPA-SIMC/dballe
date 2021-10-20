@@ -1,6 +1,7 @@
-# New in version 9.1
+# New in version 9.1 (pending release)
 
 * Implemented new query modifier `query=last` (#80)
+* Fixed a DeprecationWarning when querying latitude/longitude with Decimal values (#264)
 
 # New in version 9.0
 

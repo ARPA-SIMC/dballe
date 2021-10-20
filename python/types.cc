@@ -1023,9 +1023,10 @@ int dballe_int_lat_from_python(PyObject* o)
     {
         PyErr_Clear();
     } else {
-        pyo_unique_ptr six(throw_ifnull(PyLong_FromLong(5)));
-        pyo_unique_ptr scaled(throw_ifnull(PyObject_CallFunctionObjArgs(scaleb, six.get(), nullptr)));
-        int res = PyLong_AsLong(scaled);
+        pyo_unique_ptr digits(throw_ifnull(PyLong_FromLong(5)));
+        pyo_unique_ptr scaled(throw_ifnull(PyObject_CallFunctionObjArgs(scaleb, digits.get(), nullptr)));
+        pyo_unique_ptr as_int(throw_ifnull(PyObject_CallMethod(scaled, "__int__", nullptr)));
+        int res = PyLong_AsLong(as_int);
         if (res == -1 && PyErr_Occurred())
             throw PythonException();
         return res;
@@ -1063,9 +1064,10 @@ int dballe_int_lon_from_python(PyObject* o)
     {
         PyErr_Clear();
     } else {
-        pyo_unique_ptr six(throw_ifnull(PyLong_FromLong(5)));
-        pyo_unique_ptr scaled(throw_ifnull(PyObject_CallFunctionObjArgs(scaleb, six.get(), nullptr)));
-        int res = PyLong_AsLong(scaled);
+        pyo_unique_ptr digits(throw_ifnull(PyLong_FromLong(5)));
+        pyo_unique_ptr scaled(throw_ifnull(PyObject_CallFunctionObjArgs(scaleb, digits.get(), nullptr)));
+        pyo_unique_ptr as_int(throw_ifnull(PyObject_CallMethod(scaled, "__int__", nullptr)));
+        int res = PyLong_AsLong(as_int);
         if (res == -1 && PyErr_Occurred())
             throw PythonException();
         return res;

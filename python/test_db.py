@@ -16,19 +16,23 @@ class CommonDBTestMixin(DballeDBMixin):
         Make sure that the test within, when run ouside a transaction, raises a
         DeprecationWarning
         """
-        with warnings.catch_warnings(record=True) as warning_list:
-            warnings.simplefilter("always")
-            yield
         if self.raise_db_method_deprecation_warnings:
+            with warnings.catch_warnings(record=True) as warning_list:
+                warnings.simplefilter("always")
+                yield
             for w in warning_list:
                 if w.category != DeprecationWarning:
+                    warnings.showwarning(w.message, w.category, w.filename, w.lineno, None, w.line)
                     continue
                 if "without a transaction is deprecated" not in w.message.args[0]:
+                    warnings.showwarning(w.message, w.category, w.filename, w.lineno, None, w.line)
                     continue
                 # found = w["message"]
                 break
             else:
                 self.fail("DeprecationWarning not raised")
+        else:
+            yield
 
     @contextmanager
     def assert_deprecated(self, msg):
@@ -106,7 +110,12 @@ class CommonDBTestMixin(DballeDBMixin):
             count += 1
         self.assertEqual(count, 1)
 
-    def testQueryDecimal(self):
+    def test_query_station_data_decimal(self):
+        with self.deprecated_on_db():
+            cur = self.db.query_station_data({"lat": Decimal("12.34560"), "lon": Decimal("76.54320")})
+        self.assertEqual(cur.remaining, 1)
+
+    def test_query_stations_decimal(self):
         with self.deprecated_on_db():
             cur = self.db.query_stations({"lat": Decimal("12.34560"), "lon": Decimal("76.54320")})
         self.assertEqual(cur.remaining, 1)
