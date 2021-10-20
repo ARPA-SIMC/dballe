@@ -215,6 +215,11 @@ this->add_method("issue232", [](Fixture& f) {
         cur->get_datetimerange();
 });
 
+this->add_method("issue262", [](Fixture& f) {
+    EXPLORER explorer1("test.xapian");
+    EXPLORER explorer2("test.xapian");
+});
+
 }
 
 }
