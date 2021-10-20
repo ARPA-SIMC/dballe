@@ -110,7 +110,12 @@ class CommonDBTestMixin(DballeDBMixin):
             count += 1
         self.assertEqual(count, 1)
 
-    def testQueryDecimal(self):
+    def test_query_station_data_decimal(self):
+        with self.deprecated_on_db():
+            cur = self.db.query_station_data({"lat": Decimal("12.34560"), "lon": Decimal("76.54320")})
+        self.assertEqual(cur.remaining, 1)
+
+    def test_query_stations_decimal(self):
         with self.deprecated_on_db():
             cur = self.db.query_stations({"lat": Decimal("12.34560"), "lon": Decimal("76.54320")})
         self.assertEqual(cur.remaining, 1)
