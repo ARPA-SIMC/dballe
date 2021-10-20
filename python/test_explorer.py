@@ -304,8 +304,3 @@ class DballeV7DBExplorerXapianTest(XapianExplorerTestMixin, DBExplorerTestMixin,
 
 class DballeV7DBExplorerJSONTest(JSONExplorerTestMixin, DBExplorerTestMixin, unittest.TestCase):
     DB_FORMAT = "V7"
-
-
-if __name__ == "__main__":
-    from testlib import main
-    main("test-explorer")

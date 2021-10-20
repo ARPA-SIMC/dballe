@@ -73,8 +73,3 @@ class TestFileRead(unittest.TestCase):
             self.assertEqual(sys.getrefcount(f), 4)  # file, __enter__ result, f, getrefcount
         self.assertEqual(sys.getrefcount(file), 3)  # file, f, _getrefcount
         self.assertEqual(sys.getrefcount(f), 3)  # file, f, _getrefcount
-
-
-if __name__ == "__main__":
-    from testlib import main
-    main("test-file")

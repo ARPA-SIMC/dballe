@@ -1018,8 +1018,3 @@ class DballeV7Test(FullDBTestMixin, AttrTestMixin, unittest.TestCase):
 
 class DballeV7TransactionTest(TransactionTestMixin, CommonDBTestMixin, AttrTestMixin, unittest.TestCase):
     DB_FORMAT = "V7"
-
-
-if __name__ == "__main__":
-    from testlib import main
-    main("test-db")

@@ -9,8 +9,3 @@ class Describe(unittest.TestCase):
 
     def testTrange(self):
         self.assertIn("Accumulation", dballe.describe_trange(1))
-
-
-if __name__ == "__main__":
-    from testlib import main
-    main("test_core")

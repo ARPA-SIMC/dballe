@@ -25,8 +25,3 @@ class TestExporter(MessageTestMixin, unittest.TestCase):
 
         with self.assertRaises(ValueError):
             exporter.to_binary([])
-
-
-if __name__ == "__main__":
-    from testlib import main
-    main("test-exporter")

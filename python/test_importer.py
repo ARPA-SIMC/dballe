@@ -151,8 +151,3 @@ class TestImporter(MessageTestMixin, unittest.TestCase):
         a = val.enqa("B33192")
         self.assertTrue(a)
         self.assertEqual(a.enqi(), 0)
-
-
-if __name__ == "__main__":
-    from testlib import main
-    main("test-importer")

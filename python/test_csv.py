@@ -66,8 +66,3 @@ class CSVMixin(DballeDBMixin):
 
 class TestCSVV7(CSVMixin, unittest.TestCase):
     DB_FORMAT = "V7"
-
-
-if __name__ == "__main__":
-    from testlib import main
-    main("test-csv")

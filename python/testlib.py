@@ -1,23 +1,7 @@
 import dballe
-import shlex
 import os
-import sys
 import tempfile
-import unittest
 from contextlib import contextmanager
-
-
-def main(testname):
-    args = os.environ.get("ARGS", None)
-    if args is None:
-        return unittest.main()
-
-    args = shlex.split(args)
-    if args[0] != testname:
-        return 0
-
-    argv = [sys.argv[0]] + args[1:]
-    unittest.main(argv=argv)
 
 
 def test_pathname(fname):

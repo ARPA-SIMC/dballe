@@ -17,8 +17,3 @@ class TestBinaryMessage(unittest.TestCase):
         self.assertEqual(msg.offset, None)
         self.assertEqual(msg.index, None)
         self.assertEqual(msg.pathname, None)
-
-
-if __name__ == "__main__":
-    from testlib import main
-    main("test-binarymessage")

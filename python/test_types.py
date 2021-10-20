@@ -104,8 +104,3 @@ class TestDBStation(StationTestMixin, unittest.TestCase):
         self.assertEqual(t.lat, 3.0)
         self.assertEqual(t.lon, 4.0)
         self.assertEqual(t.ident, "bar")
-
-
-if __name__ == "__main__":
-    from testlib import main
-    main("test-types")
