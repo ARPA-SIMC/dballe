@@ -402,6 +402,7 @@ test_dballe_SOURCES = \
 	db/db-import-test.cc \
 	db/db-export-test.cc \
 	db/summary-test.cc \
+	db/summary_xapian-test.cc \
 	db/explorer-test.cc \
 	fortran/traced-test.cc \
 	fortran/commonapi-test.cc \
