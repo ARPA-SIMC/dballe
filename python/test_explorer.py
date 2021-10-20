@@ -99,10 +99,10 @@ class BaseExplorerTestMixin(DballeDBMixin):
                 update.add_db(tr)
 
         explorer1 = self._explorer("e2")
-        explorer1.set_filter({"rep_memo": "amdar"})
         with explorer1.rebuild() as update:
             update.add_explorer(explorer)
             update.add_explorer(explorer)
+        explorer1.set_filter({"rep_memo": "amdar"})
 
         self.assertExplorerContents(explorer1, count_unfiltered=6, count_filtered=2)
 

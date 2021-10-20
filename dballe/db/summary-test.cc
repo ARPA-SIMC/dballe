@@ -8,6 +8,7 @@
 #ifdef HAVE_XAPIAN
 #include "dballe/db/summary_xapian.h"
 #endif
+#include <wreport/utils/sys.h>
 
 using namespace dballe;
 using namespace dballe::db;
@@ -26,30 +27,30 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
     void register_tests() override;
 };
 
-Tests<V7DB, SummaryMemory> tg1("db_summary_memory_v7_sqlite_summary", "SQLITE");
-Tests<V7DB, DBSummaryMemory> tg2("db_summary_memory_v7_sqlite_dbsummary", "SQLITE");
+Tests<V7DB, SummaryMemory> tg1("db_summary_memory_v7_sqlite_summary_memory", "SQLITE");
+Tests<V7DB, DBSummaryMemory> tg2("db_summary_memory_v7_sqlite_dbsummary_memory", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests<V7DB, SummaryMemory> tg3("db_summary_memory_v7_postgresql_summary", "POSTGRESQL");
-Tests<V7DB, DBSummaryMemory> tg4("db_summary_memory_v7_postgresql_dbsummary", "POSTGRESQL");
+Tests<V7DB, SummaryMemory> tg3("db_summary_memory_v7_postgresql_summary_memory", "POSTGRESQL");
+Tests<V7DB, DBSummaryMemory> tg4("db_summary_memory_v7_postgresql_dbsummary_memory", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests<V7DB, SummaryMemory> tg5("db_summary_memory_v7_mysql_summary", "MYSQL");
-Tests<V7DB, DBSummaryMemory> tg6("db_summary_memory_v7_mysql_dbsummary", "MYSQL");
+Tests<V7DB, SummaryMemory> tg5("db_summary_memory_v7_mysql_summary_memory", "MYSQL");
+Tests<V7DB, DBSummaryMemory> tg6("db_summary_memory_v7_mysql_dbsummary_memory", "MYSQL");
 #endif
 
 std::unique_ptr<Summary> other_summary(const DBSummaryMemory&) { return std::unique_ptr<Summary>(new SummaryMemory); }
 std::unique_ptr<DBSummary> other_summary(const SummaryMemory&) { return std::unique_ptr<DBSummary>(new DBSummaryMemory); }
 
 #ifdef HAVE_XAPIAN
-Tests<V7DB, SummaryXapian> tg7("db_summary_xapian_v7_sqlite_summary", "SQLITE");
-Tests<V7DB, DBSummaryXapian> tg8("db_summary_xapian_v7_sqlite_dbsummary", "SQLITE");
+Tests<V7DB, SummaryXapian> tg7("db_summary_xapian_v7_sqlite_summary_disk", "SQLITE");
+Tests<V7DB, DBSummaryXapian> tg8("db_summary_xapian_v7_sqlite_dbsummary_disk", "SQLITE");
 #ifdef HAVE_LIBPQ
-Tests<V7DB, SummaryXapian> tg9("db_summary_xapian_v7_postgresql_summary", "POSTGRESQL");
-Tests<V7DB, DBSummaryXapian> tg10("db_summary_xapian_v7_postgresql_dbsummary", "POSTGRESQL");
+Tests<V7DB, SummaryXapian> tg9("db_summary_xapian_v7_postgresql_summary_disk", "POSTGRESQL");
+Tests<V7DB, DBSummaryXapian> tg10("db_summary_xapian_v7_postgresql_dbsummary_disk", "POSTGRESQL");
 #endif
 #ifdef HAVE_MYSQL
-Tests<V7DB, SummaryXapian> tg11("db_summary_xapian_v7_mysql_summary", "MYSQL");
-Tests<V7DB, DBSummaryXapian> tg12("db_summary_xapian_v7_mysql_dbsummary", "MYSQL");
+Tests<V7DB, SummaryXapian> tg11("db_summary_xapian_v7_mysql_summary_disk", "MYSQL");
+Tests<V7DB, DBSummaryXapian> tg12("db_summary_xapian_v7_mysql_dbsummary_disk", "MYSQL");
 #endif
 
 std::unique_ptr<Summary> other_summary(const DBSummaryXapian&) { return std::unique_ptr<Summary>(new SummaryXapian); }

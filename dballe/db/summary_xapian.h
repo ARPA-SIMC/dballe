@@ -9,13 +9,26 @@ namespace dballe {
 namespace db {
 
 /**
+ * Abstract interface for accessing Xapian databases, with read locking only
+ * when needed
+ */
+struct XapianDB
+{
+    virtual ~XapianDB() {}
+
+    virtual Xapian::Database& reader() = 0;
+    virtual Xapian::WritableDatabase& writer() = 0;
+    virtual void commit() = 0;
+    virtual void clear() = 0;
+};
+
+/**
  * High level objects for working with DB-All.e DB summaries
  */
 template<typename Station>
 class BaseSummaryXapian: public BaseSummary<Station>
 {
-    std::string pathname;
-    Xapian::WritableDatabase db;
+    std::unique_ptr<XapianDB> db;
 
 public:
     BaseSummaryXapian();
