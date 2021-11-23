@@ -419,6 +419,40 @@ struct lon : Getter<lon<Station>, typename StationImplTraits<Station>::Impl>
 };
 
 template<typename Station>
+struct ilat : Getter<ilat<Station>, typename StationImplTraits<Station>::Impl>
+{
+    typedef typename StationImplTraits<Station>::Impl Impl;
+    constexpr static const char* name = "ilat";
+    constexpr static const char* doc = "station latitude (as integer)";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            if (self->val.coords.lat == MISSING_INT)
+                Py_RETURN_NONE;
+            else
+                return PyLong_FromLong(self->val.coords.lat);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+template<typename Station>
+struct ilon : Getter<ilon<Station>, typename StationImplTraits<Station>::Impl>
+{
+    typedef typename StationImplTraits<Station>::Impl Impl;
+    constexpr static const char* name = "ilon";
+    constexpr static const char* doc = "station longitude (as integer)";
+    static PyObject* get(Impl* self, void* closure)
+    {
+        try {
+            if (self->val.coords.lon == MISSING_INT)
+                Py_RETURN_NONE;
+            else
+                return PyLong_FromLong(self->val.coords.lon);
+        } DBALLE_CATCH_RETURN_PYO
+    }
+};
+
+template<typename Station>
 struct ident : Getter<ident<Station>, typename StationImplTraits<Station>::Impl>
 {
     typedef typename StationImplTraits<Station>::Impl Impl;
@@ -500,7 +534,7 @@ Station information.
 
 Constructor: Station(report: str, lat: float, lon: float, ident: str=None)
 )";
-    GetSetters<report<Station>, lat<Station>, lon<Station>, ident<Station>> getsetters;
+    GetSetters<report<Station>, lat<Station>, lon<Station>, ilat<Station>, ilon<Station>, ident<Station>> getsetters;
     static Station from_args(PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "report", "lat", "lon", "ident", nullptr };
@@ -529,7 +563,7 @@ Station information with database ID.
 
 Constructor: Station(report: str, id: int, lat: float, lon: float, ident: str=None)
 )";
-    GetSetters<report<Station>, id, lat<Station>, lon<Station>, ident<Station>> getsetters;
+    GetSetters<report<Station>, id, lat<Station>, lon<Station>, ilat<Station>, ilon<Station>, ident<Station>> getsetters;
     static DBStation from_args(PyObject* args, PyObject* kw)
     {
         static const char* kwlist[] = { "report", "id", "lat", "lon", "ident", nullptr };

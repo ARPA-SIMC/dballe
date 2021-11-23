@@ -1,6 +1,5 @@
 import dballe
 import unittest
-import datetime
 
 
 class TestLevel(unittest.TestCase):
@@ -68,6 +67,8 @@ class TestStation(StationTestMixin, unittest.TestCase):
         self.assertEqual(t.report, "foo")
         self.assertEqual(t.lat, 3.0)
         self.assertEqual(t.lon, 4.0)
+        self.assertEqual(t.ilat, 300000)
+        self.assertEqual(t.ilon, 400000)
         self.assertIsNone(t.ident)
 
     def testCreateFull(self):
@@ -75,6 +76,8 @@ class TestStation(StationTestMixin, unittest.TestCase):
         self.assertEqual(t.report, "foo")
         self.assertEqual(t.lat, 3.0)
         self.assertEqual(t.lon, 4.0)
+        self.assertEqual(t.ilat, 300000)
+        self.assertEqual(t.ilon, 400000)
         self.assertEqual(t.ident, "bar")
 
 
