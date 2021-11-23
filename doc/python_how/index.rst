@@ -8,4 +8,5 @@ Python HOWTOs
    insert
    convertvars
    attributes
+   messages
    explorer

@@ -3,7 +3,7 @@
 Insert data into a db
 =====================
 
-This is an example python code that inserts a station, some station data, and
+This is an example Python code that inserts a station, some station data, and
 some data into a database.
 
 ::
