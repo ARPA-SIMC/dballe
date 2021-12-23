@@ -4,6 +4,9 @@
 * Fixed a DeprecationWarning when querying latitude/longitude with Decimal values (#264)
 * Open/create a Xapian explorer only when needed, fixing locking issues on
   concurrent access (#262)
+* Added `ilat` e `ilon` (integer lat/lon) for `Station` objects (#247)
+* Added examples for messages import/export (#255)
+
 
 # New in version 9.0
 
