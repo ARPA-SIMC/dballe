@@ -2,9 +2,9 @@
 #include "dballe/db/tests.h"
 #include "summary.h"
 #include "config.h"
+
 #ifdef HAVE_XAPIAN
 #include "dballe/db/summary_xapian.h"
-#endif
 #include <wreport/utils/sys.h>
 
 using namespace dballe;
@@ -83,3 +83,4 @@ this->add_method("xapian_concurrency", [] {
 
 }
 
+#endif
