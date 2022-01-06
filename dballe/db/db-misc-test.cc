@@ -987,6 +987,7 @@ this->add_method("query_best_priomax", [](Fixture& f) {
         cur->discard();
     }
 });
+
 this->add_method("query_repmemo_in_results", [](Fixture& f) {
     // Ensure that rep_memo is set in the results
     OldDballeTestDataSet oldf;
@@ -995,6 +996,23 @@ this->add_method("query_repmemo_in_results", [](Fixture& f) {
     auto cur = f.tr->query_data(core::Query());
     while (cur->next())
         wassert_false(cur->get_station().report.empty());
+});
+
+this->add_method("export_then_remove", [](Fixture& f) {
+    // See issue #255
+    // Ensure that rep_memo is set in the results
+    OldDballeTestDataSet oldf;
+    wassert(f.populate(oldf));
+
+    core::Query query;
+    query.varcodes.insert(WR_VAR(0, 12, 101));
+
+    // Simulate a query
+    auto cursor = f.tr->query_messages(query);
+    while (cursor->next())
+        cursor->get_message();
+
+    f.tr->remove_data(query);
 });
 
 }
