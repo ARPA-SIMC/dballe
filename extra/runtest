@@ -65,6 +65,7 @@ export DBA_INSECURE_SQLITE=1
 export PYTHONPATH=$TOP_SRCDIR/python/:$ORIGDIR:$ORIGDIR/python:$ORIGDIR/.libs:$ORIGDIR/python/.libs
 # export PYTHONWARNINGS=error
 export PYTHONWARNINGS=default
+# See https://docs.python.org/3/library/devmode.html
 export PYTHONDEVMODE=1
 
 export TOP_SRCDIR
