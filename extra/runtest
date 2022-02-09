@@ -5,17 +5,8 @@ PYTHON=${PYTHON:-$(which python3)}
 
 if [ "$1" = "NOSE" ]
 then
-    NOSE="${NOSE:-nose2-3}"
-    for n in "$NOSE" nose2-3 nose2-3.10 nose2-3.9 nose2-3.8 nose2-3.7 nose2-3.6
-    do
-        if which "$n" > /dev/null
-        then
-            NOSE="$n"
-            break
-        fi
-    done
-    CMD="$NOSE --verbose -s `pwd` -s ${TOP_SRCDIR}/python"
-    DEBUG_CMD="$PYTHON `which $NOSE` -s `pwd` -s ${TOP_SRCDIR}/python"
+    CMD="$PYTHON -m unittest discover --verbose -s ${TOP_SRCDIR}/python"
+    DEBUG_CMD="$CMD"
 else
     CMD=$(readlink -f "$1")
     DEBUG_CMD="$CMD"
