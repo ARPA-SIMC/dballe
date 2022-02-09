@@ -83,6 +83,6 @@ EXTRA_DIST += \
 AM_CPPFLAGS = -I/usr/include/python$(PYTHON_VERSION) -I$(top_srcdir)
 
 check-local:
-	PYTHON="$(PYTHON)" NOSE="@NOSE@" $(TESTS_ENVIRONMENT) NOSE
+	PYTHON="$(PYTHON)" $(TESTS_ENVIRONMENT) PYTHON
 
 CLEANFILES = python-dballe.rst python-dballe.html

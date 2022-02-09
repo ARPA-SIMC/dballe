@@ -64,8 +64,7 @@ python_tests = [
 
 runtest = find_program('../extra/runtest')
 
-# TODO: from meson 0.55.0, we can add env: 'NOSE=' + nose.full_path()
-test('python', runtest, args: ['NOSE'],
+test('python', runtest, args: ['PYTHON'],
      env: [
          'PYTHON=' + python3_path,
          'PYTHONPATH=' + meson.current_source_dir() + ':' + meson.current_build_dir(),

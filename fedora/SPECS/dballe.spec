@@ -41,7 +41,6 @@ BuildRequires: libwreport-doc
 BuildRequires: %{python3_vers}-wreport3
 BuildRequires: gcc-gfortran
 BuildRequires: %{python3_vers}-numpy
-BuildRequires: %{python3_vers}-nose2
 %if ! 0%{?el7}
 BuildRequires: %{python3_vers}-sphinx
 BuildRequires: %{python3_vers}-breathe

@@ -40,8 +40,6 @@ if python3.found()
     # FIXME: python3.path() is only available from meson 0.50: this is a workaround
     python3_path = python3.get_variable('BINDIR') / python3.get_variable('PYTHON') + python3.language_version()
 
-    nose = find_program('nose2-3', 'nose2-' + python3.language_version())
-
     sphinx = find_program('sphinx-build', 'sphinx-build-3', 'sphinx-build-' + python3.language_version(), required: false)
 
     # TODO: check if breathe is installed

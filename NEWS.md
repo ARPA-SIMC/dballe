@@ -6,7 +6,7 @@
   concurrent access (#262)
 * Added `ilat` e `ilon` (integer lat/lon) for `Station` objects (#247)
 * Added examples for messages import/export (#255)
-
+* Removed dependency on nose (#268)
 
 # New in version 9.0
 

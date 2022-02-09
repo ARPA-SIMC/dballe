@@ -3,7 +3,7 @@
 TOP_SRCDIR=$(readlink -f $(dirname $0)/..)
 PYTHON=${PYTHON:-$(which python3)}
 
-if [ "$1" = "NOSE" ]
+if [ "$1" = "PYTHON" ]
 then
     CMD="$PYTHON -m unittest discover --verbose -s ${TOP_SRCDIR}/python"
     DEBUG_CMD="$CMD"
