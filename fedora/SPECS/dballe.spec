@@ -1,10 +1,10 @@
-%global releaseno 3
+%global releaseno 1
 # Note: define _srcarchivename in CI build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 9.0
+Version: 9.1
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -316,6 +316,16 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Tue Feb 22 2022 Daniele Branchini <dbranchini@arpae.it> - 9.1-1
+- Implemented new query modifier `query=last` (#80)
+- Fixed a DeprecationWarning when querying latitude/longitude with Decimal values (#264)
+- Open/create a Xapian explorer only when needed, fixing locking issues on
+  concurrent access (#262)
+- Added `ilat` e `ilon` (integer lat/lon) for `Station` objects (#247)
+- Added examples for messages import/export (#255)
+- Removed dependency on nose (#268)
+- Added Turbidity and ORP variables (#267)
+
 * Mon May 17 2021 Daniele Branchini <dbranchini@arpae.it> - 9.0-3
 - Resolving dballe-common conflicts by obsoleting lidballe6
 
