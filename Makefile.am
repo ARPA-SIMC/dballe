@@ -42,7 +42,6 @@ EXTRA_DIST = README.md NEWS.md LICENSE BENCHMARKS autogen.sh \
 	     $(conf_DATA) get_line_no run-check.conf.example \
 	     run-check run-local run-bench show_code_notes \
 	     fabfile.py \
-	     UPGRADE-5.x \
 	     dbaexport.1 \
 	     rebuild-gh-pages \
              fedora/SPECS/dballe.spec

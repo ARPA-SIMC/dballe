@@ -142,7 +142,7 @@ Contact and copyright information
 
 The author of DB-ALLe is Enrico Zini <enrico@enricozini.com>
 
-DB-ALLe is Copyright (C) 2005-2021 ARPAE-SIMC <urpsim@arpae.it>
+DB-ALLe is Copyright (C) 2005-2022 ARPAE-SIMC <urpsim@arpae.it>
 
 DB-ALLe is licensed under the terms of the GNU General Public License version
 2.  Please see the file COPYING for details.
