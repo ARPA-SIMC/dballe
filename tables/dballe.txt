@@ -37,8 +37,11 @@
  002063 AIRCRAFT ROLL ANGLE                                              DEGREE                     2       -18000  16 DEGREE                    2          5
  002064 AIRCRAFT ROLL ANGLE QUALITY                                      CODE TABLE 2064            0            0   2 CODE TABLE 2064           0          1
  002070 ORIGINAL SPECIFICATION OF LATITUDE/LONGITUDE                     CODE TABLE 2070            0            0   4 CODE TABLE 2070           0          2
+ 002099 POLARIZATION                                                     CODE TABLE 2099            0            0   3 CODE TABLE 0              0          1
  002121 MEAN FREQUENCY                                                   Hz                        -8            0   7 Hz                       -8          3
  002125 PULSE REPETITION FREQUENCY                                       Hz                        -1            0   8 Hz                       -1          3
+ 002192 Signal frequency                                                 Hz                        -5            0  17 Hz                       -5          6
+ 002193 Antenna diameter                                                 M                          2            0   7 M                         2          3
  004001 YEAR                                                             YEAR                       0            0  12 YEAR                      0          4
  004002 MONTH                                                            MONTH                      0            0   4 MONTH                     0          2
  004003 DAY                                                              DAY                        0            0   6 DAY                       0          2
@@ -60,8 +63,10 @@
  005040 ORBIT NUMBER                                                     NUMERIC                    0            0  24 NUMERIC                   0          8
  005041 SCAN LINE NUMBER                                                 NUMERIC                    0            0   8 NUMERIC                   0          3
  005043 FIELD OF VIEW NUMBER                                             NUMERIC                    0            0   8 NUMERIC                   0          3
+ 005192 Latitude of RX antenna                                           DEGREE                     5     -9000000  25 DEGREE                    5          7
  006001 LONGITUDE (HIGH ACCURACY)                                        DEGREE                     5    -18000000  26 DEGREE                    5          8
  006015 LONGITUDE DISPLACEMENT (HIGH ACCURACY)                           DEGREE                     5    -18000000  26 DEGREE                    5          8
+ 006192 Longitude of RX antenna                                          DEGREE                     5    -18000000  26 DEGREE                    5          8
  007002 HEIGHT OR ALTITUDE                                               M                         -1          -40  16 M                        -1          5
  007004 PRESSURE                                                         PA                        -1            0  14 PA                       -1          5
  007007 HEIGHT                                                           M                          0        -1000  17 M                         0          6
@@ -75,6 +80,7 @@
  007193 Level L1                                                         NUMERIC                    0   -536870912  31 NUMERIC                   0         10
  007194 Level L2                                                         NUMERIC                    0   -536870912  31 NUMERIC                   0         10
  007195 Second level type                                                NUMERIC                    0            0  31 NUMERIC                   0          4
+ 007196 Height of RX antenna above mean sea level                        M                          1        -4000  17 M                         1          5
  008002 VERTICAL SIGNIFICANCE (SURFACE OBSERVATIONS)                     CODE TABLE 8002            0            0   6 CODE TABLE 8002           0          2
  008004 PHASE OF AIRCRAFT FLIGHT                                         CODE TABLE 8004            0            0   3 CODE TABLE 8004           0          1
  008009 DETAILED PHASE OF FLIGHT                                         CODE TABLE 8009            0            0   4 CODE TABLE 8009           0          2
@@ -322,6 +328,8 @@
  020201 Presence of water-spout                                          BOOLEAN                    0            0   1 BOOLEAN                   0          1
  020202 State of the ground with snow                                    CODE TABLE                 0            0   5 CODE TABLE                0          2
  020203 Weather impact                                                   CODE TABLE 20203           0            0   9 CODE TABLE 20203          0          3
+ 021192 Receiving power                                                  dBm                        4     -2000000  22 dBm                       4          7
+ 021193 Transmitting power                                               dBm                        4     -2000000  22 dBm                       4          7
  022001 DIRECTION OF WAVES                                               DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  022002 DIRECTION OF WIND WAVES                                          DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
  022003 DIRECTION OF SWELL WAVES                                         DEGREE TRUE                0            0   9 DEGREE TRUE               0          3
