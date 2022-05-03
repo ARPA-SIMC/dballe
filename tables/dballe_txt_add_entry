@@ -242,9 +242,10 @@ class App:
         maxp = fancy_input("Highest possible value: ", type=float)
         prec = fancy_input("Precision (minimum significant variation of values): ", type=float)
         scale = int(-math.floor(math.log10(prec)))
+        prec10 = math.pow(10., -scale)
         ref = int(minp*math.pow(10., scale))
-        widthb = int(math.ceil(math.log((maxp-minp)/prec+2)/math.log(2.0)))
-        widthc = int(math.ceil(math.log10(max(abs(minp), abs(maxp))/prec+1)))
+        widthb = int(math.ceil(math.log((maxp-minp)/prec10+2)/math.log(2.0)))
+        widthc = int(math.ceil(math.log10(max(abs(minp), abs(maxp))/prec10+1)))
         print(f"Scale: {scale}, base value: {ref}, size: {widthb}b or {widthc}c")
         entry.scaleb = scale
         entry.refb = ref
