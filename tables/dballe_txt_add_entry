@@ -210,7 +210,7 @@ class App:
         else:
             pstart = 1
 
-        free_yyy = frozenset(int(x.bcode[-3:]) for x in self.bufrtable.table)
+        free_yyy = frozenset(int(x.bcode[-3:]) for x in self.bufrtable.table if int(x.bcode[1:3]) == cat)
         for yyy in range(pstart, 256):
             if yyy not in free_yyy:
                 break
