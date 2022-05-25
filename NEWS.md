@@ -1,3 +1,10 @@
+# New in version 9.2
+
+* Added entries for mobile telephony links
+* Fix bug in `dballe_txt_add_entry` when precision is not a power of 10
+* `dballe_txt_add_entry` finds max code among the selected category (#271)
+* Added B13207 "Water skin velocity module"
+
 # New in version 9.1
 
 * Implemented new query modifier `query=last` (#80)

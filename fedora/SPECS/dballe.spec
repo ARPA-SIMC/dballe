@@ -4,7 +4,7 @@
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 9.1
+Version: 9.2
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -316,6 +316,12 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Wed May 25 2022 Emanuele Di Giacomo <edigiacomo@arpae.it> - 9.2-1
+- Added entries for mobile telephony links
+- Fix bug in `dballe_txt_add_entry` when precision is not a power of 10
+- `dballe_txt_add_entry` finds max code among the selected category (#271)
+- Added B13207 "Water skin velocity module"
+
 * Tue Feb 22 2022 Daniele Branchini <dbranchini@arpae.it> - 9.1-1
 - Implemented new query modifier `query=last` (#80)
 - Fixed a DeprecationWarning when querying latitude/longitude with Decimal values (#264)
