@@ -30,7 +30,6 @@ install_headers(
     'bulletin.h',
     'context.h',
     'msg.h',
-    'msg-extravars.h',
     'cursor.h',
     'domain_errors.h',
     'json_codec.h',
@@ -47,4 +46,6 @@ foreach f: [['msg-cursor-access.in.cc', 'msg-cursor-access.cc']]
     libdballe_sources += custom_target(f[1], output: f[1], input: f[0], command: [mklookup, '@INPUT@', '-o', '@OUTPUT@'])
 endforeach
 
-libdballe_sources += custom_target('msg-extravars.h', input: '../vars.csv', output: 'msg-extravars.h', command: [mkvars, '-t', 'msg-extravars.h', '@INPUT@', '-o', '@OUTPUT@'])
+libdballe_sources += custom_target('msg-extravars.h', input: '../vars.csv', output: 'msg-extravars.h',
+                                   command: [mkvars, '-t', 'msg-extravars.h', '@INPUT@', '-o', '@OUTPUT@'],
+				   install_dir: get_option('includedir') + '/' + 'dballe/msg')
