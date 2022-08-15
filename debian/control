@@ -3,7 +3,7 @@ Section: misc
 Priority: optional
 Maintainer: Enrico Zini <enrico@debian.org>
 Build-Depends: debhelper (>= 13), dh-python, dh-fortran-mod (>= 0.11),
-  pkg-config, libtool,
+  pkg-config, libtool, meson,
   doxygen, help2man, python3-sphinx, python3-breathe,
   libsqlite3-dev (>= 3.14), libpq-dev, default-libmysqlclient-dev,
   libwreport-dev (>= 3.23-2), python3-wreport (>= 3.22),
