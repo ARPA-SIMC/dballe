@@ -1,4 +1,7 @@
-shortcuts_h = custom_target('shortcuts.h', output: 'shortcuts.h', input: '../vars.csv', command: [mkvars, '-t', 'shortcuts.h', '@INPUT@', '-o', '@OUTPUT@'])
+shortcuts_h = custom_target(
+	'shortcuts.h', output: 'shortcuts.h', input: '../vars.csv',
+	command: [mkvars, '-t', 'shortcuts.h', '@INPUT@', '-o', '@OUTPUT@'],
+	install_dir: get_option('includedir') + '/' + 'dballe/core')
 shortcuts_cc = custom_target('shortcuts.cc', output: 'shortcuts.cc', input: '../vars.csv', command: [mkvars, '-t', 'shortcuts.cc', '@INPUT@', '-o', '@OUTPUT@'])
 shortcuts_access_in_cc = custom_target('shortcuts-access.in.cc', output: 'shortcuts-access.in.cc', input: '../vars.csv', command: [mkvars, '-t', 'shortcuts-access.in.cc', '@INPUT@', '-o', '@OUTPUT@'])
 
@@ -25,7 +28,6 @@ libdballe_sources += files(
 install_headers(
 	'fwd.h',
 	'error.h',
-	'shortcuts.h',
 	'enq.h',
 	'cursor.h',
 	'aliases.h',
