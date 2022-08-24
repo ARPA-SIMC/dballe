@@ -8,7 +8,7 @@ Build-Depends: debhelper (>= 13), dh-python, dh-fortran-mod (>= 0.11),
   libsqlite3-dev (>= 3.14), libpq-dev, default-libmysqlclient-dev,
   libwreport-dev (>= 3.23-2), python3-wreport (>= 3.22),
   libwreport-doc (>= 3.23-2),
-  libpopt-dev, gperf,
+  libxapian-dev, libpopt-dev, gperf,
   gfortran | g77, g++ (>= 4:7),
   python3-all-dev, python3-numpy, python3-docutils
 Standards-Version: 4.5.1
@@ -19,7 +19,9 @@ Vcs-Browser: https://github.com/ARPA-SIMC/dballe
 Package: libdballe-dev
 Section: libdevel
 Architecture: any
-Depends: libdballe9 (= ${binary:Version}), libwreport-dev (>= 3.22), ${misc:Depends}
+Depends: libdballe9 (= ${binary:Version}), libwreport-dev (>= 3.22), ${misc:Depends},
+  libsqlite3-dev (>= 3.14), libpq-dev, default-libmysqlclient-dev,
+  libpopt-dev, libxapian-dev
 Recommends: pkg-config
 Description: DB-All.e C development library for weather research
  DB-All.e is a fast on-disk database where meteorological observed and
