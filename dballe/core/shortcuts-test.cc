@@ -1,5 +1,5 @@
 #include "tests.h"
-#include "shortcuts.h"
+#include "dballe/core/shortcuts.h"
 
 using namespace dballe;
 using namespace dballe::impl;
