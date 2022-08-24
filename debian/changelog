@@ -1,4 +1,13 @@
-dballe (9.0-1) UNRELEASED; urgency=medium
+dballe (9.2-0) UNRELEASED; urgency=medium
+
+  * New upstream version, see NEWS.md for what's new.
+  * Updated Standards-Version
+  * Updated Vcs-* packages
+  * Build with meson instead of autotools
+
+ -- Enrico Zini <enrico@debian.org>  Wed, 24 Aug 2022 15:46:53 +0200
+
+dballe (9.0-1) unstable; urgency=medium
 
   * New upstream version, see NEWS.md for what's new.
   * libdballe soname bump due to C++ ABI changes
