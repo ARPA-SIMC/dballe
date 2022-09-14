@@ -93,11 +93,10 @@ Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
 Summary:  DB-ALL.e core C development library
 Group:    Applications/Meteo
 Requires: libdballe9 = %{?epoch:%epoch:}%{version}-%{release}
-%if 0%{?rhel} == 7
 Requires: popt-devel
 Requires: postgresql-devel
 Requires: mariadb-devel
-%endif
+%{!?el7:Requires: xapian-core-devel}
 
 %description -n libdballe-devel
  DB-ALL.e core C development library
