@@ -4,7 +4,7 @@
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 9.2
+Version: 9.3
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -315,6 +315,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Thu Oct 27 2022 Daniele Branchini <dbranchini@arpae.it> - 9.3-1
+- Implemented debian packaging (#273, #274)
+
 * Wed May 25 2022 Emanuele Di Giacomo <edigiacomo@arpae.it> - 9.2-1
 - Added entries for mobile telephony links
 - Fix bug in `dballe_txt_add_entry` when precision is not a power of 10
