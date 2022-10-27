@@ -1,11 +1,11 @@
-dballe (9.3-1) UNRELEASED; urgency=medium
+dballe (9.3-1) unstable; urgency=medium
 
   * New upstream version, see NEWS.md for what's new. Closes: #957123
   * Updated Standards-Version
   * Updated Vcs-* packages
   * Build with meson instead of autotools
 
- -- Enrico Zini <enrico@debian.org>  Thu, 27 Oct 2022 10:13:24 +0200
+ -- Enrico Zini <enrico@debian.org>  Thu, 27 Oct 2022 11:23:46 +0200
 
 dballe (9.0-1) unstable; urgency=medium
 
