@@ -1,6 +1,5 @@
 [![Build Status](https://simc.arpae.it/moncic-ci/dballe/centos7.png)](https://simc.arpae.it/moncic-ci/dballe/)
 [![Build Status](https://simc.arpae.it/moncic-ci/dballe/centos8.png)](https://simc.arpae.it/moncic-ci/dballe/)
-[![Build Status](https://simc.arpae.it/moncic-ci/dballe/fedora34.png)](https://simc.arpae.it/moncic-ci/dballe/)
 [![Build Status](https://simc.arpae.it/moncic-ci/dballe/fedora36.png)](https://simc.arpae.it/moncic-ci/dballe/)
 [![Build Status](https://copr.fedorainfracloud.org/coprs/simc/stable/package/dballe/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/simc/stable/package/dballe/)
 

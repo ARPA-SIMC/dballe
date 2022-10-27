@@ -1,3 +1,7 @@
+# New in version 9.3
+
+* Implemented debian packaging (#273, #274)
+
 # New in version 9.2
 
 * Added entries for mobile telephony links
