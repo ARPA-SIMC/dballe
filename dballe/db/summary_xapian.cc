@@ -6,6 +6,7 @@
 #include "dballe/core/json.h"
 #include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
+#include <array>
 #include <algorithm>
 #include <unordered_set>
 #include <cstring>
