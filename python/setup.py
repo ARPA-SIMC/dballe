@@ -28,7 +28,7 @@ setup(
     description="Fast on-disk database for meteorological data",
     long_description="Fast on-disk database for meteorological data",
     url="http://github.com/arpa-simc/dballe",
-    license="GPLv2+",
+    license="GPLv2",
     py_modules=[],
     packages=['dballe'],
     data_files=[],
