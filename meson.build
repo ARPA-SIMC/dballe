@@ -1,8 +1,8 @@
-project('dballe', 'cpp', 'fortran', version: '9.2', license : 'GPL-2.0-or-later', default_options: ['warning_level=3', 'cpp_std=c++11'])
+project('dballe', 'cpp', 'fortran', version: '9.3', license : 'GPL-2.0-or-later', default_options: ['warning_level=3', 'cpp_std=c++11'])
 
 add_global_arguments('-Wextra', '-Wno-unused-parameter', language : 'cpp')
 
-libdballe_so_version = '9.2.0'
+libdballe_so_version = '9.3.0'
 libdballef_so_version = '5.0.0'
 
 table_dir = get_option('datadir') / 'wreport'
