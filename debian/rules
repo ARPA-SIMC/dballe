@@ -4,16 +4,13 @@ VERSION=$(shell debian/vercheck)
 RELEASE_PACKAGE=dballe
 
 %:
-	dh $@ --with fortran_mod,python3,sphinxdoc --without autoreconf -Smeson --parallel
+	dh $@ --with fortran_mod,python3,sphinxdoc --without autoreconf -Smeson
 
 # #DEB_MAKE_CHECK_TARGET := check
 
 override_dh_makeshlibs:
 	# For new symbols when compiled with GCC 7. See: #871272
 	dh_makeshlibs -V'libdballe (>= 9.0-1~)'
-
-override_dh_auto_install:
-	dh_auto_install
 
 vercheck:
 	debian/vercheck > /dev/null
