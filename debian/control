@@ -102,7 +102,6 @@ Description: DB-ALL.e Python library for weather research
  These are the Python bindings.
 
 Package: dballe-common
-Section: misc
 Architecture: all
 Depends: ${misc:Depends}
 Description: Common data files for all DB-All.e modules
@@ -114,7 +113,6 @@ Description: Common data files for all DB-All.e modules
  descriptions.
 
 Package: dballe
-Section: misc
 Architecture: any
 Depends: dballe-common, ${shlibs:Depends}, ${misc:Depends}
 Recommends: python3-dballe
