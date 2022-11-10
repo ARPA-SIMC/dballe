@@ -410,14 +410,14 @@ dballe (5.5-1) unstable; urgency=low
 
   * New upstream version
      - Fixed an issue with present but undefined values in the Fortran API
-     - Local B table change: B22042->B22043 
+     - Local B table change: B22042->B22043
      - Local B table change: removed B08001 (replaced with B08042)
        B08001 found in old generic BUFR messages will transparently be
        converted to B08042 on import.
      - Local B table change: removed B10009 GEOPOTENTIAL HEIGHT
        (redundant, since we already have B10008)
      - Lots of testing and fixes in WMO SYNOP templates import/export
-     - TEMP templates: all pressure imports now use B10004 
+     - TEMP templates: all pressure imports now use B10004
      - Local B table change: B07001->B07030
      - Autodetect ECMWF/WMO template to use if not explicitly requested
      - Imported past weather time range now is 3h or 6h depending on the
@@ -455,7 +455,7 @@ dballe (5.2-1) unstable; urgency=low
      - Reenabled generation if Python API docs
      - Handle all 2:x:x as TEMPs
      - Command line tools now properly turn exceptions into errors
-     - Ported rconvert to rpy2 
+     - Ported rconvert to rpy2
      - Fixed timeranges when importing synops
      - In fortran message API, treat levels and time ranges that are not set
        as "missing" instead of "leave as they were before"
@@ -585,7 +585,7 @@ dballe (4.0.10-1) unstable; urgency=low
        message sets
      - ship direction and ship speed flags were swapped when reading from AOF
      - Ignore CREX data when loading tables for BUFR decoding/encoding
-     - Handle negative heights in AOF aireps, somehow 
+     - Handle negative heights in AOF aireps, somehow
   * libdballe-doc is now Architecture: all.  Closes: #517607
   * Updated Standard-Version (no change required)
   * Build-Depend on ghostscript instead of gs
@@ -753,4 +753,3 @@ dballe (2.5-1) unstable; urgency=low
   * Initial upload.  Closes: bug#389776.
 
  -- Enrico Zini <enrico@debian.org>  Sat, 30 Sep 2006 17:42:22 +0200
-
