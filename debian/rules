@@ -1,8 +1,5 @@
 #!/usr/bin/make -f
 
-VERSION=$(shell debian/vercheck)
-RELEASE_PACKAGE=dballe
-
 %:
 	dh $@ --with python3 --without autoreconf -Smeson --parallel
 
@@ -14,15 +11,3 @@ override_dh_makeshlibs:
 
 override_dh_auto_install:
 	dh_auto_install
-
-vercheck:
-	debian/vercheck > /dev/null
-
-debsrc: vercheck
-	if [ ! -f ../$(RELEASE_PACKAGE)_$(VERSION).orig.tar.gz ]; then \
-		test -f Makefile || ./configure; \
-		make -j4; \
-		make dist; \
-		mv $(RELEASE_PACKAGE)-$(VERSION).tar.gz ../$(RELEASE_PACKAGE)_$(VERSION).orig.tar.gz; \
-	fi
-	gbp buildpackage -S -us -uc
