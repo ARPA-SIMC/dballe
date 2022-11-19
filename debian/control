@@ -11,7 +11,7 @@ Build-Depends:
   libwreport-doc (>= 3.23-2),
   libxapian-dev, libpopt-dev, gperf,
   gfortran | g77, g++ (>= 4:7),
-  python3-all-dev, python3-numpy, python3-docutils
+  python3-dev, python3-numpy, python3-docutils
 Standards-Version: 4.6.1
 Homepage: https://github.com/ARPA-SIMC/dballe
 Vcs-Git: https://github.com/ARPA-SIMC/dballe.git

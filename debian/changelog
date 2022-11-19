@@ -1,3 +1,11 @@
+dballe (9.3-2) unstable; urgency=medium
+
+  * Build-Depend on python3-dev instead of python3-all-dev (Closes: #1024255)
+  * Depend on dh-sequence-sphinxdoc, simplifying debian/rules and B-D list
+  * Depend on debhelper-compat, removed debian/compat
+
+ -- Enrico Zini <enrico@debian.org>  Sat, 19 Nov 2022 13:42:43 +0100
+
 dballe (9.3-1) unstable; urgency=medium
 
   * New upstream version, see NEWS.md for what's new. Closes: #957123
