@@ -5,7 +5,7 @@ Maintainer: Enrico Zini <enrico@debian.org>
 Build-Depends:
   debhelper-compat (= 13), dh-sequence-sphinxdoc, dh-sequence-fortran-mod, dh-python,
   pkg-config, meson,
-  doxygen, help2man, python3-sphinx, python3-breathe,
+  doxygen, help2man, python3-breathe,
   libsqlite3-dev (>= 3.14), libpq-dev, default-libmysqlclient-dev,
   libwreport-dev (>= 3.23-2), python3-wreport (>= 3.22),
   libwreport-doc (>= 3.23-2),
