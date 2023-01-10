@@ -1,4 +1,4 @@
-# New in version UNRELEASED
+# New in version 9.4
 
 * Compatibility with numpy 1.24
 
