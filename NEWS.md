@@ -1,3 +1,7 @@
+# New in version UNRELEASED
+
+* Compatibility with numpy 1.24
+
 # New in version 9.3
 
 * Implemented debian packaging (#273, #274)
