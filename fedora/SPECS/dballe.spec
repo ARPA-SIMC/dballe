@@ -1,4 +1,4 @@
-%global releaseno 1
+%global releaseno 2
 # Note: define _srcarchivename in CI build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
@@ -315,6 +315,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Wed Apr  5 2023 Daniele Branchini <dbranchini@arpae.it> - 9.4-2
+- Added variable B22196 Period of maximum wave
+
 * Tue Jan 10 2023 Emanuele Di Giacomo <edigiacomo@arpae.it> - 9.4-1
 - Compatibility with numpy 1.24
 
