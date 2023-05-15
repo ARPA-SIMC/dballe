@@ -411,6 +411,7 @@
  033196 Data has been invalidated                                        CODE TABLE 33196           0            0   2 CODE TABLE 33196          0          1
  033197 Manual replacement in substitution                               CODE TABLE 33197           0            0   2 CODE TABLE 33197          0          1
  033198 Observation increment                                            NUMERIC                    4  -1073741823  31 NUMERIC                   4         10
+ 033199 In station quality check                                         %                          0            0   7 PERCENT                   0          3
  033201 Kalman coefficient, state vector (s.v.) x1                       NUMERIC                    4  -1073741823  31 NUMERIC                   4         10
  033202 Kalman coefficient, state vector (s.v.) x2                       NUMERIC                    4  -1073741823  31 NUMERIC                   4         10
  033203 Kalman coefficient, s.v. error covariance matrix(1,1)            NUMERIC                    4  -1073741823  31 NUMERIC                   4         10
