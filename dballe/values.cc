@@ -261,7 +261,7 @@ void ValuesBase<Value>::decode(const std::vector<uint8_t>& buf, std::function<vo
 {
     core::value::Decoder dec(buf);
     while (dec.size)
-        dest(move(dec.decode_var()));
+        dest(dec.decode_var());
 }
 
 template struct ValuesBase<Value>;
