@@ -65,6 +65,7 @@ foreach f: [[shortcuts_access_in_cc, 'shortcuts-access.cc'],
 endforeach
 
 libdballe_sources += [
+        shortcuts_h,
         shortcuts_cc,
 ]
 
