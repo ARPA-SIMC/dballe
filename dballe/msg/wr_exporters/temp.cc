@@ -864,8 +864,7 @@ void register_temp(TemplateRegistry& r)
                     return unique_ptr<Template>(new TempWMO(opts, msgs));
                 else
                 {
-                    const wr::TemplateFactory& fac = wr::TemplateRegistry::get("temp-ecmwf");
-                    return fac.factory(opts, msgs);
+                    return wr::TemplateRegistry::get("temp-ecmwf").factory(opts, msgs);
                 }
             });
     r.register_factory(2, "temp-ship", "Temp ship (autodetect)",
