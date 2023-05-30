@@ -358,6 +358,7 @@
  022193 Current Y component                                              M/S                        2            0  13 M/S                       2          4
  022194 Concentrazione clorofilla a                                      microg/l                   2            0  17 microg/l                  2          6
  022195 Depth below sea surface                                          M                          3            0  23 M                         3          7
+ 022196 Period of maximum wave                                           S                          0            0   6 S                         0          2
  023192 Dry deposition of H2SO4                                          MOL/M**2                   5            0  20 MOL/M**3                  5          6
  023193 Wet deposition of H2SO4                                          MOL/M**2                   5            0  20 MOL/M**3                  5          6
  023194 Dry deposition of NH4                                            MOL/M**2                   5            0  20 MOL/M**3                  5          6
@@ -410,6 +411,7 @@
  033196 Data has been invalidated                                        CODE TABLE 33196           0            0   2 CODE TABLE 33196          0          1
  033197 Manual replacement in substitution                               CODE TABLE 33197           0            0   2 CODE TABLE 33197          0          1
  033198 Observation increment                                            NUMERIC                    4  -1073741823  31 NUMERIC                   4         10
+ 033199 In station quality check                                         %                          0            0   7 PERCENT                   0          3
  033201 Kalman coefficient, state vector (s.v.) x1                       NUMERIC                    4  -1073741823  31 NUMERIC                   4         10
  033202 Kalman coefficient, state vector (s.v.) x2                       NUMERIC                    4  -1073741823  31 NUMERIC                   4         10
  033203 Kalman coefficient, s.v. error covariance matrix(1,1)            NUMERIC                    4  -1073741823  31 NUMERIC                   4         10

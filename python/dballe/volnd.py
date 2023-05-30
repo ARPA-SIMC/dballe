@@ -595,7 +595,7 @@ class Data:
                 a = self._instantiateIntMatrix()
             else:
                 a = numpy.empty(shape, dtype=numpy.float64)
-            mask = numpy.ones(shape, dtype=numpy.bool)
+            mask = numpy.ones(shape, dtype=bool)
 
             # Fill the array with all the values, at the given indexes
             for pos, val in self.vals:

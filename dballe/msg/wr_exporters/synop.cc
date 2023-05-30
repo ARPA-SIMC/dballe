@@ -640,15 +640,9 @@ void register_synop(TemplateRegistry& r)
                 auto msg = Message::downcast(msgs[0]);
                 const Var* var = msg->get_st_name_var();
                 if (var)
-                {
-                    const wr::TemplateFactory& fac = wr::TemplateRegistry::get(SYNOP_WMO_NAME);
-                    return fac.factory(opts, msgs);
-                }
+                    return wr::TemplateRegistry::get(SYNOP_WMO_NAME).factory(opts, msgs);
                 else
-                {
-                    const wr::TemplateFactory& fac = wr::TemplateRegistry::get("synop-ecmwf");
-                    return fac.factory(opts, msgs);
-                }
+                    return wr::TemplateRegistry::get("synop-ecmwf").factory(opts, msgs);
             });
     r.register_factory(0, SYNOP_WMO_NAME, SYNOP_WMO_DESC,
             [](const dballe::ExporterOptions& opts, const Messages& msgs) {

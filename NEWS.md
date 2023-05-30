@@ -1,3 +1,8 @@
+# New in version 9.4
+
+* Compatibility with numpy 1.24
+* Added variable B22196 Period of maximum wave
+
 # New in version 9.3
 
 * Implemented debian packaging (#273, #274)
