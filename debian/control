@@ -71,7 +71,7 @@ Description: DB-ALL.e C shared library for weather research
 Package: libdballef-dev
 Section: libdevel
 Architecture: any
-Depends: libdballef5 (=${binary:Version}), ${misc:Depends}
+Depends: libdballe-dev (=${binary:Version}), libdballef5 (=${binary:Version}), ${misc:Depends}
 Recommends: pkg-config
 Description: DB-All.e Fortran development library for weather research
  DB-All.e is a fast on-disk database where meteorological observed and
