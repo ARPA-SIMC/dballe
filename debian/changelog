@@ -1,3 +1,9 @@
+dballe (9.5-2) unstable; urgency=medium
+
+  * Fix dependencies for libdballef-dev
+
+ -- Emanuele Di Giacomo <edigiacomo@arpae.it>  Tue, 20 Jun 2023 07:33:14 +0200
+
 dballe (9.5-1) unstable; urgency=medium
 
   * Added variable B33199 In station quality check
