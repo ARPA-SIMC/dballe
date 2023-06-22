@@ -18,10 +18,9 @@ BuildRequires: python3-rpm-macros >= 3-23
 %else
 %define python3_vers python3
 %endif
-BuildRequires: libtool
+BuildRequires: meson
 BuildRequires: gcc-c++
 BuildRequires: gperf
-BuildRequires: which
 BuildRequires: doxygen
 BuildRequires: pkgconfig(lua) > 5.1.1
 BuildRequires: pkgconfig(libwreport) >= 3.29
@@ -215,30 +214,14 @@ Obsoletes: python-dballe < 8.0
 %setup -q -n %{srcarchivename}
 
 %build
-
-autoreconf -ifv
-%if 0%{?rhel} == 7
-# CentOS7 doesn't support [[deprecated]] attribute
-CPPFLAGS="-Wno-error=attributes"
-%else
-CPPFLAGS=""
-%endif
-%configure FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs --disable-static CPPFLAGS="$CPPFLAGS -Wno-error=cpp"
-make
-make check
+%meson
+%meson_build
 
 %install
-[ "%{buildroot}" != / ] && rm -rf "%{buildroot}"
-
-make install DESTDIR="%{buildroot}" STRIP=/bin/true
-mkdir -p $RPM_BUILD_ROOT%{_fmoddir}
-mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
-
+%meson_install
 
 %clean
 [ "%{buildroot}" != / ] && rm -rf "%{buildroot}"
-
-
 
 %files
 %defattr(-,root,root,-)
