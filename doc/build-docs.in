@@ -5,7 +5,7 @@ set -uxe
 # Generate documentation with doxygen and sphynx
 
 # Locate wreport's doxygen tags
-WREPORT_DOXYGEN_DIR=/usr/share/doc/wreport/html/doxygen
+WREPORT_DOXYGEN_DIR=/usr/share/doc/wreport
 test -e "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR="/usr/share/doc/libwreport-doc/apidocs/"
 test -e "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR="/usr/share/doc/libwreport-doc/html/doxygen/"
 test -e "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR="/usr/share/doc/libwreport-dev/"
