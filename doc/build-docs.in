@@ -5,22 +5,30 @@ set -uxe
 # Generate documentation with doxygen and sphynx
 
 # Locate wreport's doxygen tags
-WREPORT_DOXYGEN_DIR=/usr/share/doc/wreport
-test -e "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR="/usr/share/doc/libwreport-doc/apidocs/"
-test -e "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR="/usr/share/doc/libwreport-doc/html/doxygen/"
-test -e "$WREPORT_DOXYGEN_DIR" || WREPORT_DOXYGEN_DIR="/usr/share/doc/libwreport-dev/"
+WREPORT_DOXYGEN_DIRS="
+/usr/share/doc/wreport
+/usr/share/doc/libwreport-doc/apidocs/
+/usr/share/doc/libwreport-doc/html/doxygen/
+/usr/share/doc/libwreport-dev/
+"
+for WREPORT_DOXYGEN_DIR in $WREPORT_DOXYGEN_DIRS
+do
+    if [ -e "${WREPORT_DOXYGEN_DIR}/libwreport.doxytags" ]
+    then
+        cp "${WREPORT_DOXYGEN_DIR}/libwreport.doxytags" .
+        break
+    elif [ -e "${WREPORT_DOXYGEN_DIR}/libwreport.doxytags.gz" ]
+    then
+        gzip -cd "${WREPORT_DOXYGEN_DIR}/libwreport.doxytags.gz" > libwreport.doxytags
+        break
+    fi
+done
 
-if [ -e "${WREPORT_DOXYGEN_DIR}/libwreport.doxytags" ]
+if [ ! -e libwreport.doxytags ]
 then
-    cp "${WREPORT_DOXYGEN_DIR}/libwreport.doxytags" .
-elif [ -e "${WREPORT_DOXYGEN_DIR}/libwreport.doxytags.gz" ]
-then
-    gzip -cd "${WREPORT_DOXYGEN_DIR}/libwreport.doxytags.gz" > libwreport.doxytags
-else
     echo "wreport doxygen tags not found in ${WREPORT_DOXYGEN_DIR}" >&2
     exit 1
 fi
-
 
 OUTDIR="@doc_build@/html"
 
