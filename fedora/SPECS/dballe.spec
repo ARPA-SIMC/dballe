@@ -259,7 +259,6 @@ mv $RPM_BUILD_ROOT%{_includedir}/dballe/dballef.mod $RPM_BUILD_ROOT%{_fmoddir}
 %{_includedir}/dballe/cmdline/*
 %{_includedir}/dballe/fortran/*
 
-%exclude %{_libdir}/libdballe.la
 %{_libdir}/libdballe.so
 %{_libdir}/pkgconfig/libdballe.pc
 %{_datadir}/aclocal/libdballe.m4
@@ -270,7 +269,6 @@ mv $RPM_BUILD_ROOT%{_includedir}/dballe/dballef.mod $RPM_BUILD_ROOT%{_fmoddir}
 %{_includedir}/dballe/dballef.h
 %{_includedir}/dballe/dballeff.h
 %{_libdir}/pkgconfig/libdballef*
-%exclude %{_libdir}/libdballef*.la
 %{_libdir}/libdballef*.so
 %{_datadir}/aclocal/libdballef*.m4
 %{_fmoddir}/dballef.mod
@@ -292,7 +290,6 @@ mv $RPM_BUILD_ROOT%{_includedir}/dballe/dballef.mod $RPM_BUILD_ROOT%{_fmoddir}
 %dir %{python3_sitelib}/dballe
 %{python3_sitelib}/dballe/*
 %dir %{python3_sitearch}
-%exclude %{python3_sitearch}/*.la
 %{python3_sitearch}/*.so*
 
 %post
