@@ -18,10 +18,9 @@ BuildRequires: python3-rpm-macros >= 3-23
 %else
 %define python3_vers python3
 %endif
-BuildRequires: libtool
+BuildRequires: meson
 BuildRequires: gcc-c++
 BuildRequires: gperf
-BuildRequires: which
 BuildRequires: doxygen
 BuildRequires: pkgconfig(lua) > 5.1.1
 BuildRequires: pkgconfig(libwreport) >= 3.29
@@ -215,30 +214,19 @@ Obsoletes: python-dballe < 8.0
 %setup -q -n %{srcarchivename}
 
 %build
+%meson
+%meson_build
 
-autoreconf -ifv
-%if 0%{?rhel} == 7
-# CentOS7 doesn't support [[deprecated]] attribute
-CPPFLAGS="-Wno-error=attributes"
-%else
-CPPFLAGS=""
-%endif
-%configure FC=gfortran F90=gfortan F77=gfortran --enable-dballef --enable-dballe-python --enable-docs --disable-static CPPFLAGS="$CPPFLAGS -Wno-error=cpp"
-make
-make check
+%check
+%meson_test
 
 %install
-[ "%{buildroot}" != / ] && rm -rf "%{buildroot}"
-
-make install DESTDIR="%{buildroot}" STRIP=/bin/true
+%meson_install
 mkdir -p $RPM_BUILD_ROOT%{_fmoddir}
-mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
-
+mv $RPM_BUILD_ROOT%{_includedir}/dballe/dballef.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 %clean
 [ "%{buildroot}" != / ] && rm -rf "%{buildroot}"
-
-
 
 %files
 %defattr(-,root,root,-)
@@ -270,8 +258,7 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 %{_includedir}/dballe/db/*
 %{_includedir}/dballe/cmdline/*
 %{_includedir}/dballe/fortran/*
-
-%exclude %{_libdir}/libdballe.la
+%exclude %{_libdir}/libdballe.a
 %{_libdir}/libdballe.so
 %{_libdir}/pkgconfig/libdballe.pc
 %{_datadir}/aclocal/libdballe.m4
@@ -282,10 +269,10 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 %{_includedir}/dballe/dballef.h
 %{_includedir}/dballe/dballeff.h
 %{_libdir}/pkgconfig/libdballef*
-%exclude %{_libdir}/libdballef*.la
 %{_libdir}/libdballef*.so
 %{_datadir}/aclocal/libdballef*.m4
-%{_fmoddir}/*.mod
+%{_fmoddir}/dballef.mod
+%exclude %{_libdir}/libdballef.a
 
 
 %files -n libdballef5
@@ -304,7 +291,6 @@ mv $RPM_BUILD_ROOT%{_includedir}/*.mod $RPM_BUILD_ROOT%{_fmoddir}
 %dir %{python3_sitelib}/dballe
 %{python3_sitelib}/dballe/*
 %dir %{python3_sitearch}
-%exclude %{python3_sitearch}/*.la
 %{python3_sitearch}/*.so*
 
 %post
