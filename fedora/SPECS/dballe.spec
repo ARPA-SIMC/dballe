@@ -217,6 +217,9 @@ Obsoletes: python-dballe < 8.0
 %meson
 %meson_build
 
+%check
+%meson_test
+
 %install
 %meson_install
 
