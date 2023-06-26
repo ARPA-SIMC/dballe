@@ -258,7 +258,7 @@ mv $RPM_BUILD_ROOT%{_includedir}/dballe/dballef.mod $RPM_BUILD_ROOT%{_fmoddir}
 %{_includedir}/dballe/db/*
 %{_includedir}/dballe/cmdline/*
 %{_includedir}/dballe/fortran/*
-
+%exclude %{_libdir}/libdballe.a
 %{_libdir}/libdballe.so
 %{_libdir}/pkgconfig/libdballe.pc
 %{_datadir}/aclocal/libdballe.m4
@@ -272,6 +272,7 @@ mv $RPM_BUILD_ROOT%{_includedir}/dballe/dballef.mod $RPM_BUILD_ROOT%{_fmoddir}
 %{_libdir}/libdballef*.so
 %{_datadir}/aclocal/libdballef*.m4
 %{_fmoddir}/dballef.mod
+%exclude %{_libdir}/libdballef.a
 
 
 %files -n libdballef5
