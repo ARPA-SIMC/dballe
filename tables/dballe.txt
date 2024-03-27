@@ -197,6 +197,8 @@
  013204 Total convective precipitation (liquid + snow)                   KG/M**2                    1           -1  14 KG/M**2                   1          5
  013205 Snowfall (grid-scale + convective)                               KG/M**2                    1           -1  14 KG/M**2                   1          5
  013206 Soil water content                                               KG/M**2                    1            0  14 KG/M**2                   1          5
+ 013208 Total precipitation rate over 1'                                 Kg/m**2/s                  4            0  14 Kg/m**2/s                 4          5
+ 013209 Total precipitation rate over 5'                                 Kg/m**2/s                  4            0  14 Kg/m**2/s                 4          5
  013210 Penetration of the probe in the snow                             M                          2            0   9 M                         2          3
  013211 Volume of basin                                                  M**3                       0            0  32 M**3                      0         10
  013212 Leaf wetness duration                                            S                         -1            0  24 S                        -1          7
