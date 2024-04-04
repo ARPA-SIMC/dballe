@@ -1,10 +1,10 @@
-%global releaseno 1
+%global releaseno 2
 # Note: define _srcarchivename in CI build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 9.5
+Version: 9.6
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -301,6 +301,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/dballe/dballef.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Thu Apr  4 2024 Emanuele Di Giacomo <edigiacomo@arpae.it> - 9.6-2
+- Fixed package version in spec file
+
 * Thu Apr  4 2024 Emanuele Di Giacomo <edigiacomo@arpae.it> - 9.6-1
 - Build with meson (#269)
 - Add B13208 and B13209
