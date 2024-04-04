@@ -301,6 +301,10 @@ mv $RPM_BUILD_ROOT%{_includedir}/dballe/dballef.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Thu Apr  4 2024 Emanuele Di Giacomo <edigiacomo@arpae.it> - 9.6-1
+- Build with meson (#269)
+- Add B13208 and B13209
+
 * Tue May 30 2023 Emanuele Di Giacomo <edigiacomo@arpae.it> - 9.5-1
 - Bump minor version to reflect upstream changes
 
