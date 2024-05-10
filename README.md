@@ -62,9 +62,6 @@ easy installation for most Linux distributions.
 For CentOS and Fedora, rpm files are hosted in a copr repo:
 https://copr.fedorainfracloud.org/coprs/simc/stable/
 
-For Debian, DB-All.e is available in the testing distribution:
-https://packages.debian.org/testing/dballe
-
 If you want to build and install DB-All.e yourself, you'll need to install the
 automake/autoconf/libtool packages then you can proceed as in most other Unix 
 software:
