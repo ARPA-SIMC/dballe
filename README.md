@@ -65,13 +65,6 @@ https://copr.fedorainfracloud.org/coprs/simc/stable/
 For Debian, DB-All.e is available in the testing distribution:
 https://packages.debian.org/testing/dballe
 
-Using docker images with DB-All.e preinstalled is also possible:
-
-```
-docker run -it arpaesimc/fedora:31 /bin/bash
-docker run -it arpaesimc/centos:8 /bin/bash
-```
-
 If you want to build and install DB-All.e yourself, you'll need to install the
 automake/autoconf/libtool packages then you can proceed as in most other Unix 
 software:
