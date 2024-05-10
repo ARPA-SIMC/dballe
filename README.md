@@ -62,15 +62,14 @@ easy installation for most Linux distributions.
 For CentOS and Fedora, rpm files are hosted in a copr repo:
 https://copr.fedorainfracloud.org/coprs/simc/stable/
 
-If you want to build and install DB-All.e yourself, you'll need to install the
-automake/autoconf/libtool packages then you can proceed as in most other Unix 
-software:
+If you want to build and install DB-All.e yourself, you'll need to install
+[Meson](https://mesonbuild.com/) and run the following commands:
 
 ```
-autoreconf -if
-./configure
-make
-make install
+meson setup builddir && cd builddir
+meson compile
+meson test
+meson install
 ```
 
 If you're familiar with .rpm and .deb packaging you'll find the packaging 
