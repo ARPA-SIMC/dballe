@@ -1,8 +1,7 @@
-[![Build Status](https://simc.arpae.it/moncic-ci/dballe/centos7.png)](https://simc.arpae.it/moncic-ci/dballe/)
 [![Build Status](https://simc.arpae.it/moncic-ci/dballe/rocky8.png)](https://simc.arpae.it/moncic-ci/dballe/)
 [![Build Status](https://simc.arpae.it/moncic-ci/dballe/rocky9.png)](https://simc.arpae.it/moncic-ci/dballe/)
-[![Build Status](https://simc.arpae.it/moncic-ci/dballe/fedora36.png)](https://simc.arpae.it/moncic-ci/dballe/)
 [![Build Status](https://simc.arpae.it/moncic-ci/dballe/fedora38.png)](https://simc.arpae.it/moncic-ci/dballe/)
+[![Build Status](https://simc.arpae.it/moncic-ci/dballe/fedora40.png)](https://simc.arpae.it/moncic-ci/dballe/)
 [![Build Status](https://copr.fedorainfracloud.org/coprs/simc/stable/package/dballe/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/simc/stable/package/dballe/)
 
 DB-All.e
@@ -133,7 +132,7 @@ Contact and copyright information
 
 The author of DB-ALLe is Enrico Zini <enrico@enricozini.com>
 
-DB-ALLe is Copyright (C) 2005-2022 ARPAE-SIMC <urpsim@arpae.it>
+DB-ALLe is Copyright (C) 2005-2024 ARPAE-SIMC <urpsim@arpae.it>
 
 DB-ALLe is licensed under the terms of the GNU General Public License version
 2.  Please see the file COPYING for details.
@@ -147,4 +146,4 @@ Contact informations for ARPAE-SIMC:
   Tel: + 39 051 6497511
   Fax: + 39 051 6497501
   Email: urpsim@arpae.it
-  Website: http://www.arpae.it/sim/
+  Website: https://www.arpae.it/it/temi-ambientali/meteo
