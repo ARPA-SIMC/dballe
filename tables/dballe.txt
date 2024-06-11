@@ -190,14 +190,14 @@
  013083 DISSOLVED OXYGEN                                                 KG/M**3                    6            0  15 KG/M**3                   6          5
  013084 TURBIDITY                                                        LM                         0            0  14 LM                        0          4
  013085 OXIDATION REDUCTION POTENTIAL (ORP)                              V                          3            0  14 V                         3          4
- 013192 Cloud liquid water content                                       KG/KG                      8            0  27 KG/KG                     8          8
- 013193 Cloud ice content                                                KG/KG                      8            0  27 KG/KG                     8          8
+ 013192 Specific cloud liquid water content                              KG/KG                      8            0  27 KG/KG                     8          8
+ 013193 Specific cloud ice content                                       KG/KG                      8            0  27 KG/KG                     8          8
  013194 Water table depth                                                M                          3            0  18 M                         3          6
- 013195 Precipitating liquid water                                       KG/KG                      8            0  27 KG/KG                     8          8
- 013196 Precipitating ice                                                KG/KG                      8            0  27 KG/KG                     8          8
- 013197 Total precipitating water+ice                                    KG/KG                      8            0  27 KG/KG                     8          8
- 013198 Total liquid water (cloud+precipitating)                         KG/KG                      8            0  27 KG/KG                     8          8
- 013199 Total ice (cloud+precipitating)                                  KG/KG                      8            0  27 KG/KG                     8          8
+ 013195 Specific precipitating liquid water content                      KG/KG                      8            0  27 KG/KG                     8          8
+ 013196 Specific precipitating ice content                               KG/KG                      8            0  27 KG/KG                     8          8
+ 013197 Specific total precipitating content (water+ice)                 KG/KG                      8            0  27 KG/KG                     8          8
+ 013198 Specific total liquid water content (cloud+precipitating)        KG/KG                      8            0  27 KG/KG                     8          8
+ 013199 Specific Total ice content (cloud+precipitating)                 KG/KG                      8            0  27 KG/KG                     8          8
  013200 Grid-scale liquid precipitation                                  KG/M**2                    1           -1  14 KG/M**2                   1          5
  013201 Grid-scale snowfall                                              KG/M**2                    1           -1  14 KG/M**2                   1          5
  013202 Convective liquid precipitation                                  KG/M**2                    1           -1  14 KG/M**2                   1          5
@@ -221,6 +221,9 @@
  013232 Reference evapotranspiration according to Penman Monteith        KG/M**2                    1            0   7 KG/M**2                   0          3
  013233 Reference evapotranspiration according to Hargreav.-Samani       KG/M**2                    1            0   7 KG/M**2                   0          3
  013234 Lifted Index                                                     K                          2        -8000  14 K                         2          4
+ 013235 Specific graupel content                                         KG/KG                      8            0  27 KG/KG                     8          8
+ 013236 Graupel                                                          KG/M**2                    1           -1  14 KG/M**2                   1          5
+ 013237 Total solid precipitation                                        KG/M**2                    1           -1  14 KG/M**2                   1          5
  014002 Long-wave radiation, integrated over period specified            J/M**2                    -3       -65536  17 J/M**2                   -3          5
  014004 Short-wave radiation, integrated over period specified           J/M**2                    -3       -65536  17 J/M**2                   -3          5
  014016 NET RADIATION                                                    J/M**2                    -4       -16384  15 J/M**2                   -4          5
