@@ -167,13 +167,12 @@ cleanup:
 }
 #endif
 
-std::string datafile(const std::string& fname)
+std::filesystem::path datafile(const std::string& fname)
 {
     // Skip appending the test data path for pathnames starting with ./
     if (fname[0] == '.') return fname;
-	const char* testdatadirenv = getenv("DBA_TESTDATA");
-	std::string testdatadir = testdatadirenv ? testdatadirenv : ".";
-	return testdatadir + "/" + fname;
+    auto testdatadir = path_from_env("DBA_TESTDATA");
+    return testdatadir / fname;
 }
 
 unique_ptr<File> open_test_data(const char* filename, Encoding type)

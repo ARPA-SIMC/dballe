@@ -1,5 +1,6 @@
 #include "api.h"
 #include <wreport/error.h>
+#include <wreport/utils/sys.h>
 #include <cstring>
 #include <limits>
 
@@ -148,7 +149,7 @@ const char* API::test_enqc(const char* param, unsigned len)
 {
     static std::string res;
 
-    char buf[len];
+    wreport::sys::TempBuffer buf(len);
     if (!enqc(param, buf, len))
         return nullptr;
 

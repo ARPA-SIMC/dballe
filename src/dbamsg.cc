@@ -110,8 +110,8 @@ static void dump_common_header(const BinaryMessage& rmsg, const Bulletin& braw)
     printf("Datetime: %04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu\n",
             braw.rep_year, braw.rep_month, braw.rep_day,
             braw.rep_hour, braw.rep_minute, braw.rep_second);
-    printf("B Table: %s\n", braw.tables.btable ? braw.tables.btable->pathname().c_str() : "(none)");
-    printf("D Table: %s\n", braw.tables.dtable ? braw.tables.dtable->pathname().c_str() : "(none)");
+    printf("B Table: %s\n", braw.tables.btable ? braw.tables.btable->path().c_str() : "(none)");
+    printf("D Table: %s\n", braw.tables.dtable ? braw.tables.dtable->path().c_str() : "(none)");
 }
 
 static void dump_bufr_header(const BinaryMessage& rmsg, const BufrBulletin& braw)
