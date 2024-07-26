@@ -40,8 +40,8 @@ handle that you will later use to refer to it.
 
 Sessions run with their own database transaction, which means that the changes
 they perform on data are handled in an all-or-nothing fashion. If you close a
-session with :c:func:`idba_commit`, then all the changes made will be preserved. If
-you do not call :c:func:`idba_commit`, such as if your program unexpectedly
+session with :ref:`idba_commit`, then all the changes made will be preserved. If
+you do not call :ref:`idba_commit`, such as if your program unexpectedly
 terminates, then all the changes made will be undone.
 
 
@@ -51,7 +51,7 @@ Station values
 The interface to work with station values is the same as the interface to work
 with normal values, except that date, time, level, and timerange information
 are not set when inserting or querying data, and
-:c:func:`idba_set_station_context` is called instead, to signal the
+:ref:`idba_set_station_context` is called instead, to signal the
 intention of working with station values.
 
 See :ref:`querying` for examples on how to work with values.
@@ -64,8 +64,8 @@ Input, output, actions
 
 Work with DB-All.e happens using *action routines*.  An action routine
 typically reads some input, performs an action and produces some output.
-Example of action routines are :c:func:`idba_query_data` to query data from a
-database and :c:func:`idba_insert_data` to write data into the database.
+Example of action routines are :ref:`idba_query_data` to query data from a
+database and :ref:`idba_insert_data` to write data into the database.
 
 The input and the output of action routines are collections of parameters which
 have a name and a value.  A list of parameters can be found in :ref:`parms`.
@@ -107,12 +107,12 @@ code::
     ierr = idba_seti(handle, "height", 1)
     ierr = idba_enqi(handle, "height", val)
 
-the value of `val` after the :c:func:`idba_enqi` will not probably be 1, and
+the value of `val` after the :ref:`idba_enqi` will not probably be 1, and
 it could be either a value indicating ``missing value`` (in case no
 ``height`` parameter is set in the output parameters) or a ``height`` value
 previously retrieved by an action routine.
 
-To reset one input parameter you can use :c:func:`idba_unset`::
+To reset one input parameter you can use :ref:`idba_unset`::
 
     ! We do not want to limit results by latitude this time
     ierr = idba_unset(handle, "latmin")
@@ -122,13 +122,13 @@ To reset one input parameter you can use :c:func:`idba_unset`::
 Alternatively, you can reset an input parameter by setting it to one of the
 special ``missing value`` values listed below.
 
-To reset all input parameters you can use :c:func:`idba_unsetall`::
+To reset all input parameters you can use :ref:`idba_unsetall`::
 
     ! Restart the query from scratch
     ierr = idba_unsetall(handle)
     ierr = idba_setd(handle, "latmin", 10.D0)
 
-To reset only Bxxyyy variables you can use :c:func:`idba_unsetb`::
+To reset only Bxxyyy variables you can use :ref:`idba_unsetb`::
 
     ! Insert a new variable with the old station, level and so on
     ierr = idba_unsetb(handle)
