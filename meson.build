@@ -1,6 +1,37 @@
-project('dballe', 'cpp', 'fortran', version: '9.6', license : 'GPL-2.0-or-later', default_options: ['warning_level=3', 'cpp_std=c++11'])
+project('dballe', 'cpp', 'fortran', version: '9.6', license : 'GPL-2.0-or-later', default_options: ['warning_level=3', 'cpp_std=c++17'])
+# TODO: use warning_level=everything in meson from 1.0
 
-add_global_arguments('-Wextra', '-Wno-unused-parameter', language : 'cpp')
+cpp = meson.get_compiler('cpp')
+
+warning_control = [
+  '-Wno-padded',
+  '-Wno-abi-tag',
+  '-Wswitch',
+  '-Wno-switch-enum',
+  '-Wno-effc++',
+
+  # TODO: remove the following ones over time
+  '-Wno-shadow',
+  '-Wno-zero-as-null-pointer-constant',
+  '-Wno-mismatched-tags',
+  '-Wno-unused-const-variable',
+  '-Wno-redundant-tags',
+  '-Wno-useless-cast',
+  '-Wno-switch-default',
+  '-Wno-old-style-cast',
+  '-Wno-unused-parameter',
+
+  # These ones can be activated from time to time
+  '-Wno-float-equal',
+  '-Wno-suggest-attribute=noreturn',
+  '-Wno-format-truncation',
+  '-Wno-arith-conversion',
+  '-Wno-conversion',
+]
+
+add_project_arguments(
+  cpp.get_supported_arguments(warning_control),
+  language : 'cpp')
 
 libdballe_so_version = '9.6.0'
 libdballef_so_version = '5.0.0'
