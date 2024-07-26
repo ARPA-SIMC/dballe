@@ -2,6 +2,7 @@
 #include <wreport/vartable.h>
 #include <wreport/dtable.h>
 #include <wreport/conv.h>
+#include <wreport/utils/string.h>
 #include <dballe/types.h>
 #include <dballe/var.h>
 #include <dballe/core/csv.h>
@@ -58,9 +59,9 @@ struct VarinfoPrinter : public cmdline::Subcommand
     const Vartable* load_vartable(const char* id)
     {
         if (op_crex)
-            return Vartable::load_crex(id);
+            return Vartable::get_crex(id);
         else
-            return Vartable::load_bufr(id);
+            return Vartable::get_bufr(id);
     }
 
     void print_varinfo(Varinfo info) const
@@ -205,16 +206,11 @@ struct Grep : public VarinfoPrinter
         if (poptPeekArg(optCon) == NULL)
             dba_cmdline_error(optCon, "there should be at least one B or D item to expand.  Examples are: B01002 or D03001");
 
-        const char* pattern = poptGetArg(optCon);
+        std::string pattern = str::lower(poptGetArg(optCon));
 
         const Vartable* table = load_vartable("dballe");
         table->iterate([&](Varinfo info) {
-#if HAVE_STRCASESTR
-            if (strcasestr(info->desc, pattern) != NULL)
-#else
-#warning dbatbl grep is case sensitive on this sytstem, since strcasestr is not available
-            if (strstr(info->desc, pattern) != NULL)
-#endif
+            if (str::lower(info->desc).find(pattern) != string::npos)
                 print_varinfo(info);
             return true;
         });
