@@ -78,7 +78,7 @@ add_method("parse_json", [] {
     Reader reader(opts);
     TestAction action;
 
-    reader.read({dballe::tests::datafile("/json/issue134.json")}, action);
+    reader.read({dballe::tests::datafile("json/issue134.json")}, action);
     wassert(actual(action.messages.size()) == 5);
 
     {
@@ -130,7 +130,7 @@ add_method("issue77", [] {
     Reader reader(opts);
     TestAction action;
 
-    reader.read({dballe::tests::datafile("/json/issue77.json")}, action);
+    reader.read({dballe::tests::datafile("json/issue77.json")}, action);
 });
 
 
