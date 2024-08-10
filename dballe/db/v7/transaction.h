@@ -68,11 +68,11 @@ public:
     void rollback_nothrow() noexcept override;
     void clear_cached_state() override;
 
-    std::shared_ptr<dballe::CursorStation> query_stations(const Query& query);
+    std::shared_ptr<dballe::CursorStation> query_stations(const Query& query) override;
     std::shared_ptr<dballe::CursorStationData> query_station_data(const Query& query) override;
-    std::shared_ptr<dballe::CursorData> query_data(const Query& query);
-    std::shared_ptr<dballe::CursorSummary> query_summary(const Query& query);
-    std::shared_ptr<dballe::CursorMessage> query_messages(const Query& query);
+    std::shared_ptr<dballe::CursorData> query_data(const Query& query) override;
+    std::shared_ptr<dballe::CursorSummary> query_summary(const Query& query) override;
+    std::shared_ptr<dballe::CursorMessage> query_messages(const Query& query) override;
     void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
     void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
 

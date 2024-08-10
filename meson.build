@@ -4,6 +4,24 @@ project('dballe', 'cpp', 'fortran', version: '9.6', license : 'GPL-2.0-or-later'
 cpp = meson.get_compiler('cpp')
 
 warning_control = [
+  # Turn some warning classes to errors
+  '-Werror=format',
+  '-Werror=suggest-override',
+  '-Werror=deprecated-copy-dtor',
+  '-Werror=missing-declarations',
+  '-Werror=overloaded-virtual',
+  '-Werror=cast-qual',                
+  '-Werror=duplicated-branches',
+  '-Werror=logical-op',
+  '-Werror=catch-value',
+  '-Werror=conditionally-supported',   
+  '-Werror=noexcept',
+  '-Werror=c++23-extensions',
+  '-Werror=dangling-else',
+  '-Werror=suggest-attribute=format',
+  '-Werror=deprecated-declarations',
+  # '-Werror=cast-align',
+
   '-Wno-padded',
   '-Wno-abi-tag',
   '-Wswitch',

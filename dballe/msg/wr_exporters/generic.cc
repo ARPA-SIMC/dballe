@@ -24,8 +24,8 @@ struct Generic : public Template
     Generic(const dballe::ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
-    virtual const char* name() const { return GENERIC_NAME; }
-    virtual const char* description() const { return GENERIC_DESC; }
+    const char* name() const override { return GENERIC_NAME; }
+    const char* description() const override { return GENERIC_DESC; }
 
     void add_var_and_attrs(const Var& var)
     {
@@ -213,6 +213,8 @@ struct Generic : public Template
 };
 
 } // anonymous namespace
+
+void register_generic(TemplateRegistry& r);
 
 void register_generic(TemplateRegistry& r)
 {

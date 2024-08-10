@@ -18,7 +18,7 @@ class Tests : public TestCase
 void Tests::register_tests()
 {
 
-add_method("empty", []() {
+add_method("empty", []() noexcept {
 });
 
 }

@@ -64,7 +64,7 @@ Decoder::Decoder(const std::vector<uint8_t>& buf) : buf(buf.data()), size(buf.si
 uint16_t Decoder::decode_uint16()
 {
     if (size < 2) error_toolong::throwf("cannot decode a 16 bit integer: only %u bytes are left to read", size);
-    uint16_t res = ntohs(*(uint16_t*)buf);
+    uint16_t res = ntohs(*(const uint16_t*)buf);
     buf += 2;
     size -= 2;
     return res;
@@ -73,7 +73,7 @@ uint16_t Decoder::decode_uint16()
 uint32_t Decoder::decode_uint32()
 {
     if (size < 4) error_toolong::throwf("cannot decode a 32 bit integer: only %u bytes are left to read", size);
-    uint32_t res = ntohl(*(uint32_t*)buf);
+    uint32_t res = ntohl(*(const uint32_t*)buf);
     buf += 4;
     size -= 4;
     return res;

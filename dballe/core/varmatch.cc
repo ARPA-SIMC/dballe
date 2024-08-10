@@ -45,7 +45,7 @@ struct Op : public Varmatch
     OP op;
     T val;
     Op(Varcode code, const T& val) : Varmatch(code), val(val) {}
-    bool operator()(const wreport::Var& var) const
+    bool operator()(const wreport::Var& var) const override
     {
         if (!Varmatch::operator()(var)) return false;
         if (!var.isset()) return false;
@@ -80,7 +80,7 @@ struct Between : public Varmatch
     T min, max;
     Between(Varcode code, const T& min, const T& max)
         : Varmatch(code), min(min), max(max) {}
-    bool operator()(const wreport::Var& var) const
+    bool operator()(const wreport::Var& var) const override
     {
         if (!Varmatch::operator()(var)) return false;
         if (!var.isset()) return false;

@@ -81,7 +81,7 @@ struct And : public Matcher
             delete *i;
     }
 
-    Result match(const Matched& item) const
+    Result match(const Matched& item) const override
     {
         if (exprs.empty()) return MATCH_YES;
 

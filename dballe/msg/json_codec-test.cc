@@ -23,7 +23,7 @@ add_method("read", []() {
     auto importer = Importer::create(Encoding::JSON);
     unsigned count = 0;
     wassert_true(file->foreach([&](const BinaryMessage& bmsg) {
-        return importer->foreach_decoded(bmsg, [&](std::shared_ptr<Message> dest) {
+        return importer->foreach_decoded(bmsg, [&](std::shared_ptr<Message> dest) noexcept {
             ++count;
             return true;
         });
@@ -38,7 +38,7 @@ add_method("domain_throw", []() {
     options->domain_errors = ImporterOptions::DomainErrors::THROW;
     auto importer = Importer::create(Encoding::JSON, *options);
     file->foreach([&](const BinaryMessage& bmsg) {
-        wassert_throws(wreport::error_domain, importer->foreach_decoded(bmsg, [&](std::shared_ptr<Message> dest) { return true; }));
+        wassert_throws(wreport::error_domain, importer->foreach_decoded(bmsg, [&](std::shared_ptr<Message> dest) noexcept { return true; }));
         return true;
     });
 });

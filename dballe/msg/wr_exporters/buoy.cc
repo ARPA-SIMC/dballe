@@ -24,8 +24,8 @@ struct Buoy : public Template
     Buoy(const dballe::ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
-    virtual const char* name() const { return BUOY_NAME; }
-    virtual const char* description() const { return BUOY_DESC; }
+    const char* name() const override { return BUOY_NAME; }
+    const char* description() const override { return BUOY_DESC; }
 
     void add(Varcode code, const Shortcut& shortcut)
     {
@@ -45,7 +45,7 @@ struct Buoy : public Template
             subset->store_variable_undef(code);
     }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         Template::setupBulletin(bulletin);
 
@@ -133,6 +133,8 @@ struct Buoy : public Template
 };
 
 } // anonymous namespace
+
+void register_buoy(TemplateRegistry& r);
 
 void register_buoy(TemplateRegistry& r)
 {

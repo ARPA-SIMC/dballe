@@ -65,7 +65,7 @@ add_method("parse_json", [] {
     struct TestAction : public Action {
         std::vector<std::shared_ptr<dballe::Message>> messages;
 
-        virtual bool operator()(const Item& item) {
+        bool operator()(const Item& item) override {
             for (auto& m: *(item.msgs)) {
                 messages.push_back(m->clone());
             }
@@ -122,7 +122,7 @@ add_method("parse_json", [] {
 
 add_method("issue77", [] {
     struct TestAction : public Action {
-        virtual bool operator()(const Item& item) { return true; }
+        bool operator()(const Item& item) override { return true; }
     };
 
     ReaderOptions opts;

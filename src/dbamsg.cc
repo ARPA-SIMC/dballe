@@ -83,11 +83,11 @@ struct FileCSV : CSVWriter
 };
 
 volatile int flag_bisect_stop = 0;
-void stop_bisect(int sig)
+static void stop_bisect(int sig)
 {
-	/* The signal handler just clears the flag and re-enables itself. */
-	flag_bisect_stop = 1;
-	signal(sig, stop_bisect);
+    /* The signal handler just clears the flag and re-enables itself. */
+    flag_bisect_stop = 1;
+    signal(sig, stop_bisect);
 }
 
 static int count_nonnulls(const Subset& raw)
@@ -214,7 +214,7 @@ static void print_item_header(const Item& item)
 
 struct Summarise : public cmdline::Action
 {
-    virtual bool operator()(const cmdline::Item& item)
+    bool operator()(const cmdline::Item& item) override
     {
         print_item_header(item);
         puts(".");
@@ -224,7 +224,7 @@ struct Summarise : public cmdline::Action
 
 struct Head : public cmdline::Action
 {
-    virtual bool operator()(const cmdline::Item& item)
+    bool operator()(const cmdline::Item& item) override
     {
         if (!item.rmsg) return false;
         switch (item.rmsg->encoding)
@@ -259,7 +259,7 @@ struct CSVBulletin : public cmdline::Action
 
     CSVBulletin() : writer(stdout) {}
 
-    virtual bool operator()(const cmdline::Item& item)
+    bool operator()(const cmdline::Item& item) override
     {
         if (!item.rmsg) return false;
         if (!item.bulletin) return false;
@@ -279,7 +279,7 @@ struct CSVMsgs : public cmdline::Action
 
     CSVMsgs() : first(true), writer(stdout) {}
 
-    virtual bool operator()(const cmdline::Item& item)
+    bool operator()(const cmdline::Item& item) override
     {
         if (!item.msgs) return false;
 
@@ -305,7 +305,7 @@ struct JSONMsgs : public cmdline::Action
     JSONMsgs() : json(cout) {}
     ~JSONMsgs() { cout << flush; }
 
-    virtual bool operator()(const cmdline::Item& item)
+    bool operator()(const cmdline::Item& item) override
     {
         if (!item.msgs) return false;
 
@@ -364,7 +364,7 @@ struct DumpMessage : public cmdline::Action
 		}
 	}
 
-    virtual bool operator()(const cmdline::Item& item)
+    bool operator()(const cmdline::Item& item) override
     {
         print_item_header(item);
         if (!item.rmsg)
@@ -397,7 +397,7 @@ struct DumpMessage : public cmdline::Action
 
 struct DumpCooked : public cmdline::Action
 {
-    virtual bool operator()(const cmdline::Item& item)
+    bool operator()(const cmdline::Item& item) override
     {
         if (item.msgs == NULL) return false;
         for (size_t i = 0; i < item.msgs->size(); ++i)
@@ -427,10 +427,10 @@ struct DumpText : public cmdline::Action
         printf("%s: %s\n", key, val.c_str());
     }
 
-    virtual bool operator()(const cmdline::Item& item)
+    bool operator()(const cmdline::Item& item) override
     {
-		if (item.bulletin == NULL)
-			throw error_consistency("source is not a BUFR or CREX message");
+        if (item.bulletin == NULL)
+            throw error_consistency("source is not a BUFR or CREX message");
 
         const Bulletin& bul = *item.bulletin;
         add_keyval("master_table_number", bul.master_table_number);
@@ -490,7 +490,7 @@ struct DumpText : public cmdline::Action
 
 struct DumpStructured : public cmdline::Action
 {
-    virtual bool operator()(const cmdline::Item& item)
+    bool operator()(const cmdline::Item& item) override
     {
         print_item_header(item);
         if (!item.rmsg)
@@ -511,7 +511,7 @@ struct DumpStructured : public cmdline::Action
 
 struct DumpDDS : public cmdline::Action
 {
-    virtual bool operator()(const cmdline::Item& item)
+    bool operator()(const cmdline::Item& item) override
     {
         print_item_header(item);
         if (!item.rmsg)
@@ -536,7 +536,7 @@ struct WriteRaw : public cmdline::Action
     WriteRaw() : file(0) {}
     ~WriteRaw() { if (file) delete file; }
 
-    virtual bool operator()(const cmdline::Item& item)
+    bool operator()(const cmdline::Item& item) override
     {
         if (!item.rmsg) return false;
         if (!file) file = File::create(item.rmsg->encoding, stdout, false, "(stdout)").release();

@@ -50,10 +50,10 @@ struct Pollution : public Template
     Pollution(const dballe::ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
-    virtual const char* name() const { return POLLUTION_NAME; }
-    virtual const char* description() const { return POLLUTION_DESC; }
+    const char* name() const override { return POLLUTION_NAME; }
+    const char* description() const override { return POLLUTION_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         Template::setupBulletin(bulletin);
 
@@ -218,6 +218,8 @@ struct Pollution : public Template
 };
 
 } // anonymous namespace
+
+void register_pollution(TemplateRegistry& r);
 
 void register_pollution(TemplateRegistry& r)
 {

@@ -46,7 +46,7 @@ static void bench_clock_gettime(clockid_t clk_id, struct timespec *res)
         throw std::system_error(errno, std::system_category(), "clock_gettime failed");
 }
 
-std::string format_clockdiff(const struct timespec& begin, const struct timespec& until)
+static std::string format_clockdiff(const struct timespec& begin, const struct timespec& until)
 {
     unsigned long secs = 0;
     unsigned long nsecs = 0;

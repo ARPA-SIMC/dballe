@@ -84,7 +84,7 @@ struct error_cmdline : public std::exception
     error_cmdline(const std::string& msg) : msg(msg) {}
     ~error_cmdline() throw () {}
 
-    virtual const char* what() const throw () { return msg.c_str(); }
+    const char* what() const noexcept override { return msg.c_str(); }
 
     /// Throw the exception, building the message printf-style
     static void throwf(const char* fmt, ...) WREPORT_THROWF_ATTRS(1, 2);
@@ -100,7 +100,7 @@ void dba_cmdline_print_dba_error();
  * Print an error that happened when parsing commandline arguments, then add
  * usage informations and exit
  */
-void dba_cmdline_error(poptContext optCon, const char* fmt, ...) __attribute__ ((noreturn));
+[[noreturn]] void dba_cmdline_error(poptContext optCon, const char* fmt, ...) __attribute__((format(printf, 2, 3))) ;
 
 /**
  * Return the File::Encoding that corresponds to the name in the string

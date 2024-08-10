@@ -225,7 +225,7 @@ class Tests : public FixtureTestCase<DBDataFixture<DB>>
             wassert(actual(f.tr).try_summary_query("mobile=0", 4));
             wassert(actual(f.tr).try_summary_query("mobile=1", 0));
         });
-        this->add_method("query_ident", [](Fixture& f) {
+        this->add_method("query_ident", [](Fixture& f) noexcept {
             //auto& db = *f.db;
             // TODO: add mobile stations to the fixture so we can query ident
         });

@@ -327,7 +327,7 @@ PyTypeObject* dpy_File_Type = nullptr;
 namespace dballe {
 namespace python {
 
-dpy_File* file_create(std::unique_ptr<FileWrapper> wrapper)
+static dpy_File* file_create(std::unique_ptr<FileWrapper> wrapper)
 {
     dpy_File* res = PyObject_New(dpy_File, dpy_File_Type);
     if (!res) return nullptr;

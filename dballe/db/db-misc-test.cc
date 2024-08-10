@@ -107,7 +107,7 @@ this->add_method("insert", [](Fixture& f) {
     {
         int count = 0;
         unique_ptr<Var> attr;
-        wassert(f.tr->attr_query_data(ds.data["synop"].values.value(WR_VAR(0, 12, 101)).data_id, [&](std::unique_ptr<wreport::Var>&& var) {
+        wassert(f.tr->attr_query_data(ds.data["synop"].values.value(WR_VAR(0, 12, 101)).data_id, [&](std::unique_ptr<wreport::Var>&& var) noexcept {
             ++count;
             attr = move(var);
         }));

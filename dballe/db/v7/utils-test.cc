@@ -33,7 +33,7 @@ Tests tg4("db_v7_utils_mysql", "MYSQL");
 void Tests::register_tests()
 {
 
-add_method("empty", [](Fixture& f) {
+add_method("empty", [](Fixture& f) noexcept {
     using namespace dballe::db::v7;
 });
 

@@ -24,7 +24,7 @@ struct Importer : public Action
 
     Importer(dballe::DB& db, const DBImportOptions& opts) : db(db), opts(opts) {}
 
-    virtual bool operator()(const cmdline::Item& item);
+    bool operator()(const cmdline::Item& item) override;
     void commit()
     {
         if (transaction.get())

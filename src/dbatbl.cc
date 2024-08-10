@@ -52,8 +52,8 @@ struct VarinfoPrinter : public cmdline::Subcommand
     void add_to_optable(std::vector<poptOption>& opts) const override
     {
         Subcommand::add_to_optable(opts);
-        opts.push_back(poptOption{ "csv", 'c', POPT_ARG_NONE, (void*)&op_csv, 0, "output variables in CSV format", 0 });
-        opts.push_back(poptOption{ "crex", 0,  POPT_ARG_NONE, (void*)&op_crex, 0, "read CREX entries instead of BUFR", 0 });
+        opts.push_back(poptOption{ "csv", 'c', POPT_ARG_NONE, const_cast<int*>(&op_csv), 0, "output variables in CSV format", 0 });
+        opts.push_back(poptOption{ "crex", 0,  POPT_ARG_NONE, const_cast<int*>(&op_crex), 0, "read CREX entries instead of BUFR", 0 });
     }
 
     const Vartable* load_vartable(const char* id)

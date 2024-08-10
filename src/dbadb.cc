@@ -216,7 +216,7 @@ struct CleanupCmd : public DatabaseCmd
             "the future, they will be documented here.";
     }
 
-    int main(poptContext optCon)
+    int main(poptContext optCon) override
     {
         auto db = connect();
         db->vacuum();
