@@ -40,7 +40,9 @@ PyObject* path_to_python(const std::filesystem::path& path)
     pyo_unique_ptr pathlib(throw_ifnull(PyImport_ImportModule("pathlib")));
     pyo_unique_ptr Path(throw_ifnull(PyObject_GetAttrString(pathlib, "Path")));
     pyo_unique_ptr arg(to_python(path.native()));
-    return throw_ifnull(PyObject_CallOneArg(Path, arg));
+    // From python 3.9:
+    // return throw_ifnull(PyObject_CallOneArg(Path, arg));
+    return throw_ifnull(PyObject_CallFunctionObjArgs(Path,  arg.get(), nullptr));
 }
 
 std::filesystem::path path_from_python(PyObject* o)
@@ -55,7 +57,9 @@ std::filesystem::path path_from_python(PyObject* o)
     }
 
     pyo_unique_ptr as_posix(throw_ifnull(PyObject_GetAttrString(o, "as_posix")));
-    pyo_unique_ptr stringval(throw_ifnull(PyObject_CallNoArgs(as_posix)));
+    // From Python 3.9:
+    // pyo_unique_ptr stringval(throw_ifnull(PyObject_CallNoArgs(as_posix)));
+    pyo_unique_ptr stringval(throw_ifnull(PyObject_CallFunctionObjArgs(as_posix, nullptr)));
     return std::filesystem::path(cstring_from_python(stringval));
 }
 
