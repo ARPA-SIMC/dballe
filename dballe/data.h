@@ -17,7 +17,12 @@ namespace dballe {
 class Data
 {
 public:
+    Data() = default;
+    Data(const Data&) = default;
+    Data(Data&&) = default;
     virtual ~Data() {}
+    Data& operator=(const Data& o) = default;
+    Data& operator=(Data&& o) = default;
 
     /// Create a new Record
     static std::unique_ptr<Data> create();

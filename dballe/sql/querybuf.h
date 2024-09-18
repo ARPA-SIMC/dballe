@@ -24,7 +24,12 @@ struct Querybuf : public std::string
 	 *   query.
 	 */
 	Querybuf(size_t reserve = 512);
-	~Querybuf();
+    Querybuf(const Querybuf&) = default;
+    Querybuf(Querybuf&&) = default;
+    virtual ~Querybuf();
+
+    Querybuf& operator=(const Querybuf& o) = default;
+    Querybuf& operator=(Querybuf&& o) = default;
 
 	/// Reset the querybuf to contain the empty string
 	void clear();

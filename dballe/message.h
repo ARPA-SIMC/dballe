@@ -28,7 +28,12 @@ namespace dballe {
 class Message : public std::enable_shared_from_this<Message>
 {
 public:
+    Message() {}
+    Message(const Message&) = default;
     virtual ~Message();
+
+    Message& operator=(const Message& o) = default;
+    Message& operator=(Message&& o) = default;
 
     /// Return the type of the data in the message
     virtual MessageType get_type() const = 0;
