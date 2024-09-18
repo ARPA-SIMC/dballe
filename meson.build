@@ -15,11 +15,11 @@ warning_control = [
   '-Werror=logical-op',
   '-Werror=catch-value',
   '-Werror=conditionally-supported',   
-  '-Werror=noexcept',
   '-Werror=c++23-extensions',
   '-Werror=dangling-else',
   '-Werror=suggest-attribute=format',
   '-Werror=deprecated-declarations',
+  # '-Werror=noexcept',
   # '-Werror=cast-align',
 
   '-Wno-padded',
