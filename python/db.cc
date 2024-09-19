@@ -791,7 +791,7 @@ struct export_to_file : MethKwargs<export_to_file<Impl>, Impl>
                     impl::Messages msgs;
                     msgs.emplace_back(cursor->get_message());
                     std::string encoded = exporter->to_binary(msgs);
-                    res = pyo_unique_ptr(PyObject_CallMethod(file, (char*)"write", (char*)"y#", encoded.data(), (int)encoded.size()));
+                    res = pyo_unique_ptr(PyObject_CallMethod(file, "write", "y#", encoded.data(), (int)encoded.size()));
                     if (!res)
                     {
                         has_error = true;

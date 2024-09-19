@@ -34,7 +34,7 @@ PyStructSequence_Field dpy_stats_fields[] = {
     { "datetime_min", "Minimum datetime" },
     { "datetime_max", "Maximum datetime" },
     { "count", "Number of values" },
-    nullptr,
+    { nullptr, nullptr },
 };
 
 PyStructSequence_Desc dpy_stats_desc = {

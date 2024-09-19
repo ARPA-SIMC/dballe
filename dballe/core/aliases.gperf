@@ -29,8 +29,9 @@
 /* Using %switch may be faster (remember to check when doing optimizations) */
 
 %{
-#include <string.h>
+#include <cstring>
 #include <wreport/varinfo.h>
+#include "dballe/core/aliases.h"
 
 using namespace wreport;
 

@@ -156,6 +156,8 @@ static PyModuleDef dballe_module = {
 
 };
 
+PyMODINIT_FUNC PyInit__dballe(void);
+
 PyMODINIT_FUNC PyInit__dballe(void)
 {
     using namespace dballe::python;

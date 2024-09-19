@@ -35,7 +35,7 @@ called in case of error::
 
 The previous code will setup DB-ALLe to call ``error_handler`` after any error,
 passing it the integer value 42.  The callback can be removed at any time by
-calling :c:func:`idba_error_remove_callback`::
+calling :ref:`idba_error_remove_callback`::
 
     ! How to remove a callback
     ierr = idba_error_remove_callback(cb_handle)
@@ -75,17 +75,17 @@ This is an example of a useful error handling function::
 
 This code introduces three new functions:
 
-* :c:func:`idba_error_message`:
+* :ref:`idba_error_message`:
   returns a string describing what type of error has happened.
-* :c:func:`idba_error_context`:
+* :ref:`idba_error_context`:
   returns a string describing what DB-All.e was trying to do when the error
   happened.
-* :c:func:`idba_error_details`:
+* :ref:`idba_error_details`:
   returns a detailed description of the error, when available.  If no detailed
   description is available, it returns an empty string.
 
 A similar error handling behaviour can be obtained by using the predefined
-convenience function :c:func:`idba_default_error_handler`::
+convenience function :ref:`idba_default_error_handler`::
 
     ! Declare the external function (not necessary if you include dballeff.h)
     external idba_default_error_handler
@@ -93,7 +93,7 @@ convenience function :c:func:`idba_default_error_handler`::
     ! Use it as the error handling callback
     ierr = idba_error_set_callback(0, idba_default_error_handler, 1, cb_handle)
 
-An alternative error handler called :c:func:`idba_error_handle_tolerating_overflows`
+An alternative error handler called :ref:`idba_error_handle_tolerating_overflows`
 is available: it exists on all errors instead of value overflows, in what case
 it prints a warning to standard error and allows the program to continue.  The
 overflow error can then be catched, if needed, by inspecting the error code

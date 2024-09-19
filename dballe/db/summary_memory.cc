@@ -23,13 +23,13 @@ BaseSummaryMemory<Station>::BaseSummaryMemory()
 }
 
 template<typename Station>
-BaseSummaryMemory<Station>::BaseSummaryMemory(const std::string& pathname)
-    : pathname(pathname)
+BaseSummaryMemory<Station>::BaseSummaryMemory(const std::filesystem::path& path_)
+    : path(path_)
 {
     using namespace wreport;
-    if (sys::exists(pathname))
+    if (std::filesystem::exists(path))
     {
-        std::stringstream in(sys::read_file(pathname));
+        std::stringstream in(sys::read_file(path));
         core::json::Stream json(in);
         load_json(json);
     }
@@ -199,13 +199,13 @@ template<typename Station>
 void BaseSummaryMemory<Station>::commit()
 {
     using namespace wreport;
-    if (pathname.empty())
+    if (path.empty())
         return;
 
     std::stringstream out;
     core::JSONWriter writer(out);
     to_json(writer);
-    sys::write_file(pathname, out.str());
+    sys::write_file(path, out.str());
 }
 
 template<typename Station>

@@ -15,10 +15,11 @@ class Tests : public TestCase
     void register_tests() override;
 } tests("fortran_traced");
 
-void Tests::register_tests()
-{
-    add_method("empty", []{
-    });
+void Tests::register_tests() {
+
+add_method("empty", []() noexcept {
+});
+
 }
 
 }

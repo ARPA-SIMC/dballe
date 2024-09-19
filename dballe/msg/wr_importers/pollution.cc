@@ -63,7 +63,7 @@ public:
     PollutionImporter(const dballe::ImporterOptions& opts) : WMOImporter(opts) {}
     virtual ~PollutionImporter() {}
 
-    virtual void init()
+    void init() override
     {
         WMOImporter::init();
         lev = Level(103);
@@ -77,7 +77,7 @@ public:
         finalvar = NULL;
     }
 
-    virtual void run()
+    void run() override
     {
         // Scan the input variables
         for (pos = 0; pos < subset->size(); ++pos)
@@ -117,7 +117,7 @@ public:
         msg->set(lev, tr, move(finalvar));
     }
 
-    MessageType scanType(const Bulletin& bulletin) const { return MessageType::POLLUTION; }
+    MessageType scanType(const Bulletin& bulletin) const override { return MessageType::POLLUTION; }
 };
 
 std::unique_ptr<Importer> Importer::createPollution(const dballe::ImporterOptions& opts)

@@ -350,10 +350,10 @@ struct SynopWMO : public Synop
     SynopWMO(const dballe::ExporterOptions& opts, const Messages& msgs)
         : Synop(opts, msgs), cur_bulletin(0) {}
 
-    virtual const char* name() const { return SYNOP_WMO_NAME; }
-    virtual const char* description() const { return SYNOP_WMO_DESC; }
+    const char* name() const override { return SYNOP_WMO_NAME; }
+    const char* description() const override { return SYNOP_WMO_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         Synop::setupBulletin(bulletin);
 
@@ -513,7 +513,7 @@ struct SynopWMO : public Synop
         subset->store_variable_undef(WR_VAR(0,  7, 32));
     }
 
-    virtual void to_subset(const Message& msg, wreport::Subset& subset)
+    void to_subset(const Message& msg, wreport::Subset& subset) override
     {
         Synop::to_subset(msg, subset);
 
@@ -632,6 +632,8 @@ struct SynopWMO : public Synop
 
 
 } // anonymous namespace
+
+void register_synop(TemplateRegistry& r);
 
 void register_synop(TemplateRegistry& r)
 {

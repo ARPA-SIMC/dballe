@@ -84,9 +84,9 @@ struct ProcessingException : public std::exception
         this->msg += original.what();
     }
 
-    virtual ~ProcessingException() throw() {}
+    virtual ~ProcessingException() noexcept {}
 
-    virtual const char* what() const throw ()
+    const char* what() const noexcept override
     {
         return msg.c_str();
     }

@@ -141,7 +141,7 @@ struct Base : public ImplTraits<Impl>::Parent
     virtual ~Base() {}
 
     int remaining() const override;
-    bool has_value() const { return !at_start && !results.empty(); }
+    bool has_value() const override { return !at_start && !results.empty(); }
     bool next() override
     {
         if (at_start)

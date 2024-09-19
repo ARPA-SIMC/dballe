@@ -92,7 +92,7 @@ class Tests : public FixtureTestCase<TransactionFixture<DB, DBData>>
             wassert(actual(f.tr).try_station_query("mobile=0", 4));
             wassert(actual(f.tr).try_station_query("mobile=1", 0));
         });
-        this->add_method("query_ident", [](Fixture& f) {
+        this->add_method("query_ident", [](Fixture& f) noexcept {
             // FIXME: add some mobile stations to the test fixture to test ident
         });
         this->add_method("query_block_station", [](Fixture& f) {
@@ -105,7 +105,7 @@ class Tests : public FixtureTestCase<TransactionFixture<DB, DBData>>
             wassert(actual(f.tr).try_station_query("station=3", 0));
             wassert(actual(f.tr).try_station_query("station=4", 2));
         });
-        this->add_method("query_mobile", [](Fixture& f) {
+        this->add_method("query_mobile", [](Fixture& f) noexcept {
         });
         this->add_method("query_ana_filter", [](Fixture& f) {
             wassert(actual(f.tr).try_station_query("ana_filter=block=1", 2));

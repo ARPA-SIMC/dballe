@@ -83,9 +83,9 @@ struct StationQueryBuilder : public QueryBuilder
     StationQueryBuilder(std::shared_ptr<v7::Transaction> tr, const core::Query& query, unsigned int modifiers)
         : QueryBuilder(tr, query, modifiers, false) {}
 
-    virtual void build_select();
-    virtual bool build_where();
-    virtual void build_order_by();
+    void build_select() override;
+    bool build_where() override;
+    void build_order_by() override;
 };
 
 struct DataQueryBuilder : public QueryBuilder
@@ -107,9 +107,9 @@ struct DataQueryBuilder : public QueryBuilder
     /// Match the attributes of var against attr_filter
     bool match_attrs(const wreport::Var& var) const;
 
-    virtual void build_select();
-    virtual bool build_where();
-    virtual void build_order_by();
+    void build_select() override;
+    bool build_where() override;
+    void build_order_by() override;
 };
 
 struct IdQueryBuilder : public DataQueryBuilder
@@ -117,8 +117,8 @@ struct IdQueryBuilder : public DataQueryBuilder
     IdQueryBuilder(std::shared_ptr<v7::Transaction> tr, const core::Query& query, unsigned int modifiers, bool query_station_vars)
         : DataQueryBuilder(tr, query, modifiers, query_station_vars) {}
 
-    virtual void build_select();
-    virtual void build_order_by();
+    void build_select() override;
+    void build_order_by() override;
 };
 
 struct SummaryQueryBuilder : public DataQueryBuilder
@@ -126,8 +126,8 @@ struct SummaryQueryBuilder : public DataQueryBuilder
     SummaryQueryBuilder(std::shared_ptr<v7::Transaction> tr, const core::Query& query, unsigned int modifiers, bool query_station_vars)
         : DataQueryBuilder(tr, query, modifiers, query_station_vars) {}
 
-    virtual void build_select();
-    virtual void build_order_by();
+    void build_select() override;
+    void build_order_by() override;
 };
 
 }

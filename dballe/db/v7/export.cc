@@ -60,7 +60,7 @@ struct Cursor : public impl::CursorMessage
     Results::iterator cur;
     bool at_start = true;
 
-    bool has_value() const { return !at_start && cur != results.end(); }
+    bool has_value() const override { return !at_start && cur != results.end(); }
 
     std::shared_ptr<Message> get_message() const override
     {

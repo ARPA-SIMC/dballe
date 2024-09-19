@@ -14,7 +14,13 @@ namespace dballe {
 class Query
 {
 public:
+    Query() {}
+    Query(const Query&) = default;
+    Query(Query&&) = default;
     virtual ~Query() {}
+
+    Query& operator=(const Query& o) = default;
+    Query& operator=(Query&& o) = default;
 
     /// Get the Datetime bounds set in this query
     virtual DatetimeRange get_datetimerange() const = 0;

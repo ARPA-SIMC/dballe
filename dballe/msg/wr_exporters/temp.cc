@@ -338,10 +338,10 @@ struct TempRadar : public TempBase
     TempRadar(const dballe::ExporterOptions& opts, const Messages& msgs)
         : TempBase(opts, msgs) {}
 
-    virtual const char* name() const { return TEMP_RADAR_NAME; }
-    virtual const char* description() const { return TEMP_RADAR_DESC; }
+    const char* name() const override { return TEMP_RADAR_NAME; }
+    const char* description() const override { return TEMP_RADAR_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         TempBase::setupBulletin(bulletin);
 
@@ -428,10 +428,10 @@ struct TempEcmwfLand : public TempBase
     TempEcmwfLand(const dballe::ExporterOptions& opts, const Messages& msgs)
         : TempBase(opts, msgs) {}
 
-    virtual const char* name() const { return TEMP_ECMWF_LAND_NAME; }
-    virtual const char* description() const { return TEMP_ECMWF_LAND_DESC; }
+    const char* name() const override { return TEMP_ECMWF_LAND_NAME; }
+    const char* description() const override { return TEMP_ECMWF_LAND_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         TempBase::setupBulletin(bulletin);
 
@@ -495,10 +495,10 @@ struct TempEcmwfShip : public TempBase
     TempEcmwfShip(const dballe::ExporterOptions& opts, const Messages& msgs)
         : TempBase(opts, msgs) {}
 
-    virtual const char* name() const { return TEMP_ECMWF_SHIP_NAME; }
-    virtual const char* description() const { return TEMP_ECMWF_SHIP_DESC; }
+    const char* name() const override { return TEMP_ECMWF_SHIP_NAME; }
+    const char* description() const override { return TEMP_ECMWF_SHIP_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         TempBase::setupBulletin(bulletin);
 
@@ -580,10 +580,10 @@ struct PilotWMO : public TempBase
     PilotWMO(const dballe::ExporterOptions& opts, const Messages& msgs)
         : TempBase(opts, msgs) {}
 
-    virtual const char* name() const { return PILOT_WMO_NAME; }
-    virtual const char* description() const { return PILOT_WMO_DESC; }
+    const char* name() const override { return PILOT_WMO_NAME; }
+    const char* description() const override { return PILOT_WMO_DESC; }
 
-    virtual void to_bulletin(wreport::Bulletin& bulletin)
+    void to_bulletin(wreport::Bulletin& bulletin) override
     {
         // Scan contexts to see if we are encoding pressure or height levels
         unsigned has_press = 0;
@@ -720,10 +720,10 @@ struct PilotEcmwf : public TempBase
     PilotEcmwf(const dballe::ExporterOptions& opts, const Messages& msgs)
         : TempBase(opts, msgs) {}
 
-    virtual const char* name() const { return PILOT_ECMWF_NAME; }
-    virtual const char* description() const { return PILOT_ECMWF_DESC; }
+    const char* name() const override { return PILOT_ECMWF_NAME; }
+    const char* description() const override { return PILOT_ECMWF_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         TempBase::setupBulletin(bulletin);
 
@@ -843,6 +843,8 @@ struct PilotEcmwf : public TempBase
 
 
 } // anonymous namespace
+
+void register_temp(TemplateRegistry& r);
 
 void register_temp(TemplateRegistry& r)
 {

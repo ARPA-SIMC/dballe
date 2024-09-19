@@ -23,8 +23,13 @@ struct Querybuf : public std::string
 	 *   wisely, there is no need to reallocate space while composing the
 	 *   query.
 	 */
-	Querybuf(size_t reserve = 512);
-	~Querybuf();
+    explicit Querybuf(size_t reserve = 512);
+    Querybuf(const Querybuf&) = default;
+    Querybuf(Querybuf&&) = default;
+    virtual ~Querybuf();
+
+    Querybuf& operator=(const Querybuf& o) = default;
+    Querybuf& operator=(Querybuf&& o) = default;
 
 	/// Reset the querybuf to contain the empty string
 	void clear();

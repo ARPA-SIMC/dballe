@@ -25,10 +25,10 @@ struct Metar : public Template
     Metar(const dballe::ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs) {}
 
-    virtual const char* name() const { return METAR_NAME; }
-    virtual const char* description() const { return METAR_DESC; }
+    const char* name() const override { return METAR_NAME; }
+    const char* description() const override { return METAR_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         Template::setupBulletin(bulletin);
 
@@ -108,6 +108,8 @@ struct Metar : public Template
 
 
 } // anonymous namespace
+
+void register_metar(TemplateRegistry& r);
 
 void register_metar(TemplateRegistry& r)
 {

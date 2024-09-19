@@ -37,15 +37,15 @@ Example code to query all the stations in a given area::
 
 This code introduces two new functions:
 
-* :c:func:`idba_query_stations`: performs the query and returns the number of stations it
+* :ref:`idba_query_stations`: performs the query and returns the number of stations it
   finds.
-* :c:func:`idba_next_station`: gets a station out of the results of :c:func:`idba_query_stations`.
+* :ref:`idba_next_station`: gets a station out of the results of :ref:`idba_query_stations`.
   If there are no more stations, the function fails.
 
-After :c:func:`idba_next_station`, the output record will also contain all the pseudoana
+After :ref:`idba_next_station`, the output record will also contain all the pseudoana
 values available for the station.  If `rep_cod` or `rep_memo` are specified as
 query parameters, the pseudoana values of that network will be used.  Else,
-:c:func:`idba_next_station` will use all available pseudoana values, choosing the one in
+:ref:`idba_next_station` will use all available pseudoana values, choosing the one in
 the network with the highest priority in case the same pseudoana value is
 available on more than one network.
 
@@ -74,9 +74,9 @@ Example code to query all the values in a given area and time::
 
 This code introduces two new functions:
 
-* :c:func:`idba_query_data`: performs the query and returns the number of values it
+* :ref:`idba_query_data`: performs the query and returns the number of values it
   finds.
-* :c:func:`idba_next_data`: gets a value out of the result of :c:func:`idba_query_data`.  If
+* :ref:`idba_next_data`: gets a value out of the result of :ref:`idba_query_data`.  If
   there are no more stations, the function fails.
 
 
@@ -99,7 +99,7 @@ Shortcuts to stations and data
 
 DB-All.e offers two shortcuts to represent pseudoana entries and data in the
 database: the ``ana_id`` and the ``data_id`` keys, that are set in the
-output of every :c:func:`idba_next_data`.
+output of every :ref:`idba_next_data`.
 
 ``ana_id`` represents a pseudoana entry.  Every time one needs to specify a
 set of latitude, longitude, fixed/mobile, one could use the corresponding

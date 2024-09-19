@@ -9,7 +9,7 @@ Inserting data
 Inserting data
 --------------
 
-Data is inserted using :c:func:`idba_insert_data`:
+Data is inserted using :ref:`idba_insert_data`:
 
     ! Insert a new data in the database
     ierr = idba_setr(handle, "ana_id", 4)
@@ -25,15 +25,15 @@ Data is inserted using :c:func:`idba_insert_data`:
 
 This code introduces a new function:
 
-* :c:func:`idba_insert_data`:
+* :ref:`idba_insert_data`:
   inserts a new value in the database.  All the information about the parameter
   to insert is taken from the input previously set by ``idba_set*`` functions.
 
   When data of the same kind and with the same characteristics already exists,
-  the behaviour of :c:func:`idba_insert_data` is defined by the parameter passed to
-  :c:func:`idba_begin` when creating the handle.  See :ref:`starting_the_work` for more informations.
+  the behaviour of :ref:`idba_insert_data` is defined by the parameter passed to
+  :ref:`idba_begin` when creating the handle.  See :ref:`starting_the_work` for more informations.
 
-:c:func:`idba_insert_data` will work in different ways according to the data opening
+:ref:`idba_insert_data` will work in different ways according to the data opening
 mode of the database:
 
 * ``read``: causes an error, because the data cannot be read.

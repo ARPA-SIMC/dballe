@@ -37,7 +37,7 @@ public:
     DB(std::shared_ptr<dballe::sql::Connection> conn);
     virtual ~DB();
 
-    db::Format format() const { return Format::V7; }
+    db::Format format() const override { return Format::V7; }
 
     /// Access the backend DB driver
     v7::Driver& driver();
@@ -45,7 +45,7 @@ public:
     std::shared_ptr<dballe::Transaction> transaction(bool readonly=false) override;
     std::shared_ptr<dballe::db::Transaction> test_transaction(bool readonly=false) override;
 
-    void disappear();
+    void disappear() override;
 
     /**
      * Reset the database, removing all existing DBALLE tables and re-creating them
@@ -58,7 +58,7 @@ public:
      *   If repinfo_file is NULL, then the default of /etc/dballe/repinfo.csv is
      *   used.
      */
-    void reset(const char* repinfo_file = 0);
+    void reset(const char* repinfo_file = 0) override;
 
     /**
      * Delete all the DB-ALLe tables from the database.
@@ -74,7 +74,7 @@ public:
      *
      * Depending on database size, this routine can take a few minutes to execute.
      */
-    void vacuum();
+    void vacuum() override;
 
     friend class dballe::DB;
     friend class dballe::db::v7::Transaction;

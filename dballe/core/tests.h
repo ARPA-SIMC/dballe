@@ -6,6 +6,7 @@
 #include <dballe/core/csv.h>
 #include <cstdlib>
 #include <climits>
+#include <filesystem>
 #include <string>
 #include <vector>
 #include <sstream>
@@ -48,7 +49,7 @@ static inline bool rnd(double prob)
 // Message reading functions
 
 /// Return the pathname of a test file
-std::string datafile(const std::string& fname);
+std::filesystem::path datafile(const std::string& fname);
 
 std::unique_ptr<File> open_test_data(const char* filename, Encoding type);
 

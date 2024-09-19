@@ -83,7 +83,7 @@ struct ShipECMWFBase : public ShipBase
     ShipECMWFBase(const dballe::ExporterOptions& opts, const Messages& msgs)
         : ShipBase(opts, msgs) {}
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         ShipBase::setupBulletin(bulletin);
 
@@ -171,10 +171,10 @@ struct ShipAbbr : public ShipECMWFBase
     ShipAbbr(const dballe::ExporterOptions& opts, const Messages& msgs)
         : ShipECMWFBase(opts, msgs) {}
 
-    virtual const char* name() const { return SHIP_ABBR_NAME; }
-    virtual const char* description() const { return SHIP_ABBR_DESC; }
+    const char* name() const override { return SHIP_ABBR_NAME; }
+    const char* description() const override { return SHIP_ABBR_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         ShipECMWFBase::setupBulletin(bulletin);
         bulletin.data_subcategory_local = 9;
@@ -188,10 +188,10 @@ struct ShipPlain : public ShipECMWFBase
     ShipPlain(const dballe::ExporterOptions& opts, const Messages& msgs)
         : ShipECMWFBase(opts, msgs) {}
 
-    virtual const char* name() const { return SHIP_PLAIN_NAME; }
-    virtual const char* description() const { return SHIP_PLAIN_DESC; }
+    const char* name() const override { return SHIP_PLAIN_NAME; }
+    const char* description() const override { return SHIP_PLAIN_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         ShipECMWFBase::setupBulletin(bulletin);
         bulletin.data_subcategory_local = 11;
@@ -205,10 +205,10 @@ struct ShipAuto : public ShipECMWFBase
     ShipAuto(const dballe::ExporterOptions& opts, const Messages& msgs)
         : ShipECMWFBase(opts, msgs) {}
 
-    virtual const char* name() const { return SHIP_AUTO_NAME; }
-    virtual const char* description() const { return SHIP_AUTO_DESC; }
+    const char* name() const override { return SHIP_AUTO_NAME; }
+    const char* description() const override { return SHIP_AUTO_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         ShipECMWFBase::setupBulletin(bulletin);
         bulletin.data_subcategory_local = 13;
@@ -222,10 +222,10 @@ struct ShipReduced : public ShipECMWFBase
     ShipReduced(const dballe::ExporterOptions& opts, const Messages& msgs)
         : ShipECMWFBase(opts, msgs) {}
 
-    virtual const char* name() const { return SHIP_REDUCED_NAME; }
-    virtual const char* description() const { return SHIP_REDUCED_DESC; }
+    const char* name() const override { return SHIP_REDUCED_NAME; }
+    const char* description() const override { return SHIP_REDUCED_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         ShipECMWFBase::setupBulletin(bulletin);
         bulletin.data_subcategory_local = 19;
@@ -239,10 +239,10 @@ struct ShipECMWFSecondRecord : public ShipBase
     ShipECMWFSecondRecord(const dballe::ExporterOptions& opts, const Messages& msgs)
         : ShipBase(opts, msgs) {}
 
-    virtual const char* name() const { return SHIP_ECMWF_SECOND_NAME; }
-    virtual const char* description() const { return SHIP_ECMWF_SECOND_DESC; }
+    const char* name() const override { return SHIP_ECMWF_SECOND_NAME; }
+    const char* description() const override { return SHIP_ECMWF_SECOND_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         ShipBase::setupBulletin(bulletin);
 
@@ -338,8 +338,8 @@ struct ShipWMO : public ShipBase
     ShipWMO(const dballe::ExporterOptions& opts, const Messages& msgs)
         : ShipBase(opts, msgs) {}
 
-    virtual const char* name() const { return SHIP_WMO_NAME; }
-    virtual const char* description() const { return SHIP_WMO_DESC; }
+    const char* name() const override { return SHIP_WMO_NAME; }
+    const char* description() const override { return SHIP_WMO_DESC; }
 
     void setupBulletin(wreport::Bulletin& bulletin) override
     {
@@ -403,6 +403,8 @@ struct ShipWMO : public ShipBase
 
 
 } // anonymous namespace
+
+void register_ship(TemplateRegistry& r);
 
 void register_ship(TemplateRegistry& r)
 {
