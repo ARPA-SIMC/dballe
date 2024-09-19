@@ -1,10 +1,10 @@
-%global releaseno 2
+%global releaseno 1
 # Note: define _srcarchivename in CI build only.
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 9.6
+Version: 9.7
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -23,7 +23,7 @@ BuildRequires: gcc-c++
 BuildRequires: gperf
 BuildRequires: doxygen
 BuildRequires: pkgconfig(lua) > 5.1.1
-BuildRequires: pkgconfig(libwreport) >= 3.29
+BuildRequires: pkgconfig(libwreport) >= 3.38
 BuildRequires: %{python3_vers}-devel
 %if 0%{?rhel} == 7
 BuildRequires: popt-devel
@@ -301,6 +301,11 @@ mv $RPM_BUILD_ROOT%{_includedir}/dballe/dballef.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Thu Sep 19 2024 Daniele Branchini <dbranchini@arpae.it> - 9.7-1
+- Updated code to use C++17 features and new wreport
+- Fixed runtest to work with no tables available in build dir
+- Added some solid precipitation-related entries and fixed variable names
+
 * Thu Apr  4 2024 Emanuele Di Giacomo <edigiacomo@arpae.it> - 9.6-2
 - Fixed package version in spec file
 

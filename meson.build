@@ -1,4 +1,4 @@
-project('dballe', 'cpp', 'fortran', version: '9.6', license : 'GPL-2.0-or-later', default_options: ['warning_level=3', 'cpp_std=c++17'])
+project('dballe', 'cpp', 'fortran', version: '9.7', license : 'GPL-2.0-or-later', default_options: ['warning_level=3', 'cpp_std=c++17'])
 # TODO: use warning_level=everything in meson from 1.0
 
 cpp = meson.get_compiler('cpp')
@@ -51,7 +51,7 @@ add_project_arguments(
   cpp.get_supported_arguments(warning_control),
   language : 'cpp')
 
-libdballe_so_version = '9.6.0'
+libdballe_so_version = '9.7.0'
 libdballef_so_version = '5.0.0'
 
 table_dir = get_option('datadir') / 'wreport'
