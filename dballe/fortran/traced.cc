@@ -28,7 +28,7 @@ namespace {
 
 struct NullTracer : public Tracer
 {
-    std::unique_ptr<API> wrap_api(int handle, std::unique_ptr<API> api) { return std::move(api); }
+    std::unique_ptr<API> wrap_api(int handle, std::unique_ptr<API> api) override { return api; }
     void log_connect_url(int handle, const char* chosen_dsn) override {}
     void log_begin(int dbahandle, int handle, const char* anaflag, const char* dataflag, const char* attrflag) override {}
     void log_begin_messages(int handle, const char* filename, const char* mode, const char* type) override {}

@@ -10,8 +10,8 @@ namespace {
 template<class Interface>
 struct EmptyCursor : public Interface
 {
-    bool has_value() const { return false; }
-    void enq(Enq& enq) const {}
+    bool has_value() const override { return false; }
+    void enq(Enq& enq) const override {}
     int remaining() const override { return 0; }
     bool next() override { return false; }
     void discard() override {}
@@ -27,13 +27,13 @@ struct EmptyCursorStation : public EmptyCursor<impl::CursorStation>
 struct EmptyCursorStationData : public EmptyCursor<impl::CursorStationData>
 {
     wreport::Varcode get_varcode() const override { return 0; }
-    wreport::Var get_var() const { throw wreport::error_consistency("cursor not on a result"); }
+    wreport::Var get_var() const override { throw wreport::error_consistency("cursor not on a result"); }
 };
 
 struct EmptyCursorData : public EmptyCursor<impl::CursorData>
 {
     wreport::Varcode get_varcode() const override { return 0; }
-    wreport::Var get_var() const { throw wreport::error_consistency("cursor not on a result"); }
+    wreport::Var get_var() const override { throw wreport::error_consistency("cursor not on a result"); }
     Level get_level() const override { return Level(); }
     Trange get_trange() const override { return Trange(); }
     Datetime get_datetime() const override { return Datetime(); }

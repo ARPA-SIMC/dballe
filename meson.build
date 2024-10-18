@@ -1,8 +1,57 @@
-project('dballe', 'cpp', 'fortran', version: '9.5', license : 'GPL-2.0-or-later', default_options: ['warning_level=3', 'cpp_std=c++11'])
+project('dballe', 'cpp', 'fortran', version: '9.7', license : 'GPL-2.0-or-later', default_options: ['warning_level=3', 'cpp_std=c++17'])
+# TODO: use warning_level=everything in meson from 1.0
 
-add_global_arguments('-Wextra', '-Wno-unused-parameter', language : 'cpp')
+cpp = meson.get_compiler('cpp')
 
-libdballe_so_version = '9.5.0'
+warning_control = [
+  # Turn some warning classes to errors
+  '-Werror=format',
+  '-Werror=suggest-override',
+  '-Werror=deprecated-copy-dtor',
+  '-Werror=missing-declarations',
+  '-Werror=overloaded-virtual',
+  '-Werror=cast-qual',                
+  '-Werror=duplicated-branches',
+  '-Werror=logical-op',
+  '-Werror=catch-value',
+  '-Werror=conditionally-supported',   
+  '-Werror=c++23-extensions',
+  '-Werror=dangling-else',
+  '-Werror=suggest-attribute=format',
+  '-Werror=deprecated-declarations',
+  # '-Werror=noexcept',
+  # '-Werror=cast-align',
+
+  '-Wno-padded',
+  '-Wno-abi-tag',
+  '-Wswitch',
+  '-Wno-switch-enum',
+  '-Wno-effc++',
+
+  # TODO: remove the following ones over time
+  '-Wno-shadow',
+  '-Wno-zero-as-null-pointer-constant',
+  '-Wno-mismatched-tags',
+  '-Wno-unused-const-variable',
+  '-Wno-redundant-tags',
+  '-Wno-useless-cast',
+  '-Wno-switch-default',
+  '-Wno-old-style-cast',
+  '-Wno-unused-parameter',
+
+  # These ones can be activated from time to time
+  '-Wno-float-equal',
+  '-Wno-suggest-attribute=noreturn',
+  '-Wno-format-truncation',
+  '-Wno-arith-conversion',
+  '-Wno-conversion',
+]
+
+add_project_arguments(
+  cpp.get_supported_arguments(warning_control),
+  language : 'cpp')
+
+libdballe_so_version = '9.7.0'
 libdballef_so_version = '5.0.0'
 
 table_dir = get_option('datadir') / 'wreport'
@@ -14,7 +63,7 @@ conf_data.set_quoted('TABLE_DIR', get_option('prefix') / table_dir)
 toplevel_inc = include_directories('.')
 
 # Dependencies
-libwreport_dep = dependency('libwreport', version: '>= 3.22')
+libwreport_dep = dependency('libwreport', version: '>= 3.38')
 sqlite3_dep = dependency('sqlite3')
 libpq_dep = dependency('libpq', required: false)
 conf_data.set('HAVE_LIBPQ', libpq_dep.found())
@@ -56,11 +105,6 @@ else
 endif
 
 compiler = meson.get_compiler('cpp')
-if compiler.has_function('strcasestr', prefix : '#include <string.h>')
-    # This does not currently work.
-    # See https://github.com/mesonbuild/meson/issues/8075
-    conf_data.set('HAVE_STRCASESTR', true)
-endif
 if not compiler.has_function('bswap_32', prefix : '#include <byteswap.h>')
     conf_data.set('USE_OWN_BSWAP', true)
 endif

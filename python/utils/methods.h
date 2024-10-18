@@ -28,7 +28,9 @@ struct BaseMethod
     static constexpr PyMethodDef def()
     {
 #pragma GCC diagnostic push
+#ifndef __clang__
 #pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
         return PyMethodDef {const_cast<char*>(Child::name), (PyCFunction)Child::run, Child::flags, Child::doc};
 #pragma GCC diagnostic pop
     }

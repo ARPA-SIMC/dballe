@@ -277,7 +277,7 @@ struct Cursor : public impl::CursorSummary
     Cursor(const BaseSummary<Station>& summary, const Query& query);
     Cursor(const summary::StationEntries<Station>& entries, const Query& query);
 
-    bool has_value() const { return !at_start && station_entry != results.end(); }
+    bool has_value() const override { return !at_start && station_entry != results.end(); }
 
     int remaining() const override
     {
@@ -338,7 +338,7 @@ struct Cursor : public impl::CursorSummary
     DatetimeRange get_datetimerange() const override { return var_entry->dtrange; }
     size_t get_count() const override { return var_entry->count; }
 
-    void enq(impl::Enq& enq) const;
+    void enq(impl::Enq& enq) const override;
 };
 
 extern template class Cursor<dballe::Station>;

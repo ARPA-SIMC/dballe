@@ -41,6 +41,7 @@ inline ActualVar actual_var(const Message& message, const impl::Shortcut& shortc
 inline ActualVar actual_var(const Message& message, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr) { return ActualVar(want_var(message, code, lev, tr)); }
 
 void dump(const std::string& tag, const Message& msg, const std::string& desc="message");
+void dump(const std::string& tag, const impl::Message& msg, const std::string& desc);
 void dump(const std::string& tag, const impl::Messages& msgs, const std::string& desc="message");
 void dump(const std::string& tag, const wreport::Bulletin& bul, const std::string& desc="message");
 void dump(const std::string& tag, const BinaryMessage& msg, const std::string& desc="message");
@@ -70,29 +71,29 @@ struct StripAttrs : public MessageTweaker
 {
     std::vector<wreport::Varcode> codes;
 
-    void tweak(impl::Messages& msgs);
-    virtual std::string desc() const { return "StripAttrs"; }
+    void tweak(impl::Messages& msgs) override;
+    std::string desc() const override { return "StripAttrs"; }
 };
 
 // Strip attributes from all variables in a impl::Messages
 struct StripQCAttrs : public StripAttrs
 {
     StripQCAttrs();
-    virtual std::string desc() const { return "StripQCAttrs"; }
+    std::string desc() const override { return "StripQCAttrs"; }
 };
 
 // Strip attributes with substituted values
 struct StripSubstituteAttrs : public MessageTweaker
 {
-    void tweak(impl::Messages& msgs);
-    virtual std::string desc() const { return "StripSubstituteAttrs"; }
+    void tweak(impl::Messages& msgs) override;
+    std::string desc() const override { return "StripSubstituteAttrs"; }
 };
 
 // Strip context attributes from all variables in a impl::Messages
 struct StripContextAttrs : public StripAttrs
 {
     StripContextAttrs();
-    virtual std::string desc() const { return "StripContextAttrs"; }
+    std::string desc() const override { return "StripContextAttrs"; }
 };
 
 // Strip a user-defined list of vars from all levels
@@ -102,8 +103,8 @@ struct StripVars : public MessageTweaker
 
     StripVars() {}
     StripVars(std::initializer_list<wreport::Varcode> codes) : codes(codes) {}
-    void tweak(impl::Messages& msgs);
-    virtual std::string desc() const { return "StripVars"; }
+    void tweak(impl::Messages& msgs) override;
+    std::string desc() const override { return "StripVars"; }
 };
 
 // Round variables to account for a passage through legacy vars
@@ -111,22 +112,22 @@ struct RoundLegacyVars : public MessageTweaker
 {
     const wreport::Vartable* table;
     RoundLegacyVars();
-    void tweak(impl::Messages& msgs);
-    virtual std::string desc() const { return "RoundLegacyVars"; }
+    void tweak(impl::Messages& msgs) override;
+    std::string desc() const override { return "RoundLegacyVars"; }
 };
 
 // Remove synop vars present in WMO templates but not in ECMWF templates
 struct RemoveSynopWMOOnlyVars : public MessageTweaker
 {
-    void tweak(impl::Messages& msgs);
-    virtual std::string desc() const { return "RemoveSynopWMOOnlyVars"; }
+    void tweak(impl::Messages& msgs) override;
+    std::string desc() const override { return "RemoveSynopWMOOnlyVars"; }
 };
 
 // Remove temp vars present in WMO templates but not in ECMWF templates
 struct RemoveTempWMOOnlyVars : public MessageTweaker
 {
-    void tweak(impl::Messages& msgs);
-    virtual std::string desc() const { return "RemoveTempWMOOnlyVars"; }
+    void tweak(impl::Messages& msgs) override;
+    std::string desc() const override { return "RemoveTempWMOOnlyVars"; }
 };
 
 // Remove temp vars present only in an odd temp template for which we have
@@ -134,22 +135,22 @@ struct RemoveTempWMOOnlyVars : public MessageTweaker
 struct RemoveOddTempTemplateOnlyVars : public StripVars
 {
     RemoveOddTempTemplateOnlyVars();
-    virtual std::string desc() const { return "RemoveOddTempTemplateOnlyVars"; }
+    std::string desc() const override { return "RemoveOddTempTemplateOnlyVars"; }
 };
 
 // Remove ground level with missing length of statistical processing, that
 // cannot be encoded in ECMWF templates
 struct RemoveSynopWMOOddprec : public MessageTweaker
 {
-    void tweak(impl::Messages& msgs);
-    virtual std::string desc() const { return "RemoveSynopWMOOddprec"; }
+    void tweak(impl::Messages& msgs) override;
+    std::string desc() const override { return "RemoveSynopWMOOddprec"; }
 };
 
 // Truncate station name to its canonical length
 struct TruncStName : public MessageTweaker
 {
-    void tweak(impl::Messages& msgs);
-    virtual std::string desc() const { return "TruncStName"; }
+    void tweak(impl::Messages& msgs) override;
+    std::string desc() const override { return "TruncStName"; }
 };
 
 // Round geopotential with a B10003->B10008->B10009->B10008->B10003 round trip
@@ -157,8 +158,8 @@ struct RoundGeopotential : public MessageTweaker
 {
     const wreport::Vartable* table;
     RoundGeopotential();
-    void tweak(impl::Messages& msgs);
-    virtual std::string desc() const { return "RoundGeopotential"; }
+    void tweak(impl::Messages& msgs) override;
+    std::string desc() const override { return "RoundGeopotential"; }
 };
 
 // Add B10008 GEOPOTENTIAL to all height levels, with its value taken from the height
@@ -166,15 +167,15 @@ struct HeightToGeopotential : public MessageTweaker
 {
     const wreport::Vartable* table;
     HeightToGeopotential();
-    void tweak(impl::Messages& msgs);
-    virtual std::string desc() const { return "HeightToGeopotential"; }
+    void tweak(impl::Messages& msgs) override;
+    std::string desc() const override { return "HeightToGeopotential"; }
 };
 
 // Round vertical sounding significance with a B08042->B08001->B08042 round trip
 struct RoundVSS : public MessageTweaker
 {
-    void tweak(impl::Messages& msgs);
-    virtual std::string desc() const { return "RoundVSS"; }
+    void tweak(impl::Messages& msgs) override;
+    std::string desc() const override { return "RoundVSS"; }
 };
 
 // Remove a context given its level and time range
@@ -183,8 +184,8 @@ struct RemoveContext : public MessageTweaker
     Level lev;
     Trange tr;
     RemoveContext(const Level& lev, const Trange& tr);
-    void tweak(impl::Messages& msgs);
-    virtual std::string desc() const { return "RemoveContext"; }
+    void tweak(impl::Messages& msgs) override;
+    std::string desc() const override { return "RemoveContext"; }
 };
 
 }
@@ -226,7 +227,7 @@ struct TestCodec
 
     void do_compare(const TestMessage& msg1, const TestMessage& msg2);
 
-    TestCodec(const std::string& fname, Encoding type=Encoding::BUFR);
+    explicit TestCodec(const std::string& fname, Encoding type=Encoding::BUFR);
 
     void configure_ecmwf_to_wmo_tweaks();
 

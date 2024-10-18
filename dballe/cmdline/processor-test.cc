@@ -65,7 +65,7 @@ add_method("parse_json", [] {
     struct TestAction : public Action {
         std::vector<std::shared_ptr<dballe::Message>> messages;
 
-        virtual bool operator()(const Item& item) {
+        bool operator()(const Item& item) override {
             for (auto& m: *(item.msgs)) {
                 messages.push_back(m->clone());
             }
@@ -78,7 +78,7 @@ add_method("parse_json", [] {
     Reader reader(opts);
     TestAction action;
 
-    reader.read({dballe::tests::datafile("/json/issue134.json")}, action);
+    reader.read({dballe::tests::datafile("json/issue134.json")}, action);
     wassert(actual(action.messages.size()) == 5);
 
     {
@@ -122,7 +122,7 @@ add_method("parse_json", [] {
 
 add_method("issue77", [] {
     struct TestAction : public Action {
-        virtual bool operator()(const Item& item) { return true; }
+        bool operator()(const Item& item) override { return true; }
     };
 
     ReaderOptions opts;
@@ -130,7 +130,7 @@ add_method("issue77", [] {
     Reader reader(opts);
     TestAction action;
 
-    reader.read({dballe::tests::datafile("/json/issue77.json")}, action);
+    reader.read({dballe::tests::datafile("json/issue77.json")}, action);
 });
 
 

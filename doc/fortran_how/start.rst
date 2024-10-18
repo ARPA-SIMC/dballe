@@ -18,10 +18,10 @@ program::
     include "dballe/dballeff.h"
 
 The Fortran 90 interface also allows to replace all the functions
-:c:func:`idba_enqi`, :c:func:`idba_enqr`, :c:func:`idba_enqd` and
-:c:func:`idba_enqc` with ``idba_enq`` and to replace all the functions
-:c:func:`idba_seti`, :c:func:`idba_setr`, :c:func:`idba_setd` and
-:c:func:`idba_setc` with ``idba_set``.
+:ref:`idba_enqi`, :ref:`idba_enqr`, :ref:`idba_enqd` and
+:ref:`idba_enqc` with ``idba_enq`` and to replace all the functions
+:ref:`idba_seti`, :ref:`idba_setr`, :ref:`idba_setd` and
+:ref:`idba_setc` with ``idba_set``.
 
 
 .. _starting_the_work:
@@ -44,14 +44,14 @@ This code will open a connection with DB-All.e, then it will start a session::
     ierr = idba_commit(handle)
     ierr = idba_disconnect(dbhandle)
 
-You call :c:func:`idba_connect` to connect to the databse. The parameters are
+You call :ref:`idba_connect` to connect to the databse. The parameters are
 the database connection URL (see :ref:`connect`), and two parameters that were
 used in the past and are now ignored.
 
-You can call :c:func:`idba_begin` many times and get more handles.  This allows
+You can call :ref:`idba_begin` many times and get more handles.  This allows
 to perform many operations on the database at the same time.
 
-:c:func:`idba_begin` has three extra parameters that can be used to limit
+:ref:`idba_begin` has three extra parameters that can be used to limit
 write operations on the database, as a limited protection against programming
 errors.
 
@@ -89,8 +89,8 @@ Starting the work on a message
 Instead of connecting to a database, you can use the DB-All.e API to read and
 write message reports in BUFR and CREX format.
 
-To do that, use :c:func:`idba_begin_messages` instead of both :c:func:`idba_connect` and
-:c:func:`idba_begin`.  To write a message, your code will look like::
+To do that, use :ref:`idba_begin_messages` instead of both :ref:`idba_connect` and
+:ref:`idba_begin`.  To write a message, your code will look like::
 
     ! Connect to the database and get a handle to work with it
     ierr = idba_begin_messages(handle, "file.bufr", "r", "auto")
@@ -100,7 +100,7 @@ To do that, use :c:func:`idba_begin_messages` instead of both :c:func:`idba_conn
     ! End of the work
     ierr = idba_commit(handle)
 
-:c:func:`idba_begin_messages` has three parameters:
+:ref:`idba_begin_messages` has three parameters:
 
 1. the name of the file to open
 2. the open mode (``"r"`` for read, ``"w"`` for write or create, ``"a"`` for append).
@@ -109,8 +109,8 @@ To do that, use :c:func:`idba_begin_messages` instead of both :c:func:`idba_conn
    DB-All.e to autodetect the file format, but it only works when reading
    files, not when writing new one.
 
-You can call :c:func:`idba_begin_messages` many times and read or write many files.  You
-can even call :c:func:`idba_begin_messages` many time on the same file as long as you
+You can call :ref:`idba_begin_messages` many times and read or write many files.  You
+can even call :ref:`idba_begin_messages` many time on the same file as long as you
 open it read only.
 
 Once you open a file, you can use the other DB-All.e functions on it.  There
@@ -122,12 +122,12 @@ Ending the work
 ---------------
 
 When you are finished working with a handle, you release it with
-:c:func:`idba_commit`::
+:ref:`idba_commit`::
 
     ! We are finished with this handle
     ierr = idba_commit(handle)
 
-When you are finished working with DB-ALLe, you use :c:func:`idba_disconnect` to
+When you are finished working with DB-ALLe, you use :ref:`idba_disconnect` to
 close all connections and release all resources::
 
     ! We do not need to work with dballe anymore

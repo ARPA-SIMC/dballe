@@ -11,11 +11,14 @@ class Tests : public TestCase
 {
     using TestCase::TestCase;
 
-    void register_tests() override
-    {
-        add_method("empty", []() {
-        });
-    }
+    void register_tests() override;
 } test("core_file");
+
+void Tests::register_tests() {
+
+add_method("empty", []() noexcept {
+});
+
+}
 
 }

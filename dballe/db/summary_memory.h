@@ -4,6 +4,7 @@
 #include <dballe/core/fwd.h>
 #include <dballe/db/summary.h>
 #include <dballe/db/summary_utils.h>
+#include <filesystem>
 
 namespace dballe {
 namespace db {
@@ -18,7 +19,7 @@ protected:
     // Summary of items for the currently active filter
     summary::StationEntries<Station> entries;
 
-    std::string pathname;
+    std::filesystem::path path;
 
     mutable core::SortedSmallUniqueValueSet<std::string> m_reports;
     mutable core::SortedSmallUniqueValueSet<dballe::Level> m_levels;
@@ -33,7 +34,7 @@ protected:
 
 public:
     BaseSummaryMemory();
-    BaseSummaryMemory(const std::string& pathname);
+    explicit BaseSummaryMemory(const std::filesystem::path& path);
 
     const summary::StationEntries<Station>& _entries() const { if (dirty) recompute_summaries(); return entries.sorted(); }
 

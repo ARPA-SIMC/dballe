@@ -1,8 +1,7 @@
-[![Build Status](https://simc.arpae.it/moncic-ci/dballe/centos7.png)](https://simc.arpae.it/moncic-ci/dballe/)
 [![Build Status](https://simc.arpae.it/moncic-ci/dballe/rocky8.png)](https://simc.arpae.it/moncic-ci/dballe/)
 [![Build Status](https://simc.arpae.it/moncic-ci/dballe/rocky9.png)](https://simc.arpae.it/moncic-ci/dballe/)
-[![Build Status](https://simc.arpae.it/moncic-ci/dballe/fedora36.png)](https://simc.arpae.it/moncic-ci/dballe/)
 [![Build Status](https://simc.arpae.it/moncic-ci/dballe/fedora38.png)](https://simc.arpae.it/moncic-ci/dballe/)
+[![Build Status](https://simc.arpae.it/moncic-ci/dballe/fedora40.png)](https://simc.arpae.it/moncic-ci/dballe/)
 [![Build Status](https://copr.fedorainfracloud.org/coprs/simc/stable/package/dballe/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/simc/stable/package/dballe/)
 
 DB-All.e
@@ -62,25 +61,14 @@ easy installation for most Linux distributions.
 For CentOS and Fedora, rpm files are hosted in a copr repo:
 https://copr.fedorainfracloud.org/coprs/simc/stable/
 
-For Debian, DB-All.e is available in the testing distribution:
-https://packages.debian.org/testing/dballe
-
-Using docker images with DB-All.e preinstalled is also possible:
+If you want to build and install DB-All.e yourself, you'll need to install
+[Meson](https://mesonbuild.com/) and run the following commands:
 
 ```
-docker run -it arpaesimc/fedora:31 /bin/bash
-docker run -it arpaesimc/centos:8 /bin/bash
-```
-
-If you want to build and install DB-All.e yourself, you'll need to install the
-automake/autoconf/libtool packages then you can proceed as in most other Unix 
-software:
-
-```
-autoreconf -if
-./configure
-make
-make install
+meson setup builddir && cd builddir
+meson compile
+meson test
+meson install
 ```
 
 If you're familiar with .rpm and .deb packaging you'll find the packaging 
@@ -144,7 +132,7 @@ Contact and copyright information
 
 The author of DB-ALLe is Enrico Zini <enrico@enricozini.com>
 
-DB-ALLe is Copyright (C) 2005-2022 ARPAE-SIMC <urpsim@arpae.it>
+DB-ALLe is Copyright (C) 2005-2024 ARPAE-SIMC <urpsim@arpae.it>
 
 DB-ALLe is licensed under the terms of the GNU General Public License version
 2.  Please see the file COPYING for details.
@@ -158,4 +146,4 @@ Contact informations for ARPAE-SIMC:
   Tel: + 39 051 6497511
   Fax: + 39 051 6497501
   Email: urpsim@arpae.it
-  Website: http://www.arpae.it/sim/
+  Website: https://www.arpae.it/it/temi-ambientali/meteo

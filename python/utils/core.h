@@ -8,6 +8,8 @@
 namespace dballe {
 namespace python {
 
+#define pass_kwlist(kwlist) (const_cast<char**>(static_cast<const char**>(kwlist)))
+
 /**
  * unique_ptr-like object that contains PyObject pointers, and that calls
  * Py_DECREF on destruction.

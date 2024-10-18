@@ -93,8 +93,8 @@ public:
     BufrExporter(const dballe::ExporterOptions& opts=dballe::ExporterOptions::defaults);
     virtual ~BufrExporter();
 
-    virtual std::string to_binary(const Messages& msgs) const;
-    virtual std::unique_ptr<wreport::Bulletin> make_bulletin() const;
+    std::string to_binary(const Messages& msgs) const override;
+    std::unique_ptr<wreport::Bulletin> make_bulletin() const override;
 };
 
 class CrexExporter : public WRExporter
@@ -103,8 +103,8 @@ public:
     CrexExporter(const dballe::ExporterOptions& opts=dballe::ExporterOptions::defaults);
     virtual ~CrexExporter();
 
-    virtual std::string to_binary(const Messages& msgs) const;
-    virtual std::unique_ptr<wreport::Bulletin> make_bulletin() const;
+    std::string to_binary(const Messages& msgs) const override;
+    std::unique_ptr<wreport::Bulletin> make_bulletin() const override;
 };
 
 namespace wr {

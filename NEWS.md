@@ -1,3 +1,19 @@
+# New in version 9.7
+
+* Updated code to use C++17 features and new wreport
+* Fixed runtest to work with no tables available in build dir
+* Added some solid precipitation-related entries and fixed variable names
+
+# New in version 9.6
+
+* Build with meson (#269)
+* Added B13208 and B13209 variables
+
+# New in version 9.5
+
+* Fixed dangling reference to a temporary in register_synop (#279)
+* Removed std::move that prevented copy elision
+
 # New in version 9.4
 
 * Compatibility with numpy 1.24

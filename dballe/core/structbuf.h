@@ -78,7 +78,7 @@ public:
         if (tmpfile_fd != -1)
         {
             if (readbuf != MAP_FAILED)
-                munmap((void*)readbuf, m_count * sizeof(T));
+                munmap(const_cast<T*>(readbuf), m_count * sizeof(T));
             ::close(tmpfile_fd);
         }
     }

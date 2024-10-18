@@ -12,7 +12,7 @@ How do I access the station values?
 There are two ways:
 
 If you know in advances what variables you want to read, you can find them
-among the results of :c:func:`idba_next_station`::
+among the results of :ref:`idba_next_station`::
 
     ! Query station data
     ierr = idba_query_stations(handle, count)
@@ -26,8 +26,8 @@ among the results of :c:func:`idba_next_station`::
     enddo
 
 If you want to see all the extra station data available, you can make an
-explicit query for the extra station data using :c:func:`idba_query_data` and
-:c:func:`idba_next_data`::
+explicit query for the extra station data using :ref:`idba_query_data` and
+:ref:`idba_next_data`::
 
     ierr = idba_seti("ana_id", id)
     ierr = idba_query_data(handle, count)

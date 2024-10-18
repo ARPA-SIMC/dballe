@@ -28,7 +28,7 @@ struct Converter : public Action
      * Convert the item as configured in the Converter, and write it to the
      * output file
      */
-    virtual bool operator()(const cmdline::Item& item);
+    bool operator()(const cmdline::Item& item) override;
 
 protected:
     Exporter* exporter = nullptr;

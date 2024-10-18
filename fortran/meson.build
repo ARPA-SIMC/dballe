@@ -1,8 +1,13 @@
+extra_warnings = cpp.get_supported_arguments([
+  '-Wno-missing-declarations',
+])
+
 libdballef = both_libraries('dballef',
     'error.cc', 'binding.cc', 'dballef.f90',
     version: libdballef_so_version,
     install: true,
     include_directories: toplevel_inc,
+    cpp_args: extra_warnings,
     link_with: [libdballe],
     dependencies: [
         libwreport_dep,

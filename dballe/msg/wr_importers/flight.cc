@@ -120,7 +120,7 @@ public:
         return MessageType::AMDAR;
     }
 
-    MessageType scanType(const Bulletin& bulletin) const
+    MessageType scanType(const Bulletin& bulletin) const override
     {
         switch (bulletin.data_subcategory_local)
         {

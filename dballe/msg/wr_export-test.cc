@@ -576,7 +576,7 @@ class Tests : public TestCase
                     int diffs = impl::msg::messages_diff(msgs, msgs1);
                     if (diffs)
                     {
-                        string tag = str::basename(files[i]);
+                        string tag = std::filesystem::path(files[i]).filename();
                         dballe::tests::dump("dballe-orig-" + tag, msgs, "original message");
                         dballe::tests::dump("dballe-reenc-" + tag, *bbulletin, "reencoded message");
                         dballe::tests::dump("dballe-reenc-" + tag, msgs1, "decoded reencoded message");

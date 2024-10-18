@@ -128,7 +128,7 @@ void Tests::register_tests()
     });
     add_method("create", []() {
         using namespace wreport;
-        sys::unlink_ifexists("tmp.bufr");
+        std::filesystem::remove("tmp.bufr");
         {
             MsgAPI msgapi0("tmp.bufr", "w", "BUFR");
             msgapi0.set_station_context();
@@ -150,12 +150,12 @@ void Tests::register_tests()
             wassert(msgapi0.insert_data());
         }
 
-        wassert(actual_file("tmp.bufr").startswith("BUFR"));
+        wassert(actual_file("tmp.bufr").contents_startwith("BUFR"));
         // error: no year information found in message to import
     });
     add_method("issue46", []() {
         using namespace wreport;
-        sys::unlink_ifexists("tmp.bufr");
+        std::filesystem::remove("tmp.bufr");
         {
             MsgAPI msgapi0("tmp.bufr", "w", "BUFR");
             msgapi0.set_station_context();
@@ -215,7 +215,7 @@ void Tests::register_tests()
 add_method("message_ordering", [] {
     using namespace wreport;
     using namespace dballe::fortran;
-    sys::unlink_ifexists("dballe_test.bufr");
+    std::filesystem::remove("dballe_test.bufr");
 
     // Check the ordering of results when iterating message contents
 

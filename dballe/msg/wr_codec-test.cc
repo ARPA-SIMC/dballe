@@ -57,7 +57,7 @@ add_method("domain_throw", []() {
     options->domain_errors = ImporterOptions::DomainErrors::THROW;
     auto importer = Importer::create(Encoding::BUFR, *options);
     file->foreach([&](const BinaryMessage& bmsg) {
-        wassert_throws(wreport::error_domain, importer->foreach_decoded(bmsg, [&](std::shared_ptr<Message> dest) { return true; }));
+        wassert_throws(wreport::error_domain, importer->foreach_decoded(bmsg, [&](std::shared_ptr<Message> dest) noexcept { return true; }));
         return true;
     });
 });

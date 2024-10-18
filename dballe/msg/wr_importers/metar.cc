@@ -45,13 +45,13 @@ public:
     MetarImporter(const dballe::ImporterOptions& opts) : WMOImporter(opts) {}
     virtual ~MetarImporter() {}
 
-    virtual void init()
+    void init() override
     {
         WMOImporter::init();
         height_sensor = MISSING_SENSOR_H;
     }
 
-    virtual void run()
+    void run() override
     {
         for (pos = 0; pos < subset->size(); ++pos)
         {
@@ -64,7 +64,7 @@ public:
         }
     }
 
-    MessageType scanType(const Bulletin& bulletin) const { return MessageType::METAR; }
+    MessageType scanType(const Bulletin& bulletin) const override { return MessageType::METAR; }
 };
 
 std::unique_ptr<Importer> Importer::createMetar(const dballe::ImporterOptions& opts)

@@ -131,10 +131,10 @@ struct Airep : public FlightBase
     Airep(const dballe::ExporterOptions& opts, const Messages& msgs)
         : FlightBase(opts, msgs) {}
 
-    virtual const char* name() const { return AIREP_NAME; }
-    virtual const char* description() const { return AIREP_DESC; }
+    const char* name() const override { return AIREP_NAME; }
+    const char* description() const override { return AIREP_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         FlightBase::setupBulletin(bulletin);
         bulletin.data_subcategory_local = 142;
@@ -196,10 +196,10 @@ struct Amdar : public Airep
     Amdar(const dballe::ExporterOptions& opts, const Messages& msgs)
         : Airep(opts, msgs) {}
 
-    virtual const char* name() const { return AMDAR_NAME; }
-    virtual const char* description() const { return AMDAR_DESC; }
+    const char* name() const override { return AMDAR_NAME; }
+    const char* description() const override { return AMDAR_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         Airep::setupBulletin(bulletin);
         bulletin.data_subcategory_local = 144;
@@ -211,10 +211,10 @@ struct AmdarWMO : public FlightBase
     AmdarWMO(const dballe::ExporterOptions& opts, const Messages& msgs)
         : FlightBase(opts, msgs) {}
 
-    virtual const char* name() const { return AMDAR_WMO_NAME; }
-    virtual const char* description() const { return AMDAR_WMO_DESC; }
+    const char* name() const override { return AMDAR_WMO_NAME; }
+    const char* description() const override { return AMDAR_WMO_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         FlightBase::setupBulletin(bulletin);
         bulletin.data_subcategory = 255;
@@ -310,10 +310,10 @@ struct Acars : public FlightBase
     Acars(const dballe::ExporterOptions& opts, const Messages& msgs)
         : FlightBase(opts, msgs) {}
 
-    virtual const char* name() const { return ACARS_NAME; }
-    virtual const char* description() const { return ACARS_DESC; }
+    const char* name() const override { return ACARS_NAME; }
+    const char* description() const override { return ACARS_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         FlightBase::setupBulletin(bulletin);
 
@@ -408,10 +408,10 @@ struct AcarsWMO : public AmdarWMO
     AcarsWMO(const dballe::ExporterOptions& opts, const Messages& msgs)
         : AmdarWMO(opts, msgs) {}
 
-    virtual const char* name() const { return ACARS_WMO_NAME; }
-    virtual const char* description() const { return ACARS_WMO_DESC; }
+    const char* name() const override { return ACARS_WMO_NAME; }
+    const char* description() const override { return ACARS_WMO_DESC; }
 
-    virtual void setupBulletin(wreport::Bulletin& bulletin)
+    void setupBulletin(wreport::Bulletin& bulletin) override
     {
         AmdarWMO::setupBulletin(bulletin);
 
@@ -422,6 +422,8 @@ struct AcarsWMO : public AmdarWMO
 
 
 } // anonymous namespace
+
+void register_flight(TemplateRegistry& r);
 
 void register_flight(TemplateRegistry& r)
 {

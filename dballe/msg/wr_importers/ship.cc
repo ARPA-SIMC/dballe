@@ -17,14 +17,14 @@ namespace {
 class ShipImporter : public SynopBaseImporter
 {
 protected:
-    virtual void import_var(const Var& var);
+    void import_var(const Var& var) override;
 
 public:
     ShipImporter(const dballe::ImporterOptions& opts)
         : SynopBaseImporter(opts) {}
     virtual ~ShipImporter() {}
 
-    MessageType scanType(const Bulletin& bulletin) const
+    MessageType scanType(const Bulletin& bulletin) const override
     {
         switch (bulletin.data_category)
         {

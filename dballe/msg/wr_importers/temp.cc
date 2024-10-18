@@ -48,7 +48,7 @@ public:
     TempImporter(const dballe::ImporterOptions& opts) : WMOImporter(opts) {}
     virtual ~TempImporter() {}
 
-    virtual void init()
+    void init() override
     {
         WMOImporter::init();
 
@@ -124,7 +124,7 @@ public:
         return true;
     }
 
-    virtual void run()
+    void run() override
     {
         for (pos = 0; pos < subset->size(); )
         {
@@ -177,7 +177,7 @@ public:
         }
     }
 
-    MessageType scanType(const Bulletin& bulletin) const
+    MessageType scanType(const Bulletin& bulletin) const override
     {
         switch (bulletin.data_category)
         {

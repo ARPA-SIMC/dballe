@@ -36,7 +36,7 @@ int make_anonymous_tmpfile()
     tmpnam += "/dballe-XXXXXX";
 
     // FIXME: to avoid a string copy, we are writing directly to the string buffer
-    int fd = mkstemp((char*)tmpnam.c_str());
+    int fd = mkstemp(const_cast<char*>(tmpnam.c_str()));
     if (fd == -1)
         error_system::throwf("cannot create temporary file in %s", tmpdir);
 
