@@ -1,3 +1,7 @@
+# New in version 9.8
+
+* Add variable B13238, river current speed
+
 # New in version 9.7
 
 * Updated code to use C++17 features and new wreport
