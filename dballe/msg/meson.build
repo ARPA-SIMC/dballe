@@ -26,19 +26,6 @@ libdballe_sources += files(
 )
 
 install_headers(
-    'fwd.h',
-    'bulletin.h',
-    'context.h',
-    'msg.h',
-    'msg-extravars.h',
-    'cursor.h',
-    'domain_errors.h',
-    'json_codec.h',
-    'wr_codec.h',
-    subdir: 'dballe/msg',
-)
-
-install_headers(
     'wr_exporters/common.h',
     subdir: 'dballe/msg/wr_exporters',
 )
@@ -50,3 +37,16 @@ endforeach
 libdballe_sources += custom_target('msg-extravars.h', input: '../vars.csv', output: 'msg-extravars.h',
                                    command: [mkvars, '-t', 'msg-extravars.h', '@INPUT@', '-o', '@OUTPUT@'],
 				   install_dir: get_option('includedir') + '/' + 'dballe/msg')
+
+install_headers(
+    'fwd.h',
+    'bulletin.h',
+    'context.h',
+    'msg.h',
+    'msg-extravars.h',
+    'cursor.h',
+    'domain_errors.h',
+    'json_codec.h',
+    'wr_codec.h',
+    subdir: 'dballe/msg',
+)
