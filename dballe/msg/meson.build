@@ -36,14 +36,14 @@ endforeach
 
 libdballe_sources += custom_target('msg-extravars.h', input: '../vars.csv', output: 'msg-extravars.h',
                                    command: [mkvars, '-t', 'msg-extravars.h', '@INPUT@', '-o', '@OUTPUT@'],
-				   install_dir: get_option('includedir') + '/' + 'dballe/msg')
+                                   install_dir: get_option('includedir') + '/' + 'dballe/msg',
+                                   install: true)
 
 install_headers(
     'fwd.h',
     'bulletin.h',
     'context.h',
     'msg.h',
-    'msg-extravars.h',
     'cursor.h',
     'domain_errors.h',
     'json_codec.h',
