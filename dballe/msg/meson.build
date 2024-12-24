@@ -30,6 +30,7 @@ install_headers(
     'bulletin.h',
     'context.h',
     'msg.h',
+    'msg-extravars.h',
     'cursor.h',
     'domain_errors.h',
     'json_codec.h',
