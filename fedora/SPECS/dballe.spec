@@ -4,49 +4,37 @@
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 9.7
+Version: 9.9
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
 URL: https://github.com/ARPA-SIMC/dballe
 Source0: https://github.com/arpa-simc/%{name}/archive/v%{version}-%{releaseno}.tar.gz#/%{srcarchivename}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-%if 0%{?rhel} == 7
-%define python3_vers python36
-# to have python 3.6 interpreter
-BuildRequires: python3-rpm-macros >= 3-23
-%else
+
 %define python3_vers python3
-%endif
+
 BuildRequires: meson
 BuildRequires: gcc-c++
 BuildRequires: gperf
 BuildRequires: doxygen
 BuildRequires: pkgconfig(lua) > 5.1.1
 BuildRequires: pkgconfig(libwreport) >= 3.38
-BuildRequires: %{python3_vers}-devel
-%if 0%{?rhel} == 7
-BuildRequires: popt-devel
-BuildRequires: postgresql-devel
-BuildRequires: mariadb-devel
-%else
+BuildRequires: python3-devel
 BuildRequires: pkgconfig(popt)
 BuildRequires: pkgconfig(libpq)
 BuildRequires: pkgconfig(mariadb)
-%endif
 BuildRequires: pkgconfig(sqlite3)
 BuildRequires: help2man
 BuildRequires: libwreport-doc
-BuildRequires: %{python3_vers}-wreport3
+BuildRequires: python3-wreport3
 BuildRequires: gcc-gfortran
-BuildRequires: %{python3_vers}-numpy
-%if ! 0%{?el7}
-BuildRequires: %{python3_vers}-sphinx
-BuildRequires: %{python3_vers}-breathe
-%endif
-%{!?el7:BuildRequires: xapian-core-devel}
+BuildRequires: python3-numpy
+BuildRequires: python3-sphinx
+BuildRequires: python3-breathe
+BuildRequires: xapian-core-devel
 
-Requires: %{python3_vers}-dballe = %{?epoch:%epoch:}%{version}-%{release}
+Requires: python3-dballe = %{?epoch:%epoch:}%{version}-%{release}
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
 
 %description
@@ -95,7 +83,7 @@ Requires: libdballe9 = %{?epoch:%epoch:}%{version}-%{release}
 Requires: popt-devel
 Requires: postgresql-devel
 Requires: mariadb-devel
-%{!?el7:Requires: xapian-core-devel}
+Requires: xapian-core-devel
 
 %description -n libdballe-devel
  DB-ALL.e core C development library
@@ -195,15 +183,15 @@ Common data files for all DB-All.e modules
  BUFR and CREX decoding tables, report metadata, level and time range
  descriptions.
 
-%package -n %{python3_vers}-dballe
+%package -n python3-dballe
 Summary:  DB-ALL.e Python library
 Group:    Applications/Meteo
 Requires: %{name}-common = %{?epoch:%epoch:}%{version}-%{release}
-Requires: %{python3_vers}-numpy
-Requires: %{python3_vers}-wreport3
+Requires: python3-numpy
+Requires: python3-wreport3
 Obsoletes: python-dballe < 8.0
 
-%description -n %{python3_vers}-dballe
+%description -n python3-dballe
  DB-ALL.e Python library for weather research
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
@@ -282,11 +270,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/dballe/dballef.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 %files -n libdballe-doc
 %defattr(-,root,root,-)
-%if ! 0%{?el7}
 %doc %{_docdir}/%{name}/*
-%endif
 
-%files -n %{python3_vers}-dballe
+%files -n python3-dballe
 %defattr(-,root,root,-)
 %dir %{python3_sitelib}/dballe
 %{python3_sitelib}/dballe/*
@@ -301,6 +287,11 @@ mv $RPM_BUILD_ROOT%{_includedir}/dballe/dballef.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Fri Dec 27 2024 Daniele Branchini <dbranchini@arpae.it> - 9.9-1
+- Fix msg-extravars.h installation (#287)
+- Add variable B13238, river current speed
+- Removed CentOs7 support from specfile
+
 * Thu Sep 19 2024 Daniele Branchini <dbranchini@arpae.it> - 9.7-1
 - Updated code to use C++17 features and new wreport
 - Fixed runtest to work with no tables available in build dir

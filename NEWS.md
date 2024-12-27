@@ -1,3 +1,7 @@
+# New in version 9.9
+
+* Fix msg-extravars.h installation (#287)
+
 # New in version 9.8
 
 * Add variable B13238, river current speed
