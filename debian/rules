@@ -1,28 +1,8 @@
 #!/usr/bin/make -f
 
-VERSION=$(shell debian/vercheck)
-RELEASE_PACKAGE=dballe
-
 %:
-	dh $@ --with fortran_mod,python3,sphinxdoc --without autoreconf -Smeson --parallel
-
-# #DEB_MAKE_CHECK_TARGET := check
+	dh $@ --with python3 --without autoreconf -Smeson --parallel
 
 override_dh_makeshlibs:
 	# For new symbols when compiled with GCC 7. See: #871272
 	dh_makeshlibs -V'libdballe (>= 9.0-1~)'
-
-override_dh_auto_install:
-	dh_auto_install
-
-vercheck:
-	debian/vercheck > /dev/null
-
-debsrc: vercheck
-	if [ ! -f ../$(RELEASE_PACKAGE)_$(VERSION).orig.tar.gz ]; then \
-		test -f Makefile || ./configure; \
-		make -j4; \
-		make dist; \
-		mv $(RELEASE_PACKAGE)-$(VERSION).tar.gz ../$(RELEASE_PACKAGE)_$(VERSION).orig.tar.gz; \
-	fi
-	gbp buildpackage -S -us -uc
