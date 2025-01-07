@@ -5,6 +5,7 @@ dballe (9.7-2) UNRELEASED; urgency=medium
   * Build-Depend on python3-dev instead of python3-all-dev (Closes: #1024255)
   * Depend on dh-sequence-sphinxdoc, simplifying debian/rules and B-D list
   * Depend on debhelper-compat, removed debian/compat
+  * Require wreport >= 3.38
 
  -- Enrico Zini <enrico@debian.org>  Tue, 10 Jan 2023 14:47:53 +0100
 

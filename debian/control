@@ -7,8 +7,8 @@ Build-Depends:
   pkg-config, meson,
   doxygen, help2man, python3-breathe,
   libsqlite3-dev (>= 3.14), libpq-dev, default-libmysqlclient-dev,
-  libwreport-dev (>= 3.29), python3-wreport (>= 3.29),
-  libwreport-doc (>= 3.29),
+  libwreport-dev (>= 3.38), python3-wreport (>= 3.38),
+  libwreport-doc (>= 3.38),
   libxapian-dev, libpopt-dev, gperf,
   gfortran | g77, g++ (>= 4:7),
   python3-dev, python3-numpy, python3-docutils
