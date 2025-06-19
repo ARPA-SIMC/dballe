@@ -1,3 +1,7 @@
+# New in version 9.10
+
+* restructure "volume of basin" variables (#291)
+
 # New in version 9.9
 
 * Fix msg-extravars.h installation (#287)

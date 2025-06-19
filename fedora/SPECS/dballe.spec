@@ -4,7 +4,7 @@
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 9.9
+Version: 9.10
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -287,6 +287,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/dballe/dballef.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Thu Jun 19 2025 Daniele Branchini <dbranchini@arpae.it> - 9.10-1
+- restructure "volume of basin" variables (#291)
+
 * Fri Dec 27 2024 Daniele Branchini <dbranchini@arpae.it> - 9.9-1
 - Fix msg-extravars.h installation (#287)
 - Add variable B13238, river current speed

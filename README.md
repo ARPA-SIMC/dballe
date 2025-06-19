@@ -1,7 +1,7 @@
 [![Build Status](https://simc.arpae.it/moncic-ci/dballe/rocky8.png)](https://simc.arpae.it/moncic-ci/dballe/)
 [![Build Status](https://simc.arpae.it/moncic-ci/dballe/rocky9.png)](https://simc.arpae.it/moncic-ci/dballe/)
-[![Build Status](https://simc.arpae.it/moncic-ci/dballe/fedora38.png)](https://simc.arpae.it/moncic-ci/dballe/)
 [![Build Status](https://simc.arpae.it/moncic-ci/dballe/fedora40.png)](https://simc.arpae.it/moncic-ci/dballe/)
+[![Build Status](https://simc.arpae.it/moncic-ci/dballe/fedora42.png)](https://simc.arpae.it/moncic-ci/dballe/)
 [![Build Status](https://copr.fedorainfracloud.org/coprs/simc/stable/package/dballe/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/simc/stable/package/dballe/)
 
 DB-All.e
