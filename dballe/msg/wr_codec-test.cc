@@ -21,7 +21,7 @@ class Tests : public TestCase
 void Tests::register_tests() {
 
 add_method("issue239", []() {
-    auto v = newvar(WR_VAR(0, 13, 211), 12.123);
+    auto v = wcallchecked(newvar(WR_VAR(0, 13, 211), 12.123));
     wassert(actual(v->code()) == WR_VAR(0, 13, 211));
     wassert(actual(v->enqi()) == 12);
 
@@ -38,7 +38,7 @@ add_method("issue239", []() {
     auto exporter = Exporter::create(Encoding::BUFR);
 
     std::vector<std::shared_ptr<Message>> msgs {msg};
-    auto bulletin = exporter->to_bulletin(msgs);
+    auto bulletin = wcallchecked(exporter->to_bulletin(msgs));
 
     BinaryMessage bmsg(Encoding::BUFR);
     bmsg.data = bulletin->encode();

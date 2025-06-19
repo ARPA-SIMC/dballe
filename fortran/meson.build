@@ -56,6 +56,6 @@ common_test_sources = ['test.f90', 'dbtest.f90']
 runtest = find_program('../extra/runtest')
 
 foreach s: test_sources
-    e = executable(s, [s + '.f90'] + common_test_sources, link_with: [libdballef])
+    e = executable(s, [s + '.f90'] + common_test_sources + tables, link_with: [libdballef])
     test(s, runtest, args: [e])
 endforeach

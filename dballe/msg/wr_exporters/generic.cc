@@ -19,7 +19,7 @@ namespace {
 
 struct Generic : public Template
 {
-    Bulletin* bulletin;
+    Bulletin* bulletin = nullptr;
 
     Generic(const dballe::ExporterOptions& opts, const Messages& msgs)
         : Template(opts, msgs) {}

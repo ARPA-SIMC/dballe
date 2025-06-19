@@ -1,5 +1,6 @@
 #!/bin/sh -e
 
+TOP_BUILDDIR=$(readlink -f "$PWD")
 TOP_SRCDIR=$(readlink -f $(dirname $0)/..)
 PYTHON=${PYTHON:-$(which python3)}
 
@@ -36,30 +37,30 @@ then
     fi
 fi
 
-ORIGDIR=`pwd`
 TESTDIR="`mktemp -d`"
 
 echo "Moving to test directory $TESTDIR"
 cd "$TESTDIR"
 
+# Merge source and built tables
 mkdir tables
 cp "$TOP_SRCDIR"/tables/*.txt tables/
-if [ -d "$ORIGDIR/tables" ]
+if [ -d "$TOP_BUILDDIR/tables" ]
 then
-    for file in $(find "$ORIGDIR/tables" -type f -name "*.txt")
+    for file in $(find "$TOP_BUILDDIR/tables" -type f -name "*.txt")
     do
         cp "$file" tables/
     done
 fi
 
 export WREPORT_EXTRA_TABLES="$TESTDIR/tables"
-export WREPORT_TESTDATA=$TOP_SRCDIR/extra
+export WREPORT_TESTDATA="$TOP_SRCDIR/extra"
 export DBA_REPINFO=$TOP_SRCDIR/tables/repinfo.csv
 export DBA_TABLES=$TOP_SRCDIR/tables
 export DBA_TESTDATA=$TOP_SRCDIR/extra
 export DBA_INSECURE_SQLITE=1
 
-export PYTHONPATH=$TOP_SRCDIR/python/:$ORIGDIR:$ORIGDIR/python:$ORIGDIR/.libs:$ORIGDIR/python/.libs
+export PYTHONPATH=$TOP_SRCDIR/python/:$TOP_BUILDDIR:$TOP_BUILDDIR/python:$TOP_BUILDDIR/.libs:$TOP_BUILDDIR/python/.libs
 # export PYTHONWARNINGS=error
 export PYTHONWARNINGS=default
 # See https://docs.python.org/3/library/devmode.html
@@ -100,7 +101,7 @@ then
 
     echo "Running $DEBUGGER $DEBUG_CMD $ARGS"
     RES=0
-    if ! libtool --mode=execute $DEBUGGER $DEBUG_CMD $ARGS
+    if ! $DEBUGGER $DEBUG_CMD $ARGS
     then
         RES=$?
         echo "Failed with result $RES"

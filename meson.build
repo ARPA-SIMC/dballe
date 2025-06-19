@@ -126,6 +126,7 @@ run_local_cfg = configure_file(output: 'run-local', input: 'run-local.in', confi
 # See https://github.com/mesonbuild/meson/issues/8039
 run_local = find_program(run_local_cfg)
 
+subdir('tables')
 subdir('dballe')
 subdir('fortran')
 subdir('src')
@@ -137,8 +138,6 @@ endif
 if build_docs
     subdir('doc')
 endif
-
-subdir('tables')
 
 
 # Generate pkg-config metadata
