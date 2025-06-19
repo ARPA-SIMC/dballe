@@ -6,6 +6,10 @@ PYTHON=${PYTHON:-$(which python3)}
 
 if [ "$1" = "PYTHON" ]
 then
+    if [ -x $PYTHON-dbg ]
+    then
+        PYTHON="$PYTHON-dbg"
+    fi
     CMD="$PYTHON -m unittest discover --verbose -s ${TOP_SRCDIR}/python"
     DEBUG_CMD="$CMD"
 else
@@ -60,14 +64,14 @@ export DBA_TABLES=$TOP_SRCDIR/tables
 export DBA_TESTDATA=$TOP_SRCDIR/extra
 export DBA_INSECURE_SQLITE=1
 
-export PYTHONPATH=$TOP_SRCDIR/python/:$TOP_BUILDDIR:$TOP_BUILDDIR/python:$TOP_BUILDDIR/.libs:$TOP_BUILDDIR/python/.libs
+export PYTHONPATH=$TOP_SRCDIR/python/:$TOP_BUILDDIR/python
 # export PYTHONWARNINGS=error
 export PYTHONWARNINGS=default
 # See https://docs.python.org/3/library/devmode.html
 export PYTHONDEVMODE=1
 
 export TOP_SRCDIR
-ulimit -v 2097152 || true
+ulimit -v 4294967 || true
 ulimit -n 1024 || true
 
 
