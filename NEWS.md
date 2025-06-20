@@ -1,3 +1,8 @@
+# New in version 9.11
+
+* Fixed build error about "#warning" (#292)
+* Updated python tests
+
 # New in version 9.10
 
 * restructure "volume of basin" variables (#291)
