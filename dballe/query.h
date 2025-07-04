@@ -3,10 +3,10 @@
 
 #include <dballe/fwd.h>
 #include <dballe/types.h>
-#include <wreport/var.h>
-#include <string>
 #include <functional>
 #include <memory>
+#include <string>
+#include <wreport/var.h>
 
 namespace dballe {
 
@@ -16,11 +16,11 @@ class Query
 public:
     Query() {}
     Query(const Query&) = default;
-    Query(Query&&) = default;
+    Query(Query&&)      = default;
     virtual ~Query() {}
 
     Query& operator=(const Query& o) = default;
-    Query& operator=(Query&& o) = default;
+    Query& operator=(Query&& o)      = default;
 
     /// Get the Datetime bounds set in this query
     virtual DatetimeRange get_datetimerange() const = 0;
@@ -84,5 +84,5 @@ public:
     virtual bool empty() const = 0;
 };
 
-}
+} // namespace dballe
 #endif

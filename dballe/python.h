@@ -25,11 +25,12 @@ extern "C" {
  * \code
  * dbapy_c_api* dbapy = (dbapy_c_api*)PyCapsule_Import("_dballe._C_API", 0);
  * \endcode
- * 
+ *
  */
-struct dbapy_c_api {
+struct dbapy_c_api
+{
 
-// API version 1.x
+    // API version 1.x
 
     /// C API major version (updated on incompatible changes)
     unsigned version_major;
@@ -46,7 +47,6 @@ struct dbapy_c_api {
     /// Create a dballe.Message referencing the given message
     PyObject* (*message_create)(std::shared_ptr<dballe::Message>);
 };
-
 }
 
 #endif

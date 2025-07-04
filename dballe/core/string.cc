@@ -9,14 +9,11 @@ namespace {
 struct QSParser
 {
     std::string& url;
-    size_t qs_start = 0;
-    size_t pos = 0;
+    size_t qs_start    = 0;
+    size_t pos         = 0;
     size_t value_start = 0;
 
-    QSParser(std::string& url)
-        : url(url)
-    {
-    }
+    QSParser(std::string& url) : url(url) {}
 
     bool seek_qs()
     {
@@ -85,9 +82,10 @@ struct QSParser
     }
 };
 
-}
+} // namespace
 
-bool url_pop_query_string(std::string& url, const std::string& name, std::string& val)
+bool url_pop_query_string(std::string& url, const std::string& name,
+                          std::string& val)
 {
     QSParser parser(url);
 
@@ -111,4 +109,4 @@ bool url_pop_query_string(std::string& url, const std::string& name, std::string
     }
 }
 
-}
+} // namespace dballe

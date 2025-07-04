@@ -2,10 +2,10 @@
 #define DBALLE_FILE_H
 
 #include <dballe/fwd.h>
-#include <memory>
-#include <string>
 #include <functional>
 #include <iosfwd>
+#include <memory>
+#include <string>
 
 namespace dballe {
 
@@ -49,7 +49,7 @@ public:
      *   true if all file was read, false if reading was stopped because
      *   @a dest returned false.
      */
-    virtual bool foreach(std::function<bool(const BinaryMessage&)> dest) = 0;
+    virtual bool foreach (std::function<bool(const BinaryMessage&)> dest) = 0;
 
     /// Append the binary message to the file
     virtual void write(const std::string& msg) = 0;
@@ -64,7 +64,8 @@ public:
      * @returns
      *   The new File object.
      */
-    static std::unique_ptr<File> create(const std::string& pathname, const char* mode);
+    static std::unique_ptr<File> create(const std::string& pathname,
+                                        const char* mode);
 
     /**
      * Open a file from the filesystem.
@@ -78,7 +79,8 @@ public:
      * @returns
      *   The new File object.
      */
-    static std::unique_ptr<File> create(Encoding type, const std::string& pathname, const char* mode);
+    static std::unique_ptr<File>
+    create(Encoding type, const std::string& pathname, const char* mode);
 
     /**
      * Create a File from an existing FILE* stream, autodetecting the encoding
@@ -95,7 +97,8 @@ public:
      * @returns
      *   The new File object.
      */
-    static std::unique_ptr<File> create(FILE* file, bool close_on_exit, const std::string& name="(fp)");
+    static std::unique_ptr<File> create(FILE* file, bool close_on_exit,
+                                        const std::string& name = "(fp)");
 
     /**
      * Create a File from an existing FILE* stream.
@@ -113,7 +116,9 @@ public:
      * @returns
      *   The new File object.
      */
-    static std::unique_ptr<File> create(Encoding type, FILE* file, bool close_on_exit, const std::string& name="(fp)");
+    static std::unique_ptr<File> create(Encoding type, FILE* file,
+                                        bool close_on_exit,
+                                        const std::string& name = "(fp)");
 
     /// Return a string with the name of this encoding
     static const char* encoding_name(Encoding enc);
@@ -123,7 +128,6 @@ public:
 
     /// Return the Encoding corresponding to the given name
     static Encoding parse_encoding(const std::string& s);
-
 };
 
 /// Binary message
@@ -137,8 +141,8 @@ public:
     std::string data;
 
     /**
-     * Pathname of the file from where the BinaryMessage has been read.  It can be
-     * empty when not applicable, such as when the message is created from
+     * Pathname of the file from where the BinaryMessage has been read.  It can
+     * be empty when not applicable, such as when the message is created from
      * scratch and not yet written
      */
     std::string pathname;
@@ -149,21 +153,19 @@ public:
     /// Index of the message from the beginning of the file
     int index = MISSING_INT;
 
-    BinaryMessage(Encoding encoding)
-        : encoding(encoding) {}
-    BinaryMessage(const BinaryMessage&) = default;
-    BinaryMessage(BinaryMessage&&) = default;
+    BinaryMessage(Encoding encoding) : encoding(encoding) {}
+    BinaryMessage(const BinaryMessage&)            = default;
+    BinaryMessage(BinaryMessage&&)                 = default;
     BinaryMessage& operator=(const BinaryMessage&) = default;
-    BinaryMessage& operator=(BinaryMessage&&) = default;
+    BinaryMessage& operator=(BinaryMessage&&)      = default;
 
     /// Return true if the message is not empty
     operator bool() const;
 };
 
-
 /// Serialize Encoding
 std::ostream& operator<<(std::ostream&, const dballe::Encoding&);
 
-}
+} // namespace dballe
 
 #endif

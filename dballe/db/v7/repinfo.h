@@ -7,10 +7,10 @@
  * Repinfo table management used by the db module.
  */
 
-#include <dballe/sql/fwd.h>
 #include <dballe/core/fwd.h>
-#include <memory>
+#include <dballe/sql/fwd.h>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -48,7 +48,8 @@ struct Cache
     /// New report A table value used when updating the repinfo table
     unsigned new_tablea;
 
-    Cache(int id, const std::string& memo, const std::string& desc, int prio, const std::string& descriptor, int tablea);
+    Cache(int id, const std::string& memo, const std::string& desc, int prio,
+          const std::string& descriptor, int tablea);
     void make_new();
 
     void dump(FILE* out) const;
@@ -65,7 +66,7 @@ struct Memoidx
     bool operator<(const Memoidx& memo) const;
 };
 
-}
+} // namespace repinfo
 
 /// Fast cached access to the repinfo table
 struct Repinfo
@@ -75,7 +76,7 @@ struct Repinfo
     Repinfo(dballe::sql::Connection& conn);
     virtual ~Repinfo() {}
 
-    //static std::unique_ptr<Repinfo> create(Connection& conn);
+    // static std::unique_ptr<Repinfo> create(Connection& conn);
 
     /// Get the rep_memo for a given ID; throws if id is not valud
     // FIXME: use std::string?
@@ -88,8 +89,8 @@ struct Repinfo
     int get_priority(const std::string& report);
 
     /**
-     * Update the report type information in the database using the data from the
-     * given file.
+     * Update the report type information in the database using the data from
+     * the given file.
      *
      * @param deffile
      *   Pathname of the file to use for the update.  The NULL value is accepted
@@ -109,7 +110,8 @@ struct Repinfo
     std::map<std::string, int> get_priorities();
 
     /**
-     * Return a vector of IDs matching the priority constraints in the given record.
+     * Return a vector of IDs matching the priority constraints in the given
+     * record.
      */
     std::vector<int> ids_by_prio(const core::Query& rec);
 
@@ -154,7 +156,8 @@ protected:
     int cache_find_by_memo(const char* memo) const;
 
     /// Append an entry to the cache
-    void cache_append(unsigned id, const char* memo, const char* desc, int prio, const char* descriptor, int tablea);
+    void cache_append(unsigned id, const char* memo, const char* desc, int prio,
+                      const char* descriptor, int tablea);
 
     /// Rebuild the memo_idx cache
     void rebuild_memo_idx() const;
@@ -174,11 +177,12 @@ protected:
     /// Insert an entry using the new_* fields of \a entry
     virtual void insert_entry(const repinfo::Cache& entry) = 0;
 
-    /// Create an automatic entry for a missing memo, and insert it in the database
+    /// Create an automatic entry for a missing memo, and insert it in the
+    /// database
     virtual void insert_auto_entry(const char* memo) = 0;
 };
 
-}
-}
-}
+} // namespace v7
+} // namespace db
+} // namespace dballe
 #endif

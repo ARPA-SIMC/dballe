@@ -1,14 +1,14 @@
 #include "cmdline.h"
 #include "dballe/core/query.h"
 #include "dballe/msg/wr_codec.h"
-#include <wreport/notes.h>
-#include <popt.h>
-#include <cstring>
+#include <cctype>
 #include <cstdarg>
 #include <cstdlib>
-#include <cctype>
+#include <cstring>
 #include <ctime>
 #include <iostream>
+#include <popt.h>
+#include <wreport/notes.h>
 
 using namespace std;
 
@@ -17,16 +17,13 @@ namespace cmdline {
 
 static int is_tableend(struct poptOption* op)
 {
-    return op->longName == NULL && \
-           op->shortName == '\0' && \
-           op->argInfo == 0 && \
-           op->arg == 0 && \
-           op->val == 0 && \
-           op->descrip == NULL && \
+    return op->longName == NULL && op->shortName == '\0' && op->argInfo == 0 &&
+           op->arg == 0 && op->val == 0 && op->descrip == NULL &&
            op->argDescrip == NULL;
 }
 
-static void manpage_print_options(const char* title, struct poptOption* optable, FILE* out)
+static void manpage_print_options(const char* title, struct poptOption* optable,
+                                  FILE* out)
 {
     int i;
 
@@ -55,18 +52,23 @@ static void manpage_print_options(const char* title, struct poptOption* optable,
             }
             if (optable[i].longName != nullptr)
             {
-                fprintf(out, "%s \\-\\-%s", bol ? "" : ",", optable[i].longName);
+                fprintf(out, "%s \\-\\-%s", bol ? "" : ",",
+                        optable[i].longName);
                 bol = 0;
             }
-        } else {
+        }
+        else
+        {
             if (optable[i].shortName != '\0')
             {
-                fprintf(out, " \\-%c %s", optable[i].shortName, optable[i].argDescrip);
+                fprintf(out, " \\-%c %s", optable[i].shortName,
+                        optable[i].argDescrip);
                 bol = 0;
             }
             if (optable[i].longName != nullptr)
             {
-                fprintf(out, "%s \\-\\-%s=%s", bol ? "" : ",", optable[i].longName, optable[i].argDescrip);
+                fprintf(out, "%s \\-\\-%s=%s", bol ? "" : ",",
+                        optable[i].longName, optable[i].argDescrip);
                 bol = 0;
             }
         }
@@ -76,8 +78,9 @@ static void manpage_print_options(const char* title, struct poptOption* optable,
 
 void Subcommand::add_to_optable(std::vector<poptOption>& opts) const
 {
-    opts.push_back({ "help", '?', 0, 0, 1, "print an help message", 0 });
-    opts.push_back({ "verbose", 0, POPT_ARG_NONE, const_cast<int*>(&op_verbose), 0, "verbose output", 0 });
+    opts.push_back({"help", '?', 0, 0, 1, "print an help message", 0});
+    opts.push_back({"verbose", 0, POPT_ARG_NONE, const_cast<int*>(&op_verbose),
+                    0, "verbose output", 0});
 }
 
 void Subcommand::manpage_print_options(FILE* out)
@@ -87,13 +90,11 @@ void Subcommand::manpage_print_options(FILE* out)
     vector<poptOption> opts;
     add_to_optable(opts);
     opts.push_back(POPT_TABLEEND);
-    cmdline::manpage_print_options(
-            title.c_str(),
-            opts.data(),
-            out);
+    cmdline::manpage_print_options(title.c_str(), opts.data(), out);
 }
 
-poptContext Subcommand::make_popt_context(int argc, const char* argv[], vector<poptOption>& opts) const
+poptContext Subcommand::make_popt_context(int argc, const char* argv[],
+                                          vector<poptOption>& opts) const
 {
     add_to_optable(opts);
     opts.push_back(POPT_TABLEEND);
@@ -111,17 +112,13 @@ poptContext Subcommand::make_popt_context(int argc, const char* argv[], vector<p
 
 void Subcommand::init() {}
 
-
 Command::~Command()
 {
-    for (auto& a: ops)
+    for (auto& a : ops)
         delete a;
 }
 
-void Command::add_subcommand(Subcommand* action)
-{
-    ops.push_back(action);
-}
+void Command::add_subcommand(Subcommand* action) { ops.push_back(action); }
 
 void Command::add_subcommand(std::unique_ptr<Subcommand>&& action)
 {
@@ -130,8 +127,8 @@ void Command::add_subcommand(std::unique_ptr<Subcommand>&& action)
 
 Subcommand* Command::find_action(const std::string& name) const
 {
-    for (auto& a: ops)
-        for (const auto& n: a->names)
+    for (auto& a : ops)
+        for (const auto& n : a->names)
             if (name == n)
                 return a;
     return nullptr;
@@ -140,7 +137,7 @@ Subcommand* Command::find_action(const std::string& name) const
 void Command::usage(const std::string& selfpath, FILE* out) const
 {
     // Get the executable name
-    size_t pos = selfpath.rfind('/');
+    size_t pos       = selfpath.rfind('/');
     const char* self = selfpath.c_str();
     if (pos != string::npos)
         self += pos + 1;
@@ -153,10 +150,10 @@ void Command::usage(const std::string& selfpath, FILE* out) const
     fprintf(out, "\t%s help manpage\n", self);
     fprintf(out, "\t\tgenerate the manpage for %s\n", self);
 
-    for (auto& a: ops)
+    for (auto& a : ops)
     {
         bool first = true;
-        for (auto& name: a->names)
+        for (auto& name : a->names)
         {
             if (first)
             {
@@ -169,9 +166,11 @@ void Command::usage(const std::string& selfpath, FILE* out) const
         fprintf(out, "\n\t\t%s\n", a->desc.c_str());
     }
 
-    fprintf(out, "\nCalling `%s <command> --help' will give help on the specific command\n", self);
+    fprintf(out,
+            "\nCalling `%s <command> --help' will give help on the specific "
+            "command\n",
+            self);
 }
-
 
 #if 0
 void dba_cmdline_print_dba_error()
@@ -211,32 +210,37 @@ void dba_cmdline_error(poptContext optCon, const char* fmt, ...)
 
 Encoding string_to_encoding(const char* type)
 {
-    if (strlen(type) >= 1) {
-        switch (type[0]) {
-            case 'b':
-                return Encoding::BUFR;
-            case 'c':
-                return Encoding::CREX;
+    if (strlen(type) >= 1)
+    {
+        switch (type[0])
+        {
+            case 'b': return Encoding::BUFR;
+            case 'c': return Encoding::CREX;
         }
     }
-    try {
+    try
+    {
         return File::parse_encoding(type);
-    } catch(wreport::error_notfound& e) {
+    }
+    catch (wreport::error_notfound& e)
+    {
         error_cmdline::throwf("%s", e.what());
     }
 }
 
 void Command::manpage(FILE* out) const
 {
-    static const char* months[] = { "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec" };
-    const char* self = name.c_str();
+    static const char* months[] = {"jan", "feb", "mar", "apr", "may", "jun",
+                                   "jul", "aug", "sep", "oct", "nov", "dec"};
+    const char* self            = name.c_str();
     char* uself;
-    time_t curtime = time(NULL);
+    time_t curtime     = time(NULL);
     struct tm* loctime = localtime(&curtime);
     int i;
 
     /* Remove libtool cruft from program name if present */
-    if (strncmp(self, "lt-", 3) == 0) self += 3;
+    if (strncmp(self, "lt-", 3) == 0)
+        self += 3;
     uself = strdup(self);
     for (i = 0; uself[i] != '\0'; i++)
         uself[i] = toupper(uself[i]);
@@ -247,8 +251,8 @@ void Command::manpage(FILE* out) const
     .\" other parameters are allowed: see man(7), man(1)
     .TH APPNAME 1 "may 3, 1976"
     */
-    fprintf(out, ".TH %s 1 \"%s %2d, %4d\n",
-            uself, months[loctime->tm_mon], loctime->tm_mday, loctime->tm_year + 1900);
+    fprintf(out, ".TH %s 1 \"%s %2d, %4d\n", uself, months[loctime->tm_mon],
+            loctime->tm_mday, loctime->tm_year + 1900);
     /*
     .\" Some roff macros, for reference:
     .\" .nh        disable hyphenation
@@ -267,7 +271,8 @@ void Command::manpage(FILE* out) const
     */
     fprintf(out,
             ".SH NAME\n"
-            "%s \\- %s\n", self, desc.c_str());
+            "%s \\- %s\n",
+            self, desc.c_str());
     /*
     .SH SYNOPSIS
     .B debtags
@@ -282,7 +287,8 @@ void Command::manpage(FILE* out) const
             ".RI [ command ]\n"
             ".RI [ options ]\n"
             ".RI [ args ... ]\n"
-            ".br\n", self);
+            ".br\n",
+            self);
 
     /*
     .SH DESCRIPTION
@@ -297,13 +303,13 @@ void Command::manpage(FILE* out) const
         switch (longdesc[i])
         {
             case '\n': fprintf(out, "\n.P\n"); break;
-            case '-': fprintf(out, "\\-"); break;
-            default:
-                putc(longdesc[i], out);
-                break;
+            case '-':  fprintf(out, "\\-"); break;
+            default:   putc(longdesc[i], out); break;
         }
-    fprintf(out, ".\n.P\n"
-            "\\fB%s\\fP always requires a non-switch argument, that indicates what is the "
+    fprintf(out,
+            ".\n.P\n"
+            "\\fB%s\\fP always requires a non-switch argument, that indicates "
+            "what is the "
             "operation that should be performed:\n"
             ".TP\n"
             "\\fBhelp\\fP\n"
@@ -312,9 +318,10 @@ void Command::manpage(FILE* out) const
             ".TP\n"
             "\\fBhelp manpage\\fP\n"
             ".br\n"
-            "Print this manpage.\n", self);
+            "Print this manpage.\n",
+            self);
 
-    for (auto& op: ops)
+    for (auto& op : ops)
     {
         /*
         .TP
@@ -329,8 +336,7 @@ void Command::manpage(FILE* out) const
                 "\\fB%s\\fP\n"
                 ".br\n"
                 "%s.\n",
-                    op->usage.c_str(),
-                    op->desc.c_str());
+                op->usage.c_str(), op->desc.c_str());
         if (!op->longdesc.empty())
             fprintf(out, "%s.\n", op->longdesc.c_str());
     }
@@ -342,8 +348,10 @@ void Command::manpage(FILE* out) const
     */
     fprintf(out,
             ".SH OPTIONS\n"
-            "\\fB%s\\fP follows the usual GNU command line syntax, with long options "
-            "starting with two dashes (`-').\n", self);
+            "\\fB%s\\fP follows the usual GNU command line syntax, with long "
+            "options "
+            "starting with two dashes (`-').\n",
+            self);
 
     /*
      * First trip on all the popt structures to see the subgroups, and document
@@ -352,11 +360,11 @@ void Command::manpage(FILE* out) const
     {
         struct poptOption* seen[20];
         seen[0] = NULL;
-        for (Subcommand* op: ops)
+        for (Subcommand* op : ops)
         {
             vector<poptOption> optable;
             op->add_to_optable(optable);
-            for (auto& sw: optable)
+            for (auto& sw : optable)
                 if (sw.argInfo == POPT_ARG_INCLUDE_TABLE)
                 {
                     int is_seen = 0;
@@ -366,10 +374,11 @@ void Command::manpage(FILE* out) const
                             is_seen = 1;
                     if (!is_seen && j < 20)
                     {
-                        seen[j] = (struct poptOption*)sw.arg;
-                        seen[j+1] = NULL;
+                        seen[j]     = (struct poptOption*)sw.arg;
+                        seen[j + 1] = NULL;
 
-                        manpage_print_options(sw.descrip, (struct poptOption*)sw.arg, out);
+                        manpage_print_options(sw.descrip,
+                                              (struct poptOption*)sw.arg, out);
                     }
                 }
         }
@@ -378,7 +387,7 @@ void Command::manpage(FILE* out) const
      * Then document the rest, without
      * repeating the options in the subgroups.
      */
-    for (auto& op: ops)
+    for (auto& op : ops)
         op->manpage_print_options(out);
 
     /* .SH EXAMPLES */
@@ -402,10 +411,12 @@ void Command::manpage(FILE* out) const
         fputs(manpage_seealso_section.c_str(), out);
     }
 
-    fprintf(out,
-            ".SH AUTHOR\n"
-            "\\fB%s\\fP has been written by Enrico Zini <enrico@enricozini.com> "
-            "for ARPA Emilia Romagna, Servizio Idrometeorologico.\n", self);
+    fprintf(
+        out,
+        ".SH AUTHOR\n"
+        "\\fB%s\\fP has been written by Enrico Zini <enrico@enricozini.com> "
+        "for ARPA Emilia Romagna, Servizio Idrometeorologico.\n",
+        self);
 }
 
 int Command::main(int argc, const char* argv[])
@@ -416,27 +427,29 @@ int Command::main(int argc, const char* argv[])
     for (i = 1; i < argc; i++)
     {
         /* Check if the user asked for help */
-        if (strcmp(argv[i], "--help") == 0 ||
-            strcmp(argv[i], "help") == 0)
+        if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "help") == 0)
         {
-            if (i+1 < argc)
+            if (i + 1 < argc)
             {
-                if (strcmp(argv[i+1], "manpage") == 0)
+                if (strcmp(argv[i + 1], "manpage") == 0)
                     manpage(stdout);
                 else
                 {
-                    const Subcommand* action = find_action(argv[i+1]);
+                    const Subcommand* action = find_action(argv[i + 1]);
                     if (action == nullptr)
                     {
                         fputs("Error parsing commandline: ", stderr);
-                        fprintf(stderr, "cannot get help on non-existing command '%s'", argv[i+1]);
+                        fprintf(stderr,
+                                "cannot get help on non-existing command '%s'",
+                                argv[i + 1]);
                         fputc('\n', stderr);
                         fputc('\n', stderr);
                         usage(argv[0], stderr);
                         exit(1);
                     }
                     vector<poptOption> opts;
-                    poptContext optCon = action->make_popt_context(argc, argv, opts);
+                    poptContext optCon =
+                        action->make_popt_context(argc, argv, opts);
                     poptPrintHelp(optCon, stdout, 0);
                     poptFreeContext(optCon);
                 }
@@ -456,7 +469,9 @@ int Command::main(int argc, const char* argv[])
         {
             usage(argv[0], stderr);
             return 1;
-        } else {
+        }
+        else
+        {
             vector<poptOption> opts;
             poptContext optCon = action->make_popt_context(argc, argv, opts);
 
@@ -468,8 +483,11 @@ int Command::main(int argc, const char* argv[])
                 {
                     poptPrintHelp(optCon, stdout, 0);
                     return 0;
-                } else {
-                    dba_cmdline_error(optCon, "invalid flag passed in the commandline");
+                }
+                else
+                {
+                    dba_cmdline_error(optCon,
+                                      "invalid flag passed in the commandline");
                 }
             }
 
@@ -477,15 +495,20 @@ int Command::main(int argc, const char* argv[])
                 wreport::notes::set_target(cerr);
 
             int res = 0;
-            try {
+            try
+            {
                 action->init();
                 res = action->main(optCon);
-            } catch (error_cmdline& e) {
+            }
+            catch (error_cmdline& e)
+            {
                 fprintf(stderr, "Error parsing commandline: %s\n", e.what());
                 fputc('\n', stderr);
                 poptPrintHelp(optCon, stderr, 0);
                 res = 1;
-            } catch (std::exception& e) {
+            }
+            catch (std::exception& e)
+            {
                 fprintf(stderr, "%s\n", e.what());
                 res = 1;
             }
@@ -521,12 +544,13 @@ unsigned dba_cmdline_get_query(poptContext optCon, Query& query)
 
 void list_templates()
 {
-    const impl::msg::wr::TemplateRegistry& reg = impl::msg::wr::TemplateRegistry::get();
-    for (impl::msg::wr::TemplateRegistry::const_iterator i = reg.begin(); i != reg.end(); ++i)
-        fprintf(stdout, "%s - %s\n",
-                i->second.name.c_str(), i->second.description.c_str());
+    const impl::msg::wr::TemplateRegistry& reg =
+        impl::msg::wr::TemplateRegistry::get();
+    for (impl::msg::wr::TemplateRegistry::const_iterator i = reg.begin();
+         i != reg.end(); ++i)
+        fprintf(stdout, "%s - %s\n", i->second.name.c_str(),
+                i->second.description.c_str());
 }
-
 
 std::list<std::string> get_filenames(poptContext optCon)
 {
@@ -536,5 +560,5 @@ std::list<std::string> get_filenames(poptContext optCon)
     return res;
 }
 
-}
-}
+} // namespace cmdline
+} // namespace dballe

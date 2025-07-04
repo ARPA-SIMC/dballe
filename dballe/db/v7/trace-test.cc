@@ -13,8 +13,6 @@ class Tests : public TestCase
     void register_tests() override;
 } test("db_trace");
 
-void Tests::register_tests()
-{
-}
+void Tests::register_tests() {}
 
-}
+} // namespace

@@ -9,27 +9,40 @@ namespace core {
 
 void Query::setf(const char* key, unsigned len, const char* val)
 {
-    switch (key) { // mklookup
-        case "priority":    priomin = priomax = strtol(val, nullptr, 10);
-        case "priomax":     priomax = strtol(val, nullptr, 10);
-        case "priomin":     priomin = strtol(val, nullptr, 10);
-        case "rep_memo":    report = val;
-        case "report":      report = val;
-        case "ana_id":      ana_id = strtol(val, nullptr, 10);
-        case "mobile":      mobile = strtol(val, nullptr, 10);
-        case "ident":       ident = val;
-        case "lat":         { double dval = strtod(val, nullptr); latrange.set(dval, dval); }
-        case "lon":         { double dval = strtod(val, nullptr); lonrange.set(dval, dval); }
-        case "latmax":      latrange.imax = Coords::lat_to_int(strtod(val, nullptr));
-        case "latmin":      latrange.imin = Coords::lat_to_int(strtod(val, nullptr));
-        case "lonmax":      lonrange.imax = Coords::lon_to_int(strtod(val, nullptr));
-        case "lonmin":      lonrange.imin = Coords::lon_to_int(strtod(val, nullptr));
-        case "year":        dtrange.min.year   = dtrange.max.year = strtol(val, nullptr, 10);
-        case "month":       dtrange.min.month  = dtrange.max.month = strtol(val, nullptr, 10);
-        case "day":         dtrange.min.day    = dtrange.max.day = strtol(val, nullptr, 10);
-        case "hour":        dtrange.min.hour   = dtrange.max.hour = strtol(val, nullptr, 10);
-        case "min":         dtrange.min.minute = dtrange.max.minute = strtol(val, nullptr, 10);
-        case "sec":         dtrange.min.second = dtrange.max.second = strtol(val, nullptr, 10);
+    switch (key) // mklookup
+    {
+        case "priority": priomin = priomax = strtol(val, nullptr, 10);
+        case "priomax":  priomax = strtol(val, nullptr, 10);
+        case "priomin":  priomin = strtol(val, nullptr, 10);
+        case "rep_memo": report = val;
+        case "report":   report = val;
+        case "ana_id":   ana_id = strtol(val, nullptr, 10);
+        case "mobile":   mobile = strtol(val, nullptr, 10);
+        case "ident":    ident = val;
+        case "lat":      {
+            double dval = strtod(val, nullptr);
+            latrange.set(dval, dval);
+        }
+        case "lon": {
+            double dval = strtod(val, nullptr);
+            lonrange.set(dval, dval);
+        }
+        case "latmax": latrange.imax = Coords::lat_to_int(strtod(val, nullptr));
+        case "latmin": latrange.imin = Coords::lat_to_int(strtod(val, nullptr));
+        case "lonmax": lonrange.imax = Coords::lon_to_int(strtod(val, nullptr));
+        case "lonmin": lonrange.imin = Coords::lon_to_int(strtod(val, nullptr));
+        case "year":
+            dtrange.min.year = dtrange.max.year = strtol(val, nullptr, 10);
+        case "month":
+            dtrange.min.month = dtrange.max.month = strtol(val, nullptr, 10);
+        case "day":
+            dtrange.min.day = dtrange.max.day = strtol(val, nullptr, 10);
+        case "hour":
+            dtrange.min.hour = dtrange.max.hour = strtol(val, nullptr, 10);
+        case "min":
+            dtrange.min.minute = dtrange.max.minute = strtol(val, nullptr, 10);
+        case "sec":
+            dtrange.min.second = dtrange.max.second = strtol(val, nullptr, 10);
         case "yearmax":     dtrange.max.year = strtol(val, nullptr, 10);
         case "yearmin":     dtrange.min.year = strtol(val, nullptr, 10);
         case "monthmax":    dtrange.max.month = strtol(val, nullptr, 10);
@@ -58,13 +71,16 @@ void Query::setf(const char* key, unsigned len, const char* val)
         case "limit":       limit = strtol(val, nullptr, 10);
         case "block":       block = strtol(val, nullptr, 10);
         case "station":     station = strtol(val, nullptr, 10);
-        default: wreport::error_notfound::throwf("key %s is not valid for a query", key);
+        default:
+            wreport::error_notfound::throwf("key %s is not valid for a query",
+                                            key);
     }
 }
 
 void Query::unset(const char* key, unsigned len)
 {
-    switch (key) { // mklookup
+    switch (key) // mklookup
+    {
         case "priority":    priomin = priomax = MISSING_INT;
         case "priomax":     priomax = MISSING_INT;
         case "priomin":     priomin = MISSING_INT;
@@ -79,10 +95,10 @@ void Query::unset(const char* key, unsigned len)
         case "latmin":      latrange.imin = LatRange::IMIN;
         case "lonmax":      lonrange.imax = MISSING_INT;
         case "lonmin":      lonrange.imin = MISSING_INT;
-        case "year":        dtrange.min.year   = dtrange.max.year = 0xffff;
-        case "month":       dtrange.min.month  = dtrange.max.month = 0xff;
-        case "day":         dtrange.min.day    = dtrange.max.day = 0xff;
-        case "hour":        dtrange.min.hour   = dtrange.max.hour = 0xff;
+        case "year":        dtrange.min.year = dtrange.max.year = 0xffff;
+        case "month":       dtrange.min.month = dtrange.max.month = 0xff;
+        case "day":         dtrange.min.day = dtrange.max.day = 0xff;
+        case "hour":        dtrange.min.hour = dtrange.max.hour = 0xff;
         case "min":         dtrange.min.minute = dtrange.max.minute = 0xff;
         case "sec":         dtrange.min.second = dtrange.max.second = 0xff;
         case "yearmax":     dtrange.max.year = 0xffff;
@@ -113,9 +129,11 @@ void Query::unset(const char* key, unsigned len)
         case "limit":       limit = MISSING_INT;
         case "block":       block = MISSING_INT;
         case "station":     station = MISSING_INT;
-        default: wreport::error_notfound::throwf("key %s is not valid for a query", key);
+        default:
+            wreport::error_notfound::throwf("key %s is not valid for a query",
+                                            key);
     }
 }
 
-}
-}
+} // namespace core
+} // namespace dballe

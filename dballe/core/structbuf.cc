@@ -19,8 +19,8 @@
  * Author: Enrico Zini <enrico@enricozini.com>
  */
 #include "structbuf.h"
-#include <wreport/error.h>
 #include <cerrno>
+#include <wreport/error.h>
 
 using namespace std;
 using namespace wreport;
@@ -31,11 +31,13 @@ namespace structbuf {
 int make_anonymous_tmpfile()
 {
     const char* tmpdir = getenv("TMPDIR");
-    if (!tmpdir) tmpdir = "/tmp";
+    if (!tmpdir)
+        tmpdir = "/tmp";
     std::string tmpnam = tmpdir;
     tmpnam += "/dballe-XXXXXX";
 
-    // FIXME: to avoid a string copy, we are writing directly to the string buffer
+    // FIXME: to avoid a string copy, we are writing directly to the string
+    // buffer
     int fd = mkstemp(const_cast<char*>(tmpnam.c_str()));
     if (fd == -1)
         error_system::throwf("cannot create temporary file in %s", tmpdir);
@@ -44,7 +46,8 @@ int make_anonymous_tmpfile()
     {
         int orig_errno = errno;
         close(fd);
-        throw error_system("cannot remove newly created temporary file", orig_errno);
+        throw error_system("cannot remove newly created temporary file",
+                           orig_errno);
     }
 
     return fd;
@@ -59,5 +62,5 @@ void write_buffer(int fd, void* buf, size_t size)
         throw error_consistency("write to temporary file was interrupted");
 }
 
-}
-}
+} // namespace structbuf
+} // namespace dballe

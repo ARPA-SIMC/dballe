@@ -1,16 +1,16 @@
 #include "dballe/types.h"
-#include "dballe/values.h"
-#include "dballe/core/var.h"
-#include "dballe/core/query.h"
+#include "common.h"
+#include "cursor.h"
+#include "data.h"
 #include "dballe/core/data.h"
+#include "dballe/core/query.h"
+#include "dballe/core/var.h"
 #include "dballe/db/v7/cursor.h"
+#include "dballe/values.h"
+#include "types.h"
 #include "utils/methods.h"
 #include "utils/type.h"
 #include "utils/wreport.h"
-#include "common.h"
-#include "types.h"
-#include "cursor.h"
-#include "data.h"
 #include <datetime.h>
 
 using namespace std;
@@ -18,25 +18,48 @@ using namespace dballe;
 using namespace dballe::python;
 
 extern "C" {
-PyTypeObject* dpy_Level_Type = nullptr;
-PyTypeObject* dpy_Trange_Type = nullptr;
-PyTypeObject* dpy_Station_Type = nullptr;
+PyTypeObject* dpy_Level_Type     = nullptr;
+PyTypeObject* dpy_Trange_Type    = nullptr;
+PyTypeObject* dpy_Station_Type   = nullptr;
 PyTypeObject* dpy_DBStation_Type = nullptr;
 }
 
 namespace {
 
-template<typename T>
-PyObject* impl_richcompare(const T& a, const T& b, int op)
+template <typename T> PyObject* impl_richcompare(const T& a, const T& b, int op)
 {
     switch (op)
     {
-        case Py_LT: if (a <  b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
-        case Py_LE: if (a <= b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
-        case Py_EQ: if (a == b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
-        case Py_NE: if (a != b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
-        case Py_GT: if (a >  b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
-        case Py_GE: if (a >= b) Py_RETURN_TRUE; else Py_RETURN_FALSE;
+        case Py_LT:
+            if (a < b)
+                Py_RETURN_TRUE;
+            else
+                Py_RETURN_FALSE;
+        case Py_LE:
+            if (a <= b)
+                Py_RETURN_TRUE;
+            else
+                Py_RETURN_FALSE;
+        case Py_EQ:
+            if (a == b)
+                Py_RETURN_TRUE;
+            else
+                Py_RETURN_FALSE;
+        case Py_NE:
+            if (a != b)
+                Py_RETURN_TRUE;
+            else
+                Py_RETURN_FALSE;
+        case Py_GT:
+            if (a > b)
+                Py_RETURN_TRUE;
+            else
+                Py_RETURN_FALSE;
+        case Py_GE:
+            if (a >= b)
+                Py_RETURN_TRUE;
+            else
+                Py_RETURN_FALSE;
         default: Py_RETURN_NOTIMPLEMENTED;
     }
     // Py_RETURN_RICHCOMPARE(a, b, op);  From 3.7
@@ -47,68 +70,81 @@ namespace level {
 struct ltype1 : Getter<ltype1, dpy_Level>
 {
     constexpr static const char* name = "ltype1";
-    constexpr static const char* doc = "type of the level or of the first layer";
+    constexpr static const char* doc =
+        "type of the level or of the first layer";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             return dballe_int_to_python(self->val.ltype1);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct l1 : Getter<l1, dpy_Level>
 {
     constexpr static const char* name = "l1";
-    constexpr static const char* doc = "value of the level or of the first layer";
+    constexpr static const char* doc =
+        "value of the level or of the first layer";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             return dballe_int_to_python(self->val.l1);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct ltype2 : Getter<ltype2, dpy_Level>
 {
     constexpr static const char* name = "ltype2";
-    constexpr static const char* doc = "type of the second layer";
+    constexpr static const char* doc  = "type of the second layer";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             return dballe_int_to_python(self->val.ltype2);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct l2 : Getter<l2, dpy_Level>
 {
     constexpr static const char* name = "l2";
-    constexpr static const char* doc = "value of the second layer";
+    constexpr static const char* doc  = "value of the second layer";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             return dballe_int_to_python(self->val.l2);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct describe : MethNoargs<describe, dpy_Level>
 {
     constexpr static const char* name = "describe";
-    constexpr static const char* doc = "Return a string description for this level";
+    constexpr static const char* doc =
+        "Return a string description for this level";
     static PyObject* run(Impl* self)
     {
-        try {
+        try
+        {
             return to_python(self->val.describe());
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct Definition : public Type<Definition, dpy_Level>
 {
-    constexpr static const char* name = "Level";
+    constexpr static const char* name      = "Level";
     constexpr static const char* qual_name = "dballe.Level";
-    constexpr static const char* doc = R"(
+    constexpr static const char* doc       = R"(
 Level or layer.
 
 Constructor: Level(ltype1: int=None, l1: int=None, ltype2: int=None, l2: int=None)
@@ -119,31 +155,40 @@ Constructor: Level(ltype1: int=None, l1: int=None, ltype2: int=None, l2: int=Non
 
     static PyObject* _str(Impl* self)
     {
-        try {
+        try
+        {
             return to_python(self->val.to_string("None"));
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 
     static PyObject* _repr(Impl* self)
     {
-        try {
+        try
+        {
             std::string res = "dballe.Level(";
             res += self->val.to_string("None");
             res += ")";
             return to_python(res);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 
     static PyObject* _iter(Impl* self)
     {
-        try {
-            py_unique_ptr<PyTupleObject> res((PyTupleObject*)throw_ifnull(PyTuple_New(4)));
-            PyTuple_SET_ITEM(res.get(), 0, dballe_int_to_python(self->val.ltype1));
+        try
+        {
+            py_unique_ptr<PyTupleObject> res(
+                (PyTupleObject*)throw_ifnull(PyTuple_New(4)));
+            PyTuple_SET_ITEM(res.get(), 0,
+                             dballe_int_to_python(self->val.ltype1));
             PyTuple_SET_ITEM(res.get(), 1, dballe_int_to_python(self->val.l1));
-            PyTuple_SET_ITEM(res.get(), 2, dballe_int_to_python(self->val.ltype2));
+            PyTuple_SET_ITEM(res.get(), 2,
+                             dballe_int_to_python(self->val.ltype2));
             PyTuple_SET_ITEM(res.get(), 3, dballe_int_to_python(self->val.l2));
             return PyObject_GetIter((PyObject*)res.get());
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 
     static void _dealloc(Impl* self)
@@ -154,37 +199,44 @@ Constructor: Level(ltype1: int=None, l1: int=None, ltype2: int=None, l2: int=Non
 
     static int _init(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { "ltype1", "l1", "ltype2", "l2", nullptr };
-        PyObject* py_ltype1 = nullptr;
-        PyObject* py_l1 = nullptr;
-        PyObject* py_ltype2 = nullptr;
-        PyObject* py_l2 = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "|OOOO", const_cast<char**>(kwlist), &py_ltype1, &py_l1, &py_ltype2, &py_l2))
+        static const char* kwlist[] = {"ltype1", "l1", "ltype2", "l2", nullptr};
+        PyObject* py_ltype1         = nullptr;
+        PyObject* py_l1             = nullptr;
+        PyObject* py_ltype2         = nullptr;
+        PyObject* py_l2             = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "|OOOO",
+                                         const_cast<char**>(kwlist), &py_ltype1,
+                                         &py_l1, &py_ltype2, &py_l2))
             return -1;
 
-        try {
-            new (&(self->val)) Level(
-                dballe_int_from_python(py_ltype1),
-                dballe_int_from_python(py_l1),
-                dballe_int_from_python(py_ltype2),
-                dballe_int_from_python(py_l2)
-            );
-        } DBALLE_CATCH_RETURN_INT
+        try
+        {
+            new (&(self->val)) Level(dballe_int_from_python(py_ltype1),
+                                     dballe_int_from_python(py_l1),
+                                     dballe_int_from_python(py_ltype2),
+                                     dballe_int_from_python(py_l2));
+        }
+        DBALLE_CATCH_RETURN_INT
         return 0;
     }
 
-    static PyObject* _richcompare(dpy_Level *a, PyObject *b, int op)
+    static PyObject* _richcompare(dpy_Level* a, PyObject* b, int op)
     {
-        try {
+        try
+        {
             Level lev_b;
-            try {
+            try
+            {
                 lev_b = level_from_python(b);
-            } catch (PythonException&) {
+            }
+            catch (PythonException&)
+            {
                 PyErr_Clear();
                 Py_RETURN_NOTIMPLEMENTED;
             }
             return impl_richcompare(a->val, lev_b, op);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 
     static Py_hash_t _hash(dpy_Level* self)
@@ -195,64 +247,73 @@ Constructor: Level(ltype1: int=None, l1: int=None, ltype2: int=None, l2: int=Non
 
 Definition* definition = nullptr;
 
-}
+} // namespace level
 
 namespace trange {
 
 struct pind : Getter<pind, dpy_Trange>
 {
     constexpr static const char* name = "pind";
-    constexpr static const char* doc = "Time range type indicator";
+    constexpr static const char* doc  = "Time range type indicator";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             return dballe_int_to_python(self->val.pind);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct p1 : Getter<p1, dpy_Trange>
 {
     constexpr static const char* name = "p1";
-    constexpr static const char* doc = "Time range P1 indicator";
+    constexpr static const char* doc  = "Time range P1 indicator";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             return dballe_int_to_python(self->val.p1);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct p2 : Getter<p2, dpy_Trange>
 {
     constexpr static const char* name = "p2";
-    constexpr static const char* doc = "Time range P2 indicator";
+    constexpr static const char* doc  = "Time range P2 indicator";
 
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             return dballe_int_to_python(self->val.p2);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct describe : MethNoargs<describe, dpy_Trange>
 {
     constexpr static const char* name = "describe";
-    constexpr static const char* doc = "Return a string description for this time range";
+    constexpr static const char* doc =
+        "Return a string description for this time range";
     static PyObject* run(Impl* self)
     {
-        try {
+        try
+        {
             return to_python(self->val.describe());
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct Definition : public Type<Definition, dpy_Trange>
 {
-    constexpr static const char* name = "Trange";
+    constexpr static const char* name      = "Trange";
     constexpr static const char* qual_name = "dballe.Trange";
-    constexpr static const char* doc = R"(
+    constexpr static const char* doc       = R"(
 Time range.
 
 Constructor: Trange(pind: int=None, p1: int=None, p2: int=None)
@@ -263,30 +324,38 @@ Constructor: Trange(pind: int=None, p1: int=None, p2: int=None)
 
     static PyObject* _str(Impl* self)
     {
-        try {
+        try
+        {
             return to_python(self->val.to_string("None"));
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 
     static PyObject* _repr(Impl* self)
     {
-        try {
+        try
+        {
             std::string res = "dballe.Trange(";
             res += self->val.to_string("None");
             res += ")";
             return to_python(res);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 
     static PyObject* _iter(Impl* self)
     {
-        try {
-            py_unique_ptr<PyTupleObject> res((PyTupleObject*)throw_ifnull(PyTuple_New(3)));
-            PyTuple_SET_ITEM(res.get(), 0, dballe_int_to_python(self->val.pind));
+        try
+        {
+            py_unique_ptr<PyTupleObject> res(
+                (PyTupleObject*)throw_ifnull(PyTuple_New(3)));
+            PyTuple_SET_ITEM(res.get(), 0,
+                             dballe_int_to_python(self->val.pind));
             PyTuple_SET_ITEM(res.get(), 1, dballe_int_to_python(self->val.p1));
             PyTuple_SET_ITEM(res.get(), 2, dballe_int_to_python(self->val.p2));
             return PyObject_GetIter((PyObject*)res.get());
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 
     static void _dealloc(Impl* self)
@@ -297,35 +366,42 @@ Constructor: Trange(pind: int=None, p1: int=None, p2: int=None)
 
     static int _init(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { "pind", "p1", "p2", nullptr };
-        PyObject* py_pind = nullptr;
-        PyObject* py_p1 = nullptr;
-        PyObject* py_p2 = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "|OOO", const_cast<char**>(kwlist), &py_pind, &py_p1, &py_p2))
+        static const char* kwlist[] = {"pind", "p1", "p2", nullptr};
+        PyObject* py_pind           = nullptr;
+        PyObject* py_p1             = nullptr;
+        PyObject* py_p2             = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "|OOO",
+                                         const_cast<char**>(kwlist), &py_pind,
+                                         &py_p1, &py_p2))
             return -1;
 
-        try {
-            new (&(self->val)) Trange(
-                dballe_int_from_python(py_pind),
-                dballe_int_from_python(py_p1),
-                dballe_int_from_python(py_p2)
-            );
-        } DBALLE_CATCH_RETURN_INT
+        try
+        {
+            new (&(self->val)) Trange(dballe_int_from_python(py_pind),
+                                      dballe_int_from_python(py_p1),
+                                      dballe_int_from_python(py_p2));
+        }
+        DBALLE_CATCH_RETURN_INT
         return 0;
     }
 
-    static PyObject* _richcompare(dpy_Trange *a, PyObject *b, int op)
+    static PyObject* _richcompare(dpy_Trange* a, PyObject* b, int op)
     {
-        try {
+        try
+        {
             Trange tr_b;
-            try {
+            try
+            {
                 tr_b = trange_from_python(b);
-            } catch (PythonException&) {
+            }
+            catch (PythonException&)
+            {
                 PyErr_Clear();
                 Py_RETURN_NOTIMPLEMENTED;
             }
             return impl_richcompare(a->val, tr_b, op);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 
     static Py_hash_t _hash(dpy_Trange* self)
@@ -336,138 +412,153 @@ Constructor: Trange(pind: int=None, p1: int=None, p2: int=None)
 
 Definition* definition = nullptr;
 
-}
+} // namespace trange
 
 namespace station {
 
-template<typename Station>
-struct StationImplTraits {};
+template <typename Station> struct StationImplTraits
+{
+};
 
-template<>
-struct StationImplTraits<Station>
+template <> struct StationImplTraits<Station>
 {
     typedef dpy_Station Impl;
 };
 
-template<>
-struct StationImplTraits<DBStation>
+template <> struct StationImplTraits<DBStation>
 {
     typedef dpy_DBStation Impl;
 };
 
-template<typename Station>
-struct report : Getter<report<Station>, typename StationImplTraits<Station>::Impl>
+template <typename Station>
+struct report
+    : Getter<report<Station>, typename StationImplTraits<Station>::Impl>
 {
     typedef typename StationImplTraits<Station>::Impl Impl;
     constexpr static const char* name = "report";
-    constexpr static const char* doc = "report for this station";
+    constexpr static const char* doc  = "report for this station";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             if (self->val.report.empty())
                 Py_RETURN_NONE;
             else
                 return to_python(self->val.report);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct id : Getter<id, dpy_DBStation>
 {
     constexpr static const char* name = "id";
-    constexpr static const char* doc = "database ID for this station";
+    constexpr static const char* doc  = "database ID for this station";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             return dballe_int_to_python(self->val.id);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
-template<typename Station>
+template <typename Station>
 struct lat : Getter<lat<Station>, typename StationImplTraits<Station>::Impl>
 {
     typedef typename StationImplTraits<Station>::Impl Impl;
     constexpr static const char* name = "lat";
-    constexpr static const char* doc = "station latitude";
+    constexpr static const char* doc  = "station latitude";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             if (self->val.coords.lat == MISSING_INT)
                 Py_RETURN_NONE;
             else
                 return PyFloat_FromDouble(self->val.coords.dlat());
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
-template<typename Station>
+template <typename Station>
 struct lon : Getter<lon<Station>, typename StationImplTraits<Station>::Impl>
 {
     typedef typename StationImplTraits<Station>::Impl Impl;
     constexpr static const char* name = "lon";
-    constexpr static const char* doc = "station longitude";
+    constexpr static const char* doc  = "station longitude";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             if (self->val.coords.lon == MISSING_INT)
                 Py_RETURN_NONE;
             else
                 return PyFloat_FromDouble(self->val.coords.dlon());
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
-template<typename Station>
+template <typename Station>
 struct ilat : Getter<ilat<Station>, typename StationImplTraits<Station>::Impl>
 {
     typedef typename StationImplTraits<Station>::Impl Impl;
     constexpr static const char* name = "ilat";
-    constexpr static const char* doc = "station latitude (as integer)";
+    constexpr static const char* doc  = "station latitude (as integer)";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             if (self->val.coords.lat == MISSING_INT)
                 Py_RETURN_NONE;
             else
                 return PyLong_FromLong(self->val.coords.lat);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
-template<typename Station>
+template <typename Station>
 struct ilon : Getter<ilon<Station>, typename StationImplTraits<Station>::Impl>
 {
     typedef typename StationImplTraits<Station>::Impl Impl;
     constexpr static const char* name = "ilon";
-    constexpr static const char* doc = "station longitude (as integer)";
+    constexpr static const char* doc  = "station longitude (as integer)";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             if (self->val.coords.lon == MISSING_INT)
                 Py_RETURN_NONE;
             else
                 return PyLong_FromLong(self->val.coords.lon);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
-template<typename Station>
+template <typename Station>
 struct ident : Getter<ident<Station>, typename StationImplTraits<Station>::Impl>
 {
     typedef typename StationImplTraits<Station>::Impl Impl;
     constexpr static const char* name = "ident";
-    constexpr static const char* doc = "mobile station identifier";
+    constexpr static const char* doc  = "mobile station identifier";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             return to_python(self->val.ident);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
-template<typename Base, typename Station>
-struct BaseDefinition : public Type<Base, typename StationImplTraits<Station>::Impl>
+template <typename Base, typename Station>
+struct BaseDefinition
+    : public Type<Base, typename StationImplTraits<Station>::Impl>
 {
     typedef typename StationImplTraits<Station>::Impl Impl;
 
@@ -475,20 +566,24 @@ struct BaseDefinition : public Type<Base, typename StationImplTraits<Station>::I
 
     static PyObject* _str(Impl* self)
     {
-        try {
+        try
+        {
             return to_python(self->val.to_string("None"));
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 
     static PyObject* _repr(Impl* self)
     {
-        try {
+        try
+        {
             std::string res = Base::qual_name;
             res += "(";
             res += self->val.to_string("None");
             res += ")";
             return to_python(res);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 
     static void _dealloc(Impl* self)
@@ -499,24 +594,31 @@ struct BaseDefinition : public Type<Base, typename StationImplTraits<Station>::I
 
     static int _init(Impl* self, PyObject* args, PyObject* kw)
     {
-        try {
+        try
+        {
             new (&(self->val)) Station(Base::from_args(args, kw));
             return 0;
-        } DBALLE_CATCH_RETURN_INT
+        }
+        DBALLE_CATCH_RETURN_INT
     }
 
-    static PyObject* _richcompare(Impl *a, PyObject *b, int op)
+    static PyObject* _richcompare(Impl* a, PyObject* b, int op)
     {
-        try {
+        try
+        {
             Station st_b;
-            try {
+            try
+            {
                 st_b = from_python<Station>(b);
-            } catch (PythonException&) {
+            }
+            catch (PythonException&)
+            {
                 PyErr_Clear();
                 Py_RETURN_NOTIMPLEMENTED;
             }
             return impl_richcompare(a->val, st_b, op);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 
     static Py_hash_t _hash(Impl* self)
@@ -527,71 +629,80 @@ struct BaseDefinition : public Type<Base, typename StationImplTraits<Station>::I
 
 struct Definition : public BaseDefinition<Definition, Station>
 {
-    constexpr static const char* name = "Station";
+    constexpr static const char* name      = "Station";
     constexpr static const char* qual_name = "dballe.Station";
-    constexpr static const char* doc = R"(
+    constexpr static const char* doc       = R"(
 Station information.
 
 Constructor: Station(report: str, lat: float, lon: float, ident: str=None)
 )";
-    GetSetters<report<Station>, lat<Station>, lon<Station>, ilat<Station>, ilon<Station>, ident<Station>> getsetters;
+    GetSetters<report<Station>, lat<Station>, lon<Station>, ilat<Station>,
+               ilon<Station>, ident<Station>>
+        getsetters;
     static Station from_args(PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { "report", "lat", "lon", "ident", nullptr };
-        PyObject* py_report = nullptr;
-        PyObject* py_lat = nullptr;
-        PyObject* py_lon = nullptr;
-        PyObject* py_ident = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "OOO|O", const_cast<char**>(kwlist), &py_report, &py_lat, &py_lon, &py_ident))
+        static const char* kwlist[] = {"report", "lat", "lon", "ident",
+                                       nullptr};
+        PyObject* py_report         = nullptr;
+        PyObject* py_lat            = nullptr;
+        PyObject* py_lon            = nullptr;
+        PyObject* py_ident          = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "OOO|O",
+                                         const_cast<char**>(kwlist), &py_report,
+                                         &py_lat, &py_lon, &py_ident))
             throw PythonException();
 
         Station res;
         if (py_report != Py_None)
             res.report = from_python<std::string>(py_report);
         res.coords = coords_from_python(py_lat, py_lon);
-        res.ident = from_python<Ident>(py_ident);
+        res.ident  = from_python<Ident>(py_ident);
         return res;
     }
 };
 
 struct DBDefinition : public BaseDefinition<DBDefinition, DBStation>
 {
-    constexpr static const char* name = "DBStation";
+    constexpr static const char* name      = "DBStation";
     constexpr static const char* qual_name = "dballe.DBStation";
-    constexpr static const char* doc = R"(
+    constexpr static const char* doc       = R"(
 Station information with database ID.
 
 Constructor: Station(report: str, id: int, lat: float, lon: float, ident: str=None)
 )";
-    GetSetters<report<Station>, id, lat<Station>, lon<Station>, ilat<Station>, ilon<Station>, ident<Station>> getsetters;
+    GetSetters<report<Station>, id, lat<Station>, lon<Station>, ilat<Station>,
+               ilon<Station>, ident<Station>>
+        getsetters;
     static DBStation from_args(PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { "report", "id", "lat", "lon", "ident", nullptr };
-        PyObject* py_report = nullptr;
-        PyObject* py_id = nullptr;
-        PyObject* py_lat = nullptr;
-        PyObject* py_lon = nullptr;
-        PyObject* py_ident = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "OOOO|O", const_cast<char**>(kwlist), &py_report, &py_id, &py_lat, &py_lon, &py_ident))
+        static const char* kwlist[] = {"report", "id",    "lat",
+                                       "lon",    "ident", nullptr};
+        PyObject* py_report         = nullptr;
+        PyObject* py_id             = nullptr;
+        PyObject* py_lat            = nullptr;
+        PyObject* py_lon            = nullptr;
+        PyObject* py_ident          = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "OOOO|O",
+                                         const_cast<char**>(kwlist), &py_report,
+                                         &py_id, &py_lat, &py_lon, &py_ident))
             throw PythonException();
 
         DBStation res;
         if (py_report != Py_None)
             res.report = from_python<std::string>(py_report);
-        res.id = dballe_int_from_python(py_id);
+        res.id     = dballe_int_from_python(py_id);
         res.coords = coords_from_python(py_lat, py_lon);
-        res.ident = from_python<Ident>(py_ident);
+        res.ident  = from_python<Ident>(py_ident);
         return res;
     }
 };
 
-Definition* definition = nullptr;
+Definition* definition     = nullptr;
 DBDefinition* dbdefinition = nullptr;
 
-}
+} // namespace station
 
-}
-
+} // namespace
 
 namespace dballe {
 namespace python {
@@ -602,8 +713,7 @@ PyObject* datetime_to_python(const Datetime& dt)
         Py_RETURN_NONE;
 
     return throw_ifnull(PyDateTime_FromDateAndTime(
-            dt.year, dt.month,  dt.day,
-            dt.hour, dt.minute, dt.second, 0));
+        dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, 0));
 }
 
 static int get_attr_int(PyObject* o, const char* name)
@@ -619,41 +729,37 @@ Datetime datetime_from_python(PyObject* dt)
 
     if (PyDateTime_Check(dt))
     {
-        return Datetime(
-            PyDateTime_GET_YEAR((PyDateTime_DateTime*)dt),
-            PyDateTime_GET_MONTH((PyDateTime_DateTime*)dt),
-            PyDateTime_GET_DAY((PyDateTime_DateTime*)dt),
-            PyDateTime_DATE_GET_HOUR((PyDateTime_DateTime*)dt),
-            PyDateTime_DATE_GET_MINUTE((PyDateTime_DateTime*)dt),
-            PyDateTime_DATE_GET_SECOND((PyDateTime_DateTime*)dt));
+        return Datetime(PyDateTime_GET_YEAR((PyDateTime_DateTime*)dt),
+                        PyDateTime_GET_MONTH((PyDateTime_DateTime*)dt),
+                        PyDateTime_GET_DAY((PyDateTime_DateTime*)dt),
+                        PyDateTime_DATE_GET_HOUR((PyDateTime_DateTime*)dt),
+                        PyDateTime_DATE_GET_MINUTE((PyDateTime_DateTime*)dt),
+                        PyDateTime_DATE_GET_SECOND((PyDateTime_DateTime*)dt));
     }
 
     // Fall back to duck typing, to catch creative cases such as
     // cftime.datetime instances. See https://unidata.github.io/cftime/api.html
-    return Datetime(
-        get_attr_int(dt, "year"),
-        get_attr_int(dt, "month"),
-        get_attr_int(dt, "day"),
-        get_attr_int(dt, "hour"),
-        get_attr_int(dt, "minute"),
-        get_attr_int(dt, "second")
-    );
+    return Datetime(get_attr_int(dt, "year"), get_attr_int(dt, "month"),
+                    get_attr_int(dt, "day"), get_attr_int(dt, "hour"),
+                    get_attr_int(dt, "minute"), get_attr_int(dt, "second"));
 
-    // PyErr_SetString(PyExc_TypeError, "value must be an instance of datetime.datetime");
-    // throw PythonException();
+    // PyErr_SetString(PyExc_TypeError, "value must be an instance of
+    // datetime.datetime"); throw PythonException();
 }
 
 DatetimeRange datetimerange_from_python(PyObject* val)
 {
     if (PySequence_Size(val) != 2)
     {
-        PyErr_SetString(PyExc_TypeError, "Expected a 2-tuple of datetime() objects");
+        PyErr_SetString(PyExc_TypeError,
+                        "Expected a 2-tuple of datetime() objects");
         throw PythonException();
     }
     pyo_unique_ptr dtmin(throw_ifnull(PySequence_GetItem(val, 0)));
     pyo_unique_ptr dtmax(throw_ifnull(PySequence_GetItem(val, 1)));
 
-    return DatetimeRange(datetime_from_python(dtmin), datetime_from_python(dtmax));
+    return DatetimeRange(datetime_from_python(dtmin),
+                         datetime_from_python(dtmax));
 }
 
 PyObject* coords_to_python(const Coords& coords)
@@ -681,7 +787,8 @@ Coords coords_from_python(PyObject* lat, PyObject* lon)
     if (lat && lat != Py_None && lon && lon != Py_None)
         return Coords(from_python<double>(lat), from_python<double>(lon));
 
-    PyErr_SetString(PyExc_ValueError, "both latitude and longitude must be either None or set");
+    PyErr_SetString(PyExc_ValueError,
+                    "both latitude and longitude must be either None or set");
     throw PythonException();
 }
 
@@ -704,7 +811,8 @@ PyObject* level_to_python(const Level& lev)
     if (lev.is_missing())
         Py_RETURN_NONE;
 
-    py_unique_ptr<dpy_Level> res = throw_ifnull(PyObject_New(dpy_Level, dpy_Level_Type));
+    py_unique_ptr<dpy_Level> res =
+        throw_ifnull(PyObject_New(dpy_Level, dpy_Level_Type));
     new (&(res->val)) Level(lev);
     return (PyObject*)res.release();
 }
@@ -714,7 +822,8 @@ Level level_from_python(PyObject* o)
     if (o == NULL || o == Py_None)
         return Level();
 
-    if (Py_TYPE(o) == dpy_Level_Type || PyType_IsSubtype(Py_TYPE(o), dpy_Level_Type))
+    if (Py_TYPE(o) == dpy_Level_Type ||
+        PyType_IsSubtype(Py_TYPE(o), dpy_Level_Type))
         return ((dpy_Level*)o)->val;
 
     if (PyTuple_Check(o))
@@ -722,27 +831,33 @@ Level level_from_python(PyObject* o)
         unsigned size = PyTuple_Size(o);
         if (size > 4)
         {
-            PyErr_SetString(PyExc_TypeError, "level tuple must have at most 4 elements");
+            PyErr_SetString(PyExc_TypeError,
+                            "level tuple must have at most 4 elements");
             throw PythonException();
         }
 
         Level res;
-        if (size < 1) return res;
+        if (size < 1)
+            return res;
 
         res.ltype1 = dballe_int_from_python(PyTuple_GET_ITEM(o, 0));
-        if (size < 2) return res;
+        if (size < 2)
+            return res;
 
         res.l1 = dballe_int_from_python(PyTuple_GET_ITEM(o, 1));
-        if (size < 3) return res;
+        if (size < 3)
+            return res;
 
         res.ltype2 = dballe_int_from_python(PyTuple_GET_ITEM(o, 2));
-        if (size < 4) return res;
+        if (size < 4)
+            return res;
 
         res.l2 = dballe_int_from_python(PyTuple_GET_ITEM(o, 3));
         return res;
     }
 
-    PyErr_SetString(PyExc_TypeError, "level must be None, a tuple or a dballe.Level");
+    PyErr_SetString(PyExc_TypeError,
+                    "level must be None, a tuple or a dballe.Level");
     throw PythonException();
 }
 
@@ -751,7 +866,8 @@ PyObject* trange_to_python(const Trange& tr)
     if (tr.is_missing())
         Py_RETURN_NONE;
 
-    py_unique_ptr<dpy_Trange> res = throw_ifnull(PyObject_New(dpy_Trange, dpy_Trange_Type));
+    py_unique_ptr<dpy_Trange> res =
+        throw_ifnull(PyObject_New(dpy_Trange, dpy_Trange_Type));
     new (&(res->val)) Trange(tr);
     return (PyObject*)res.release();
 }
@@ -761,7 +877,8 @@ Trange trange_from_python(PyObject* o)
     if (o == NULL || o == Py_None)
         return Trange();
 
-    if (Py_TYPE(o) == dpy_Trange_Type || PyType_IsSubtype(Py_TYPE(o), dpy_Trange_Type))
+    if (Py_TYPE(o) == dpy_Trange_Type ||
+        PyType_IsSubtype(Py_TYPE(o), dpy_Trange_Type))
         return ((dpy_Trange*)o)->val;
 
     if (PyTuple_Check(o))
@@ -769,30 +886,36 @@ Trange trange_from_python(PyObject* o)
         unsigned size = PyTuple_Size(o);
         if (size > 3)
         {
-            PyErr_SetString(PyExc_TypeError, "time range tuple must have at most 3 elements");
+            PyErr_SetString(PyExc_TypeError,
+                            "time range tuple must have at most 3 elements");
             throw PythonException();
         }
 
         Trange res;
-        if (size < 1) return res;
+        if (size < 1)
+            return res;
 
         res.pind = dballe_int_from_python(PyTuple_GET_ITEM(o, 0));
-        if (size < 2) return res;
+        if (size < 2)
+            return res;
 
         res.p1 = dballe_int_from_python(PyTuple_GET_ITEM(o, 1));
-        if (size < 3) return res;
+        if (size < 3)
+            return res;
 
         res.p2 = dballe_int_from_python(PyTuple_GET_ITEM(o, 2));
         return res;
     }
 
-    PyErr_SetString(PyExc_TypeError, "time range must be None, a tuple or a Trange structseq");
+    PyErr_SetString(PyExc_TypeError,
+                    "time range must be None, a tuple or a Trange structseq");
     throw PythonException();
 }
 
 PyObject* station_to_python(const Station& st)
 {
-    py_unique_ptr<dpy_Station> res = throw_ifnull(PyObject_New(dpy_Station, dpy_Station_Type));
+    py_unique_ptr<dpy_Station> res =
+        throw_ifnull(PyObject_New(dpy_Station, dpy_Station_Type));
     new (&(res->val)) Station(st);
     return (PyObject*)res.release();
 }
@@ -807,7 +930,8 @@ Station station_from_python(PyObject* o)
         unsigned size = PyTuple_Size(o);
         if (size != 4)
         {
-            PyErr_SetString(PyExc_TypeError, "Station tuple must have exactly 4 elements");
+            PyErr_SetString(PyExc_TypeError,
+                            "Station tuple must have exactly 4 elements");
             throw PythonException();
         }
 
@@ -815,18 +939,21 @@ Station station_from_python(PyObject* o)
         PyObject* py_report = PyTuple_GET_ITEM(o, 0);
         if (py_report != Py_None)
             res.report = string_from_python(py_report);
-        res.coords = coords_from_python(PyTuple_GET_ITEM(o, 1), PyTuple_GET_ITEM(o, 2));
+        res.coords =
+            coords_from_python(PyTuple_GET_ITEM(o, 1), PyTuple_GET_ITEM(o, 2));
         res.ident = ident_from_python(PyTuple_GET_ITEM(o, 3));
         return res;
     }
 
-    PyErr_SetString(PyExc_TypeError, "station must be a 4-tuple or a Station object");
+    PyErr_SetString(PyExc_TypeError,
+                    "station must be a 4-tuple or a Station object");
     throw PythonException();
 }
 
 PyObject* dbstation_to_python(const DBStation& st)
 {
-    py_unique_ptr<dpy_DBStation> res = throw_ifnull(PyObject_New(dpy_DBStation, dpy_DBStation_Type));
+    py_unique_ptr<dpy_DBStation> res =
+        throw_ifnull(PyObject_New(dpy_DBStation, dpy_DBStation_Type));
     new (&(res->val)) DBStation(st);
     return (PyObject*)res.release();
 }
@@ -841,21 +968,24 @@ DBStation dbstation_from_python(PyObject* o)
         unsigned size = PyTuple_Size(o);
         if (size != 5)
         {
-            PyErr_SetString(PyExc_TypeError, "DBStation tuple must have exactly 4 elements");
+            PyErr_SetString(PyExc_TypeError,
+                            "DBStation tuple must have exactly 4 elements");
             throw PythonException();
         }
 
         DBStation res;
         PyObject* py_report = PyTuple_GET_ITEM(o, 0);
-        res.id = dballe_int_from_python(PyTuple_GET_ITEM(o, 1));
+        res.id              = dballe_int_from_python(PyTuple_GET_ITEM(o, 1));
         if (py_report != Py_None)
             res.report = string_from_python(py_report);
-        res.coords = coords_from_python(PyTuple_GET_ITEM(o, 2), PyTuple_GET_ITEM(o, 3));
+        res.coords =
+            coords_from_python(PyTuple_GET_ITEM(o, 2), PyTuple_GET_ITEM(o, 3));
         res.ident = ident_from_python(PyTuple_GET_ITEM(o, 4));
         return res;
     }
 
-    PyErr_SetString(PyExc_TypeError, "station must be a 5-tuple or a DBStation object");
+    PyErr_SetString(PyExc_TypeError,
+                    "station must be a 5-tuple or a DBStation object");
     throw PythonException();
 }
 
@@ -868,10 +998,12 @@ PyObject* varcode_to_python(wreport::Varcode code)
 
 wreport::Varcode varcode_from_python(PyObject* o)
 {
-    try {
+    try
+    {
         if (PyUnicode_Check(o))
             return resolve_varcode(throw_ifnull(PyUnicode_AsUTF8(o)));
-    } DBALLE_CATCH_RETURN_INT
+    }
+    DBALLE_CATCH_RETURN_INT
 
     PyErr_SetString(PyExc_TypeError, "Expected str");
     throw PythonException();
@@ -902,9 +1034,7 @@ std::unique_ptr<Query> query_from_python(PyObject* o)
     throw PythonException();
 }
 
-
-DataPtr::DataPtr(DataPtr&& o)
-    : data(o.data), owned(o.owned)
+DataPtr::DataPtr(DataPtr&& o) : data(o.data), owned(o.owned)
 {
     o.owned = false;
 }
@@ -920,7 +1050,7 @@ void DataPtr::create()
     if (data)
         throw std::runtime_error("DataPtr::create/reuse called twice");
 
-    data = new core::Data;
+    data  = new core::Data;
     owned = true;
 }
 
@@ -930,7 +1060,7 @@ void DataPtr::reuse(core::Data* data)
         throw std::runtime_error("DataPtr::create/reuse called twice");
 
     this->data = data;
-    owned = false;
+    owned      = false;
 }
 
 DataPtr::DataPtr(PyObject* from_python)
@@ -973,8 +1103,8 @@ DataPtr::DataPtr(PyObject* from_python)
     {
         create();
         dpy_CursorStationDataDB* cur = (dpy_CursorStationDataDB*)from_python;
-        data->station = cur->cur->get_station();
-        data->station.id = MISSING_INT;
+        data->station                = cur->cur->get_station();
+        data->station.id             = MISSING_INT;
         data->values.set(*cur->cur->row().value.get());
         return;
     }
@@ -983,16 +1113,18 @@ DataPtr::DataPtr(PyObject* from_python)
     {
         create();
         dpy_CursorDataDB* cur = (dpy_CursorDataDB*)from_python;
-        data->station = cur->cur->get_station();
-        data->station.id = MISSING_INT;
-        data->datetime = cur->cur->get_datetime();
-        data->level = cur->cur->get_level();
-        data->trange = cur->cur->get_trange();
+        data->station         = cur->cur->get_station();
+        data->station.id      = MISSING_INT;
+        data->datetime        = cur->cur->get_datetime();
+        data->level           = cur->cur->get_level();
+        data->trange          = cur->cur->get_trange();
         data->values.set(*cur->cur->row().value.get());
         return;
     }
 
-    PyErr_SetString(PyExc_TypeError, "Expected Data, dict, station data cursor, data cursor, or None");
+    PyErr_SetString(
+        PyExc_TypeError,
+        "Expected Data, dict, station data cursor, data cursor, or None");
     throw PythonException();
 }
 
@@ -1024,7 +1156,8 @@ std::string dballe_nullable_string_from_python(PyObject* o)
         return throw_ifnull(PyUnicode_AsUTF8(o));
     if (PyBytes_Check(o))
         return throw_ifnull(PyBytes_AsString(o));
-    PyErr_SetString(PyExc_TypeError, "report value must be an instance of str, bytes, or None");
+    PyErr_SetString(PyExc_TypeError,
+                    "report value must be an instance of str, bytes, or None");
     throw PythonException();
 }
 
@@ -1056,16 +1189,21 @@ int dballe_int_lat_from_python(PyObject* o)
     if (scaleb == nullptr)
     {
         PyErr_Clear();
-    } else {
+    }
+    else
+    {
         pyo_unique_ptr digits(throw_ifnull(PyLong_FromLong(5)));
-        pyo_unique_ptr scaled(throw_ifnull(PyObject_CallFunctionObjArgs(scaleb, digits.get(), nullptr)));
-        pyo_unique_ptr as_int(throw_ifnull(PyObject_CallMethod(scaled, "__int__", nullptr)));
+        pyo_unique_ptr scaled(throw_ifnull(
+            PyObject_CallFunctionObjArgs(scaleb, digits.get(), nullptr)));
+        pyo_unique_ptr as_int(
+            throw_ifnull(PyObject_CallMethod(scaled, "__int__", nullptr)));
         int res = PyLong_AsLong(as_int);
         if (res == -1 && PyErr_Occurred())
             throw PythonException();
         return res;
     }
-    PyErr_SetString(PyExc_TypeError, "latitude value must be an instance of int, float, str, Decimal, or None");
+    PyErr_SetString(PyExc_TypeError, "latitude value must be an instance of "
+                                     "int, float, str, Decimal, or None");
     throw PythonException();
 }
 
@@ -1097,16 +1235,21 @@ int dballe_int_lon_from_python(PyObject* o)
     if (scaleb == nullptr)
     {
         PyErr_Clear();
-    } else {
+    }
+    else
+    {
         pyo_unique_ptr digits(throw_ifnull(PyLong_FromLong(5)));
-        pyo_unique_ptr scaled(throw_ifnull(PyObject_CallFunctionObjArgs(scaleb, digits.get(), nullptr)));
-        pyo_unique_ptr as_int(throw_ifnull(PyObject_CallMethod(scaled, "__int__", nullptr)));
+        pyo_unique_ptr scaled(throw_ifnull(
+            PyObject_CallFunctionObjArgs(scaleb, digits.get(), nullptr)));
+        pyo_unique_ptr as_int(
+            throw_ifnull(PyObject_CallMethod(scaled, "__int__", nullptr)));
         int res = PyLong_AsLong(as_int);
         if (res == -1 && PyErr_Occurred())
             throw PythonException();
         return res;
     }
-    PyErr_SetString(PyExc_TypeError, "longitude value must be an instance of int, float, str, Decimal, or None");
+    PyErr_SetString(PyExc_TypeError, "longitude value must be an instance of "
+                                     "int, float, str, Decimal, or None");
     throw PythonException();
 }
 
@@ -1126,46 +1269,55 @@ struct Decimal
     PyObject* make_lat(const char* val)
     {
         pyo_unique_ptr arg(throw_ifnull(PyUnicode_FromString(val)));
-        return throw_ifnull(PyObject_CallFunctionObjArgs(ctor, arg.get(), nullptr));
+        return throw_ifnull(
+            PyObject_CallFunctionObjArgs(ctor, arg.get(), nullptr));
     }
     PyObject* make_lat(const std::string& val)
     {
-        pyo_unique_ptr arg(throw_ifnull(PyUnicode_FromStringAndSize(val.data(), val.size())));
-        return throw_ifnull(PyObject_CallFunctionObjArgs(ctor, arg.get(), nullptr));
+        pyo_unique_ptr arg(
+            throw_ifnull(PyUnicode_FromStringAndSize(val.data(), val.size())));
+        return throw_ifnull(
+            PyObject_CallFunctionObjArgs(ctor, arg.get(), nullptr));
     }
     PyObject* make_lat(int val)
     {
         double dval = Coords::lat_from_int(val);
         char buf[16];
         int size = snprintf(buf, 16, "%.5f", dval);
-        pyo_unique_ptr arg(throw_ifnull(PyUnicode_FromStringAndSize(buf, size)));
-        return throw_ifnull(PyObject_CallFunctionObjArgs(ctor, arg.get(), nullptr));
+        pyo_unique_ptr arg(
+            throw_ifnull(PyUnicode_FromStringAndSize(buf, size)));
+        return throw_ifnull(
+            PyObject_CallFunctionObjArgs(ctor, arg.get(), nullptr));
     }
 
     PyObject* make_lon(const char* val)
     {
         pyo_unique_ptr arg(throw_ifnull(PyUnicode_FromString(val)));
-        return throw_ifnull(PyObject_CallFunctionObjArgs(ctor, arg.get(), nullptr));
+        return throw_ifnull(
+            PyObject_CallFunctionObjArgs(ctor, arg.get(), nullptr));
     }
     PyObject* make_lon(const std::string& val)
     {
-        pyo_unique_ptr arg(throw_ifnull(PyUnicode_FromStringAndSize(val.data(), val.size())));
-        return throw_ifnull(PyObject_CallFunctionObjArgs(ctor, arg.get(), nullptr));
+        pyo_unique_ptr arg(
+            throw_ifnull(PyUnicode_FromStringAndSize(val.data(), val.size())));
+        return throw_ifnull(
+            PyObject_CallFunctionObjArgs(ctor, arg.get(), nullptr));
     }
     PyObject* make_lon(int val)
     {
         double dval = Coords::lon_from_int(val);
         char buf[16];
         int size = snprintf(buf, 16, "%.5f", dval);
-        pyo_unique_ptr arg(throw_ifnull(PyUnicode_FromStringAndSize(buf, size)));
-        return throw_ifnull(PyObject_CallFunctionObjArgs(ctor, arg.get(), nullptr));
+        pyo_unique_ptr arg(
+            throw_ifnull(PyUnicode_FromStringAndSize(buf, size)));
+        return throw_ifnull(
+            PyObject_CallFunctionObjArgs(ctor, arg.get(), nullptr));
     }
 };
 
 Decimal* decimal = nullptr;
 
-}
-
+} // namespace
 
 PyObject* dballe_int_lat_to_python(int lat)
 {
@@ -1216,9 +1368,12 @@ void set_lat_from_python(PyObject* o, Coords& coords)
     if (scaleb == nullptr)
     {
         PyErr_Clear();
-    } else {
+    }
+    else
+    {
         pyo_unique_ptr six(throw_ifnull(PyLong_FromLong(5)));
-        pyo_unique_ptr scaled(throw_ifnull(PyObject_CallFunctionObjArgs(scaleb, six.get(), nullptr)));
+        pyo_unique_ptr scaled(throw_ifnull(
+            PyObject_CallFunctionObjArgs(scaleb, six.get(), nullptr)));
         int res = PyLong_AsLong(scaled);
         if (res == -1 && PyErr_Occurred())
             throw PythonException();
@@ -1226,7 +1381,9 @@ void set_lat_from_python(PyObject* o, Coords& coords)
         return;
     }
 
-    PyErr_SetString(PyExc_TypeError, "latitude value must be an instance of int, float, or None");
+    PyErr_SetString(
+        PyExc_TypeError,
+        "latitude value must be an instance of int, float, or None");
     throw PythonException();
 }
 
@@ -1261,9 +1418,12 @@ void set_lon_from_python(PyObject* o, Coords& coords)
     if (scaleb == nullptr)
     {
         PyErr_Clear();
-    } else {
+    }
+    else
+    {
         pyo_unique_ptr six(throw_ifnull(PyLong_FromLong(5)));
-        pyo_unique_ptr scaled(throw_ifnull(PyObject_CallFunctionObjArgs(scaleb, six.get(), nullptr)));
+        pyo_unique_ptr scaled(throw_ifnull(
+            PyObject_CallFunctionObjArgs(scaleb, six.get(), nullptr)));
         int res = PyLong_AsLong(scaled);
         if (res == -1 && PyErr_Occurred())
             throw PythonException();
@@ -1271,7 +1431,9 @@ void set_lon_from_python(PyObject* o, Coords& coords)
         return;
     }
 
-    PyErr_SetString(PyExc_TypeError, "longitude value must be an instance of int, float, or None");
+    PyErr_SetString(
+        PyExc_TypeError,
+        "longitude value must be an instance of int, float, or None");
     throw PythonException();
 }
 
@@ -1290,7 +1452,8 @@ unsigned short datetime_int16_from_python(PyObject* o)
     {
         return strtoul(throw_ifnull(PyUnicode_AsUTF8(o)), nullptr, 10);
     }
-    PyErr_SetString(PyExc_TypeError, "datetime value must be an instance of int, str, or None");
+    PyErr_SetString(PyExc_TypeError,
+                    "datetime value must be an instance of int, str, or None");
     throw PythonException();
 }
 
@@ -1309,12 +1472,14 @@ unsigned char datetime_int8_from_python(PyObject* o)
     {
         return strtoul(throw_ifnull(PyUnicode_AsUTF8(o)), nullptr, 10);
     }
-    PyErr_SetString(PyExc_TypeError, "datetime value must be an instance of int, str, or None");
+    PyErr_SetString(PyExc_TypeError,
+                    "datetime value must be an instance of int, str, or None");
     throw PythonException();
 }
 
-template<typename Values>
-void set_values_from_python(Values& values, wreport::Varcode code, PyObject* val)
+template <typename Values>
+void set_values_from_python(Values& values, wreport::Varcode code,
+                            PyObject* val)
 {
     if (!val || val == Py_None)
         values.unset(code);
@@ -1324,23 +1489,34 @@ void set_values_from_python(Values& values, wreport::Varcode code, PyObject* val
         if (v == -1.0 && PyErr_Occurred())
             throw PythonException();
         values.set(code, v);
-    } else if (PyLong_Check(val)) {
+    }
+    else if (PyLong_Check(val))
+    {
         long v = PyLong_AsLong(val);
         if (v == -1 && PyErr_Occurred())
             throw PythonException();
         values.set(code, (int)v);
-    } else if (PyUnicode_Check(val) || PyBytes_Check(val)) {
+    }
+    else if (PyUnicode_Check(val) || PyBytes_Check(val))
+    {
         values.set(code, string_from_python(val));
-    } else if (wreport_api.var_check(val)) {
+    }
+    else if (wreport_api.var_check(val))
+    {
         values.set(dballe::var(code, wreport_api.var(val)));
-    } else {
-        PyErr_SetString(PyExc_TypeError, "Expected int, float, str, unicode, or None");
+    }
+    else
+    {
+        PyErr_SetString(PyExc_TypeError,
+                        "Expected int, float, str, unicode, or None");
         throw PythonException();
     }
 }
 
-template void set_values_from_python(Values& values, wreport::Varcode code, PyObject* val);
-template void set_values_from_python(DBValues& values, wreport::Varcode code, PyObject* val);
+template void set_values_from_python(Values& values, wreport::Varcode code,
+                                     PyObject* val);
+template void set_values_from_python(DBValues& values, wreport::Varcode code,
+                                     PyObject* val);
 
 PyObject* attrs_to_python(const wreport::Var& var)
 {
@@ -1374,8 +1550,9 @@ std::set<wreport::Varcode> varcodes_from_python(PyObject* o)
     std::set<wreport::Varcode> res;
 
     // Iterate, resolve, and insert into res
-    pyo_unique_ptr seq(throw_ifnull(PySequence_Fast(o, "varcodes must be a sequence of strings")));
-    auto size = PySequence_Fast_GET_SIZE(seq.get());
+    pyo_unique_ptr seq(throw_ifnull(
+        PySequence_Fast(o, "varcodes must be a sequence of strings")));
+    auto size       = PySequence_Fast_GET_SIZE(seq.get());
     PyObject** vals = PySequence_Fast_ITEMS(seq.get());
     for (unsigned i = 0; i < size; ++i)
         res.insert(varcode_from_python(vals[i]));
@@ -1391,7 +1568,8 @@ void set_dict(PyObject* dict, const char* key, const char* val)
 
 void set_dict(PyObject* dict, const char* key, const std::string& val)
 {
-    pyo_unique_ptr pyval(throw_ifnull(PyUnicode_FromStringAndSize(val.data(), val.size())));
+    pyo_unique_ptr pyval(
+        throw_ifnull(PyUnicode_FromStringAndSize(val.data(), val.size())));
     if (PyDict_SetItemString(dict, key, pyval))
         throw PythonException();
 }
@@ -1438,7 +1616,7 @@ void register_types(PyObject* m)
         PyDateTime_IMPORT;
 
     level::definition = new level::Definition;
-    level::definition->define(dpy_Level_Type , m);
+    level::definition->define(dpy_Level_Type, m);
 
     trange::definition = new trange::Definition;
     trange::definition->define(dpy_Trange_Type, m);
@@ -1450,5 +1628,5 @@ void register_types(PyObject* m)
     station::dbdefinition->define(dpy_DBStation_Type, m);
 }
 
-}
-}
+} // namespace python
+} // namespace dballe

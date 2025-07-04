@@ -2,8 +2,8 @@
 #define DBALLE_CORE_VALUES_H
 
 #include <dballe/fwd.h>
-#include <wreport/var.h>
 #include <vector>
+#include <wreport/var.h>
 
 namespace dballe {
 namespace core {
@@ -35,11 +35,12 @@ struct Decoder
     /**
      * Decode the attributes of var from a buffer
      */
-    static void decode_attrs(const std::vector<uint8_t>& buf, wreport::Var& var);
+    static void decode_attrs(const std::vector<uint8_t>& buf,
+                             wreport::Var& var);
 };
 
-}
-}
-}
+} // namespace value
+} // namespace core
+} // namespace dballe
 
 #endif

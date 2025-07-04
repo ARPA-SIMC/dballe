@@ -3,9 +3,9 @@
 
 #include <dballe/db/v7/repinfo.h>
 #include <dballe/sql/fwd.h>
-#include <vector>
-#include <string>
 #include <map>
+#include <string>
+#include <vector>
 
 namespace dballe {
 namespace db {
@@ -24,7 +24,7 @@ struct MySQLRepinfoV7 : public v7::Repinfo
     dballe::sql::MySQLConnection& conn;
 
     MySQLRepinfoV7(dballe::sql::MySQLConnection& conn);
-    MySQLRepinfoV7(const MySQLRepinfoV7&) = delete;
+    MySQLRepinfoV7(const MySQLRepinfoV7&)  = delete;
     MySQLRepinfoV7(const MySQLRepinfoV7&&) = delete;
     virtual ~MySQLRepinfoV7();
     MySQLRepinfoV7& operator=(const MySQLRepinfoV7&) = delete;
@@ -41,8 +41,8 @@ protected:
     void insert_auto_entry(const char* memo) override;
 };
 
-}
-}
-}
-}
+} // namespace mysql
+} // namespace v7
+} // namespace db
+} // namespace dballe
 #endif

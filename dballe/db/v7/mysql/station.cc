@@ -1,12 +1,12 @@
 #include "station.h"
-#include "dballe/db/v7/transaction.h"
-#include "dballe/db/v7/trace.h"
+#include "dballe/core/var.h"
 #include "dballe/db/v7/db.h"
-#include "dballe/db/v7/repinfo.h"
 #include "dballe/db/v7/qbuilder.h"
+#include "dballe/db/v7/repinfo.h"
+#include "dballe/db/v7/trace.h"
+#include "dballe/db/v7/transaction.h"
 #include "dballe/sql/mysql.h"
 #include "dballe/sql/querybuf.h"
-#include "dballe/core/var.h"
 #include "dballe/values.h"
 #include <wreport/var.h>
 
@@ -27,18 +27,18 @@ MySQLStation::MySQLStation(v7::Transaction& tr, MySQLConnection& conn)
 {
 }
 
-MySQLStation::~MySQLStation()
-{
-}
+MySQLStation::~MySQLStation() {}
 
 DBStation MySQLStation::lookup(Tracer<>& trc, int id_station)
 {
     Querybuf qb;
-    qb.appendf("SELECT rep, lat, lon, ident FROM station WHERE id=%d", id_station);
+    qb.appendf("SELECT rep, lat, lon, ident FROM station WHERE id=%d",
+               id_station);
     Tracer<> trc_sel(trc ? trc->trace_select(qb) : nullptr);
 
     auto res = conn.exec_store(qb);
-    if (trc_sel) trc_sel->add_row(res.rowcount());
+    if (trc_sel)
+        trc_sel->add_row(res.rowcount());
     switch (res.rowcount())
     {
         case 0: {
@@ -49,8 +49,8 @@ DBStation MySQLStation::lookup(Tracer<>& trc, int id_station)
         case 1: {
             auto row = res.fetch();
             DBStation station;
-            station.id = id_station;
-            station.report = tr.repinfo().get_rep_memo(row.as_int(0));
+            station.id         = id_station;
+            station.report     = tr.repinfo().get_rep_memo(row.as_int(0));
             station.coords.lat = row.as_int(1);
             station.coords.lon = row.as_int(2);
             if (row.isnull(3))
@@ -60,7 +60,9 @@ DBStation MySQLStation::lookup(Tracer<>& trc, int id_station)
             return station;
         }
         default:
-            error_consistency::throwf("select station data query returned %u results", res.rowcount());
+            error_consistency::throwf(
+                "select station data query returned %u results",
+                res.rowcount());
     }
 }
 
@@ -72,23 +74,27 @@ int MySQLStation::maybe_get_id(Tracer<>& trc, const dballe::DBStation& st)
     if (st.ident.get())
     {
         string escaped_ident = conn.escape(st.ident.get());
-        qb.appendf("SELECT id FROM station WHERE rep=%d AND lat=%d AND lon=%d AND ident='%s'",
-                rep, st.coords.lat, st.coords.lon, escaped_ident.c_str());
-    } else {
-        qb.appendf("SELECT id FROM station WHERE rep=%d AND lat=%d AND lon=%d AND ident IS NULL",
-                rep, st.coords.lat, st.coords.lon);
+        qb.appendf("SELECT id FROM station WHERE rep=%d AND lat=%d AND lon=%d "
+                   "AND ident='%s'",
+                   rep, st.coords.lat, st.coords.lon, escaped_ident.c_str());
+    }
+    else
+    {
+        qb.appendf("SELECT id FROM station WHERE rep=%d AND lat=%d AND lon=%d "
+                   "AND ident IS NULL",
+                   rep, st.coords.lat, st.coords.lon);
     }
     Tracer<> trc_sel(trc ? trc->trace_select(qb) : nullptr);
     auto res = conn.exec_store(qb);
-    if (trc_sel) trc_sel->add_row(res.rowcount());
+    if (trc_sel)
+        trc_sel->add_row(res.rowcount());
     switch (res.rowcount())
     {
-        case 0:
-            return MISSING_INT;
-        case 1:
-            return res.fetch().as_int(0);
+        case 0: return MISSING_INT;
+        case 1: return res.fetch().as_int(0);
         default:
-            error_consistency::throwf("select station ID query returned %u results", res.rowcount());
+            error_consistency::throwf(
+                "select station ID query returned %u results", res.rowcount());
     }
 }
 
@@ -102,11 +108,16 @@ int MySQLStation::insert_new(Tracer<>& trc, const dballe::DBStation& desc)
         string escaped_ident = conn.escape(desc.ident.get());
         qb.appendf(R"(
             INSERT INTO station (rep, lat, lon, ident) VALUES (%d, %d, %d, '%s')
-        )", rep, desc.coords.lat, desc.coords.lon, escaped_ident.c_str());
-    } else {
+        )",
+                   rep, desc.coords.lat, desc.coords.lon,
+                   escaped_ident.c_str());
+    }
+    else
+    {
         qb.appendf(R"(
             INSERT INTO station (rep, lat, lon, ident) VALUES (%d, %d, %d, NULL)
-        )", rep, desc.coords.lat, desc.coords.lon);
+        )",
+                   rep, desc.coords.lat, desc.coords.lon);
     }
     Tracer<> trc_ins(trc ? trc->trace_insert(qb, 1) : nullptr);
     conn.exec_no_data(qb);
@@ -147,7 +158,9 @@ int MySQLStation::insert_new(Tracer<>& trc, const dballe::DBStation& desc)
     return conn.get_last_insert_id();
 #endif
 
-void MySQLStation::get_station_vars(Tracer<>& trc, int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest)
+void MySQLStation::get_station_vars(
+    Tracer<>& trc, int id_station,
+    std::function<void(std::unique_ptr<wreport::Var>)> dest)
 {
     // Perform the query
     Querybuf qb;
@@ -156,47 +169,57 @@ void MySQLStation::get_station_vars(Tracer<>& trc, int id_station, std::function
           FROM station_data d
          WHERE d.id_station=%d
          ORDER BY d.code
-    )", id_station);
+    )",
+               id_station);
     TRACE("get_station_vars Performing query: %s\n", qb.c_str());
 
     Tracer<> trc_sel(trc ? trc->trace_select(qb) : nullptr);
     auto res = conn.exec_store(qb);
     while (auto row = res.fetch())
     {
-        if (trc_sel) trc_sel->add_row();
+        if (trc_sel)
+            trc_sel->add_row();
         Varcode code = row.as_int(0);
-        TRACE("get_station_vars Got %d%02d%03d %s\n", WR_VAR_FXY(code), row.as_cstring(1));
+        TRACE("get_station_vars Got %d%02d%03d %s\n", WR_VAR_FXY(code),
+              row.as_cstring(1));
 
         unique_ptr<Var> var = newvar(code, row.as_cstring(1));
         if (!row.isnull(2))
         {
             TRACE("get_station_vars add attributes\n");
-            DBValues::decode(row.as_blob(2), [&](unique_ptr<wreport::Var> a) { var->seta(move(a)); });
+            DBValues::decode(row.as_blob(2), [&](unique_ptr<wreport::Var> a) {
+                var->seta(move(a));
+            });
         }
 
         dest(move(var));
     }
 }
 
-void MySQLStation::add_station_vars(Tracer<>& trc, int id_station, DBValues& values)
+void MySQLStation::add_station_vars(Tracer<>& trc, int id_station,
+                                    DBValues& values)
 {
     Querybuf qb;
     qb.appendf(R"(
         SELECT d.code, d.value
           FROM station_data d
          WHERE d.id_station=%d
-    )", id_station);
+    )",
+               id_station);
 
     Tracer<> trc_sel(trc ? trc->trace_select(qb) : nullptr);
     auto res = conn.exec_store(qb);
     while (auto row = res.fetch())
     {
-        if (trc_sel) trc_sel->add_row();
+        if (trc_sel)
+            trc_sel->add_row();
         values.set(newvar((wreport::Varcode)row.as_int(0), row.as_cstring(1)));
     }
 }
 
-void MySQLStation::run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::DBStation&)> dest)
+void MySQLStation::run_station_query(
+    Tracer<>& trc, const v7::StationQueryBuilder& qb,
+    std::function<void(const dballe::DBStation&)> dest)
 {
     if (qb.bind_in_ident)
         throw error_unimplemented("binding in MySQL driver is not implemented");
@@ -204,9 +227,10 @@ void MySQLStation::run_station_query(Tracer<>& trc, const v7::StationQueryBuilde
 
     dballe::DBStation station;
     conn.exec_use(qb.sql_query, [&](const sql::mysql::Row& row) {
-        if (trc_sel) trc_sel->add_row();
-        station.id = row.as_int(0);
-        station.report = tr.repinfo().get_rep_memo(row.as_int(1));
+        if (trc_sel)
+            trc_sel->add_row();
+        station.id         = row.as_int(0);
+        station.report     = tr.repinfo().get_rep_memo(row.as_int(1));
         station.coords.lat = row.as_int(2);
         station.coords.lon = row.as_int(3);
 
@@ -219,17 +243,19 @@ void MySQLStation::run_station_query(Tracer<>& trc, const v7::StationQueryBuilde
     });
 }
 
-void MySQLStation::_dump(std::function<void(int, int, const Coords& coords, const char* ident)> out)
+void MySQLStation::_dump(
+    std::function<void(int, int, const Coords& coords, const char* ident)> out)
 {
     auto res = conn.exec_store("SELECT id, rep, lat, lon, ident FROM station");
     while (auto row = res.fetch())
     {
         const char* ident = row.isnull(4) ? nullptr : row.as_cstring(4);
-        out(row.as_int(0), row.as_int(1), Coords(row.as_int(2), row.as_int(3)), ident);
+        out(row.as_int(0), row.as_int(1), Coords(row.as_int(2), row.as_int(3)),
+            ident);
     }
 }
 
-}
-}
-}
-}
+} // namespace mysql
+} // namespace v7
+} // namespace db
+} // namespace dballe

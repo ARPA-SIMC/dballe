@@ -1,15 +1,15 @@
 #include "msgapi.h"
-#include <wreport/var.h>
+#include "dballe/core/var.h"
+#include "dballe/exporter.h"
 #include "dballe/file.h"
 #include "dballe/importer.h"
-#include "dballe/exporter.h"
 #include "dballe/message.h"
-#include "dballe/msg/msg.h"
-#include "dballe/msg/cursor.h"
 #include "dballe/msg/context.h"
-#include "dballe/core/var.h"
-#include <cstring>
+#include "dballe/msg/cursor.h"
+#include "dballe/msg/msg.h"
 #include <cassert>
+#include <cstring>
+#include <wreport/var.h>
 
 using namespace wreport;
 using namespace std;
@@ -23,94 +23,110 @@ struct QuantesonoOperation : public CursorOperation<impl::msg::CursorStation>
 {
     const MsgAPI& api;
 
-    QuantesonoOperation(const MsgAPI& api)
-        : api(api)
-    {
-    }
+    QuantesonoOperation(const MsgAPI& api) : api(api) {}
 
     int run()
     {
         const impl::Message* curmsg = api.curmsg();
         if (!curmsg)
-            throw error_consistency("query_stations called without a current message");
-        cursor = impl::msg::CursorStation::downcast(curmsg->query_stations(api.input_query));
+            throw error_consistency(
+                "query_stations called without a current message");
+        cursor = impl::msg::CursorStation::downcast(
+            curmsg->query_stations(api.input_query));
         return cursor->remaining();
     }
 
-    bool next_station() override
-    {
-        return cursor->next();
-    }
+    bool next_station() override { return cursor->next(); }
 
-    void query_attributes(Attributes& dest) override { throw error_consistency("query_attributes cannot be called after query_stations/next_station"); }
-    void insert_attributes(Values& qcinput) override { throw error_consistency("insert_attributes cannot be called after query_stations/next_station"); }
-    void remove_attributes() override { throw error_consistency("remove_attributes cannot be called after query_stations/next_station"); }
+    void query_attributes(Attributes& dest) override
+    {
+        throw error_consistency("query_attributes cannot be called after "
+                                "query_stations/next_station");
+    }
+    void insert_attributes(Values& qcinput) override
+    {
+        throw error_consistency("insert_attributes cannot be called after "
+                                "query_stations/next_station");
+    }
+    void remove_attributes() override
+    {
+        throw error_consistency("remove_attributes cannot be called after "
+                                "query_stations/next_station");
+    }
 };
 
-template<typename Cursor>
-struct CursorTraits {};
-
-template<>
-struct CursorTraits<impl::msg::CursorStationData>
+template <typename Cursor> struct CursorTraits
 {
-    static inline std::shared_ptr<impl::msg::CursorStationData> query(const dballe::impl::Message& msg, const core::Query& query)
+};
+
+template <> struct CursorTraits<impl::msg::CursorStationData>
+{
+    static inline std::shared_ptr<impl::msg::CursorStationData>
+    query(const dballe::impl::Message& msg, const core::Query& query)
     {
-        return std::dynamic_pointer_cast<impl::msg::CursorStationData>(msg.query_station_data(query));
+        return std::dynamic_pointer_cast<impl::msg::CursorStationData>(
+            msg.query_station_data(query));
     }
     /*
-    static inline void attr_insert(db::Transaction& tr, int id, const Values& values)
+    static inline void attr_insert(db::Transaction& tr, int id, const Values&
+    values)
     {
         tr.attr_insert_station(id, values);
     }
     */
 };
 
-template<>
-struct CursorTraits<impl::msg::CursorData>
+template <> struct CursorTraits<impl::msg::CursorData>
 {
-    static inline std::shared_ptr<impl::msg::CursorData> query(const dballe::impl::Message& msg, const core::Query& query)
+    static inline std::shared_ptr<impl::msg::CursorData>
+    query(const dballe::impl::Message& msg, const core::Query& query)
     {
-        return std::dynamic_pointer_cast<impl::msg::CursorData>(msg.query_data(query));
+        return std::dynamic_pointer_cast<impl::msg::CursorData>(
+            msg.query_data(query));
     }
     /*
-    static inline void attr_insert(db::Transaction& tr, int id, const Values& values)
+    static inline void attr_insert(db::Transaction& tr, int id, const Values&
+    values)
     {
         tr.attr_insert_data(id, values);
     }
     */
 };
 
-template<typename Cursor>
+template <typename Cursor>
 struct VoglioquestoOperation : public CursorOperation<Cursor>
 {
     MsgAPI& api;
     bool valid_cached_attrs = false;
-    bool next_data_ended = false;
+    bool next_data_ended    = false;
 
-    VoglioquestoOperation(MsgAPI& api)
-        : api(api)
-    {
-    }
+    VoglioquestoOperation(MsgAPI& api) : api(api) {}
 
     int run()
     {
         impl::Message* msg = api.curmsg();
-        if (!msg) return API::missing_int;
+        if (!msg)
+            return API::missing_int;
 
-        // this->cursor.reset(CursorTraits<Cursor>::query(*msg, api.input_query).release());
-        this->cursor = Cursor::downcast(msg->query_station_and_data(api.input_query));
+        // this->cursor.reset(CursorTraits<Cursor>::query(*msg,
+        // api.input_query).release());
+        this->cursor =
+            Cursor::downcast(msg->query_station_and_data(api.input_query));
         return this->cursor->remaining();
     }
 
     wreport::Varcode next_data() override
     {
-        if (next_data_ended) return 0;
+        if (next_data_ended)
+            return 0;
 
         if (this->cursor->next())
         {
             valid_cached_attrs = true;
             return this->cursor->get_varcode();
-        } else {
+        }
+        else
+        {
             next_data_ended = true;
             return 0;
         }
@@ -118,7 +134,9 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
 
     void query_attributes(Attributes& dest) override
     {
-        if (next_data_ended) throw error_consistency("query_attributes called after next_data returned end of data");
+        if (next_data_ended)
+            throw error_consistency(
+                "query_attributes called after next_data returned end of data");
 
         wreport::Var var = this->cursor->get_var();
         api.qcoutput.values.clear();
@@ -130,12 +148,14 @@ struct VoglioquestoOperation : public CursorOperation<Cursor>
 
     void insert_attributes(Values& qcinput) override
     {
-        throw error_consistency("insert_attributes has been called without a previous insert_data");
+        throw error_consistency(
+            "insert_attributes has been called without a previous insert_data");
     }
 
     void remove_attributes() override
     {
-        throw error_consistency("remove_attributes does not make sense when writing messages");
+        throw error_consistency(
+            "remove_attributes does not make sense when writing messages");
     }
 };
 
@@ -151,17 +171,17 @@ struct PrendiloOperation : public Operation
     /// Last variables written with insert_data
     Values vars;
 
-    PrendiloOperation(MsgAPI& api)
-        : api(api)
-    {
-    }
+    PrendiloOperation(MsgAPI& api) : api(api) {}
     ~PrendiloOperation()
     {
         if (!vars.empty() && api.wmsg)
             flushVars();
     }
 
-    void set_varcode(wreport::Varcode varcode) override { this->varcode = varcode; }
+    void set_varcode(wreport::Varcode varcode) override
+    {
+        this->varcode = varcode;
+    }
 
     void flushVars()
     {
@@ -173,17 +193,21 @@ struct PrendiloOperation : public Operation
 
     void run()
     {
-        if (!api.msgs) api.msgs = new std::vector<std::shared_ptr<dballe::Message>>;
-        if (!api.wmsg) api.wmsg = std::make_shared<impl::Message>();
+        if (!api.msgs)
+            api.msgs = new std::vector<std::shared_ptr<dballe::Message>>;
+        if (!api.wmsg)
+            api.wmsg = std::make_shared<impl::Message>();
 
         // Store record metainfo
         if (!api.input_data.station.report.empty())
         {
             api.wmsg->set_rep_memo(api.input_data.station.report.c_str());
-            api.wmsg->type = impl::Message::type_from_repmemo(api.input_data.station.report.c_str());
+            api.wmsg->type = impl::Message::type_from_repmemo(
+                api.input_data.station.report.c_str());
         }
         if (api.input_data.station.id != MISSING_INT)
-            api.wmsg->station_data.set(newvar(WR_VAR(0, 1, 192), api.input_data.station.id));
+            api.wmsg->station_data.set(
+                newvar(WR_VAR(0, 1, 192), api.input_data.station.id));
         if (!api.input_data.station.ident.is_missing())
             api.wmsg->set_ident(api.input_data.station.ident);
         if (api.input_data.station.coords.lat != MISSING_INT)
@@ -201,7 +225,7 @@ struct PrendiloOperation : public Operation
         flushVars();
         assert(vars.empty());
 
-        vars_level = api.input_data.level;
+        vars_level  = api.input_data.level;
         vars_trange = api.input_data.trange;
 
         vars = std::move(api.input_data.values);
@@ -211,11 +235,16 @@ struct PrendiloOperation : public Operation
             if (strcasecmp(api.input_query.query.c_str(), "subset") == 0)
             {
                 api.flushSubset();
-            } else if (strncasecmp(api.input_query.query.c_str(), "message", 7) == 0) {
+            }
+            else if (strncasecmp(api.input_query.query.c_str(), "message", 7) ==
+                     0)
+            {
                 // Check that message is followed by spaces or end of string
                 const char* s = api.input_query.query.c_str() + 7;
                 if (*s != 0 && !isblank(*s))
-                    error_consistency::throwf("Query type \"%s\" is not among the supported values", api.input_query.query.c_str());
+                    error_consistency::throwf(
+                        "Query type \"%s\" is not among the supported values",
+                        api.input_query.query.c_str());
                 // Skip the spaces after message
                 while (*s != 0 && isblank(*s))
                     ++s;
@@ -224,50 +253,86 @@ struct PrendiloOperation : public Operation
                 api.set_exporter(s);
 
                 api.flushMessage();
-            } else
-                error_consistency::throwf("Query type \"%s\" is not among the supported values", api.input_query.query.c_str());
+            }
+            else
+                error_consistency::throwf(
+                    "Query type \"%s\" is not among the supported values",
+                    api.input_query.query.c_str());
 
-            // Uset query after using it: it needs to be explicitly set every time
+            // Uset query after using it: it needs to be explicitly set every
+            // time
             api.input_query.query.clear();
         }
     }
     void query_attributes(Attributes& dest) override
     {
-        throw error_consistency("query_attributes cannot be called after a insert_data");
+        throw error_consistency(
+            "query_attributes cannot be called after a insert_data");
     }
     void insert_attributes(Values& qcinput) override
     {
         if (vars.empty())
-            throw error_consistency("insert_attributes has been called without a previous insert_data");
+            throw error_consistency("insert_attributes has been called without "
+                                    "a previous insert_data");
         if (vars.size() > 1)
-            throw error_consistency("insert_attributes has been called after setting many variables with a single insert_data, so I do not know which one should get the attributes");
+            throw error_consistency(
+                "insert_attributes has been called after setting many "
+                "variables with a single insert_data, so I do not know which "
+                "one should get the attributes");
 
         qcinput.move_to_attributes(**vars.begin());
     }
 
     void remove_attributes() override
     {
-        throw error_consistency("remove_attributes does not make sense when writing messages");
+        throw error_consistency(
+            "remove_attributes does not make sense when writing messages");
     }
-    int enqi(const char* param) const override { wreport::error_consistency::throwf("enqi %s cannot be called after a insert_data", param); }
-    double enqd(const char* param) const override { throw wreport::error_consistency("enqd cannot be called after a insert_data"); }
-    bool enqc(const char* param, char* res, unsigned res_len) const override { throw wreport::error_consistency("enqc cannot be called after a insert_data"); }
-    void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const override { throw wreport::error_consistency("enqlevel cannot be called after a insert_data"); }
-    void enqtimerange(int& ptype, int& p1, int& p2) const override { throw wreport::error_consistency("enqtimerange cannot be called after a insert_data"); }
-    void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) const override { throw wreport::error_consistency("enqdate cannot be called after a insert_data"); }
+    int enqi(const char* param) const override
+    {
+        wreport::error_consistency::throwf(
+            "enqi %s cannot be called after a insert_data", param);
+    }
+    double enqd(const char* param) const override
+    {
+        throw wreport::error_consistency(
+            "enqd cannot be called after a insert_data");
+    }
+    bool enqc(const char* param, char* res, unsigned res_len) const override
+    {
+        throw wreport::error_consistency(
+            "enqc cannot be called after a insert_data");
+    }
+    void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const override
+    {
+        throw wreport::error_consistency(
+            "enqlevel cannot be called after a insert_data");
+    }
+    void enqtimerange(int& ptype, int& p1, int& p2) const override
+    {
+        throw wreport::error_consistency(
+            "enqtimerange cannot be called after a insert_data");
+    }
+    void enqdate(int& year, int& month, int& day, int& hour, int& min,
+                 int& sec) const override
+    {
+        throw wreport::error_consistency(
+            "enqdate cannot be called after a insert_data");
+    }
 };
 
-}
-
+} // namespace
 
 MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
-    : file(0), state(STATE_BLANK), importer(0), curmsgidx(0),
-        cached_cat(0), cached_subcat(0), cached_lcat(0)
+    : file(0), state(STATE_BLANK), importer(0), curmsgidx(0), cached_cat(0),
+      cached_subcat(0), cached_lcat(0)
 {
     if (strchr(mode, 'r') != NULL)
     {
         perms = compute_permissions("read", "read", "read");
-    } else if (strchr(mode, 'w') != NULL || strchr(mode, 'a') != NULL) {
+    }
+    else if (strchr(mode, 'w') != NULL || strchr(mode, 'a') != NULL)
+    {
         perms = compute_permissions("write", "add", "write");
     }
 
@@ -278,7 +343,8 @@ MsgAPI::MsgAPI(const char* fname, const char* mode, const char* type)
     else if (strcasecmp(type, "AUTO") == 0)
         file = File::create(fname, mode).release();
     else
-        error_consistency::throwf("\"%s\" is not one of the supported message types", type);
+        error_consistency::throwf(
+            "\"%s\" is not one of the supported message types", type);
 
     if (strchr(mode, 'r') != NULL)
         importer = Importer::create(file->encoding()).release();
@@ -292,15 +358,15 @@ MsgAPI::~MsgAPI()
         flushSubset();
         flushMessage();
     }
-    if (file) delete file;
-    if (importer) delete importer;
-    if (exporter) delete exporter;
+    if (file)
+        delete file;
+    if (importer)
+        delete importer;
+    if (exporter)
+        delete exporter;
 }
 
-void MsgAPI::flushSubset()
-{
-    msgs->emplace_back(std::move(wmsg));
-}
+void MsgAPI::flushSubset() { msgs->emplace_back(std::move(wmsg)); }
 
 void MsgAPI::flushMessage()
 {
@@ -347,7 +413,7 @@ bool MsgAPI::readNextMessage()
         return true;
     }
 
-    state = STATE_BLANK;
+    state     = STATE_BLANK;
     curmsgidx = 0;
     if (msgs)
     {
@@ -375,7 +441,8 @@ void MsgAPI::reinit_db(const char* repinfofile)
             "reinit_db must be run with the database open in data write mode");
 
     // FIXME: In theory, nothing to do
-    // FIXME: In practice, we could reset all buffered data and ftruncate the file
+    // FIXME: In practice, we could reset all buffered data and ftruncate the
+    // file
 }
 
 int MsgAPI::query_stations()
@@ -403,7 +470,8 @@ int MsgAPI::query_data()
         return reset_operation(new VoglioquestoOperation<impl::msg::CursorStationData>(*this));
     else
 #endif
-        return reset_operation(new VoglioquestoOperation<impl::msg::CursorData>(*this));
+    return reset_operation(
+        new VoglioquestoOperation<impl::msg::CursorData>(*this));
 }
 
 void MsgAPI::set_exporter(const char* template_name)
@@ -413,14 +481,15 @@ void MsgAPI::set_exporter(const char* template_name)
 
     // If it has changed, we need to recreate the exporter
     delete exporter;
-    exporter = nullptr;
+    exporter          = nullptr;
     exporter_template = template_name;
 }
 
 void MsgAPI::insert_data()
 {
     if (perms & PERM_DATA_RO)
-        error_consistency("insert_data cannot be called with the file open in read mode");
+        error_consistency(
+            "insert_data cannot be called with the file open in read mode");
 
     input_data.datetime.set_lower_bound();
     reset_operation(new PrendiloOperation(*this));
@@ -429,15 +498,18 @@ void MsgAPI::insert_data()
 
 void MsgAPI::remove_data()
 {
-    throw error_consistency("remove_data does not make sense when writing messages");
+    throw error_consistency(
+        "remove_data does not make sense when writing messages");
 }
 
-void MsgAPI::messages_open_input(const char* filename, const char* mode, Encoding format, bool)
+void MsgAPI::messages_open_input(const char* filename, const char* mode,
+                                 Encoding format, bool)
 {
     throw error_unimplemented("MsgAPI::messages_open_input");
 }
 
-void MsgAPI::messages_open_output(const char* filename, const char* mode, Encoding format)
+void MsgAPI::messages_open_output(const char* filename, const char* mode,
+                                  Encoding format)
 {
     throw error_unimplemented("MsgAPI::messages_open_output");
 }
@@ -452,10 +524,7 @@ void MsgAPI::messages_write_next(const char*)
     throw error_unimplemented("MsgAPI::messages_write_next");
 }
 
-void MsgAPI::remove_all()
-{
-    throw error_unimplemented("MsgAPI::remove_all");
-}
+void MsgAPI::remove_all() { throw error_unimplemented("MsgAPI::remove_all"); }
 
-}
-}
+} // namespace fortran
+} // namespace dballe

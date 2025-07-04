@@ -4,8 +4,8 @@
 #include "utils/core.h"
 #include <dballe/fwd.h>
 #include <dballe/types.h>
-#include <wreport/python.h>
 #include <wreport/error.h>
+#include <wreport/python.h>
 #include <wreport/varinfo.h>
 
 namespace dballe {
@@ -28,33 +28,45 @@ void set_std_exception(const std::exception& e);
  *
  * Returns f unchanged.
  */
-FILE* check_file_result(FILE* f, const char* filename=nullptr);
+FILE* check_file_result(FILE* f, const char* filename = nullptr);
 
-#define DBALLE_CATCH_RETURN_PYO \
-      catch (PythonException&) { \
-        return nullptr; \
-    } catch (wreport::error& e) { \
-        set_wreport_exception(e); return nullptr; \
-    } catch (std::exception& se) { \
-        set_std_exception(se); return nullptr; \
+#define DBALLE_CATCH_RETURN_PYO                                                \
+    catch (PythonException&) { return nullptr; }                               \
+    catch (wreport::error & e)                                                 \
+    {                                                                          \
+        set_wreport_exception(e);                                              \
+        return nullptr;                                                        \
+    }                                                                          \
+    catch (std::exception & se)                                                \
+    {                                                                          \
+        set_std_exception(se);                                                 \
+        return nullptr;                                                        \
     }
 
-#define DBALLE_CATCH_RETURN_INT \
-      catch (PythonException&) { \
-        return -1; \
-    } catch (wreport::error& e) { \
-        set_wreport_exception(e); return -1; \
-    } catch (std::exception& se) { \
-        set_std_exception(se); return -1; \
+#define DBALLE_CATCH_RETURN_INT                                                \
+    catch (PythonException&) { return -1; }                                    \
+    catch (wreport::error & e)                                                 \
+    {                                                                          \
+        set_wreport_exception(e);                                              \
+        return -1;                                                             \
+    }                                                                          \
+    catch (std::exception & se)                                                \
+    {                                                                          \
+        set_std_exception(se);                                                 \
+        return -1;                                                             \
     }
 
-#define DBALLE_CATCH_RETHROW_PYTHON \
-      catch (PythonException&) { \
-        throw; \
-    } catch (wreport::error& e) { \
-        set_wreport_exception(e); throw PythonException(); \
-    } catch (std::exception& se) { \
-        set_std_exception(se); throw PythonException(); \
+#define DBALLE_CATCH_RETHROW_PYTHON                                            \
+    catch (PythonException&) { throw; }                                        \
+    catch (wreport::error & e)                                                 \
+    {                                                                          \
+        set_wreport_exception(e);                                              \
+        throw PythonException();                                               \
+    }                                                                          \
+    catch (std::exception & se)                                                \
+    {                                                                          \
+        set_std_exception(se);                                                 \
+        throw PythonException();                                               \
     }
 
 /// If val is MISSING_INT, returns None, else return it as a PyLong
@@ -73,6 +85,6 @@ std::string object_repr(PyObject* o);
  */
 void common_init();
 
-}
-}
+} // namespace python
+} // namespace dballe
 #endif

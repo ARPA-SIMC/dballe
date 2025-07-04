@@ -9,6 +9,7 @@
 # Into code that matches the given strings.
 # break; statements in each case are ignored, and effectively added if missing.
 
+import abc
 import argparse
 import logging
 import sys
@@ -16,6 +17,8 @@ import re
 import os
 from collections import defaultdict
 from contextlib import contextmanager
+from pathlib import Path
+from typing import IO, List, Optional, Never
 
 log = logging.getLogger("mklookup")
 
@@ -56,7 +59,9 @@ class Builder:
         if len(val) == 1:
             self.print("if (key[{}] == '{}') {{".format(pos, val))
         else:
-            self.print('if (memcmp(key + {}, "{}", {}) == 0) {{'.format(pos, val, len(val)))
+            self.print(
+                'if (memcmp(key + {}, "{}", {}) == 0) {{'.format(pos, val, len(val))
+            )
 
     def print_leaf_check(self, key, code, default, pos):
         self.print_key_match(pos, key[pos:])
@@ -94,7 +99,9 @@ class Builder:
             with self.print_switch("key[{}]".format(pos)) as b1:
                 for prefix, keys in by_prefix.items():
                     with b1.print_case(prefix) as b2:
-                        b2.build_prefix_switch(keys, default, pos=pos + 1, length=length)
+                        b2.build_prefix_switch(
+                            keys, default, pos=pos + 1, length=length
+                        )
                 b1.print("default:", default)
         else:
             # Only one key left, or many keys left with a common prefix
@@ -122,16 +129,37 @@ class Builder:
             self.print("}")
 
 
-class Table:
+class Block(abc.ABC):
+    @abc.abstractmethod
+    def parse_line(self, lineno: int, line: str) -> Optional["Block"]:
+        """Parse a line, optionally starting a new block."""
+
+    def parse_error(self, lineno: int, line: str, message: str) -> Never:
+        raise RuntimeError(f"{lineno}: {message} (line: {line!r})")
+
+    @abc.abstractmethod
+    def dump(self, file: Optional[IO[str]] = None) -> None:
+        """Dump the block contents."""
+
+
+class Switch(Block):
+    """
+    A switch block to preprocess.
+
+    It accepts case keys as strings, converting them to an efficient string
+    match.
+    """
+
     re_case_line = re.compile(r'^\s*case\s*"(?P<key>[^"]+)"\s*:\s*(?P<code>.*)$')
-    re_default_line = re.compile(r'^\s*default\s*:\s*(?P<code>.+)$')
+    re_default_line = re.compile(r"^\s*default\s*:\s*(?P<code>.*)$")
     re_trailing_break = re.compile(r"\s*break\s*;\s*$")
 
-    def __init__(self, indent):
-        self.keys = {}
-        self.default = ""
-        self.cur_key = None
-        self.cur_code = None
+    def __init__(self, indent: str) -> None:
+        self.keys: dict[str, str] = {}
+        self.default: Optional[str] = None
+        self.cur_key: Optional[str] = None
+        self.cur_code: Optional[str] = None
+        self.re_open_brace = re.compile("^" + re.escape(indent) + r"{\s*")
         self.re_end_switch = re.compile("^" + re.escape(indent) + r"}\s*")
         self.indent = indent
 
@@ -147,15 +175,22 @@ class Table:
         self.cur_code = code
 
     def _add_code(self, code):
-        if self.cur_code:
-            self.cur_code += "\n"
-        self.cur_code += code
+        if self.default is not None:
+            if self.default:
+                self.default += "\n"
+            self.default += code
+        else:
+            if self.cur_code:
+                self.cur_code += "\n"
+            self.cur_code += code
 
     def _add_default(self, code):
         if self.cur_key:
             self._add_key_code()
         if self.default:
             self.default += "\n"
+        else:
+            self.default = ""
         self.default += code
 
     def _end_switch(self):
@@ -166,6 +201,10 @@ class Table:
         if self.re_end_switch.match(line):
             self._end_switch()
             return Verbatim()
+
+        mo = self.re_open_brace.match(line)
+        if mo:
+            return None
 
         mo = self.re_case_line.match(line)
         if mo:
@@ -180,17 +219,20 @@ class Table:
         self._add_code(line)
         return None
 
-    def dump(self):
+    def dump(self, file: Optional[IO[str]] = None) -> None:
         for k, v in self.keys.items():
-            print("{}: {}".format(k, v))
+            print(f"{k}: {v}", file=file)
+        print(f"DEFAULT: {self.default}", file=file)
 
     def print(self, file):
         builder = Builder(len(self.indent), file=file)
         builder.build_len_switch(self.keys, self.default)
 
 
-class Verbatim:
-    re_switch_line = re.compile(r"^(?P<indent>\s*)switch\s*\(key\)\s*{\s*//\s*mklookup\s*$")
+class Verbatim(Block):
+    re_switch_line = re.compile(
+        r"^(?P<indent>\s*)switch\s*\(key\)\s*{?\s*//\s*mklookup\s*$"
+    )
 
     def __init__(self):
         self.lines = []
@@ -201,22 +243,25 @@ class Verbatim:
             self.lines.append(line)
             return None
         else:
-            return Table(indent=mo.group("indent"))
+            return Switch(indent=mo.group("indent"))
 
     def print(self, file):
         for line in self.lines:
             print(line, file=file)
 
+    def dump(self, file: Optional[IO[str]] = None) -> None:
+        for line in self.lines:
+            print(f"verbatim: {line}", file=file)
 
-def parse(fname):
+
+def parse(fname: Path) -> List[Block]:
     """
     Parse a file into a sequence of blocks
     """
-    blocks = [Verbatim()]
-    with open(fname) as fd:
+    blocks: List[Block] = [Verbatim()]
+    with fname.open() as fd:
         for lineno, line in enumerate(fd, start=1):
-            next_block = blocks[-1].parse_line(lineno, line.rstrip())
-            if next_block is not None:
+            if next_block := blocks[-1].parse_line(lineno, line.rstrip()):
                 blocks.append(next_block)
     return blocks
 
@@ -236,12 +281,22 @@ def outfile(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-            description="build C code for a lookup table")
+    parser = argparse.ArgumentParser(description="build C code for a lookup table")
     parser.add_argument("--verbose", "-v", action="store_true", help="verbose output")
     parser.add_argument("--debug", action="store_true", help="debug output")
-    parser.add_argument("-o", "--outfile", action="store", help="output file (default: stdout)")
-    parser.add_argument("pathname", nargs="?", help="source file with the lookup table description")
+    parser.add_argument(
+        "-o",
+        "--outfile",
+        type=Path,
+        action="store",
+        help="output file (default: stdout)",
+    )
+    parser.add_argument(
+        "pathname",
+        nargs="?",
+        type=Path,
+        help="source file with the lookup table description",
+    )
     args = parser.parse_args()
 
     log_format = "%(asctime)-15s %(levelname)s %(message)s"
@@ -253,6 +308,8 @@ def main():
     logging.basicConfig(level=level, stream=sys.stderr, format=log_format)
 
     blocks = parse(args.pathname)
+    # for block in blocks:
+    #     block.dump()
 
     with outfile(args) as out:
         for block in blocks:

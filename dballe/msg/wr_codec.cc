@@ -1,13 +1,13 @@
 #include "wr_codec.h"
-#include "domain_errors.h"
-#include "dballe/file.h"
-#include "msg.h"
 #include "context.h"
 #include "dballe/core/shortcuts.h"
+#include "dballe/file.h"
+#include "domain_errors.h"
+#include "msg.h"
 #include "wr_importers/base.h"
 #include <wreport/bulletin.h>
-#include <wreport/vartable.h>
 #include <wreport/options.h>
+#include <wreport/vartable.h>
 
 using namespace wreport;
 using namespace std;
@@ -17,23 +17,33 @@ namespace impl {
 namespace msg {
 
 WRImporter::WRImporter(const dballe::ImporterOptions& opts)
-    : BulletinImporter(opts) {}
+    : BulletinImporter(opts)
+{
+}
 
 BufrImporter::BufrImporter(const dballe::ImporterOptions& opts)
-    : WRImporter(opts) {}
+    : WRImporter(opts)
+{
+}
 BufrImporter::~BufrImporter() {}
 
-bool BufrImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::shared_ptr<dballe::Message>)> dest) const
+bool BufrImporter::foreach_decoded(
+    const BinaryMessage& msg,
+    std::function<bool(std::shared_ptr<dballe::Message>)> dest) const
 {
     unique_ptr<BufrBulletin> bulletin(BufrBulletin::decode(msg.data));
     return foreach_decoded_bulletin(*bulletin, dest);
 }
 
 CrexImporter::CrexImporter(const dballe::ImporterOptions& opts)
-    : WRImporter(opts) {}
+    : WRImporter(opts)
+{
+}
 CrexImporter::~CrexImporter() {}
 
-bool CrexImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::shared_ptr<dballe::Message>)> dest) const
+bool CrexImporter::foreach_decoded(
+    const BinaryMessage& msg,
+    std::function<bool(std::shared_ptr<dballe::Message>)> dest) const
 {
     unique_ptr<CrexBulletin> bulletin(CrexBulletin::decode(msg.data));
     return foreach_decoded_bulletin(*bulletin, dest);
@@ -42,11 +52,16 @@ bool CrexImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(
 Messages WRImporter::from_bulletin(const wreport::Bulletin& msg) const
 {
     Messages res;
-    foreach_decoded_bulletin(msg, [&](std::shared_ptr<dballe::Message>&& m) { res.emplace_back(move(m)); return true; });
+    foreach_decoded_bulletin(msg, [&](std::shared_ptr<dballe::Message>&& m) {
+        res.emplace_back(move(m));
+        return true;
+    });
     return res;
 }
 
-bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::function<bool(std::shared_ptr<dballe::Message>)> dest) const
+bool WRImporter::foreach_decoded_bulletin(
+    const wreport::Bulletin& msg,
+    std::function<bool(std::shared_ptr<dballe::Message>)> dest) const
 {
     WreportVarOptionsForImport wreport_config(opts.domain_errors);
 
@@ -59,9 +74,7 @@ bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::fun
             switch (msg.data_subcategory)
             {
                 // Routine aeronautical observations (METAR)
-                case 10:
-                    importer = wr::Importer::createMetar(opts);
-                    break;
+                case 10: importer = wr::Importer::createMetar(opts); break;
                 default:
                     // Old ECMWF METAR type
                     if (msg.data_subcategory_local == 140)
@@ -88,14 +101,14 @@ bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::fun
                 importer = wr::Importer::createGeneric(opts);
             break;
         // Physical/chemical constituents
-        case 8: importer = wr::Importer::createPollution(opts); break;
+        case 8:  importer = wr::Importer::createPollution(opts); break;
         default: importer = wr::Importer::createGeneric(opts); break;
     }
 
     MessageType type = importer->scanType(msg);
     for (unsigned i = 0; i < msg.subsets.size(); ++i)
     {
-        auto newmsg = std::make_shared<Message>();
+        auto newmsg  = std::make_shared<Message>();
         newmsg->type = type;
         importer->import(msg.subsets[i], *newmsg);
         if (!dest(newmsg))
@@ -104,12 +117,15 @@ bool WRImporter::foreach_decoded_bulletin(const wreport::Bulletin& msg, std::fun
     return true;
 }
 
-
 WRExporter::WRExporter(const dballe::ExporterOptions& opts)
-    : BulletinExporter(opts) {}
+    : BulletinExporter(opts)
+{
+}
 
 BufrExporter::BufrExporter(const dballe::ExporterOptions& opts)
-    : WRExporter(opts) {}
+    : WRExporter(opts)
+{
+}
 
 BufrExporter::~BufrExporter() {}
 
@@ -124,7 +140,9 @@ std::string BufrExporter::to_binary(const Messages& msgs) const
 }
 
 CrexExporter::CrexExporter(const dballe::ExporterOptions& opts)
-    : WRExporter(opts) {}
+    : WRExporter(opts)
+{
+}
 CrexExporter::~CrexExporter() {}
 
 std::unique_ptr<wreport::Bulletin> CrexExporter::make_bulletin() const
@@ -144,12 +162,12 @@ const char* infer_from_message(const Message& msg)
     switch (msg.type)
     {
         case MessageType::TEMP_SHIP: return "temp-ship";
-        default: break;
+        default:                     break;
     }
     return format_message_type(msg.type);
 }
 
-}
+} // namespace
 
 unique_ptr<wr::Template> WRExporter::infer_template(const Messages& msgs) const
 {
@@ -167,7 +185,7 @@ unique_ptr<Bulletin> WRExporter::to_bulletin(const Messages& msgs) const
 {
     std::unique_ptr<wr::Template> encoder = infer_template(msgs);
     // fprintf(stderr, "Encoding with template %s\n", encoder->name());
-    auto res = make_bulletin();
+    auto res                              = make_bulletin();
     encoder->to_bulletin(*res);
     return res;
 }
@@ -190,21 +208,22 @@ const TemplateRegistry& TemplateRegistry::get()
     {
         registry = new TemplateRegistry;
 
-        registry->register_factory(MISSING_INT, "wmo", "WMO style templates (autodetect)",
-                [](const dballe::ExporterOptions& opts, const Messages& msgs) {
-                    auto msg = Message::downcast(msgs[0]);
-                    string tpl;
-                    switch (msg->type)
-                    {
-                        case MessageType::TEMP_SHIP: tpl = "temp-wmo"; break;
-                        default:
-                            tpl = format_message_type(msg->type);
-                            tpl += "-wmo";
-                            break;
-                    }
-                    const wr::TemplateFactory& fac = wr::TemplateRegistry::get(tpl);
-                    return fac.factory(opts, msgs);
-                });
+        registry->register_factory(
+            MISSING_INT, "wmo", "WMO style templates (autodetect)",
+            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
+                auto msg = Message::downcast(msgs[0]);
+                string tpl;
+                switch (msg->type)
+                {
+                    case MessageType::TEMP_SHIP: tpl = "temp-wmo"; break;
+                    default:
+                        tpl = format_message_type(msg->type);
+                        tpl += "-wmo";
+                        break;
+                }
+                const wr::TemplateFactory& fac = wr::TemplateRegistry::get(tpl);
+                return fac.factory(opts, msgs);
+            });
 
         // Populate it
         register_synop(*registry);
@@ -228,18 +247,18 @@ const TemplateRegistry& TemplateRegistry::get()
 
 const TemplateFactory& TemplateRegistry::get(const std::string& name)
 {
-    const TemplateRegistry& tr = get();
+    const TemplateRegistry& tr         = get();
     TemplateRegistry::const_iterator i = tr.find(name);
     if (i == tr.end())
-        error_notfound::throwf("requested export template %s which does not exist", name.c_str());
+        error_notfound::throwf(
+            "requested export template %s which does not exist", name.c_str());
     return i->second;
 }
 
-void TemplateRegistry::register_factory(
-        unsigned data_category,
-        const std::string& name,
-        const std::string& desc,
-        TemplateFactory::factory_func fac)
+void TemplateRegistry::register_factory(unsigned data_category,
+                                        const std::string& name,
+                                        const std::string& desc,
+                                        TemplateFactory::factory_func fac)
 {
     insert(make_pair(name, TemplateFactory(data_category, name, desc, fac)));
 }
@@ -259,46 +278,49 @@ void Template::setupBulletin(wreport::Bulletin& bulletin)
 {
     // Get reference time from first msg in the set
     // If not found, use current time.
-    Datetime dt = msgs[0]->get_datetime();
-    bulletin.rep_year = dt.year;
-    bulletin.rep_month = dt.month;
-    bulletin.rep_day = dt.day;
-    bulletin.rep_hour = dt.hour;
-    bulletin.rep_minute = dt.minute;
-    bulletin.rep_second = dt.second;
+    Datetime dt                  = msgs[0]->get_datetime();
+    bulletin.rep_year            = dt.year;
+    bulletin.rep_month           = dt.month;
+    bulletin.rep_day             = dt.day;
+    bulletin.rep_hour            = dt.hour;
+    bulletin.rep_minute          = dt.minute;
+    bulletin.rep_second          = dt.second;
     bulletin.master_table_number = 0;
-    bulletin.originating_centre = opts.centre != MISSING_INT ? opts.centre : 255;
-    bulletin.originating_subcentre = opts.subcentre != MISSING_INT ? opts.subcentre : 255;
+    bulletin.originating_centre =
+        opts.centre != MISSING_INT ? opts.centre : 255;
+    bulletin.originating_subcentre =
+        opts.subcentre != MISSING_INT ? opts.subcentre : 255;
     bulletin.update_sequence_number = 0;
 
     if (BufrBulletin* b = dynamic_cast<BufrBulletin*>(&bulletin))
     {
         // Take from opts
-        b->edition_number = 4;
-        b->master_table_version_number = 17;
+        b->edition_number                    = 4;
+        b->master_table_version_number       = 17;
         b->master_table_version_number_local = 0;
-        b->compression = false;
+        b->compression                       = false;
     }
     if (CrexBulletin* b = dynamic_cast<CrexBulletin*>(&bulletin))
     {
         // TODO: change using BUFR tables, when the encoder can encode the full
         // CREX ed.2 header
-        b->edition_number = 2;
-        b->master_table_version_number = 3;
+        b->edition_number                    = 2;
+        b->master_table_version_number       = 3;
         b->master_table_version_number_local = 0;
-        b->master_table_version_number_bufr = 0;
-        b->has_check_digit = false;
+        b->master_table_version_number_bufr  = 0;
+        b->has_check_digit                   = false;
     }
 }
 
 void Template::to_subset(const Message& msg, wreport::Subset& subset)
 {
-    this->msg = &msg;
-    this->subset = &subset;
+    this->msg           = &msg;
+    this->subset        = &subset;
     this->c_gnd_instant = msg.find_context(Level(1), Trange::instant());
 }
 
-void Template::add(Varcode code, const msg::Context* ctx, const Shortcut& shortcut) const
+void Template::add(Varcode code, const msg::Context* ctx,
+                   const Shortcut& shortcut) const
 {
     if (!ctx)
         subset->store_variable_undef(code);
@@ -334,7 +356,8 @@ void Template::add(Varcode code, const Values& values) const
         subset->store_variable_undef(code);
 }
 
-void Template::add(Varcode code, const Values& values, const Shortcut& shortcut) const
+void Template::add(Varcode code, const Values& values,
+                   const Shortcut& shortcut) const
 {
     if (const Var* var = values.maybe_var(shortcut.code))
         subset->store_variable(code, *var);
@@ -342,13 +365,13 @@ void Template::add(Varcode code, const Values& values, const Shortcut& shortcut)
         subset->store_variable_undef(code);
 }
 
-
 void Template::add(Varcode code, const Shortcut& shortcut) const
 {
     add(code, msg->get(shortcut));
 }
 
-void Template::add(Varcode code, Varcode srccode, const Level& level, const Trange& trange) const
+void Template::add(Varcode code, Varcode srccode, const Level& level,
+                   const Trange& trange) const
 {
     add(code, msg->get(level, trange, srccode));
 }
@@ -386,31 +409,33 @@ void Template::do_ecmwf_past_wtr() const
 
     if (hour % 6 == 0)
     {
-        add(WR_VAR(0, 20,  4), sc::past_wtr1_6h);
-        add(WR_VAR(0, 20,  5), sc::past_wtr2_6h);
-    } else {
-        add(WR_VAR(0, 20,  4), sc::past_wtr1_3h);
-        add(WR_VAR(0, 20,  5), sc::past_wtr2_3h);
+        add(WR_VAR(0, 20, 4), sc::past_wtr1_6h);
+        add(WR_VAR(0, 20, 5), sc::past_wtr2_6h);
+    }
+    else
+    {
+        add(WR_VAR(0, 20, 4), sc::past_wtr1_3h);
+        add(WR_VAR(0, 20, 5), sc::past_wtr2_3h);
     }
 }
 
 void Template::do_station_height() const
 {
-    add(WR_VAR(0,  7, 30), msg->station_data);
-    add(WR_VAR(0,  7, 31), msg->station_data);
+    add(WR_VAR(0, 7, 30), msg->station_data);
+    add(WR_VAR(0, 7, 31), msg->station_data);
 }
 
 void Template::do_D01001() const
 {
-    add(WR_VAR(0,  1,  1), msg->station_data, sc::block);
-    add(WR_VAR(0,  1,  2), msg->station_data, sc::station);
+    add(WR_VAR(0, 1, 1), msg->station_data, sc::block);
+    add(WR_VAR(0, 1, 2), msg->station_data, sc::station);
 }
 
 void Template::do_D01004() const
 {
     do_D01001();
     do_station_name(WR_VAR(0, 1, 15));
-    add(WR_VAR(0,  2,  1), msg->station_data, sc::st_type);
+    add(WR_VAR(0, 2, 1), msg->station_data, sc::st_type);
 }
 
 void Template::do_D01011() const
@@ -484,23 +509,23 @@ void Template::do_D01013() const
 
 void Template::do_D01021() const
 {
-    add(WR_VAR(0,  5,  1), msg->station_data, sc::latitude);
-    add(WR_VAR(0,  6,  1), msg->station_data, sc::longitude);
+    add(WR_VAR(0, 5, 1), msg->station_data, sc::latitude);
+    add(WR_VAR(0, 6, 1), msg->station_data, sc::longitude);
 }
 
 void Template::do_D01022() const
 {
     do_D01021();
-    add(WR_VAR(0,  7,  1), msg->station_data, sc::height_station);
+    add(WR_VAR(0, 7, 1), msg->station_data, sc::height_station);
 }
 
 void Template::do_D01023() const
 {
-    add(WR_VAR(0,  5,  2), msg->station_data, sc::latitude);
-    add(WR_VAR(0,  6,  2), msg->station_data, sc::longitude);
+    add(WR_VAR(0, 5, 2), msg->station_data, sc::latitude);
+    add(WR_VAR(0, 6, 2), msg->station_data, sc::longitude);
 }
 
-}
-}
-}
-}
+} // namespace wr
+} // namespace msg
+} // namespace impl
+} // namespace dballe

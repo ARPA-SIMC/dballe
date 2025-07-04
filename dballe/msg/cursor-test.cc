@@ -1,5 +1,5 @@
-#include "dballe/msg/tests.h"
 #include "cursor.h"
+#include "dballe/msg/tests.h"
 #include <cstring>
 
 using namespace dballe;
@@ -17,25 +17,24 @@ class Tests : public TestCase
 void Tests::register_tests()
 {
 
-add_method("issue160", []() {
-    auto msgs = read_msgs("bufr/issue160.bufr", Encoding::BUFR);
+    add_method("issue160", []() {
+        auto msgs = read_msgs("bufr/issue160.bufr", Encoding::BUFR);
 
-    std::shared_ptr<impl::Message> msg(impl::Message::downcast(msgs[0]));
-    const Values& station_values = msg->find_station_context();
-    wassert(actual(station_values.size()) == 12);
+        std::shared_ptr<impl::Message> msg(impl::Message::downcast(msgs[0]));
+        const Values& station_values = msg->find_station_context();
+        wassert(actual(station_values.size()) == 12);
 
-    core::Query query;
-    auto cur = msg->query_station_data(query);
+        core::Query query;
+        auto cur = msg->query_station_data(query);
 
-    wassert(actual(cur->remaining()) == 12);
+        wassert(actual(cur->remaining()) == 12);
 
-    unsigned iterations = 0;
-    while (cur->next())
-        ++iterations;
+        unsigned iterations = 0;
+        while (cur->next())
+            ++iterations;
 
-    wassert(actual(iterations) == 12);
-});
-
+        wassert(actual(iterations) == 12);
+    });
 }
 
-}
+} // namespace

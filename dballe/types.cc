@@ -1,10 +1,10 @@
 #include "types.h"
 #include "core/csv.h"
-#include <wreport/error.h>
-#include <ostream>
-#include <iomanip>
 #include <cmath>
 #include <cstring>
+#include <iomanip>
+#include <ostream>
+#include <wreport/error.h>
 
 using namespace wreport;
 using namespace std;
@@ -15,22 +15,21 @@ namespace dballe {
  * Date
  */
 
-Date::Date()
-    : year(0xffff), month(0xff), day(0xff)
-{
-}
+Date::Date() : year(0xffff), month(0xff), day(0xff) {}
 
 Date::Date(int ye, int mo, int da)
 {
     if (ye == MISSING_INT)
     {
-        year = 0xffff;
+        year  = 0xffff;
         month = day = 0xff;
-    } else {
+    }
+    else
+    {
         Date::validate(ye, mo, da);
-        year = ye;
+        year  = ye;
         month = mo;
-        day = da;
+        day   = da;
     }
 }
 
@@ -39,22 +38,22 @@ void Date::validate(int ye, int mo, int da)
     if (mo == MISSING_INT || mo < 1 || mo > 12)
         error_consistency::throwf("month %d is not between 1 and 12", mo);
     if (da == MISSING_INT || da < 1 || da > days_in_month(ye, mo))
-        error_consistency::throwf("day %d is not between 1 and %d", da, days_in_month(ye, mo));
+        error_consistency::throwf("day %d is not between 1 and %d", da,
+                                  days_in_month(ye, mo));
 }
 
 bool Date::is_missing() const { return year == 0xffff; }
 
 int Date::compare(const Date& o) const
 {
-    if (int res = year - o.year) return res;
-    if (int res = month - o.month) return res;
+    if (int res = year - o.year)
+        return res;
+    if (int res = month - o.month)
+        return res;
     return day - o.day;
 }
 
-int Date::to_julian() const
-{
-    return calendar_to_julian(year, month, day);
-}
+int Date::to_julian() const { return calendar_to_julian(year, month, day); }
 
 Date Date::from_julian(int jday)
 {
@@ -78,29 +77,29 @@ int Date::calendar_to_julian(int year, int month, int day)
     }
 
     int century = year / 100;
-    int julian = year * 365 - 32167;
+    int julian  = year * 365 - 32167;
     julian += year / 4 - century + century / 4;
     julian += 7834 * month / 256 + day;
 
     return julian;
 }
 
-void Date::julian_to_calendar(int jday, unsigned short& year, unsigned char& month, unsigned char& day)
+void Date::julian_to_calendar(int jday, unsigned short& year,
+                              unsigned char& month, unsigned char& day)
 {
     // From http://libpqtypes.esilo.com/browse_source.html?file=datetime.c
     unsigned julian = jday + 32044;
-    unsigned quad = julian / 146097;
-    unsigned extra = (julian - quad * 146097) * 4 + 3;
+    unsigned quad   = julian / 146097;
+    unsigned extra  = (julian - quad * 146097) * 4 + 3;
     julian += 60 + quad * 3 + extra / 146097;
     quad = julian / 1461;
     julian -= quad * 1461;
-    int y = julian * 4 / 1461;
-    julian = ((y != 0) ? ((julian + 305) % 365) : ((julian + 306) % 366))
-        + 123;
+    int y  = julian * 4 / 1461;
+    julian = ((y != 0) ? ((julian + 305) % 365) : ((julian + 306) % 366)) + 123;
     y += quad * 4;
-    year = y - 4800;
-    quad = julian * 2141 / 65536;
-    day = julian - 7834 * quad / 256;
+    year  = y - 4800;
+    quad  = julian * 2141 / 65536;
+    day   = julian - 7834 * quad / 256;
     month = (quad + 10) % 12 + 1;
 }
 
@@ -116,19 +115,27 @@ bool Date::operator!=(const Date& dt) const
 
 bool Date::operator<(const Date& dt) const
 {
-    if (year < dt.year) return true;
-    if (year > dt.year) return false;
-    if (month < dt.month) return true;
-    if (month > dt.month) return false;
+    if (year < dt.year)
+        return true;
+    if (year > dt.year)
+        return false;
+    if (month < dt.month)
+        return true;
+    if (month > dt.month)
+        return false;
     return day < dt.day;
 }
 
 bool Date::operator>(const Date& dt) const
 {
-    if (year < dt.year) return false;
-    if (year > dt.year) return true;
-    if (month < dt.month) return false;
-    if (month > dt.month) return true;
+    if (year < dt.year)
+        return false;
+    if (year > dt.year)
+        return true;
+    if (month < dt.month)
+        return false;
+    if (month > dt.month)
+        return true;
     return day > dt.day;
 }
 
@@ -136,31 +143,31 @@ int Date::days_in_month(int year, int month)
 {
     switch (month)
     {
-        case  1: return 31;
-        case  2:
-            if (year % 400 == 0 || (year % 4 == 0 && ! (year % 100 == 0)))
+        case 1: return 31;
+        case 2:
+            if (year % 400 == 0 || (year % 4 == 0 && !(year % 100 == 0)))
                 return 29;
             return 28;
-        case  3: return 31;
-        case  4: return 30;
-        case  5: return 31;
-        case  6: return 30;
-        case  7: return 31;
-        case  8: return 31;
-        case  9: return 30;
+        case 3:  return 31;
+        case 4:  return 30;
+        case 5:  return 31;
+        case 6:  return 30;
+        case 7:  return 31;
+        case 8:  return 31;
+        case 9:  return 30;
         case 10: return 31;
         case 11: return 30;
         case 12: return 31;
         default:
-            error_consistency::throwf("Month %d is not between 1 and 12", month);
+            error_consistency::throwf("Month %d is not between 1 and 12",
+                                      month);
     }
 }
 
 void Date::to_stream_iso8601(std::ostream& out) const
 {
-    out <<        setw(4) << setfill('0') << year
-        << '-' << setw(2) << setfill('0') << (unsigned)month
-        << '-' << setw(2) << setfill('0') << (unsigned)day;
+    out << setw(4) << setfill('0') << year << '-' << setw(2) << setfill('0')
+        << (unsigned)month << '-' << setw(2) << setfill('0') << (unsigned)day;
 }
 
 void Date::to_csv_iso8601(CSVWriter& out) const
@@ -181,20 +188,16 @@ std::ostream& operator<<(std::ostream& out, const Date& dt)
     return out;
 }
 
-
 /*
  * Time
  */
 
-Time::Time()
-    : hour(0xff), minute(0xff), second(0xff)
-{
-}
+Time::Time() : hour(0xff), minute(0xff), second(0xff) {}
 
 Time::Time(int ho, int mi, int se)
 {
     Time::validate(ho, mi, se);
-    hour = ho;
+    hour   = ho;
     minute = mi;
     second = se;
 }
@@ -209,7 +212,9 @@ void Time::validate(int ho, int mi, int se)
     {
         if (se == MISSING_INT || se < 0 || se > 60)
             error_consistency::throwf("second %d is not between 1 and 60", se);
-    } else {
+    }
+    else
+    {
         if (se == MISSING_INT || se < 0 || se > 59)
             error_consistency::throwf("second %d is not between 1 and 59", se);
     }
@@ -219,8 +224,10 @@ bool Time::is_missing() const { return hour == 0xff; }
 
 int Time::compare(const Time& o) const
 {
-    if (int res = hour - o.hour) return res;
-    if (int res = minute - o.minute) return res;
+    if (int res = hour - o.hour)
+        return res;
+    if (int res = minute - o.minute)
+        return res;
     return second - o.second;
 }
 
@@ -236,27 +243,35 @@ bool Time::operator!=(const Time& dt) const
 
 bool Time::operator<(const Time& dt) const
 {
-    if (hour < dt.hour) return true;
-    if (hour > dt.hour) return false;
-    if (minute < dt.minute) return true;
-    if (minute > dt.minute) return false;
+    if (hour < dt.hour)
+        return true;
+    if (hour > dt.hour)
+        return false;
+    if (minute < dt.minute)
+        return true;
+    if (minute > dt.minute)
+        return false;
     return second < dt.second;
 }
 
 bool Time::operator>(const Time& dt) const
 {
-    if (hour < dt.hour) return false;
-    if (hour > dt.hour) return true;
-    if (minute < dt.minute) return false;
-    if (minute > dt.minute) return true;
+    if (hour < dt.hour)
+        return false;
+    if (hour > dt.hour)
+        return true;
+    if (minute < dt.minute)
+        return false;
+    if (minute > dt.minute)
+        return true;
     return second > dt.second;
 }
 
 void Time::to_stream_iso8601(std::ostream& out) const
 {
-    out <<        setw(2) << setfill('0') << (unsigned)hour
-        << ':' << setw(2) << setfill('0') << (unsigned)minute
-        << ':' << setw(2) << setfill('0') << (unsigned)second;
+    out << setw(2) << setfill('0') << (unsigned)hour << ':' << setw(2)
+        << setfill('0') << (unsigned)minute << ':' << setw(2) << setfill('0')
+        << (unsigned)second;
 }
 
 void Time::to_csv_iso8601(CSVWriter& out) const
@@ -277,32 +292,36 @@ std::ostream& operator<<(std::ostream& out, const Time& dt)
     return out;
 }
 
-
 /*
  * Datetime
  */
 
 Datetime::Datetime()
-    : year(0xffff), month(0xff), day(0xff), hour(0xff), minute(0xff), second(0xff)
+    : year(0xffff), month(0xff), day(0xff), hour(0xff), minute(0xff),
+      second(0xff)
 {
 }
 
 Datetime::Datetime(const Date& date, const Time& time)
-        : year(date.year), month(date.month), day(date.day),
-          hour(time.hour), minute(time.minute), second(time.second) {}
+    : year(date.year), month(date.month), day(date.day), hour(time.hour),
+      minute(time.minute), second(time.second)
+{
+}
 
 Datetime::Datetime(int ye, int mo, int da, int ho, int mi, int se)
 {
     if (ye == MISSING_INT)
     {
-        year = 0xffff;
+        year  = 0xffff;
         month = day = hour = minute = second = 0xff;
-    } else {
+    }
+    else
+    {
         Datetime::validate(ye, mo, da, ho, mi, se);
-        year = ye;
-        month = mo;
-        day = da;
-        hour = ho;
+        year   = ye;
+        month  = mo;
+        day    = da;
+        hour   = ho;
         minute = mi;
         second = se;
     }
@@ -314,9 +333,11 @@ void Datetime::validate(int ye, int mo, int da, int ho, int mi, int se)
     Time::validate(ho, mi, se);
 }
 
-void Datetime::normalise_h24(int& ye, int& mo, int& da, int& ho, int& mi, int& se)
+void Datetime::normalise_h24(int& ye, int& mo, int& da, int& ho, int& mi,
+                             int& se)
 {
-    if (ho != 24 || mi != 0 || se != 0) return;
+    if (ho != 24 || mi != 0 || se != 0)
+        return;
     ho = 0;
     ++da;
     if (da > Date::days_in_month(ye, mo))
@@ -340,95 +361,161 @@ static void check_partial_consistency(const Datetime& dt)
 {
     if (dt.year == 0xffff)
     {
-        if (dt.month  != 0xff) error_consistency::throwf("month %d given with no year", dt.month);
-        if (dt.day    != 0xff) error_consistency::throwf("day %d given with no year", dt.day);
-        if (dt.hour   != 0xff) error_consistency::throwf("hour %d given with no year", dt.hour);
-        if (dt.minute != 0xff) error_consistency::throwf("minute %d given with no year", dt.minute);
-        if (dt.second != 0xff) error_consistency::throwf("second %d given with no year", dt.second);
+        if (dt.month != 0xff)
+            error_consistency::throwf("month %d given with no year", dt.month);
+        if (dt.day != 0xff)
+            error_consistency::throwf("day %d given with no year", dt.day);
+        if (dt.hour != 0xff)
+            error_consistency::throwf("hour %d given with no year", dt.hour);
+        if (dt.minute != 0xff)
+            error_consistency::throwf("minute %d given with no year",
+                                      dt.minute);
+        if (dt.second != 0xff)
+            error_consistency::throwf("second %d given with no year",
+                                      dt.second);
     }
-    if (dt.month == 0xff) {
-        if (dt.day != 0xff) error_consistency::throwf("day %d given with no month", dt.day);
+    if (dt.month == 0xff)
+    {
+        if (dt.day != 0xff)
+            error_consistency::throwf("day %d given with no month", dt.day);
     }
-    if (dt.hour == 0xff) {
-        if (dt.minute != 0xff) error_consistency::throwf("minute %d given with no hour", dt.minute);
-        if (dt.second != 0xff) error_consistency::throwf("second %d given with no hour", dt.second);
+    if (dt.hour == 0xff)
+    {
+        if (dt.minute != 0xff)
+            error_consistency::throwf("minute %d given with no hour",
+                                      dt.minute);
+        if (dt.second != 0xff)
+            error_consistency::throwf("second %d given with no hour",
+                                      dt.second);
     }
-    if (dt.minute == 0xff) {
-        if (dt.second != 0xff) error_consistency::throwf("second %d given with no minute", dt.second);
+    if (dt.minute == 0xff)
+    {
+        if (dt.second != 0xff)
+            error_consistency::throwf("second %d given with no minute",
+                                      dt.second);
     }
 }
 
-static void check_partial_consistency(int ye, int mo, int da, int ho, int mi, int se)
+static void check_partial_consistency(int ye, int mo, int da, int ho, int mi,
+                                      int se)
 {
     if (ye == MISSING_INT)
     {
-        if (mo != MISSING_INT) error_consistency::throwf("month %d given with no year", mo);
-        if (da != MISSING_INT) error_consistency::throwf("day %d given with no year", da);
-        if (ho != MISSING_INT) error_consistency::throwf("hour %d given with no year", ho);
-        if (mi != MISSING_INT) error_consistency::throwf("minute %d given with no year", mi);
-        if (se != MISSING_INT) error_consistency::throwf("second %d given with no year", se);
+        if (mo != MISSING_INT)
+            error_consistency::throwf("month %d given with no year", mo);
+        if (da != MISSING_INT)
+            error_consistency::throwf("day %d given with no year", da);
+        if (ho != MISSING_INT)
+            error_consistency::throwf("hour %d given with no year", ho);
+        if (mi != MISSING_INT)
+            error_consistency::throwf("minute %d given with no year", mi);
+        if (se != MISSING_INT)
+            error_consistency::throwf("second %d given with no year", se);
     }
-    if (mo == MISSING_INT) {
-        if (da != MISSING_INT) error_consistency::throwf("day %d given with no month", da);
+    if (mo == MISSING_INT)
+    {
+        if (da != MISSING_INT)
+            error_consistency::throwf("day %d given with no month", da);
     }
-    if (ho == MISSING_INT) {
-        if (mi != MISSING_INT) error_consistency::throwf("minute %d given with no hour", mi);
-        if (se != MISSING_INT) error_consistency::throwf("second %d given with no hour", se);
+    if (ho == MISSING_INT)
+    {
+        if (mi != MISSING_INT)
+            error_consistency::throwf("minute %d given with no hour", mi);
+        if (se != MISSING_INT)
+            error_consistency::throwf("second %d given with no hour", se);
     }
-    if (mi == MISSING_INT) {
-        if (se != MISSING_INT) error_consistency::throwf("second %d given with no minute", se);
+    if (mi == MISSING_INT)
+    {
+        if (se != MISSING_INT)
+            error_consistency::throwf("second %d given with no minute", se);
     }
 }
 
 Datetime Datetime::lower_bound(int ye, int mo, int da, int ho, int mi, int se)
 {
     check_partial_consistency(ye, mo, da, ho, mi, se);
-    if (ye == MISSING_INT) return Datetime();
-    if (mo == MISSING_INT) mo = 1;
-    if (da == MISSING_INT) da = 1;
-    if (ho == MISSING_INT) ho = 0;
-    if (mi == MISSING_INT) mi = 0;
-    if (se == MISSING_INT) se = 0;
+    if (ye == MISSING_INT)
+        return Datetime();
+    if (mo == MISSING_INT)
+        mo = 1;
+    if (da == MISSING_INT)
+        da = 1;
+    if (ho == MISSING_INT)
+        ho = 0;
+    if (mi == MISSING_INT)
+        mi = 0;
+    if (se == MISSING_INT)
+        se = 0;
     return Datetime(ye, mo, da, ho, mi, se);
 }
 
 Datetime Datetime::upper_bound(int ye, int mo, int da, int ho, int mi, int se)
 {
     check_partial_consistency(ye, mo, da, ho, mi, se);
-    if (ye == MISSING_INT) return Datetime();
-    if (mo == MISSING_INT) mo = 12;
-    if (da == MISSING_INT) da = Date::days_in_month(ye, mo);
-    if (ho == MISSING_INT) ho = 23;
-    if (mi == MISSING_INT) mi = 59;
-    if (se == MISSING_INT) se = 59;
+    if (ye == MISSING_INT)
+        return Datetime();
+    if (mo == MISSING_INT)
+        mo = 12;
+    if (da == MISSING_INT)
+        da = Date::days_in_month(ye, mo);
+    if (ho == MISSING_INT)
+        ho = 23;
+    if (mi == MISSING_INT)
+        mi = 59;
+    if (se == MISSING_INT)
+        se = 59;
     return Datetime(ye, mo, da, ho, mi, se);
 }
 
 void Datetime::set_lower_bound()
 {
     check_partial_consistency(*this);
-    if (year   == 0xffff) { month = day = hour = minute = second = 0xff; return; }
-    if (month  == 0xff) month = 1;
-    if (day    == 0xff) day = 1;
-    if (hour   == 0xff) hour = 0;
-    if (minute == 0xff) minute = 0;
-    if (second == 0xff) second = 0;
+    if (year == 0xffff)
+    {
+        month = day = hour = minute = second = 0xff;
+        return;
+    }
+    if (month == 0xff)
+        month = 1;
+    if (day == 0xff)
+        day = 1;
+    if (hour == 0xff)
+        hour = 0;
+    if (minute == 0xff)
+        minute = 0;
+    if (second == 0xff)
+        second = 0;
 }
 
 void Datetime::set_upper_bound()
 {
     check_partial_consistency(*this);
-    if (year   == 0xffff) { month = day = hour = minute = second = 0xff; return; }
-    if (month  == 0xff) month = 12;
-    if (day    == 0xff) day = Date::days_in_month(year, month);
-    if (hour   == 0xff) hour = 23;
-    if (minute == 0xff) minute = 59;
-    if (second == 0xff) second = 59;
+    if (year == 0xffff)
+    {
+        month = day = hour = minute = second = 0xff;
+        return;
+    }
+    if (month == 0xff)
+        month = 12;
+    if (day == 0xff)
+        day = Date::days_in_month(year, month);
+    if (hour == 0xff)
+        hour = 23;
+    if (minute == 0xff)
+        minute = 59;
+    if (second == 0xff)
+        second = 59;
 }
 
-Date Datetime::date() const { return is_missing() ? Date() : Date(year, month, day); }
+Date Datetime::date() const
+{
+    return is_missing() ? Date() : Date(year, month, day);
+}
 
-Time Datetime::time() const { return is_missing() ? Time() : Time(hour, minute, second); }
+Time Datetime::time() const
+{
+    return is_missing() ? Time() : Time(hour, minute, second);
+}
 
 bool Datetime::is_missing() const { return year == 0xffff; }
 
@@ -439,42 +526,53 @@ int Datetime::to_julian() const
 
 int Datetime::compare(const Datetime& o) const
 {
-    if (int res = year - o.year) return res;
-    if (int res = month - o.month) return res;
-    if (int res = day - o.day) return res;
-    if (int res = hour - o.hour) return res;
-    if (int res = minute - o.minute) return res;
+    if (int res = year - o.year)
+        return res;
+    if (int res = month - o.month)
+        return res;
+    if (int res = day - o.day)
+        return res;
+    if (int res = hour - o.hour)
+        return res;
+    if (int res = minute - o.minute)
+        return res;
     return second - o.second;
 }
 
 bool Datetime::operator==(const Datetime& o) const
 {
-    return std::tie(year, month, day, hour, minute, second) == std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
+    return std::tie(year, month, day, hour, minute, second) ==
+           std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
 }
 
 bool Datetime::operator!=(const Datetime& o) const
 {
-    return std::tie(year, month, day, hour, minute, second) != std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
+    return std::tie(year, month, day, hour, minute, second) !=
+           std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
 }
 
 bool Datetime::operator<(const Datetime& o) const
 {
-    return std::tie(year, month, day, hour, minute, second) < std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
+    return std::tie(year, month, day, hour, minute, second) <
+           std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
 }
 
 bool Datetime::operator>(const Datetime& o) const
 {
-    return std::tie(year, month, day, hour, minute, second) > std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
+    return std::tie(year, month, day, hour, minute, second) >
+           std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
 }
 
 bool Datetime::operator<=(const Datetime& o) const
 {
-    return std::tie(year, month, day, hour, minute, second) <= std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
+    return std::tie(year, month, day, hour, minute, second) <=
+           std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
 }
 
 bool Datetime::operator>=(const Datetime& o) const
 {
-    return std::tie(year, month, day, hour, minute, second) >= std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
+    return std::tie(year, month, day, hour, minute, second) >=
+           std::tie(o.year, o.month, o.day, o.hour, o.minute, o.second);
 }
 
 Datetime Datetime::from_iso8601(const char* str)
@@ -486,40 +584,45 @@ Datetime Datetime::from_iso8601(const char* str)
     size_t len = strlen(str);
     switch (len)
     {
-        case 19:
-            break;
+        case 19: break;
         case 20:
             if (str[19] != 'Z')
-                error_consistency::throwf("the only supported time zone indicator for \"%s\" is Z", str);
+                error_consistency::throwf(
+                    "the only supported time zone indicator for \"%s\" is Z",
+                    str);
             break;
         default:
-            error_consistency::throwf("date/time string \"%s\" is %zd characters long instead of 19", str, len);
+            error_consistency::throwf(
+                "date/time string \"%s\" is %zd characters long instead of 19",
+                str, len);
     }
 
     int ye, mo, da, ho, mi, se;
     char sep;
-    if (sscanf(str, "%04d-%02d-%02d%c%02d:%02d:%02d", &ye, &mo, &da, &sep, &ho, &mi, &se) != 7)
+    if (sscanf(str, "%04d-%02d-%02d%c%02d:%02d:%02d", &ye, &mo, &da, &sep, &ho,
+               &mi, &se) != 7)
         error_consistency::throwf("cannot parse date/time string \"%s\"", str);
     if (sep != 'T' && sep != ' ')
-        error_consistency::throwf("invalid iso8601 separator '%c' in datetime string \"%s\"", sep, str);
+        error_consistency::throwf(
+            "invalid iso8601 separator '%c' in datetime string \"%s\"", sep,
+            str);
     return Datetime(ye, mo, da, ho, mi, se);
 }
 
-void Datetime::to_stream_iso8601(std::ostream& out, char sep, const char* tz) const
+void Datetime::to_stream_iso8601(std::ostream& out, char sep,
+                                 const char* tz) const
 {
-    out <<        setw(4) << setfill('0') << year
-        << '-' << setw(2) << setfill('0') << (unsigned)month
-        << '-' << setw(2) << setfill('0') << (unsigned)day
-        << sep << setw(2) << setfill('0') << (unsigned)hour
-        << ':' << setw(2) << setfill('0') << (unsigned)minute
-        << ':' << setw(2) << setfill('0') << (unsigned)second
-        << tz;
+    out << setw(4) << setfill('0') << year << '-' << setw(2) << setfill('0')
+        << (unsigned)month << '-' << setw(2) << setfill('0') << (unsigned)day
+        << sep << setw(2) << setfill('0') << (unsigned)hour << ':' << setw(2)
+        << setfill('0') << (unsigned)minute << ':' << setw(2) << setfill('0')
+        << (unsigned)second << tz;
 }
 
 int Datetime::print_iso8601(FILE* out, char sep, const char* end) const
 {
-    return fprintf(out, "%04hu-%02hhu-%02hhu%c%02hhu:%02hhu:%02hhu%s",
-            year, month, day, sep, hour, minute, second, end);
+    return fprintf(out, "%04hu-%02hhu-%02hhu%c%02hhu:%02hhu:%02hhu%s", year,
+                   month, day, sep, hour, minute, second, end);
 }
 
 int Datetime::print(FILE* out, const char* end) const
@@ -534,8 +637,8 @@ void Datetime::to_csv_iso8601(CSVWriter& out, char sep, const char* tz) const
     else
     {
         char buf[32];
-        snprintf(buf, 32, "%04hu-%02hhu-%02hhu%c%02hhu:%02hhu:%02hhu%s",
-                year, month, day, sep, hour, minute, second, tz);
+        snprintf(buf, 32, "%04hu-%02hhu-%02hhu%c%02hhu:%02hhu:%02hhu%s", year,
+                 month, day, sep, hour, minute, second, tz);
         out.add_value(buf);
     }
 }
@@ -546,7 +649,7 @@ std::string Datetime::to_string(char sep, const char* tz) const
         return std::string();
     char buf[32];
     int len = snprintf(buf, 32, "%04hu-%02hhu-%02hhu%c%02hhu:%02hhu:%02hhu%s",
-            year, month, day, sep, hour, minute, second, tz);
+                       year, month, day, sep, hour, minute, second, tz);
     return std::string(buf, len);
 }
 
@@ -556,16 +659,16 @@ std::ostream& operator<<(std::ostream& out, const Datetime& dt)
     return out;
 }
 
-
 /*
  * DatetimeRange
  */
 
-DatetimeRange::DatetimeRange(
-            int yemin, int momin, int damin, int homin, int mimin, int semin,
-            int yemax, int momax, int damax, int homax, int mimax, int semax)
+DatetimeRange::DatetimeRange(int yemin, int momin, int damin, int homin,
+                             int mimin, int semin, int yemax, int momax,
+                             int damax, int homax, int mimax, int semax)
 {
-    set(yemin, momin, damin, homin, mimin, semin, yemax, momax, damax, homax, mimax, semax);
+    set(yemin, momin, damin, homin, mimin, semin, yemax, momax, damax, homax,
+        mimax, semax);
 }
 
 bool DatetimeRange::is_missing() const
@@ -573,12 +676,30 @@ bool DatetimeRange::is_missing() const
     return min.is_missing() && max.is_missing();
 }
 
-bool DatetimeRange::operator==(const DatetimeRange& o) const { return std::tie(min, max) == std::tie(o.min, o.max); }
-bool DatetimeRange::operator!=(const DatetimeRange& o) const { return std::tie(min, max) != std::tie(o.min, o.max); }
-bool DatetimeRange::operator<(const DatetimeRange& o) const { return std::tie(min, max) < std::tie(o.min, o.max); }
-bool DatetimeRange::operator<=(const DatetimeRange& o) const { return std::tie(min, max) <= std::tie(o.min, o.max); }
-bool DatetimeRange::operator>(const DatetimeRange& o) const { return std::tie(min, max) > std::tie(o.min, o.max); }
-bool DatetimeRange::operator>=(const DatetimeRange& o) const { return std::tie(min, max) >= std::tie(o.min, o.max); }
+bool DatetimeRange::operator==(const DatetimeRange& o) const
+{
+    return std::tie(min, max) == std::tie(o.min, o.max);
+}
+bool DatetimeRange::operator!=(const DatetimeRange& o) const
+{
+    return std::tie(min, max) != std::tie(o.min, o.max);
+}
+bool DatetimeRange::operator<(const DatetimeRange& o) const
+{
+    return std::tie(min, max) < std::tie(o.min, o.max);
+}
+bool DatetimeRange::operator<=(const DatetimeRange& o) const
+{
+    return std::tie(min, max) <= std::tie(o.min, o.max);
+}
+bool DatetimeRange::operator>(const DatetimeRange& o) const
+{
+    return std::tie(min, max) > std::tie(o.min, o.max);
+}
+bool DatetimeRange::operator>=(const DatetimeRange& o) const
+{
+    return std::tie(min, max) >= std::tie(o.min, o.max);
+}
 
 void DatetimeRange::merge(const DatetimeRange& range)
 {
@@ -595,9 +716,9 @@ void DatetimeRange::set(const Datetime& min, const Datetime& max)
     this->max = max;
 }
 
-void DatetimeRange::set(
-        int yemin, int momin, int damin, int homin, int mimin, int semin,
-        int yemax, int momax, int damax, int homax, int mimax, int semax)
+void DatetimeRange::set(int yemin, int momin, int damin, int homin, int mimin,
+                        int semin, int yemax, int momax, int damax, int homax,
+                        int mimax, int semax)
 {
     min = Datetime::lower_bound(yemin, momin, damin, homin, mimin, semin);
     max = Datetime::upper_bound(yemax, momax, damax, homax, mimax, semax);
@@ -610,11 +731,10 @@ bool DatetimeRange::contains(const Datetime& dt) const
             return true;
         else
             return dt <= max;
+    else if (max.is_missing())
+        return dt >= min;
     else
-        if (max.is_missing())
-            return dt >= min;
-        else
-            return min <= dt && dt <= max;
+        return min <= dt && dt <= max;
 }
 
 bool DatetimeRange::contains(const DatetimeRange& dtr) const
@@ -661,7 +781,6 @@ std::ostream& operator<<(std::ostream& out, const DatetimeRange& dtr)
     return out;
 }
 
-
 /*
  * Coordinate utilities
  */
@@ -675,21 +794,16 @@ inline int normalon(int lon)
     return ((lon + 18000000) % 36000000) - 18000000;
 }
 
-}
-
+} // namespace
 
 /*
  * Coords
  */
 
-Coords::Coords(int lat, int lon)
-{
-    set(lat, lon);
-}
+Coords::Coords(int lat, int lon) { set(lat, lon); }
 
 Coords::Coords(double lat, double lon)
-    : lat(ll_to_int(lat)),
-      lon(normalon(ll_to_int(lon)))
+    : lat(ll_to_int(lat)), lon(normalon(ll_to_int(lon)))
 {
 }
 
@@ -740,16 +854,35 @@ double Coords::dlon() const { return ll_from_int(lon); }
 
 int Coords::compare(const Coords& o) const
 {
-    if (int res = lat - o.lat) return res;
+    if (int res = lat - o.lat)
+        return res;
     return lon - o.lon;
 }
 
-bool Coords::operator==(const Coords& o) const { return std::tie(lat, lon) == std::tie(o.lat, o.lon); }
-bool Coords::operator!=(const Coords& o) const { return std::tie(lat, lon) != std::tie(o.lat, o.lon); }
-bool Coords::operator<(const Coords& o) const { return std::tie(lat, lon) < std::tie(o.lat, o.lon); }
-bool Coords::operator>(const Coords& o) const { return std::tie(lat, lon) > std::tie(o.lat, o.lon); }
-bool Coords::operator<=(const Coords& o) const { return std::tie(lat, lon) <= std::tie(o.lat, o.lon); }
-bool Coords::operator>=(const Coords& o) const { return std::tie(lat, lon) >= std::tie(o.lat, o.lon); }
+bool Coords::operator==(const Coords& o) const
+{
+    return std::tie(lat, lon) == std::tie(o.lat, o.lon);
+}
+bool Coords::operator!=(const Coords& o) const
+{
+    return std::tie(lat, lon) != std::tie(o.lat, o.lon);
+}
+bool Coords::operator<(const Coords& o) const
+{
+    return std::tie(lat, lon) < std::tie(o.lat, o.lon);
+}
+bool Coords::operator>(const Coords& o) const
+{
+    return std::tie(lat, lon) > std::tie(o.lat, o.lon);
+}
+bool Coords::operator<=(const Coords& o) const
+{
+    return std::tie(lat, lon) <= std::tie(o.lat, o.lon);
+}
+bool Coords::operator>=(const Coords& o) const
+{
+    return std::tie(lat, lon) >= std::tie(o.lat, o.lon);
+}
 
 int Coords::print(FILE* out, const char* end) const
 {
@@ -776,35 +909,20 @@ std::ostream& operator<<(std::ostream& out, const Coords& c)
     if (c.is_missing())
         return out << "(-,-)";
     else
-        return out << fixed
-                   << "(" << setprecision(5) << c.dlat()
-                   << "," << setprecision(5) << c.dlon()
-                   << ")"
-    //             << resetiosflags(ios_base::floatfield);
-    //             << defaultfloat;
+        return out << fixed << "(" << setprecision(5) << c.dlat() << ","
+                   << setprecision(5) << c.dlon() << ")"
+            //             << resetiosflags(ios_base::floatfield);
+            //             << defaultfloat;
             ;
 }
 
-int Coords::lat_to_int(double lat)
-{
-    return ll_to_int(lat);
-}
+int Coords::lat_to_int(double lat) { return ll_to_int(lat); }
 
-int Coords::lon_to_int(double lon)
-{
-    return normalon(ll_to_int(lon));
-}
+int Coords::lon_to_int(double lon) { return normalon(ll_to_int(lon)); }
 
-double Coords::lat_from_int(int lat)
-{
-    return ll_from_int(lat);
-}
+double Coords::lat_from_int(int lat) { return ll_from_int(lat); }
 
-double Coords::lon_from_int(int lon)
-{
-    return ll_from_int(lon);
-}
-
+double Coords::lon_from_int(int lon) { return ll_from_int(lon); }
 
 /*
  * LatRange
@@ -817,11 +935,12 @@ constexpr double LatRange::DMAX;
 
 LatRange::LatRange(int min, int max)
     : imin(min == MISSING_INT ? LatRange::IMIN : min),
-      imax(max == MISSING_INT ? LatRange::IMAX : max) {}
+      imax(max == MISSING_INT ? LatRange::IMAX : max)
+{
+}
 
 LatRange::LatRange(double min, double max)
-    : imin(ll_to_int(min)),
-      imax(ll_to_int(max))
+    : imin(ll_to_int(min)), imax(ll_to_int(max))
 {
 }
 
@@ -858,10 +977,7 @@ void LatRange::set(double min, double max)
     imax = ll_to_int(max);
 }
 
-bool LatRange::contains(int lat) const
-{
-    return lat >= imin && lat <= imax;
-}
+bool LatRange::contains(int lat) const { return lat >= imin && lat <= imax; }
 
 bool LatRange::contains(double lat) const
 {
@@ -885,24 +1001,17 @@ std::ostream& operator<<(std::ostream& out, const LatRange& lr)
 {
     double dmin, dmax;
     lr.get(dmin, dmax);
-    out << fixed
-        << "(" << setprecision(5) << dmin
-        << " to " << setprecision(5) << dmax
-        << ")"
-        << resetiosflags(ios_base::floatfield);
+    out << fixed << "(" << setprecision(5) << dmin << " to " << setprecision(5)
+        << dmax << ")" << resetiosflags(ios_base::floatfield);
     //    << defaultfloat;
     return out;
 }
-
 
 /*
  * LonRange
  */
 
-LonRange::LonRange(int min, int max)
-{
-    set(min, max);
-}
+LonRange::LonRange(int min, int max) { set(min, max); }
 
 LonRange::LonRange(double min, double max)
     : imin(normalon(ll_to_int(min))), imax(normalon(ll_to_int(max)))
@@ -913,14 +1022,16 @@ LonRange::LonRange(double min, double max)
 
 bool LonRange::operator==(const LonRange& lr) const
 {
-    if ((imin == MISSING_INT || imax == MISSING_INT) && (lr.imin == MISSING_INT || lr.imax == MISSING_INT))
+    if ((imin == MISSING_INT || imax == MISSING_INT) &&
+        (lr.imin == MISSING_INT || lr.imax == MISSING_INT))
         return true;
     return imin == lr.imin && imax == lr.imax;
 }
 
 bool LonRange::operator!=(const LonRange& lr) const
 {
-    if ((imin == MISSING_INT || imax == MISSING_INT) && (lr.imin == MISSING_INT || lr.imax == MISSING_INT))
+    if ((imin == MISSING_INT || imax == MISSING_INT) &&
+        (lr.imin == MISSING_INT || lr.imax == MISSING_INT))
         return false;
     return imin != lr.imin || imax != lr.imax;
 }
@@ -930,8 +1041,14 @@ bool LonRange::is_missing() const
     return imin == MISSING_INT || imax == MISSING_INT;
 }
 
-double LonRange::dmin() const { return imin == MISSING_INT ? -180.0 : ll_from_int(imin); }
-double LonRange::dmax() const { return imax == MISSING_INT ?  180.0 : ll_from_int(imax); }
+double LonRange::dmin() const
+{
+    return imin == MISSING_INT ? -180.0 : ll_from_int(imin);
+}
+double LonRange::dmax() const
+{
+    return imax == MISSING_INT ? 180.0 : ll_from_int(imax);
+}
 
 void LonRange::get(double& min, double& max) const
 {
@@ -939,7 +1056,9 @@ void LonRange::get(double& min, double& max) const
     {
         min = -180.0;
         max = 180.0;
-    } else {
+    }
+    else
+    {
         min = ll_from_int(imin);
         max = ll_from_int(imax);
     }
@@ -947,8 +1066,10 @@ void LonRange::get(double& min, double& max) const
 
 void LonRange::set(int min, int max)
 {
-    if ((min != MISSING_INT || max != MISSING_INT) && (min == MISSING_INT || max == MISSING_INT))
-        error_consistency::throwf("cannot set longitude range to an open ended range");
+    if ((min != MISSING_INT || max != MISSING_INT) &&
+        (min == MISSING_INT || max == MISSING_INT))
+        error_consistency::throwf(
+            "cannot set longitude range to an open ended range");
     imin = min == MISSING_INT ? MISSING_INT : normalon(min);
     imax = max == MISSING_INT ? MISSING_INT : normalon(max);
     // Catch cases like min=0 max=360, that would match anything, and set them
@@ -962,10 +1083,7 @@ void LonRange::set(double min, double max)
     set(ll_to_int(min), ll_to_int(max));
 }
 
-void LonRange::set(const LonRange& lr)
-{
-    set(lr.imin, lr.imax);
-}
+void LonRange::set(const LonRange& lr) { set(lr.imin, lr.imax); }
 
 bool LonRange::contains(int lon) const
 {
@@ -974,23 +1092,26 @@ bool LonRange::contains(int lon) const
         if (imin == MISSING_INT)
             return true;
         return lon == imin;
-    } else if (imin < imax) {
+    }
+    else if (imin < imax)
+    {
         return lon >= imin && lon <= imax;
-    } else {
-        return ((lon >= imin and lon <= 18000000)
-             or (lon >= -18000000 and lon <= imax));
+    }
+    else
+    {
+        return ((lon >= imin and lon <= 18000000) or
+                (lon >= -18000000 and lon <= imax));
     }
 }
 
-bool LonRange::contains(double lon) const
-{
-    return contains(ll_to_int(lon));
-}
+bool LonRange::contains(double lon) const { return contains(ll_to_int(lon)); }
 
 bool LonRange::contains(const LonRange& lr) const
 {
-    if (is_missing()) return true;
-    if (lr.is_missing()) return false;
+    if (is_missing())
+        return true;
+    if (lr.is_missing())
+        return false;
 
     // Longitude ranges can match outside or inside the interval
     if (imin < imax)
@@ -1000,17 +1121,23 @@ bool LonRange::contains(const LonRange& lr) const
         {
             // lr matches inside the interval
             return imin <= lr.imin && lr.imax <= imax;
-        } else {
+        }
+        else
+        {
             // lr matches outside the interval
             return false;
         }
-    } else {
+    }
+    else
+    {
         // we match outside the interval
         if (lr.imin < lr.imax)
         {
             // lr matches inside the interval
             return lr.imax <= imin || lr.imin >= imax;
-        } else {
+        }
+        else
+        {
             // lr matches outside the interval
             return lr.imin <= imin || lr.imax >= imax;
         }
@@ -1028,58 +1155,67 @@ std::ostream& operator<<(std::ostream& out, const LonRange& lr)
 {
     double dmin, dmax;
     lr.get(dmin, dmax);
-    out << fixed
-        << "(" << setprecision(5) << dmin
-        << " to " << setprecision(5) << dmax
-        << ")"
-        << resetiosflags(ios_base::floatfield);
+    out << fixed << "(" << setprecision(5) << dmin << " to " << setprecision(5)
+        << dmax << ")" << resetiosflags(ios_base::floatfield);
     //    << defaultfloat;
     return out;
 }
-
 
 /*
  * Level
  */
 
-bool Level::is_missing() const { return ltype1 == MISSING_INT && l1 == MISSING_INT && ltype2 == MISSING_INT && l2 == MISSING_INT; }
+bool Level::is_missing() const
+{
+    return ltype1 == MISSING_INT && l1 == MISSING_INT &&
+           ltype2 == MISSING_INT && l2 == MISSING_INT;
+}
 
 bool Level::operator==(const Level& o) const
 {
-    return std::tie(ltype1, l1, ltype2, l2) == std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
+    return std::tie(ltype1, l1, ltype2, l2) ==
+           std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
 }
 
 bool Level::operator!=(const Level& o) const
 {
-    return std::tie(ltype1, l1, ltype2, l2) != std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
+    return std::tie(ltype1, l1, ltype2, l2) !=
+           std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
 }
 
 bool Level::operator<(const Level& o) const
 {
-    return std::tie(ltype1, l1, ltype2, l2) < std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
+    return std::tie(ltype1, l1, ltype2, l2) <
+           std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
 }
 
 bool Level::operator>(const Level& o) const
 {
-    return std::tie(ltype1, l1, ltype2, l2) > std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
+    return std::tie(ltype1, l1, ltype2, l2) >
+           std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
 }
 
 bool Level::operator<=(const Level& o) const
 {
-    return std::tie(ltype1, l1, ltype2, l2) <= std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
+    return std::tie(ltype1, l1, ltype2, l2) <=
+           std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
 }
 
 bool Level::operator>=(const Level& o) const
 {
-    return std::tie(ltype1, l1, ltype2, l2) >= std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
+    return std::tie(ltype1, l1, ltype2, l2) >=
+           std::tie(o.ltype1, o.l1, o.ltype2, o.l2);
 }
 
 int Level::compare(const Level& l) const
 {
     int res;
-    if ((res = ltype1 - l.ltype1)) return res;
-    if ((res = l1 - l.l1)) return res;
-    if ((res = ltype2 - l.ltype2)) return res;
+    if ((res = ltype1 - l.ltype1))
+        return res;
+    if ((res = l1 - l.l1))
+        return res;
+    if ((res = ltype2 - l.ltype2))
+        return res;
     return l2 - l.l2;
 }
 
@@ -1089,32 +1225,74 @@ static std::string describe_level(int ltype, int val)
 
     switch (ltype)
     {
-        case 1:   return "Ground or water surface";
-        case 2:   return "Cloud base level";
-        case 3:   return "Level of cloud tops";
-        case 4:   return "Level of 0°C isotherm";
-        case 5:   return "Level of adiabatic condensation lifted from the surface";
-        case 6:   return "Maximum wind level";
-        case 7:   return "Tropopause";
-        case 8:   if (val == 0)
-                      return "Nominal top of atmosphere";
-                  else
-                      return snprintf(buf, 256, "Nominal top of atmosphere, channel %d", val), buf;
-        case 9:   return "Sea bottom";
-        case 20:  return snprintf(buf, 256, "Isothermal level, %.1fK", (double)val/10), buf;
-        case 100: return snprintf(buf, 256, "Isobaric surface, %.2fhPa", (double)val/100), buf;
+        case 1: return "Ground or water surface";
+        case 2: return "Cloud base level";
+        case 3: return "Level of cloud tops";
+        case 4: return "Level of 0°C isotherm";
+        case 5:
+            return "Level of adiabatic condensation lifted from the surface";
+        case 6: return "Maximum wind level";
+        case 7: return "Tropopause";
+        case 8:
+            if (val == 0)
+                return "Nominal top of atmosphere";
+            else
+                return snprintf(buf, 256,
+                                "Nominal top of atmosphere, channel %d", val),
+                       buf;
+        case 9: return "Sea bottom";
+        case 20:
+            return snprintf(buf, 256, "Isothermal level, %.1fK",
+                            (double)val / 10),
+                   buf;
+        case 100:
+            return snprintf(buf, 256, "Isobaric surface, %.2fhPa",
+                            (double)val / 100),
+                   buf;
         case 101: return "Mean sea level";
-        case 102: return snprintf(buf, 256, "%.3fm above mean sea level", (double)val/1000), buf;
-        case 103: return snprintf(buf, 256, "%.3fm above ground", (double)val/1000), buf;
-        case 104: return snprintf(buf, 256, "Sigma level %.5f", (double)val/10000), buf;
+        case 102:
+            return snprintf(buf, 256, "%.3fm above mean sea level",
+                            (double)val / 1000),
+                   buf;
+        case 103:
+            return snprintf(buf, 256, "%.3fm above ground", (double)val / 1000),
+                   buf;
+        case 104:
+            return snprintf(buf, 256, "Sigma level %.5f", (double)val / 10000),
+                   buf;
         case 105: return snprintf(buf, 256, "Hybrid level %d", val), buf;
-        case 106: return snprintf(buf, 256, "%.3fm below land surface", (double)val/1000), buf;
-        case 107: return snprintf(buf, 256, "Isentropic (theta) level, potential temperature %.1fK", (double)val/10), buf;
-        case 108: return snprintf(buf, 256, "Pressure difference %.2fhPa from ground to level", (double)val/100), buf;
-        case 109: return snprintf(buf, 256, "Potential vorticity surface %.3f 10-6 K m2 kg-1 s-1", (double)val/1000), buf;
-        case 111: return snprintf(buf, 256, "ETA* level %.5f", (double)val/10000), buf;
-        case 117: return snprintf(buf, 256, "Mixed layer depth %.3fm", (double)val/1000), buf;
-        case 160: return snprintf(buf, 256, "%.3fm below sea level", (double)val/1000), buf;
+        case 106:
+            return snprintf(buf, 256, "%.3fm below land surface",
+                            (double)val / 1000),
+                   buf;
+        case 107:
+            return snprintf(
+                       buf, 256,
+                       "Isentropic (theta) level, potential temperature %.1fK",
+                       (double)val / 10),
+                   buf;
+        case 108:
+            return snprintf(buf, 256,
+                            "Pressure difference %.2fhPa from ground to level",
+                            (double)val / 100),
+                   buf;
+        case 109:
+            return snprintf(
+                       buf, 256,
+                       "Potential vorticity surface %.3f 10-6 K m2 kg-1 s-1",
+                       (double)val / 1000),
+                   buf;
+        case 111:
+            return snprintf(buf, 256, "ETA* level %.5f", (double)val / 10000),
+                   buf;
+        case 117:
+            return snprintf(buf, 256, "Mixed layer depth %.3fm",
+                            (double)val / 1000),
+                   buf;
+        case 160:
+            return snprintf(buf, 256, "%.3fm below sea level",
+                            (double)val / 1000),
+                   buf;
         case 200: return "Entire atmosphere (considered as a single layer)";
         case 201: return "Entire ocean (considered as a single layer)";
         case 204: return "Highest tropospheric freezing level";
@@ -1134,7 +1312,10 @@ static std::string describe_level(int ltype, int val)
         case 232: return "High cloud bottom level";
         case 233: return "High cloud top level";
         case 234: return "High cloud layer";
-        case 235: return snprintf(buf, 256, "Ocean Isotherm Level, %.1fK", (double)val/10), buf;
+        case 235:
+            return snprintf(buf, 256, "Ocean Isotherm Level, %.1fK",
+                            (double)val / 10),
+                   buf;
         case 240: return "Ocean Mixed Layer";
         case 242: return "Convective cloud bottom level";
         case 243: return "Convective cloud top level";
@@ -1146,26 +1327,31 @@ static std::string describe_level(int ltype, int val)
         case 249: return "Shallow convective cloud top level";
         case 251: return "Deep convective cloud bottom level";
         case 252: return "Deep convective cloud top level";
-        case 253: return "Lowest bottom level of supercooled liquid water layer";
+        case 253:
+            return "Lowest bottom level of supercooled liquid water layer";
         case 254: return "Highest top level of supercooled liquid water layer";
         case 255: return "Missing";
         case 256: return "Clouds";
         case 258:
-            switch (val) {
-                case 0: return "General cloud group";
-                case 1: return "CL";
-                case 2: return "CM";
-                case 3: return "CH";
+            switch (val)
+            {
+                case 0:  return "General cloud group";
+                case 1:  return "CL";
+                case 2:  return "CM";
+                case 3:  return "CH";
                 default: return snprintf(buf, 256, "%d %d", ltype, val), buf;
             }
             break;
         case 259: return snprintf(buf, 256, "Cloud group %d", val), buf;
         case 260: return snprintf(buf, 256, "Cloud drift group %d", val), buf;
-        case 261: return snprintf(buf, 256, "Cloud elevation group %d", val), buf;
+        case 261:
+            return snprintf(buf, 256, "Cloud elevation group %d", val), buf;
         case 262: return "Direction and elevation of clouds";
-        case 265: return snprintf(buf, 256, "Non-physical data level #%d", val), buf;
-        case MISSING_INT: return "Information about the station that generated the data";
-        default:    return snprintf(buf, 256, "%d %d", ltype, val), buf; break;
+        case 265:
+            return snprintf(buf, 256, "Non-physical data level #%d", val), buf;
+        case MISSING_INT:
+            return "Information about the station that generated the data";
+        default: return snprintf(buf, 256, "%d %d", ltype, val), buf; break;
     }
 }
 
@@ -1179,7 +1365,9 @@ std::string Level::describe() const
         string lev1 = describe_level(ltype1, l1);
         string lev2 = describe_level(ltype2, l2);
         return lev1 + ", " + lev2;
-    } else {
+    }
+    else
+    {
         string lev1 = describe_level(ltype1, l1);
         string lev2 = describe_level(ltype2, l2);
         return "Layer from [" + lev1 + "] to [" + lev2 + "]";
@@ -1188,37 +1376,76 @@ std::string Level::describe() const
 
 void Level::to_stream(std::ostream& out, const char* undef) const
 {
-    if (ltype1 == MISSING_INT) out << undef; else out << ltype1;
+    if (ltype1 == MISSING_INT)
+        out << undef;
+    else
+        out << ltype1;
     out << ",";
-    if (l1 == MISSING_INT) out << undef; else out << l1;
+    if (l1 == MISSING_INT)
+        out << undef;
+    else
+        out << l1;
     out << ",";
-    if (ltype2 == MISSING_INT) out << undef; else out << ltype2;
+    if (ltype2 == MISSING_INT)
+        out << undef;
+    else
+        out << ltype2;
     out << ",";
-    if (l2 == MISSING_INT) out << undef; else out << l2;
+    if (l2 == MISSING_INT)
+        out << undef;
+    else
+        out << l2;
 }
 
 std::string Level::to_string(const char* undef) const
 {
     string res;
-    if (ltype1 == MISSING_INT) res += undef; else res += std::to_string(ltype1);
+    if (ltype1 == MISSING_INT)
+        res += undef;
+    else
+        res += std::to_string(ltype1);
     res += ",";
-    if (l1 == MISSING_INT) res += undef; else res += std::to_string(l1);
+    if (l1 == MISSING_INT)
+        res += undef;
+    else
+        res += std::to_string(l1);
     res += ",";
-    if (ltype2 == MISSING_INT) res += undef; else res += std::to_string(ltype2);
+    if (ltype2 == MISSING_INT)
+        res += undef;
+    else
+        res += std::to_string(ltype2);
     res += ",";
-    if (l2 == MISSING_INT) res += undef; else res += std::to_string(l2);
+    if (l2 == MISSING_INT)
+        res += undef;
+    else
+        res += std::to_string(l2);
     return res;
 }
 
 void Level::to_csv(CSVWriter& out) const
 {
-    if (ltype1 == MISSING_INT) out.add_value_empty(); else out.add_value(ltype1);
-    if (l1 == MISSING_INT) out.add_value_empty(); else out.add_value(l1);
-    if (ltype2 == MISSING_INT) out.add_value_empty(); else out.add_value(ltype2);
-    if (l2 == MISSING_INT) out.add_value_empty(); else out.add_value(l2);
+    if (ltype1 == MISSING_INT)
+        out.add_value_empty();
+    else
+        out.add_value(ltype1);
+    if (l1 == MISSING_INT)
+        out.add_value_empty();
+    else
+        out.add_value(l1);
+    if (ltype2 == MISSING_INT)
+        out.add_value_empty();
+    else
+        out.add_value(ltype2);
+    if (l2 == MISSING_INT)
+        out.add_value_empty();
+    else
+        out.add_value(l2);
 }
 
-Level Level::cloud(int ltype2, int l2) { return Level(256, MISSING_INT, ltype2, l2); }
+Level Level::cloud(int ltype2, int l2)
+{
+    return Level(256, MISSING_INT, ltype2, l2);
+}
 
 int Level::print(FILE* out, const char* undef, const char* end) const
 {
@@ -1249,53 +1476,102 @@ std::ostream& operator<<(std::ostream& out, const Level& l)
     return out;
 }
 
-
 /*
  * Trange
  */
 
-bool Trange::is_missing() const { return pind == MISSING_INT && p1 == MISSING_INT && p2 == MISSING_INT; }
+bool Trange::is_missing() const
+{
+    return pind == MISSING_INT && p1 == MISSING_INT && p2 == MISSING_INT;
+}
 
 int Trange::compare(const Trange& t) const
 {
     int res;
-    if ((res = pind - t.pind)) return res;
-    if ((res = p1 - t.p1)) return res;
+    if ((res = pind - t.pind))
+        return res;
+    if ((res = p1 - t.p1))
+        return res;
     return p2 - t.p2;
 }
 
-bool Trange::operator==(const Trange& o) const { return std::tie(pind, p1, p2) == std::tie(o.pind, o.p1, o.p2); }
-bool Trange::operator!=(const Trange& o) const { return std::tie(pind, p1, p2) != std::tie(o.pind, o.p1, o.p2); }
-bool Trange::operator<(const Trange& o) const { return std::tie(pind, p1, p2) < std::tie(o.pind, o.p1, o.p2); }
-bool Trange::operator>(const Trange& o) const { return std::tie(pind, p1, p2) > std::tie(o.pind, o.p1, o.p2); }
-bool Trange::operator<=(const Trange& o) const { return std::tie(pind, p1, p2) <= std::tie(o.pind, o.p1, o.p2); }
-bool Trange::operator>=(const Trange& o) const { return std::tie(pind, p1, p2) >= std::tie(o.pind, o.p1, o.p2); }
+bool Trange::operator==(const Trange& o) const
+{
+    return std::tie(pind, p1, p2) == std::tie(o.pind, o.p1, o.p2);
+}
+bool Trange::operator!=(const Trange& o) const
+{
+    return std::tie(pind, p1, p2) != std::tie(o.pind, o.p1, o.p2);
+}
+bool Trange::operator<(const Trange& o) const
+{
+    return std::tie(pind, p1, p2) < std::tie(o.pind, o.p1, o.p2);
+}
+bool Trange::operator>(const Trange& o) const
+{
+    return std::tie(pind, p1, p2) > std::tie(o.pind, o.p1, o.p2);
+}
+bool Trange::operator<=(const Trange& o) const
+{
+    return std::tie(pind, p1, p2) <= std::tie(o.pind, o.p1, o.p2);
+}
+bool Trange::operator>=(const Trange& o) const
+{
+    return std::tie(pind, p1, p2) >= std::tie(o.pind, o.p1, o.p2);
+}
 
 void Trange::to_stream(std::ostream& out, const char* undef) const
 {
-    if (pind == MISSING_INT) out << undef; else out << pind;
+    if (pind == MISSING_INT)
+        out << undef;
+    else
+        out << pind;
     out << ",";
-    if (p1 == MISSING_INT) out << undef; else out << p1;
+    if (p1 == MISSING_INT)
+        out << undef;
+    else
+        out << p1;
     out << ",";
-    if (p2 == MISSING_INT) out << undef; else out << p2;
+    if (p2 == MISSING_INT)
+        out << undef;
+    else
+        out << p2;
 }
 
 std::string Trange::to_string(const char* undef) const
 {
     string res;
-    if (pind == MISSING_INT) res += undef; else res += std::to_string(pind);
+    if (pind == MISSING_INT)
+        res += undef;
+    else
+        res += std::to_string(pind);
     res += ",";
-    if (p1 == MISSING_INT) res += undef; else res += std::to_string(p1);
+    if (p1 == MISSING_INT)
+        res += undef;
+    else
+        res += std::to_string(p1);
     res += ",";
-    if (p2 == MISSING_INT) res += undef; else res += std::to_string(p2);
+    if (p2 == MISSING_INT)
+        res += undef;
+    else
+        res += std::to_string(p2);
     return res;
 }
 
 void Trange::to_csv(CSVWriter& out) const
 {
-    if (pind == MISSING_INT) out.add_value_empty(); else out.add_value(pind);
-    if (p1 == MISSING_INT) out.add_value_empty(); else out.add_value(p1);
-    if (p2 == MISSING_INT) out.add_value_empty(); else out.add_value(p2);
+    if (pind == MISSING_INT)
+        out.add_value_empty();
+    else
+        out.add_value(pind);
+    if (p1 == MISSING_INT)
+        out.add_value_empty();
+    else
+        out.add_value(p1);
+    if (p2 == MISSING_INT)
+        out.add_value_empty();
+    else
+        out.add_value(p2);
 }
 
 Trange Trange::instant() { return Trange(254, 0, 0); }
@@ -1305,32 +1581,33 @@ static std::string format_seconds(int val)
     static const int bufsize = 128;
     char buf[bufsize];
 
-    if (val == MISSING_INT) return "-";
+    if (val == MISSING_INT)
+        return "-";
 
     int i = 0;
-    if (val / (3600*24) != 0)
+    if (val / (3600 * 24) != 0)
     {
-        i += snprintf(buf+i, bufsize-i, "%dd ", val / (3600*24));
-        val = abs(val) % (3600*24);
+        i += snprintf(buf + i, bufsize - i, "%dd ", val / (3600 * 24));
+        val = abs(val) % (3600 * 24);
     }
     if (val / 3600 != 0)
     {
-        i += snprintf(buf+i, bufsize-i, "%dh ", val / 3600);
+        i += snprintf(buf + i, bufsize - i, "%dh ", val / 3600);
         val = abs(val) % 3600;
     }
     if (val / 60 != 0)
     {
-        i += snprintf(buf+i, bufsize-i, "%dm ", val / 60);
+        i += snprintf(buf + i, bufsize - i, "%dm ", val / 60);
         val = abs(val) % 60;
     }
     if (val)
-        i += snprintf(buf+i, bufsize-i, "%ds ", val);
+        i += snprintf(buf + i, bufsize - i, "%ds ", val);
     if (i > 0)
         --i;
     else
     {
         buf[0] = '0';
-        i = 1;
+        i      = 1;
     }
     buf[i] = 0;
 
@@ -1377,11 +1654,12 @@ std::string Trange::describe() const
         case 204: return mkdesc("Vectorial minimum", p1, p2);
         case 205: return mkdesc("Product with a valid time ranging", p1, p2);
         case 254:
-              if (p1 == 0 && p2 == 0)
-                  return "Analysis or observation, istantaneous value";
-              else
-                  return "Forecast at t+" + format_seconds(p1) + ", instantaneous value";
-        default:  return snprintf(buf, 256, "%d %d %d", pind, p1, p2), buf;
+            if (p1 == 0 && p2 == 0)
+                return "Analysis or observation, istantaneous value";
+            else
+                return "Forecast at t+" + format_seconds(p1) +
+                       ", instantaneous value";
+        default: return snprintf(buf, 256, "%d %d %d", pind, p1, p2), buf;
     }
 }
 
@@ -1410,45 +1688,51 @@ std::ostream& operator<<(std::ostream& out, const Trange& l)
     return out;
 }
 
-
 /*
  * Ident
  */
 
 Ident::Ident(const char* value) : value(value ? strdup(value) : nullptr) {}
-Ident::Ident(const std::string& value) : value(strndup(value.data(), value.size())) {}
+Ident::Ident(const std::string& value)
+    : value(strndup(value.data(), value.size()))
+{
+}
 Ident::Ident(const Ident& o) : value(o.value ? strdup(o.value) : nullptr) {}
 Ident::Ident(Ident&& o) : value(o.value) { o.value = nullptr; }
 Ident::~Ident() { free(value); }
 Ident& Ident::operator=(const Ident& o)
 {
-    if (value == o.value) return *this;
+    if (value == o.value)
+        return *this;
     free(value);
     value = o.value ? strdup(o.value) : nullptr;
     return *this;
 }
 Ident& Ident::operator=(Ident&& o)
 {
-    if (value == o.value) return *this;
+    if (value == o.value)
+        return *this;
     free(value);
     if (o.value)
     {
-        value = strdup(o.value);
+        value   = strdup(o.value);
         o.value = nullptr;
-    } else
+    }
+    else
         value = nullptr;
     return *this;
 }
 Ident& Ident::operator=(const char* o)
 {
-    if (value) free(value);
+    if (value)
+        free(value);
     value = o ? strdup(o) : nullptr;
     return *this;
-
 }
 Ident& Ident::operator=(const std::string& o)
 {
-    if (value) free(value);
+    if (value)
+        free(value);
     value = strndup(o.c_str(), o.size());
     return *this;
 }
@@ -1459,21 +1743,28 @@ void Ident::clear()
 }
 int Ident::compare(const Ident& o) const
 {
-    if (!value && !o.value) return 0;
-    if (!value && o.value) return -1;
-    if (value && !o.value) return 1;
+    if (!value && !o.value)
+        return 0;
+    if (!value && o.value)
+        return -1;
+    if (value && !o.value)
+        return 1;
     return strcmp(value, o.value);
 }
 int Ident::compare(const char* o) const
 {
-    if (!value && !o) return 0;
-    if (!value && o) return -1;
-    if (value && !o) return 1;
+    if (!value && !o)
+        return 0;
+    if (!value && o)
+        return -1;
+    if (value && !o)
+        return 1;
     return strcmp(value, o);
 }
 int Ident::compare(const std::string& o) const
 {
-    if (!value) return -1;
+    if (!value)
+        return -1;
     return strcmp(value, o.c_str());
 }
 
@@ -1481,7 +1772,8 @@ bool Ident::is_missing() const { return value == nullptr; }
 
 Ident::operator std::string() const
 {
-    if (!value) throw error_consistency("ident is not set");
+    if (!value)
+        throw error_consistency("ident is not set");
     return std::string(value);
 }
 
@@ -1492,7 +1784,6 @@ std::ostream& operator<<(std::ostream& out, const Ident& i)
     else
         return out << (const char*)i;
 }
-
 
 /*
  * Station
@@ -1547,7 +1838,6 @@ std::ostream& operator<<(std::ostream& out, const Station& st)
     return out << st.coords << "," << st.ident << "," << st.report;
 }
 
-
 /*
  * DBStation
  */
@@ -1600,7 +1890,7 @@ std::ostream& operator<<(std::ostream& out, const DBStation& st)
     return out << (const Station&)st;
 }
 
-}
+} // namespace dballe
 
 namespace std {
 
@@ -1608,10 +1898,14 @@ size_t hash<dballe::Level>::operator()(dballe::Level const& o) const noexcept
 {
     using dballe::MISSING_INT;
     size_t res = 0;
-    if (o.ltype1 != MISSING_INT) res += o.ltype1;
-    if (o.l1 != MISSING_INT) res += o.l1;
-    if (o.ltype2 != MISSING_INT) res += o.ltype2 << 8;
-    if (o.l2 != MISSING_INT) res += o.l2;
+    if (o.ltype1 != MISSING_INT)
+        res += o.ltype1;
+    if (o.l1 != MISSING_INT)
+        res += o.l1;
+    if (o.ltype2 != MISSING_INT)
+        res += o.ltype2 << 8;
+    if (o.l2 != MISSING_INT)
+        res += o.l2;
     return res;
 }
 
@@ -1619,9 +1913,12 @@ size_t hash<dballe::Trange>::operator()(dballe::Trange const& o) const noexcept
 {
     using dballe::MISSING_INT;
     size_t res = 0;
-    if (o.pind != MISSING_INT) res += o.pind;
-    if (o.p1 != MISSING_INT) res += o.p1;
-    if (o.p2 != MISSING_INT) res += o.p2;
+    if (o.pind != MISSING_INT)
+        res += o.pind;
+    if (o.p1 != MISSING_INT)
+        res += o.p1;
+    if (o.p2 != MISSING_INT)
+        res += o.p2;
     return res;
 }
 
@@ -1637,7 +1934,8 @@ size_t hash<dballe::Ident>::operator()(dballe::Ident const& o) const noexcept
     return std::hash<std::string>{}(o.get());
 }
 
-size_t hash<dballe::Station>::operator()(dballe::Station const& o) const noexcept
+size_t
+hash<dballe::Station>::operator()(dballe::Station const& o) const noexcept
 {
     size_t res = std::hash<std::string>{}(o.report);
     res += std::hash<dballe::Coords>{}(o.coords);
@@ -1645,7 +1943,8 @@ size_t hash<dballe::Station>::operator()(dballe::Station const& o) const noexcep
     return res;
 }
 
-size_t hash<dballe::DBStation>::operator()(dballe::DBStation const& o) const noexcept
+size_t
+hash<dballe::DBStation>::operator()(dballe::DBStation const& o) const noexcept
 {
     size_t res = std::hash<std::string>{}(o.report);
     res += o.id;
@@ -1654,4 +1953,4 @@ size_t hash<dballe::DBStation>::operator()(dballe::DBStation const& o) const noe
     return res;
 }
 
-}
+} // namespace std

@@ -1,13 +1,13 @@
-#include <wreport/utils/tests.h>
-#include <wreport/utils/testrunner.h>
-#include <wreport/utils/term.h>
-#include <wreport/fwd.h>
-#include <dballe/db/tests.h>
-#include <dballe/db/v7/trace.h>
-#include <signal.h>
 #include <cstdlib>
 #include <cstring>
+#include <dballe/db/tests.h>
+#include <dballe/db/v7/trace.h>
 #include <exception>
+#include <signal.h>
+#include <wreport/fwd.h>
+#include <wreport/utils/term.h>
+#include <wreport/utils/testrunner.h>
+#include <wreport/utils/tests.h>
 
 using namespace wreport::tests;
 
@@ -16,7 +16,7 @@ using namespace wreport::tests;
     throw std::runtime_error("killing signal catched");
 }
 
-int main(int argc,const char* argv[])
+int main(int argc, const char* argv[])
 {
     dballe::db::v7::Trace::set_in_test_suite();
     signal(SIGSEGV, signal_to_exception);
@@ -55,7 +55,8 @@ int main(int argc,const char* argv[])
     auto all_results = tests.run_tests(*controller);
     TestResultStats rstats(all_results);
     rstats.print_results(output);
-    if (verbose) rstats.print_stats(output);
+    if (verbose)
+        rstats.print_stats(output);
     rstats.print_summary(output);
     return rstats.success ? 0 : 1;
 }

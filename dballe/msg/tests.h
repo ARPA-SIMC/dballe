@@ -1,7 +1,7 @@
 #include <dballe/core/tests.h>
-#include <dballe/message.h>
-#include <dballe/importer.h>
 #include <dballe/exporter.h>
+#include <dballe/importer.h>
+#include <dballe/message.h>
 #include <dballe/msg/msg.h>
 #include <vector>
 
@@ -12,8 +12,11 @@ struct Vartable;
 namespace dballe {
 namespace tests {
 
-impl::Messages read_msgs(const char* filename, Encoding type, const dballe::ImporterOptions& opts=dballe::ImporterOptions::defaults);
-impl::Messages read_msgs(const char* filename, Encoding type, const std::string& opts);
+impl::Messages read_msgs(
+    const char* filename, Encoding type,
+    const dballe::ImporterOptions& opts = dballe::ImporterOptions::defaults);
+impl::Messages read_msgs(const char* filename, Encoding type,
+                         const std::string& opts);
 impl::Messages read_msgs_csv(const char* filename);
 
 struct ActualMessage : public Actual<const Message&>
@@ -23,29 +26,54 @@ struct ActualMessage : public Actual<const Message&>
     void is_undef(const impl::Shortcut& shortcut) const;
 };
 
-inline ActualMessage actual(const Message& message) { return ActualMessage(message); }
+inline ActualMessage actual(const Message& message)
+{
+    return ActualMessage(message);
+}
 
-std::unique_ptr<wreport::Bulletin> export_msgs(Encoding enctype, const impl::Messages& in, const std::string& tag, const dballe::ExporterOptions& opts=dballe::ExporterOptions::defaults);
+std::unique_ptr<wreport::Bulletin> export_msgs(
+    Encoding enctype, const impl::Messages& in, const std::string& tag,
+    const dballe::ExporterOptions& opts = dballe::ExporterOptions::defaults);
 #define test_export_msgs(...) wcallchecked(export_msgs(__VA_ARGS__))
 
-void track_different_msgs(const Message& msg1, const Message& msg2, const std::string& prefix);
-void track_different_msgs(const impl::Messages& msgs1, const impl::Messages& msgs2, const std::string& prefix);
+void track_different_msgs(const Message& msg1, const Message& msg2,
+                          const std::string& prefix);
+void track_different_msgs(const impl::Messages& msgs1,
+                          const impl::Messages& msgs2,
+                          const std::string& prefix);
 
 extern const char* bufr_files[];
 extern const char* crex_files[];
 
-const wreport::Var& want_var(const Message& msg, const impl::Shortcut& shortcut);
-const wreport::Var& want_var(const Message& msg, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr);
+const wreport::Var& want_var(const Message& msg,
+                             const impl::Shortcut& shortcut);
+const wreport::Var& want_var(const Message& msg, wreport::Varcode code,
+                             const dballe::Level& lev,
+                             const dballe::Trange& tr);
 
-inline ActualVar actual_var(const Message& message, const impl::Shortcut& shortcut) { return ActualVar(want_var(message, shortcut)); }
-inline ActualVar actual_var(const Message& message, wreport::Varcode code, const dballe::Level& lev, const dballe::Trange& tr) { return ActualVar(want_var(message, code, lev, tr)); }
+inline ActualVar actual_var(const Message& message,
+                            const impl::Shortcut& shortcut)
+{
+    return ActualVar(want_var(message, shortcut));
+}
+inline ActualVar actual_var(const Message& message, wreport::Varcode code,
+                            const dballe::Level& lev, const dballe::Trange& tr)
+{
+    return ActualVar(want_var(message, code, lev, tr));
+}
 
-void dump(const std::string& tag, const Message& msg, const std::string& desc="message");
-void dump(const std::string& tag, const impl::Message& msg, const std::string& desc);
-void dump(const std::string& tag, const impl::Messages& msgs, const std::string& desc="message");
-void dump(const std::string& tag, const wreport::Bulletin& bul, const std::string& desc="message");
-void dump(const std::string& tag, const BinaryMessage& msg, const std::string& desc="message");
-void dump(const std::string& tag, const std::string& str, const std::string& desc="message");
+void dump(const std::string& tag, const Message& msg,
+          const std::string& desc = "message");
+void dump(const std::string& tag, const impl::Message& msg,
+          const std::string& desc);
+void dump(const std::string& tag, const impl::Messages& msgs,
+          const std::string& desc = "message");
+void dump(const std::string& tag, const wreport::Bulletin& bul,
+          const std::string& desc = "message");
+void dump(const std::string& tag, const BinaryMessage& msg,
+          const std::string& desc = "message");
+void dump(const std::string& tag, const std::string& str,
+          const std::string& desc = "message");
 
 struct MessageTweaker
 {
@@ -135,7 +163,10 @@ struct RemoveTempWMOOnlyVars : public MessageTweaker
 struct RemoveOddTempTemplateOnlyVars : public StripVars
 {
     RemoveOddTempTemplateOnlyVars();
-    std::string desc() const override { return "RemoveOddTempTemplateOnlyVars"; }
+    std::string desc() const override
+    {
+        return "RemoveOddTempTemplateOnlyVars";
+    }
 };
 
 // Remove ground level with missing length of statistical processing, that
@@ -162,7 +193,8 @@ struct RoundGeopotential : public MessageTweaker
     std::string desc() const override { return "RoundGeopotential"; }
 };
 
-// Add B10008 GEOPOTENTIAL to all height levels, with its value taken from the height
+// Add B10008 GEOPOTENTIAL to all height levels, with its value taken from the
+// height
 struct HeightToGeopotential : public MessageTweaker
 {
     const wreport::Vartable* table;
@@ -188,7 +220,7 @@ struct RemoveContext : public MessageTweaker
     std::string desc() const override { return "RemoveContext"; }
 };
 
-}
+} // namespace tweaks
 
 struct TestMessage
 {
@@ -201,9 +233,12 @@ struct TestMessage
     TestMessage(Encoding type, const std::string& name);
     ~TestMessage();
 
-    void read_from_file(const std::string& fname, const ImporterOptions& input_opts);
-    void read_from_raw(const BinaryMessage& msg, const ImporterOptions& input_opts);
-    void read_from_msgs(const impl::Messages& msgs, const ExporterOptions& export_opts);
+    void read_from_file(const std::string& fname,
+                        const ImporterOptions& input_opts);
+    void read_from_raw(const BinaryMessage& msg,
+                       const ImporterOptions& input_opts);
+    void read_from_msgs(const impl::Messages& msgs,
+                        const ExporterOptions& export_opts);
     void dump() const;
 };
 
@@ -215,10 +250,10 @@ struct TestCodec
     impl::ImporterOptions input_opts;
     impl::ExporterOptions output_opts;
     std::string expected_template;
-    int expected_subsets = 1;
-    int expected_min_vars = 1;
-    int expected_data_category = MISSING_INT;
-    int expected_data_subcategory = MISSING_INT;
+    int expected_subsets                = 1;
+    int expected_min_vars               = 1;
+    int expected_data_category          = MISSING_INT;
+    int expected_data_subcategory       = MISSING_INT;
     int expected_data_subcategory_local = MISSING_INT;
     MessageTweakers after_reimport_import;
     MessageTweakers after_reimport_reimport;
@@ -227,7 +262,8 @@ struct TestCodec
 
     void do_compare(const TestMessage& msg1, const TestMessage& msg2);
 
-    explicit TestCodec(const std::string& fname, Encoding type=Encoding::BUFR);
+    explicit TestCodec(const std::string& fname,
+                       Encoding type = Encoding::BUFR);
 
     void configure_ecmwf_to_wmo_tweaks();
 
@@ -237,7 +273,6 @@ struct TestCodec
     // "import, export as different template, import again, compare" test
     void run_convert(const std::string& tplname);
 };
-
 
 #if 0
 
@@ -278,11 +313,13 @@ void my_ensure_msg_equals(const char* file, int line, dba_msg msg, int id, const
 	dba_var var = my_want_var(file, line, msg, id, idname);
 	inner_ensure_var_equals(var, value);
 }
-#define gen_ensure_msg_equals(msg, id, value) my_ensure_msg_equals(__FILE__, __LINE__, (msg), (id), #id, (value))
-#define inner_ensure_msg_equals(msg, id, value) my_ensure_msg_equals(file, line, (msg), (id), #id, (value))
+#define gen_ensure_msg_equals(msg, id, value)                                  \
+    my_ensure_msg_equals(__FILE__, __LINE__, (msg), (id), #id, (value))
+#define inner_ensure_msg_equals(msg, id, value)                                \
+    my_ensure_msg_equals(file, line, (msg), (id), #id, (value))
 #endif
 
-}
-}
+} // namespace tests
+} // namespace dballe
 
 // vim:set ts=4 sw=4:

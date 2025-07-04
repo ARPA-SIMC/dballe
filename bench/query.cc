@@ -1,7 +1,7 @@
-#include <dballe/db/db.h>
-#include <dballe/file.h>
 #include <dballe/core/benchmark.h>
 #include <dballe/core/query.h>
+#include <dballe/db/db.h>
+#include <dballe/file.h>
 #include <dballe/msg/msg.h>
 #include <vector>
 
@@ -14,11 +14,13 @@ struct BenchmarkQuery : public dballe::benchmark::Task
     unsigned hours;
     unsigned minutes;
 
-    BenchmarkQuery(const char* name, const char* pathname, unsigned months=12, unsigned hours=24, unsigned minutes=1)
-        : m_name(name), m_pathname(pathname), months(months), hours(hours), minutes(minutes)
+    BenchmarkQuery(const char* name, const char* pathname, unsigned months = 12,
+                   unsigned hours = 24, unsigned minutes = 1)
+        : m_name(name), m_pathname(pathname), months(months), hours(hours),
+          minutes(minutes)
     {
         auto options = dballe::DBConnectOptions::test_create();
-        db = dballe::db::DB::downcast(dballe::DB::connect(*options));
+        db           = dballe::db::DB::downcast(dballe::DB::connect(*options));
     }
 
     const char* name() const override { return m_name; }
@@ -35,17 +37,20 @@ struct BenchmarkQuery : public dballe::benchmark::Task
             for (unsigned month = 1; month <= months; ++month)
                 for (unsigned hour = 0; hour < hours; ++hour)
                     for (unsigned minute = 0; minute < minutes; ++minute)
-                        messages.duplicate(size, dballe::Datetime(year, month, 1, hour, minute));
+                        messages.duplicate(
+                            size,
+                            dballe::Datetime(year, month, 1, hour, minute));
 
         auto tr = db->transaction();
-        for (const auto& msgs: messages)
+        for (const auto& msgs : messages)
             tr->import_messages(msgs);
         tr->commit();
     }
 
     void run_once() override
     {
-        auto tr = std::dynamic_pointer_cast<dballe::db::Transaction>(db->transaction());
+        auto tr = std::dynamic_pointer_cast<dballe::db::Transaction>(
+            db->transaction());
         dballe::core::Query query;
         auto cur = tr->query_data(query);
         while (cur->next())
@@ -53,10 +58,7 @@ struct BenchmarkQuery : public dballe::benchmark::Task
         tr->commit();
     }
 
-    void teardown() override
-    {
-        db->remove_all();
-    }
+    void teardown() override { db->remove_all(); }
 };
 
 int main(int argc, const char* argv[])
@@ -71,11 +73,10 @@ int main(int argc, const char* argv[])
     Benchmark benchmark;
     dballe::benchmark::Whitelist whitelist(argc, argv);
 
-    for (auto task: tasks)
+    for (auto task : tasks)
         if (whitelist.has(task->name()))
             benchmark.timeit(*task, 20);
 
     benchmark.print_timings();
     return 0;
 }
-

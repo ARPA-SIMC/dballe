@@ -12,7 +12,7 @@ namespace db {
 /**
  * High level objects for working with DB-All.e DB summaries
  */
-template<typename Station>
+template <typename Station>
 class BaseSummaryMemory : public BaseSummary<Station>
 {
 protected:
@@ -36,7 +36,12 @@ public:
     BaseSummaryMemory();
     explicit BaseSummaryMemory(const std::filesystem::path& path);
 
-    const summary::StationEntries<Station>& _entries() const { if (dirty) recompute_summaries(); return entries.sorted(); }
+    const summary::StationEntries<Station>& _entries() const
+    {
+        if (dirty)
+            recompute_summaries();
+        return entries.sorted();
+    }
 
     bool stations(std::function<bool(const Station&)>) const override;
     bool reports(std::function<bool(const std::string&)>) const override;
@@ -44,29 +49,50 @@ public:
     bool tranges(std::function<bool(const Trange&)>) const override;
     bool varcodes(std::function<bool(const wreport::Varcode&)>) const override;
 
-    Datetime datetime_min() const override { if (dirty) recompute_summaries(); return dtrange.min; }
-    Datetime datetime_max() const override { if (dirty) recompute_summaries(); return dtrange.max; }
-    unsigned data_count() const override { if (dirty) recompute_summaries(); return count; }
+    Datetime datetime_min() const override
+    {
+        if (dirty)
+            recompute_summaries();
+        return dtrange.min;
+    }
+    Datetime datetime_max() const override
+    {
+        if (dirty)
+            recompute_summaries();
+        return dtrange.max;
+    }
+    unsigned data_count() const override
+    {
+        if (dirty)
+            recompute_summaries();
+        return count;
+    }
 
     /**
      * Query the contents of the summary
      *
      * @param query
-     *   The record with the query data (see technical specifications, par. 1.6.4
-     *   "parameter output/input")
+     *   The record with the query data (see technical specifications,
+     * par. 1.6.4 "parameter output/input")
      * @return
      *   The cursor to use to iterate over the results. The results are the
      *   same as DB::query_summary.
      */
-    std::shared_ptr<dballe::CursorSummary> query_summary(const Query& query) const override;
+    std::shared_ptr<dballe::CursorSummary>
+    query_summary(const Query& query) const override;
 
-    bool iter(std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange&, size_t)>) const override;
-    bool iter_filtered(const dballe::Query& query, std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange&, size_t)>) const override;
+    bool iter(std::function<bool(const Station&, const summary::VarDesc&,
+                                 const DatetimeRange&, size_t)>) const override;
+    bool iter_filtered(
+        const dballe::Query& query,
+        std::function<bool(const Station&, const summary::VarDesc&,
+                           const DatetimeRange&, size_t)>) const override;
 
     void clear() override;
 
     /// Add an entry to the summary
-    void add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count) override;
+    void add(const Station& station, const summary::VarDesc& vd,
+             const dballe::DatetimeRange& dtrange, size_t count) override;
 
     /// Merge the copy of another summary into this one
     void add_summary(const BaseSummary<dballe::Station>& summary) override;
@@ -75,7 +101,8 @@ public:
     void add_summary(const BaseSummary<dballe::DBStation>& summary) override;
 
     /// Merge the copy of another summary into this one
-    void add_filtered(const BaseSummary<Station>& summary, const dballe::Query& query) override;
+    void add_filtered(const BaseSummary<Station>& summary,
+                      const dballe::Query& query) override;
 
     void commit() override;
 
@@ -101,7 +128,7 @@ typedef BaseSummaryMemory<dballe::DBStation> DBSummaryMemory;
 extern template class BaseSummaryMemory<dballe::Station>;
 extern template class BaseSummaryMemory<dballe::DBStation>;
 
-}
-}
+} // namespace db
+} // namespace dballe
 
 #endif

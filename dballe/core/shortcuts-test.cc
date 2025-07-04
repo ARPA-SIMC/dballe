@@ -1,5 +1,5 @@
-#include "tests.h"
 #include "dballe/core/shortcuts.h"
+#include "tests.h"
 
 using namespace dballe;
 using namespace dballe::impl;
@@ -31,4 +31,4 @@ class Tests : public TestCase
     }
 } test("msg_vars");
 
-}
+} // namespace

@@ -1,16 +1,16 @@
 #ifndef DBALLE_MSG_WRIMPORTER_BASE_H
 #define DBALLE_MSG_WRIMPORTER_BASE_H
 
-#include <dballe/msg/wr_codec.h>
-#include <dballe/msg/fwd.h>
-#include <limits>
 #include <cstdint>
+#include <dballe/msg/fwd.h>
+#include <dballe/msg/wr_codec.h>
+#include <limits>
 
 namespace wreport {
 struct Subset;
 struct Bulletin;
 struct Var;
-}
+} // namespace wreport
 
 namespace dballe {
 namespace impl {
@@ -28,7 +28,8 @@ protected:
     virtual void run() = 0;
 
     void set(const wreport::Var& var, const Shortcut& shortcut);
-    void set(const wreport::Var& var, wreport::Varcode code, const Level& level, const Trange& trange);
+    void set(const wreport::Var& var, wreport::Varcode code, const Level& level,
+             const Trange& trange);
 
 public:
     Importer(const dballe::ImporterOptions& opts) : opts(opts) {}
@@ -38,15 +39,21 @@ public:
 
     void import(const wreport::Subset& subset, impl::Message& msg);
 
-    static std::unique_ptr<Importer> createSynop(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer>
+    createSynop(const dballe::ImporterOptions&);
     static std::unique_ptr<Importer> createShip(const dballe::ImporterOptions&);
-    static std::unique_ptr<Importer> createMetar(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer>
+    createMetar(const dballe::ImporterOptions&);
     static std::unique_ptr<Importer> createTemp(const dballe::ImporterOptions&);
-    static std::unique_ptr<Importer> createPilot(const dballe::ImporterOptions&);
-    static std::unique_ptr<Importer> createFlight(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer>
+    createPilot(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer>
+    createFlight(const dballe::ImporterOptions&);
     static std::unique_ptr<Importer> createSat(const dballe::ImporterOptions&);
-    static std::unique_ptr<Importer> createPollution(const dballe::ImporterOptions&);
-    static std::unique_ptr<Importer> createGeneric(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer>
+    createPollution(const dballe::ImporterOptions&);
+    static std::unique_ptr<Importer>
+    createGeneric(const dballe::ImporterOptions&);
 };
 
 class WMOImporter : public Importer
@@ -156,14 +163,16 @@ struct Interpreted
      * shortcut
      */
     Interpreted(const Shortcut& shortcut, const wreport::Var& var);
-    Interpreted(const Shortcut& shortcut, const wreport::Var& var, const Level& level, const Trange& trange);
-    Interpreted(wreport::Varcode code, const wreport::Var& var, const Level& level, const Trange& trange);
+    Interpreted(const Shortcut& shortcut, const wreport::Var& var,
+                const Level& level, const Trange& trange);
+    Interpreted(wreport::Varcode code, const wreport::Var& var,
+                const Level& level, const Trange& trange);
     virtual ~Interpreted();
 
-    virtual void set_sensor_height(const LevelContext& ctx) = 0;
+    virtual void set_sensor_height(const LevelContext& ctx)    = 0;
     virtual void set_barometer_height(const LevelContext& ctx) = 0;
-    virtual void set_duration(const TimerangeContext& ctx) = 0;
-    virtual void set_wind_mean(const TimerangeContext& ctx) = 0;
+    virtual void set_duration(const TimerangeContext& ctx)     = 0;
+    virtual void set_wind_mean(const TimerangeContext& ctx)    = 0;
 };
 
 struct InterpretedPrecise : public Interpreted
@@ -184,13 +193,15 @@ struct InterpretedSimplified : public Interpreted
     void set_wind_mean(const TimerangeContext& ctx) override;
 };
 
-template<typename ...Args>
-std::unique_ptr<Interpreted> create_interpreted(bool simplified, Args&& ...args)
+template <typename... Args>
+std::unique_ptr<Interpreted> create_interpreted(bool simplified, Args&&... args)
 {
     if (simplified)
-        return std::unique_ptr<Interpreted>(new InterpretedSimplified(std::forward<Args>(args)...));
+        return std::unique_ptr<Interpreted>(
+            new InterpretedSimplified(std::forward<Args>(args)...));
     else
-        return std::unique_ptr<Interpreted>(new InterpretedPrecise(std::forward<Args>(args)...));
+        return std::unique_ptr<Interpreted>(
+            new InterpretedPrecise(std::forward<Args>(args)...));
 }
 
 /**
@@ -208,7 +219,8 @@ protected:
     virtual void peek_var(const wreport::Var& var);
     virtual void import_var(const wreport::Var& var);
 
-    void set_gen_sensor(const wreport::Var& var, wreport::Varcode code, const Level& defaultLevel, const Trange& trange);
+    void set_gen_sensor(const wreport::Var& var, wreport::Varcode code,
+                        const Level& defaultLevel, const Trange& trange);
     void set_gen_sensor(const wreport::Var& var, const Shortcut& shortcut);
     void set_baro_sensor(const wreport::Var& var, const Shortcut& shortcut);
     void set_past_weather(const wreport::Var& var, const Shortcut& shortcut);
@@ -216,7 +228,8 @@ protected:
     void set_wind_max(const wreport::Var& var, const Shortcut& shortcut);
     void set_pressure(const wreport::Var& var);
     void set(const wreport::Var& var, const Shortcut& shortcut);
-    void set(const wreport::Var& var, wreport::Varcode code, const Level& level, const Trange& trange);
+    void set(const wreport::Var& var, wreport::Varcode code, const Level& level,
+             const Trange& trange);
     void set(std::unique_ptr<Interpreted> val);
 
 public:
@@ -227,8 +240,8 @@ public:
     void run() override;
 };
 
-}
-}
-}
-}
+} // namespace wr
+} // namespace msg
+} // namespace impl
+} // namespace dballe
 #endif

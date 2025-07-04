@@ -1,8 +1,8 @@
 #include "dbadb.h"
+#include "dballe/db/db.h"
 #include "dballe/message.h"
 #include "dballe/msg/msg.h"
 #include "dballe/values.h"
-#include "dballe/db/db.h"
 
 #include <cstdlib>
 
@@ -22,7 +22,9 @@ struct Importer : public Action
     const DBImportOptions& opts;
     std::shared_ptr<dballe::Transaction> transaction;
 
-    Importer(dballe::DB& db, const DBImportOptions& opts) : db(db), opts(opts) {}
+    Importer(dballe::DB& db, const DBImportOptions& opts) : db(db), opts(opts)
+    {
+    }
 
     bool operator()(const cmdline::Item& item) override;
     void commit()
@@ -42,48 +44,60 @@ bool Importer::operator()(const Item& item)
         fprintf(stderr, "Message #%d cannot be parsed: ignored\n", item.idx);
         return false;
     }
-    try {
+    try
+    {
         transaction->import_messages(*item.msgs, opts);
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         item.processing_failed(e);
     }
     return true;
 }
 
-}
+} // namespace
 
-/// Query data in the database and output results as arbitrary human readable text
+/// Query data in the database and output results as arbitrary human readable
+/// text
 int Dbadb::do_dump(const Query& query, FILE* out)
 {
-    auto tr = db.transaction();
+    auto tr     = db.transaction();
     auto cursor = tr->query_data(query);
     for (unsigned i = 0; cursor->next(); ++i)
     {
         fprintf(out, "#%u: -----------------------\n", i);
-        fprintf(out, "Station: "); cursor->get_station().print(out);
-        fprintf(out, "Datetime: "); cursor->get_datetime().print(out);
-        fprintf(out, "Level: "); cursor->get_level().print(out);
-        fprintf(out, "Trange: "); cursor->get_trange().print(out);
-        fprintf(out, "Var: "); cursor->get_var().print(out);
+        fprintf(out, "Station: ");
+        cursor->get_station().print(out);
+        fprintf(out, "Datetime: ");
+        cursor->get_datetime().print(out);
+        fprintf(out, "Level: ");
+        cursor->get_level().print(out);
+        fprintf(out, "Trange: ");
+        cursor->get_trange().print(out);
+        fprintf(out, "Var: ");
+        cursor->get_var().print(out);
     }
 
     tr->rollback();
     return 0;
 }
 
-/// Query stations in the database and output results as arbitrary human readable text
+/// Query stations in the database and output results as arbitrary human
+/// readable text
 int Dbadb::do_stations(const Query& query, FILE* out)
 {
-    auto tr = db.transaction();
+    auto tr     = db.transaction();
     auto cursor = tr->query_stations(query);
     for (unsigned i = 0; cursor->next(); ++i)
     {
         fprintf(out, "#%u: -----------------------\n", i);
-        fprintf(out, "Station: "); cursor->get_station().print(out);
+        fprintf(out, "Station: ");
+        cursor->get_station().print(out);
         auto values = cursor->get_values();
-        for (const auto& val: values)
+        for (const auto& val : values)
         {
-            fprintf(out, "Var: "); val->print(out);
+            fprintf(out, "Var: ");
+            val->print(out);
         }
     }
 
@@ -99,13 +113,16 @@ int Dbadb::do_export_dump(const Query& query, FILE* out)
     return 0;
 }
 
-int Dbadb::do_import(const list<string>& fnames, Reader& reader, const DBImportOptions& opts)
+int Dbadb::do_import(const list<string>& fnames, Reader& reader,
+                     const DBImportOptions& opts)
 {
     Importer importer(db, opts);
     reader.read(fnames, importer);
     importer.commit();
     if (reader.verbose)
-        fprintf(stderr, "%u messages successfully imported, %u messages skipped\n", reader.count_successes, reader.count_failures);
+        fprintf(stderr,
+                "%u messages successfully imported, %u messages skipped\n",
+                reader.count_successes, reader.count_failures);
 
     // As discussed in #101, if there are both successes and failures, return
     // success only if --rejected has been used, because in that case the
@@ -119,14 +136,16 @@ int Dbadb::do_import(const list<string>& fnames, Reader& reader, const DBImportO
     return reader.has_fail_file() ? 0 : 1;
 }
 
-int Dbadb::do_import(const std::string& fname, Reader& reader, const DBImportOptions& opts)
+int Dbadb::do_import(const std::string& fname, Reader& reader,
+                     const DBImportOptions& opts)
 {
     list<string> fnames;
     fnames.push_back(fname);
     return do_import(fnames, reader, opts);
 }
 
-int Dbadb::do_export(const Query& query, File& file, const char* output_template, const char* forced_repmemo)
+int Dbadb::do_export(const Query& query, File& file,
+                     const char* output_template, const char* forced_repmemo)
 {
     impl::ExporterOptions opts;
     if (output_template && output_template[0] != 0)
@@ -144,7 +163,7 @@ int Dbadb::do_export(const Query& query, File& file, const char* output_template
         if (forced_repmemo != NULL)
         {
             impl::Message& m = impl::Message::downcast(*msg);
-            m.type = impl::Message::type_from_repmemo(forced_repmemo);
+            m.type           = impl::Message::type_from_repmemo(forced_repmemo);
             m.set_rep_memo(forced_repmemo);
         }
         std::vector<std::shared_ptr<Message>> msgs;
@@ -154,5 +173,5 @@ int Dbadb::do_export(const Query& query, File& file, const char* output_template
     return 0;
 }
 
-}
-}
+} // namespace cmdline
+} // namespace dballe

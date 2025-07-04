@@ -1,29 +1,30 @@
 #ifndef DBALLE_CORE_QUERY_H
 #define DBALLE_CORE_QUERY_H
 
-#include <dballe/query.h>
 #include <dballe/core/defs.h>
 #include <dballe/core/fwd.h>
-#include <wreport/varinfo.h>
+#include <dballe/query.h>
 #include <set>
+#include <wreport/varinfo.h>
 
 /**
  * Values for query modifier flags
  */
 /** When values from different reports exist on the same point, only report the
  * one from the report with the highest priority */
-#define DBA_DB_MODIFIER_BEST        (1 << 0)
+#define DBA_DB_MODIFIER_BEST (1 << 0)
 /** Do not bother sorting the results */
-#define DBA_DB_MODIFIER_UNSORTED    (1 << 5)
+#define DBA_DB_MODIFIER_UNSORTED (1 << 5)
 /** Sort by report after ana_id, to ease reconstructing messages on export */
 #define DBA_DB_MODIFIER_SORT_FOR_EXPORT (1 << 7)
-/// Add minimum date, maximum date and data count details to summary query results
+/// Add minimum date, maximum date and data count details to summary query
+/// results
 #define DBA_DB_MODIFIER_SUMMARY_DETAILS (1 << 8)
 /// Also get attributes alongside data
 #define DBA_DB_MODIFIER_WITH_ATTRIBUTES (1 << 9)
 /** When values from different reports exist on the same point, only report the
  * one with the highest datetime. See issue #80 for details */
-#define DBA_DB_MODIFIER_LAST        (1 << 10)
+#define DBA_DB_MODIFIER_LAST (1 << 10)
 
 namespace dballe {
 namespace core {
@@ -33,14 +34,14 @@ struct JSONWriter;
 /// Standard dballe::Query implementation
 struct Query : public dballe::Query
 {
-    static const uint32_t WANT_MISSING_IDENT =  (1 << 0);
+    static const uint32_t WANT_MISSING_IDENT  = (1 << 0);
     static const uint32_t WANT_MISSING_LTYPE1 = (1 << 1);
-    static const uint32_t WANT_MISSING_L1 =     (1 << 2);
+    static const uint32_t WANT_MISSING_L1     = (1 << 2);
     static const uint32_t WANT_MISSING_LTYPE2 = (1 << 3);
-    static const uint32_t WANT_MISSING_L2 =     (1 << 4);
-    static const uint32_t WANT_MISSING_PIND =   (1 << 5);
-    static const uint32_t WANT_MISSING_P1 =     (1 << 6);
-    static const uint32_t WANT_MISSING_P2 =     (1 << 7);
+    static const uint32_t WANT_MISSING_L2     = (1 << 4);
+    static const uint32_t WANT_MISSING_PIND   = (1 << 5);
+    static const uint32_t WANT_MISSING_P1     = (1 << 6);
+    static const uint32_t WANT_MISSING_P2     = (1 << 7);
 
     /**
      * Set a bit a 1 with WANT_MISSING_* constants to specify that the query
@@ -48,9 +49,9 @@ struct Query : public dballe::Query
      * value.
      */
     uint32_t want_missing = 0;
-    int ana_id = MISSING_INT;
-    int priomin = MISSING_INT;
-    int priomax = MISSING_INT;
+    int ana_id            = MISSING_INT;
+    int priomin           = MISSING_INT;
+    int priomax           = MISSING_INT;
     std::string report;
     int mobile = MISSING_INT;
     Ident ident;
@@ -64,14 +65,21 @@ struct Query : public dballe::Query
     std::string ana_filter;
     std::string data_filter;
     std::string attr_filter;
-    int limit = MISSING_INT;
-    int block = MISSING_INT;
+    int limit   = MISSING_INT;
+    int block   = MISSING_INT;
     int station = MISSING_INT;
 
     bool operator==(const Query& o) const
     {
-        return std::tie(want_missing, ana_id, priomin, priomax, report, mobile, ident, latrange, lonrange, dtrange, level, trange, varcodes, query, ana_filter, data_filter, attr_filter, limit, block, station)
-            == std::tie(o.want_missing, o.ana_id, o.priomin, o.priomax, o.report, o.mobile, o.ident, o.latrange, o.lonrange, o.dtrange, o.level, o.trange, o.varcodes, o.query, o.ana_filter, o.data_filter, o.attr_filter, o.limit, o.block, o.station);
+        return std::tie(want_missing, ana_id, priomin, priomax, report, mobile,
+                        ident, latrange, lonrange, dtrange, level, trange,
+                        varcodes, query, ana_filter, data_filter, attr_filter,
+                        limit, block, station) ==
+               std::tie(o.want_missing, o.ana_id, o.priomin, o.priomax,
+                        o.report, o.mobile, o.ident, o.latrange, o.lonrange,
+                        o.dtrange, o.level, o.trange, o.varcodes, o.query,
+                        o.ana_filter, o.data_filter, o.attr_filter, o.limit,
+                        o.block, o.station);
     }
 
     /**
@@ -141,8 +149,8 @@ struct Query : public dballe::Query
     void serialize(JSONWriter& out) const;
 
     /**
-     * Parse the modifiers specification given a query=* string, returning the ORed
-     * flags.
+     * Parse the modifiers specification given a query=* string, returning the
+     * ORed flags.
      */
     static unsigned parse_modifiers(const char* str);
 
@@ -167,6 +175,6 @@ protected:
     void unset(const char* key, unsigned len);
 };
 
-}
-}
+} // namespace core
+} // namespace dballe
 #endif

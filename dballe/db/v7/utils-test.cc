@@ -1,5 +1,5 @@
-#include "dballe/db/tests.h"
 #include "config.h"
+#include "dballe/db/tests.h"
 
 using namespace dballe;
 using namespace dballe::tests;
@@ -12,7 +12,6 @@ struct Fixture : EmptyTransactionFixture<V7DB>
 {
     using EmptyTransactionFixture::EmptyTransactionFixture;
 };
-
 
 class Tests : public FixtureTestCase<Fixture>
 {
@@ -29,15 +28,11 @@ Tests tg3("db_v7_utils_postgresql", "POSTGRESQL");
 Tests tg4("db_v7_utils_mysql", "MYSQL");
 #endif
 
-
 void Tests::register_tests()
 {
 
-add_method("empty", [](Fixture& f) noexcept {
-    using namespace dballe::db::v7;
-});
-
+    add_method("empty",
+               [](Fixture& f) noexcept { using namespace dballe::db::v7; });
 }
 
-}
-
+} // namespace

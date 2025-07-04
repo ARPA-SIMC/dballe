@@ -1,21 +1,21 @@
 #ifndef DBALLE_CORE_JSON_H
 #define DBALLE_CORE_JSON_H
 
-#include <wreport/varinfo.h>
-#include <wreport/var.h>
-#include <dballe/types.h>
 #include <dballe/core/fwd.h>
-#include <vector>
-#include <ostream>
+#include <dballe/types.h>
 #include <istream>
+#include <ostream>
+#include <vector>
+#include <wreport/var.h>
+#include <wreport/varinfo.h>
 
 namespace dballe {
 namespace core {
 
-struct JSONParseException : public std::runtime_error {
+struct JSONParseException : public std::runtime_error
+{
     using std::runtime_error::runtime_error;
 };
-
 
 /**
  * JSON serializer
@@ -67,8 +67,7 @@ public:
     void add_double(double val);
     void add_cstring(const char* val);
     void add_string(const std::string& val);
-    template<typename T>
-    void add_ostream(const T& val)
+    template <typename T> void add_ostream(const T& val)
     {
         val_head();
         out << val;
@@ -107,15 +106,13 @@ public:
     void add(const Values& v) { add_values(v); }
     void add(const DBValues& v) { add_dbvalues(v); }
 
-    template<typename T>
-    void add(const char* a, T b)
+    template <typename T> void add(const char* a, T b)
     {
         add_cstring(a);
         add(b);
     }
 
-    template<typename T>
-    void add_list(const T& val)
+    template <typename T> void add_list(const T& val)
     {
         start_list();
         for (const auto& i : val)
@@ -133,26 +130,24 @@ public:
     virtual ~JSONReader() {}
 
     virtual void on_start_list() = 0;
-    virtual void on_end_list() = 0;
+    virtual void on_end_list()   = 0;
 
     virtual void on_start_mapping() = 0;
-    virtual void on_end_mapping() = 0;
+    virtual void on_end_mapping()   = 0;
 
-    virtual void on_add_null() = 0;
-    virtual void on_add_bool(bool val) = 0;
-    virtual void on_add_int(int val) = 0;
-    virtual void on_add_double(double val) = 0;
+    virtual void on_add_null()                         = 0;
+    virtual void on_add_bool(bool val)                 = 0;
+    virtual void on_add_int(int val)                   = 0;
+    virtual void on_add_double(double val)             = 0;
     virtual void on_add_string(const std::string& val) = 0;
 
     // Parse a stream
     void parse(std::istream& in);
 };
 
-
 namespace json {
 
-enum Element
-{
+enum Element {
     JSON_OBJECT,
     JSON_ARRAY,
     JSON_STRING,
@@ -175,8 +170,7 @@ struct Stream
     void skip_spaces();
 
     /// Parse an unsigned integer
-    template<typename T>
-    T parse_unsigned()
+    template <typename T> T parse_unsigned()
     {
         T res = 0;
         while (true)
@@ -192,14 +186,14 @@ struct Stream
     }
 
     /// Parse a signed integer
-    template<typename T>
-    T parse_signed()
+    template <typename T> T parse_signed()
     {
         if (in.peek() == '-')
         {
             in.get();
             return -parse_unsigned<T>();
-        } else
+        }
+        else
             return parse_unsigned<T>();
     }
 
@@ -241,8 +235,10 @@ struct Stream
     /// Parse a DatetimeRange object
     DatetimeRange parse_datetimerange();
 
-    template<typename T>
-    inline T parse() { throw wreport::error_unimplemented(); }
+    template <typename T> inline T parse()
+    {
+        throw wreport::error_unimplemented();
+    }
 
     /// Parse a JSON array, calling on_element to parse each element
     void parse_array(std::function<void()> on_element);
@@ -255,18 +251,21 @@ struct Stream
     Element identify_next();
 };
 
-template<> inline std::string Stream::parse() { return parse_string(); }
-template<> inline Coords Stream::parse() { return parse_coords(); }
-template<> inline Station Stream::parse() { return parse_station(); }
-template<> inline DBStation Stream::parse() { return parse_dbstation(); }
-template<> inline Ident Stream::parse() { return parse_ident(); }
-template<> inline Level Stream::parse() { return parse_level(); }
-template<> inline Trange Stream::parse() { return parse_trange(); }
-template<> inline Datetime Stream::parse() { return parse_datetime(); }
-template<> inline DatetimeRange Stream::parse() { return parse_datetimerange(); }
-
+template <> inline std::string Stream::parse() { return parse_string(); }
+template <> inline Coords Stream::parse() { return parse_coords(); }
+template <> inline Station Stream::parse() { return parse_station(); }
+template <> inline DBStation Stream::parse() { return parse_dbstation(); }
+template <> inline Ident Stream::parse() { return parse_ident(); }
+template <> inline Level Stream::parse() { return parse_level(); }
+template <> inline Trange Stream::parse() { return parse_trange(); }
+template <> inline Datetime Stream::parse() { return parse_datetime(); }
+template <> inline DatetimeRange Stream::parse()
+{
+    return parse_datetimerange();
 }
 
-}
-}
+} // namespace json
+
+} // namespace core
+} // namespace dballe
 #endif

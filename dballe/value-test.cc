@@ -14,11 +14,10 @@ class Tests : public TestCase
     void register_tests() override;
 } test("dballe_value");
 
-void Tests::register_tests() {
+void Tests::register_tests()
+{
 
-add_method("empty", []() noexcept {
-});
-
+    add_method("empty", []() noexcept {});
 }
 
-}
+} // namespace

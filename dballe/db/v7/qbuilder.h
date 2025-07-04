@@ -1,9 +1,9 @@
 #ifndef DBA_DB_V7_QBUILDER_H
 #define DBA_DB_V7_QBUILDER_H
 
-#include <dballe/sql/querybuf.h>
-#include <dballe/db/v7/db.h>
 #include <dballe/core/query.h>
+#include <dballe/db/v7/db.h>
+#include <dballe/sql/querybuf.h>
 #include <regex.h>
 
 namespace dballe {
@@ -59,7 +59,8 @@ struct QueryBuilder
     /// True if we are querying station information, rather than measured data
     bool query_station_vars;
 
-    QueryBuilder(std::shared_ptr<v7::Transaction> tr, const core::Query& query, unsigned int modifiers, bool query_station_vars);
+    QueryBuilder(std::shared_ptr<v7::Transaction> tr, const core::Query& query,
+                 unsigned int modifiers, bool query_station_vars);
     virtual ~QueryBuilder() {}
 
     void build();
@@ -73,15 +74,18 @@ protected:
     bool add_repinfo_where(const char* tbl);
     bool add_datafilter_where(const char* tbl);
 
-    virtual void build_select() = 0;
-    virtual bool build_where() = 0;
+    virtual void build_select()   = 0;
+    virtual bool build_where()    = 0;
     virtual void build_order_by() = 0;
 };
 
 struct StationQueryBuilder : public QueryBuilder
 {
-    StationQueryBuilder(std::shared_ptr<v7::Transaction> tr, const core::Query& query, unsigned int modifiers)
-        : QueryBuilder(tr, query, modifiers, false) {}
+    StationQueryBuilder(std::shared_ptr<v7::Transaction> tr,
+                        const core::Query& query, unsigned int modifiers)
+        : QueryBuilder(tr, query, modifiers, false)
+    {
+    }
 
     void build_select() override;
     bool build_where() override;
@@ -99,7 +103,9 @@ struct DataQueryBuilder : public QueryBuilder
     /// True if the select includes the attrs field
     bool select_attrs = false;
 
-    DataQueryBuilder(std::shared_ptr<v7::Transaction> tr, const core::Query& query, unsigned int modifiers, bool query_station_vars);
+    DataQueryBuilder(std::shared_ptr<v7::Transaction> tr,
+                     const core::Query& query, unsigned int modifiers,
+                     bool query_station_vars);
     ~DataQueryBuilder();
 
     // bool add_attrfilter_where(const char* tbl);
@@ -114,8 +120,12 @@ struct DataQueryBuilder : public QueryBuilder
 
 struct IdQueryBuilder : public DataQueryBuilder
 {
-    IdQueryBuilder(std::shared_ptr<v7::Transaction> tr, const core::Query& query, unsigned int modifiers, bool query_station_vars)
-        : DataQueryBuilder(tr, query, modifiers, query_station_vars) {}
+    IdQueryBuilder(std::shared_ptr<v7::Transaction> tr,
+                   const core::Query& query, unsigned int modifiers,
+                   bool query_station_vars)
+        : DataQueryBuilder(tr, query, modifiers, query_station_vars)
+    {
+    }
 
     void build_select() override;
     void build_order_by() override;
@@ -123,15 +133,19 @@ struct IdQueryBuilder : public DataQueryBuilder
 
 struct SummaryQueryBuilder : public DataQueryBuilder
 {
-    SummaryQueryBuilder(std::shared_ptr<v7::Transaction> tr, const core::Query& query, unsigned int modifiers, bool query_station_vars)
-        : DataQueryBuilder(tr, query, modifiers, query_station_vars) {}
+    SummaryQueryBuilder(std::shared_ptr<v7::Transaction> tr,
+                        const core::Query& query, unsigned int modifiers,
+                        bool query_station_vars)
+        : DataQueryBuilder(tr, query, modifiers, query_station_vars)
+    {
+    }
 
     void build_select() override;
     void build_order_by() override;
 };
 
-}
-}
-}
+} // namespace v7
+} // namespace db
+} // namespace dballe
 
 #endif

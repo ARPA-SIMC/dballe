@@ -1,8 +1,8 @@
 #ifndef DBALLE_PYTHON_WREPORT_H
 #define DBALLE_PYTHON_WREPORT_H
 
-#include <wreport/python.h>
 #include "core.h"
+#include <wreport/python.h>
 
 #define WREPORT_API1_MIN_VERSION 1
 
@@ -23,8 +23,16 @@ public:
     /// Throw a python error if import() was not called
     void require_imported() const;
 
-    wrpy_c_api& api() { require_imported(); return *m_api; }
-    const wrpy_c_api& api() const { require_imported(); return *m_api; }
+    wrpy_c_api& api()
+    {
+        require_imported();
+        return *m_api;
+    }
+    const wrpy_c_api& api() const
+    {
+        require_imported();
+        return *m_api;
+    }
 
     /// Check if an object is a wreport.Var
     bool var_check(PyObject* ob) const
@@ -59,7 +67,8 @@ public:
     }
 
     /// Create a new wreport.Var object with a std::string value
-    PyObject* var_create(const wreport::Varinfo& vi, const std::string& val) const
+    PyObject* var_create(const wreport::Varinfo& vi,
+                         const std::string& val) const
     {
         return (PyObject*)throw_ifnull(api().var_create_s(vi, val));
     }
@@ -106,7 +115,8 @@ public:
     }
 
     /// Create a new wreport.Var object with the value from val
-    PyObject* var_create(const wreport::Varinfo& vi, const wreport::Var& val) const
+    PyObject* var_create(const wreport::Varinfo& vi,
+                         const wreport::Var& val) const
     {
         return (PyObject*)throw_ifnull(api().var_create_v(vi, val));
     }
@@ -114,7 +124,7 @@ public:
 #endif
 };
 
-}
-}
+} // namespace python
+} // namespace dballe
 
 #endif

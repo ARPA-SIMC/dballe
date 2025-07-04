@@ -8,14 +8,14 @@
 namespace dballe {
 namespace python {
 
-#define pass_kwlist(kwlist) (const_cast<char**>(static_cast<const char**>(kwlist)))
+#define pass_kwlist(kwlist)                                                    \
+    (const_cast<char**>(static_cast<const char**>(kwlist)))
 
 /**
  * unique_ptr-like object that contains PyObject pointers, and that calls
  * Py_DECREF on destruction.
  */
-template<typename Obj>
-class py_unique_ptr
+template <typename Obj> class py_unique_ptr
 {
 protected:
     Obj* ptr;
@@ -29,9 +29,10 @@ public:
     py_unique_ptr& operator=(const py_unique_ptr&) = delete;
     py_unique_ptr& operator=(py_unique_ptr&& o)
     {
-        if (this == &o) return *this;
+        if (this == &o)
+            return *this;
         Py_XDECREF(ptr);
-        ptr = o.ptr;
+        ptr   = o.ptr;
         o.ptr = nullptr;
         return *this;
     }
@@ -55,7 +56,7 @@ public:
     Obj* release()
     {
         Obj* res = ptr;
-        ptr = nullptr;
+        ptr      = nullptr;
         return res;
     }
 
@@ -112,33 +113,26 @@ public:
 
 typedef py_unique_ptr<PyObject> pyo_unique_ptr;
 
-
 /**
  * Release the GIL during the lifetime of this object;
  */
 class ReleaseGIL
 {
-    PyThreadState *_save = nullptr;
+    PyThreadState* _save = nullptr;
 
 public:
-    ReleaseGIL()
-    {
-        _save = PyEval_SaveThread();
-    }
+    ReleaseGIL() { _save = PyEval_SaveThread(); }
 
-    ~ReleaseGIL()
-    {
-        lock();
-    }
+    ~ReleaseGIL() { lock(); }
 
     void lock()
     {
-        if (!_save) return;
+        if (!_save)
+            return;
         PyEval_RestoreThread(_save);
         _save = nullptr;
     }
 };
-
 
 /**
  * Acquire the GIL prior to invoking python code.
@@ -151,17 +145,10 @@ class AcquireGIL
     PyGILState_STATE _state;
 
 public:
-    AcquireGIL()
-    {
-        _state = PyGILState_Ensure();
-    }
+    AcquireGIL() { _state = PyGILState_Ensure(); }
 
-    ~AcquireGIL()
-    {
-        PyGILState_Release(_state);
-    }
+    ~AcquireGIL() { PyGILState_Release(_state); }
 };
-
 
 /**
  * Exception raised when a python function returns an error with an exception
@@ -174,8 +161,9 @@ public:
  * This exception carries to information, because it is all set in the python
  * exception information.
  */
-struct PythonException : public std::exception {};
-
+struct PythonException : public std::exception
+{
+};
 
 /**
  * Throw PythonException if the given pointer is nullptr.
@@ -183,14 +171,14 @@ struct PythonException : public std::exception {};
  * This can be used to wrap Python API invocations, throwing PythonException if
  * the API call returned an error.
  */
-template<typename T>
-inline T* throw_ifnull(T* o)
+template <typename T> inline T* throw_ifnull(T* o)
 {
-    if (!o) throw PythonException();
+    if (!o)
+        throw PythonException();
     return o;
 }
 
-}
-}
+} // namespace python
+} // namespace dballe
 
 #endif

@@ -3,11 +3,14 @@
 
 namespace dballe {
 namespace tests {
-// Workaround for rocky8: newer gcc compilers can use plain actual() without issues
-inline ActualStdString actual_qb(const dballe::sql::Querybuf& actual) { return ActualStdString(actual); }
+// Workaround for rocky8: newer gcc compilers can use plain actual() without
+// issues
+inline ActualStdString actual_qb(const dballe::sql::Querybuf& actual)
+{
+    return ActualStdString(actual);
 }
-}
-
+} // namespace tests
+} // namespace dballe
 
 using namespace wreport;
 using namespace dballe;
@@ -62,4 +65,4 @@ class Tests : public TestCase
     }
 } test("db_querybuf");
 
-}
+} // namespace

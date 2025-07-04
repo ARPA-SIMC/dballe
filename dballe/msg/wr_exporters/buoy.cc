@@ -1,8 +1,8 @@
-#include "dballe/msg/msg.h"
 #include "dballe/core/shortcuts.h"
+#include "dballe/msg/msg.h"
 #include "dballe/msg/wr_codec.h"
-#include <wreport/bulletin.h>
 #include <cstdlib>
+#include <wreport/bulletin.h>
 
 using namespace wreport;
 using namespace std;
@@ -22,7 +22,9 @@ struct Buoy : public Template
     bool is_crex;
 
     Buoy(const dballe::ExporterOptions& opts, const Messages& msgs)
-        : Template(opts, msgs) {}
+        : Template(opts, msgs)
+    {
+    }
 
     const char* name() const override { return BUOY_NAME; }
     const char* description() const override { return BUOY_DESC; }
@@ -36,7 +38,8 @@ struct Buoy : public Template
             subset->store_variable_undef(code);
     }
 
-    void add(Varcode code, Varcode srccode, const Level& level, const Trange& trange)
+    void add(Varcode code, Varcode srccode, const Level& level,
+             const Trange& trange)
     {
         const Var* var = msg->get(level, trange, srccode);
         if (var)
@@ -57,22 +60,22 @@ struct Buoy : public Template
 
         is_crex = dynamic_cast<CrexBulletin*>(&bulletin) != 0;
 
-        bulletin.data_category = 1;
-        bulletin.data_subcategory = 255;
+        bulletin.data_category          = 1;
+        bulletin.data_subcategory       = 255;
         bulletin.data_subcategory_local = 21;
 
         // Data descriptor section
         bulletin.datadesc.clear();
-        bulletin.datadesc.push_back(WR_VAR(3,  8,   3));
+        bulletin.datadesc.push_back(WR_VAR(3, 8, 3));
         if (!is_crex)
         {
-                bulletin.datadesc.push_back(WR_VAR(2, 22,   0));
-                bulletin.datadesc.push_back(WR_VAR(1,  1,  32));
-                bulletin.datadesc.push_back(WR_VAR(0, 31,  31));
-                bulletin.datadesc.push_back(WR_VAR(0,  1,  31));
-                bulletin.datadesc.push_back(WR_VAR(0,  1, 201));
-                bulletin.datadesc.push_back(WR_VAR(1,  1,  32));
-                bulletin.datadesc.push_back(WR_VAR(0, 33,   7));
+            bulletin.datadesc.push_back(WR_VAR(2, 22, 0));
+            bulletin.datadesc.push_back(WR_VAR(1, 1, 32));
+            bulletin.datadesc.push_back(WR_VAR(0, 31, 31));
+            bulletin.datadesc.push_back(WR_VAR(0, 1, 31));
+            bulletin.datadesc.push_back(WR_VAR(0, 1, 201));
+            bulletin.datadesc.push_back(WR_VAR(1, 1, 32));
+            bulletin.datadesc.push_back(WR_VAR(0, 33, 7));
         }
 
         bulletin.load_tables();
@@ -85,31 +88,34 @@ struct Buoy : public Template
         const Var* var = msg.get_ident_var();
         if (var && var->isset())
         {
-            subset.store_variable_i(WR_VAR(0, 1, 5), strtol(var->enqc(), 0, 10));
+            subset.store_variable_i(WR_VAR(0, 1, 5),
+                                    strtol(var->enqc(), 0, 10));
             subset.back().setattrs(*var);
-        } else
+        }
+        else
             subset.store_variable_undef(WR_VAR(0, 1, 5));
-        /*  1 */ add(WR_VAR(0,  1, 12), sc::st_dir);
-        /*  2 */ add(WR_VAR(0,  1, 13), sc::st_speed);
-        /*  3 */ add(WR_VAR(0,  2,  1), sc::st_type);
+        /*  1 */ add(WR_VAR(0, 1, 12), sc::st_dir);
+        /*  2 */ add(WR_VAR(0, 1, 13), sc::st_speed);
+        /*  3 */ add(WR_VAR(0, 2, 1), sc::st_type);
         do_D01011();
         do_D01012();
-        /*  9 */ add(WR_VAR(0,  5,  2), sc::latitude);
-        /* 10 */ add(WR_VAR(0,  6,  2), sc::longitude);
-        /* 11 */ add(WR_VAR(0, 10,  4), sc::press);
+        /*  9 */ add(WR_VAR(0, 5, 2), sc::latitude);
+        /* 10 */ add(WR_VAR(0, 6, 2), sc::longitude);
+        /* 11 */ add(WR_VAR(0, 10, 4), sc::press);
         /* 12 */ add(WR_VAR(0, 10, 51), sc::press_msl);
         /* 13 */ add(WR_VAR(0, 10, 61), sc::press_3h);
         /* 14 */ add(WR_VAR(0, 10, 63), sc::press_tend);
         /* 15 */ add(WR_VAR(0, 11, 11), sc::wind_dir);
         /* 16 */ add(WR_VAR(0, 11, 12), sc::wind_speed);
-        /* 17 */ add(WR_VAR(0, 12,  4), sc::temp_2m);
-        /* 18 */ add(WR_VAR(0, 12,  6), sc::dewpoint_2m);
-        /* 19 */ add(WR_VAR(0, 13,  3), sc::humidity);
-        /* 20 */ add(WR_VAR(0, 20,  1), sc::visibility);
-        /* 21 */ add(WR_VAR(0, 20,  3), sc::pres_wtr);
+        /* 17 */ add(WR_VAR(0, 12, 4), sc::temp_2m);
+        /* 18 */ add(WR_VAR(0, 12, 6), sc::dewpoint_2m);
+        /* 19 */ add(WR_VAR(0, 13, 3), sc::humidity);
+        /* 20 */ add(WR_VAR(0, 20, 1), sc::visibility);
+        /* 21 */ add(WR_VAR(0, 20, 3), sc::pres_wtr);
         do_ecmwf_past_wtr();
         /* 24 */ add(WR_VAR(0, 20, 10), sc::cloud_n);
-        /* 25 */ add(WR_VAR(0,  8,  2), WR_VAR(0, 8, 2), Level::cloud(258, 0), Trange::instant());
+        /* 25 */ add(WR_VAR(0, 8, 2), WR_VAR(0, 8, 2), Level::cloud(258, 0),
+                     Trange::instant());
         /* 26 */ add(WR_VAR(0, 20, 11), sc::cloud_nh);
         /* 27 */ add(WR_VAR(0, 20, 13), sc::cloud_hh);
         /* 28 */ add(WR_VAR(0, 20, 12), sc::cloud_cl);
@@ -138,13 +144,14 @@ void register_buoy(TemplateRegistry& r);
 
 void register_buoy(TemplateRegistry& r)
 {
-    r.register_factory(1, BUOY_NAME, BUOY_DESC,
-            [](const dballe::ExporterOptions& opts, const Messages& msgs) {
-                return unique_ptr<Template>(new Buoy(opts, msgs));
-            });
+    r.register_factory(
+        1, BUOY_NAME, BUOY_DESC,
+        [](const dballe::ExporterOptions& opts, const Messages& msgs) {
+            return unique_ptr<Template>(new Buoy(opts, msgs));
+        });
 }
 
-}
-}
-}
-}
+} // namespace wr
+} // namespace msg
+} // namespace impl
+} // namespace dballe

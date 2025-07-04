@@ -1,18 +1,18 @@
-#include "db.h"
 #include "cursor.h"
-#include "qbuilder.h"
-#include "dballe/sql/sql.h"
-#include "dballe/db/v7/transaction.h"
-#include "dballe/db/v7/driver.h"
-#include "dballe/db/v7/station.h"
-#include "dballe/db/v7/levtr.h"
-#include "dballe/msg/msg.h"
-#include "dballe/msg/context.h"
+#include "db.h"
 #include "dballe/core/query.h"
-#include <map>
-#include <memory>
+#include "dballe/db/v7/driver.h"
+#include "dballe/db/v7/levtr.h"
+#include "dballe/db/v7/station.h"
+#include "dballe/db/v7/transaction.h"
+#include "dballe/msg/context.h"
+#include "dballe/msg/msg.h"
+#include "dballe/sql/sql.h"
+#include "qbuilder.h"
 #include <cstring>
 #include <iostream>
+#include <map>
+#include <memory>
 
 using namespace wreport;
 using namespace std;
@@ -33,9 +33,9 @@ struct StationValues : public Values
     void read(v7::Transaction& tr, int id_station)
     {
         clear();
-        tr.station().get_station_vars(trc, id_station, [&](std::unique_ptr<wreport::Var> var) {
-            set(std::move(var));
-        });
+        tr.station().get_station_vars(
+            trc, id_station,
+            [&](std::unique_ptr<wreport::Var> var) { set(std::move(var)); });
     }
 };
 
@@ -43,7 +43,10 @@ struct ProtoVar
 {
     int id_levtr;
     std::unique_ptr<wreport::Var> var;
-    ProtoVar(int id_levtr, std::unique_ptr<wreport::Var> var) : id_levtr(id_levtr), var(std::move(var)) {}
+    ProtoVar(int id_levtr, std::unique_ptr<wreport::Var> var)
+        : id_levtr(id_levtr), var(std::move(var))
+    {
+    }
 };
 
 struct ProtoMessage
@@ -60,12 +63,12 @@ struct Cursor : public impl::CursorMessage
     Results::iterator cur;
     bool at_start = true;
 
-    bool has_value() const override { return !at_start && cur != results.end(); }
-
-    std::shared_ptr<Message> get_message() const override
+    bool has_value() const override
     {
-        return *cur;
+        return !at_start && cur != results.end();
     }
+
+    std::shared_ptr<Message> get_message() const override { return *cur; }
 
     int remaining() const override
     {
@@ -78,7 +81,7 @@ struct Cursor : public impl::CursorMessage
     {
         if (at_start)
         {
-            cur = results.begin();
+            cur      = results.begin();
             at_start = false;
         }
         else if (cur != results.end())
@@ -87,7 +90,6 @@ struct Cursor : public impl::CursorMessage
             ++cur;
         }
         return cur != results.end();
-
     }
 
     void discard() override
@@ -106,15 +108,20 @@ struct Cursor : public impl::CursorMessage
     }
 };
 
-}
+} // namespace
 
-std::shared_ptr<dballe::CursorMessage> Transaction::query_messages(const Query& query)
+std::shared_ptr<dballe::CursorMessage>
+Transaction::query_messages(const Query& query)
 {
     Tracer<> trc(this->trc ? this->trc->trace_export_msgs(query) : nullptr);
     v7::LevTr& lt = levtr();
 
     // The big export query
-    DataQueryBuilder qb(dynamic_pointer_cast<v7::Transaction>(shared_from_this()), core::Query::downcast(query), DBA_DB_MODIFIER_SORT_FOR_EXPORT | DBA_DB_MODIFIER_WITH_ATTRIBUTES, false);
+    DataQueryBuilder qb(
+        dynamic_pointer_cast<v7::Transaction>(shared_from_this()),
+        core::Query::downcast(query),
+        DBA_DB_MODIFIER_SORT_FOR_EXPORT | DBA_DB_MODIFIER_WITH_ATTRIBUTES,
+        false);
     qb.build();
 
     // Current context information used to detect context changes
@@ -125,7 +132,8 @@ std::shared_ptr<dballe::CursorMessage> Transaction::query_messages(const Query& 
 
     if (db->explain_queries)
     {
-        fprintf(stderr, "EXPLAIN "); query.print(stderr);
+        fprintf(stderr, "EXPLAIN ");
+        query.print(stderr);
         db->conn->explain(qb.sql_query, stderr);
     }
 
@@ -134,45 +142,54 @@ std::shared_ptr<dballe::CursorMessage> Transaction::query_messages(const Query& 
     std::map<int, std::vector<ProtoMessage>> results;
     std::set<int> id_levtrs;
     ProtoMessage* msg;
-    data().run_data_query(trc, qb, [&](const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var) {
-        if (station.id != last_ana_id || datetime != last_datetime)
-        {
-            auto& vec = results[station.id];
-            vec.emplace_back();
-            msg = &vec.back();
-            msg->msg->set_datetime(datetime);
-            msg->msg->station_data.set(newvar(WR_VAR(0, 1, 194), station.report));
-            msg->msg->type = impl::Message::type_from_repmemo(station.report.c_str());
-            msg->msg->station_data.set(newvar(WR_VAR(0, 5, 1), station.coords.lat));
-            msg->msg->station_data.set(newvar(WR_VAR(0, 6, 1), station.coords.lon));
-            if (!station.ident.is_missing())
-                msg->msg->station_data.set(newvar(WR_VAR(0, 1, 11), (const char*)station.ident));
-            last_datetime = datetime;
-            last_ana_id = station.id;
-        }
-        id_levtrs.insert(id_levtr);
-        msg->vars.emplace_back(id_levtr, std::move(var));
-    });
+    data().run_data_query(
+        trc, qb,
+        [&](const dballe::DBStation& station, int id_levtr,
+            const Datetime& datetime, int id_data,
+            std::unique_ptr<wreport::Var> var) {
+            if (station.id != last_ana_id || datetime != last_datetime)
+            {
+                auto& vec = results[station.id];
+                vec.emplace_back();
+                msg = &vec.back();
+                msg->msg->set_datetime(datetime);
+                msg->msg->station_data.set(
+                    newvar(WR_VAR(0, 1, 194), station.report));
+                msg->msg->type =
+                    impl::Message::type_from_repmemo(station.report.c_str());
+                msg->msg->station_data.set(
+                    newvar(WR_VAR(0, 5, 1), station.coords.lat));
+                msg->msg->station_data.set(
+                    newvar(WR_VAR(0, 6, 1), station.coords.lon));
+                if (!station.ident.is_missing())
+                    msg->msg->station_data.set(
+                        newvar(WR_VAR(0, 1, 11), (const char*)station.ident));
+                last_datetime = datetime;
+                last_ana_id   = station.id;
+            }
+            id_levtrs.insert(id_levtr);
+            msg->vars.emplace_back(id_levtr, std::move(var));
+        });
 
     lt.prefetch_ids(trc, id_levtrs);
 
     auto res = std::make_shared<Cursor>();
-    for (auto& r: results)
+    for (auto& r : results)
     {
         station_values.read(*this, r.first);
-        for (auto& msg: r.second)
+        for (auto& msg : r.second)
         {
             // Fill in station information
             msg.msg->station_data.merge(station_values);
 
             // Move variables to contexts
-            int last_id_levtr = -1;
+            int last_id_levtr       = -1;
             impl::msg::Context* ctx = nullptr;
-            for (auto& pvar: msg.vars)
+            for (auto& pvar : msg.vars)
             {
                 if (pvar.id_levtr != last_id_levtr)
                 {
-                    ctx = lt.to_msg(trc, pvar.id_levtr, *msg.msg);
+                    ctx           = lt.to_msg(trc, pvar.id_levtr, *msg.msg);
                     last_id_levtr = pvar.id_levtr;
                 }
                 ctx->values.set(std::move(pvar.var));
@@ -180,7 +197,9 @@ std::shared_ptr<dballe::CursorMessage> Transaction::query_messages(const Query& 
             msg.vars.clear();
 
             // Send message to consumer
-            if (msg.msg->type == MessageType::PILOT || msg.msg->type == MessageType::TEMP || msg.msg->type == MessageType::TEMP_SHIP)
+            if (msg.msg->type == MessageType::PILOT ||
+                msg.msg->type == MessageType::TEMP ||
+                msg.msg->type == MessageType::TEMP_SHIP)
                 msg.msg->sounding_pack_levels();
 
             res->results.emplace_back(std::move(msg.msg));
@@ -192,6 +211,6 @@ std::shared_ptr<dballe::CursorMessage> Transaction::query_messages(const Query& 
     return res;
 }
 
-}
-}
-}
+} // namespace v7
+} // namespace db
+} // namespace dballe

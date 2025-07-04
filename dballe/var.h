@@ -7,9 +7,9 @@
  * Create wreport variables from the DB-All.e B table
  */
 
-#include <wreport/var.h>
 #include <memory>
 #include <string>
+#include <wreport/var.h>
 
 namespace dballe {
 
@@ -21,7 +21,6 @@ wreport::Varinfo varinfo(const char* code);
 
 /// Return a Varinfo entry from the DB-All.e B table
 wreport::Varinfo varinfo(const std::string& code);
-
 
 /**
  * Resolve a variable name to a varcode proper, dealing with aliases and
@@ -35,15 +34,18 @@ wreport::Varcode resolve_varcode(const char* name);
  */
 wreport::Varcode resolve_varcode(const std::string& name);
 
-
 /// Create a new Var, from the DB-All.e B table, with undefined value
-template<typename C>
-static inline wreport::Var var(C code) { return wreport::Var(varinfo(code)); }
+template <typename C> static inline wreport::Var var(C code)
+{
+    return wreport::Var(varinfo(code));
+}
 
 /// Create a new Var, from the DB-All.e B table, with value
-template<typename C, typename T>
-static inline wreport::Var var(C code, const T& val) { return wreport::Var(varinfo(code), val); }
-
+template <typename C, typename T>
+static inline wreport::Var var(C code, const T& val)
+{
+    return wreport::Var(varinfo(code), val);
+}
 
 /// Create a new Var, as a copy of an existing variable
 static inline std::unique_ptr<wreport::Var> newvar(const wreport::Var& var)
@@ -52,19 +54,18 @@ static inline std::unique_ptr<wreport::Var> newvar(const wreport::Var& var)
 }
 
 /// Create a new Var, from the DB-All.e B table, with undefined value
-template<typename C>
-static inline std::unique_ptr<wreport::Var> newvar(C code)
+template <typename C> static inline std::unique_ptr<wreport::Var> newvar(C code)
 {
     return std::unique_ptr<wreport::Var>(new wreport::Var(varinfo(code)));
 }
 
 /// Create a new Var, from the DB-All.e B table, with value
-template<typename C, typename T>
+template <typename C, typename T>
 std::unique_ptr<wreport::Var> newvar(C code, const T& val)
 {
     return std::unique_ptr<wreport::Var>(new wreport::Var(varinfo(code), val));
 }
 
-}
+} // namespace dballe
 
 #endif

@@ -12,28 +12,34 @@ namespace db {
 namespace v7 {
 
 const char* StationDataTraits::table_name = "station_data";
-const char* DataTraits::table_name = "data";
+const char* DataTraits::table_name        = "data";
 
-template<typename Traits>
+template <typename Traits>
 const char* DataCommon<Traits>::table_name = Traits::table_name;
 
-template<typename Traits>
-void DataCommon<Traits>::read_attrs_into_values(Tracer<>& trc, int id_data, Values& values)
+template <typename Traits>
+void DataCommon<Traits>::read_attrs_into_values(Tracer<>& trc, int id_data,
+                                                Values& values)
 {
-    read_attrs(trc, id_data, [&](unique_ptr<wreport::Var> var) { values.set(move(var)); });
+    read_attrs(trc, id_data,
+               [&](unique_ptr<wreport::Var> var) { values.set(move(var)); });
 }
 
-template<typename Traits>
-void DataCommon<Traits>::read_attrs_into_values(Tracer<>& trc, int id_data, Values& values, const db::AttrList& exclude)
+template <typename Traits>
+void DataCommon<Traits>::read_attrs_into_values(Tracer<>& trc, int id_data,
+                                                Values& values,
+                                                const db::AttrList& exclude)
 {
     read_attrs(trc, id_data, [&](unique_ptr<wreport::Var> var) {
-        if (std::find(exclude.begin(), exclude.end(), var->code()) == exclude.end())
+        if (std::find(exclude.begin(), exclude.end(), var->code()) ==
+            exclude.end())
             values.set(move(var));
     });
 }
 
-template<typename Traits>
-void DataCommon<Traits>::merge_attrs(Tracer<>& trc, int id_data, const Values& attrs)
+template <typename Traits>
+void DataCommon<Traits>::merge_attrs(Tracer<>& trc, int id_data,
+                                     const Values& attrs)
 {
     // Read existing attributes
     Values merged;
@@ -46,12 +52,14 @@ void DataCommon<Traits>::merge_attrs(Tracer<>& trc, int id_data, const Values& a
     write_attrs(trc, id_data, merged);
 }
 
-template<typename Traits>
-void DataCommon<Traits>::remove_attrs(Tracer<>& trc, int id_data, const db::AttrList& attrs)
+template <typename Traits>
+void DataCommon<Traits>::remove_attrs(Tracer<>& trc, int id_data,
+                                      const db::AttrList& attrs)
 {
     if (attrs.empty())
         remove_all_attrs(trc, id_data);
-    else {
+    else
+    {
         // Read existing attributes
         Values remaining;
         read_attrs_into_values(trc, id_data, remaining, attrs);
@@ -66,11 +74,7 @@ void DataCommon<Traits>::remove_attrs(Tracer<>& trc, int id_data, const db::Attr
 template class DataCommon<StationDataTraits>;
 template class DataCommon<DataTraits>;
 
-
-StationDataDumper::StationDataDumper(FILE* out)
-    : out(out)
-{
-}
+StationDataDumper::StationDataDumper(FILE* out) : out(out) {}
 
 void StationDataDumper::print_head()
 {
@@ -78,7 +82,9 @@ void StationDataDumper::print_head()
     fprintf(out, " id   st   var\n");
 }
 
-void StationDataDumper::print_row(int id, int id_station, wreport::Varcode code, const char* val, const std::vector<uint8_t>& attrs)
+void StationDataDumper::print_row(int id, int id_station, wreport::Varcode code,
+                                  const char* val,
+                                  const std::vector<uint8_t>& attrs)
 {
     fprintf(out, " %4d %4d %01d%02d%03d", id, id_station, WR_VAR_FXY(code));
     if (!val)
@@ -99,10 +105,7 @@ void StationDataDumper::print_tail()
     fprintf(out, "%d element%s in table data\n", count, count != 1 ? "s" : "");
 }
 
-DataDumper::DataDumper(FILE* out)
-    : out(out)
-{
-}
+DataDumper::DataDumper(FILE* out) : out(out) {}
 
 void DataDumper::print_head()
 {
@@ -110,14 +113,13 @@ void DataDumper::print_head()
     fprintf(out, " id   st   ltr  datetime              var\n");
 }
 
-void DataDumper::print_row(int id, int id_station, int id_levtr, const Datetime& dt, wreport::Varcode code, const char* val, const std::vector<uint8_t>& attrs)
+void DataDumper::print_row(int id, int id_station, int id_levtr,
+                           const Datetime& dt, wreport::Varcode code,
+                           const char* val, const std::vector<uint8_t>& attrs)
 {
-    fprintf(out, " %4d %4d %04d %04d-%02d-%02d %02d:%02d:%02d %01d%02d%03d",
-            id,
-            id_station,
-            id_levtr,
-            dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,
-            WR_VAR_FXY(code));
+    fprintf(out, " %4d %4d %04d %04d-%02d-%02d %02d:%02d:%02d %01d%02d%03d", id,
+            id_station, id_levtr, dt.year, dt.month, dt.day, dt.hour, dt.minute,
+            dt.second, WR_VAR_FXY(code));
     if (!val)
         fprintf(out, "\n");
     else
@@ -136,6 +138,6 @@ void DataDumper::print_tail()
     fprintf(out, "%d element%s in table data\n", count, count != 1 ? "s" : "");
 }
 
-}
-}
-}
+} // namespace v7
+} // namespace db
+} // namespace dballe

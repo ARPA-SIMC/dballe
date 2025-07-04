@@ -1,7 +1,7 @@
-#include "tests.h"
 #include "csv.h"
-#include <sstream>
+#include "tests.h"
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 using namespace dballe;
@@ -50,7 +50,8 @@ class Tests : public TestCase
             s.str(std::string());
             csv_output_quoted_string(s, "antani, \"blinda\"");
             wassert(actual(s.str()) == "\"antani, \"\"blinda\"\"\"");
-            wassert(actual(CSVReader::unescape(s.str())) == "antani, \"blinda\"");
+            wassert(actual(CSVReader::unescape(s.str())) ==
+                    "antani, \"blinda\"");
 
             s.str(std::string());
             csv_output_quoted_string(s, "\"");
@@ -129,11 +130,9 @@ class Tests : public TestCase
             }
 
             {
-                stringstream in(
-                        "1,\",\",2\n"
-                        "antani,,blinda\n"
-                        ",\n"
-                );
+                stringstream in("1,\",\",2\n"
+                                "antani,,blinda\n"
+                                ",\n");
                 CSVReader reader(in);
 
                 wassert(actual(reader.next()).istrue());
@@ -204,4 +203,4 @@ class Tests : public TestCase
     }
 } test("core_csv");
 
-}
+} // namespace

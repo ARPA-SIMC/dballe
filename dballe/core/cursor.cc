@@ -7,8 +7,7 @@ namespace impl {
 
 namespace {
 
-template<class Interface>
-struct EmptyCursor : public Interface
+template <class Interface> struct EmptyCursor : public Interface
 {
     bool has_value() const override { return false; }
     void enq(Enq& enq) const override {}
@@ -27,13 +26,19 @@ struct EmptyCursorStation : public EmptyCursor<impl::CursorStation>
 struct EmptyCursorStationData : public EmptyCursor<impl::CursorStationData>
 {
     wreport::Varcode get_varcode() const override { return 0; }
-    wreport::Var get_var() const override { throw wreport::error_consistency("cursor not on a result"); }
+    wreport::Var get_var() const override
+    {
+        throw wreport::error_consistency("cursor not on a result");
+    }
 };
 
 struct EmptyCursorData : public EmptyCursor<impl::CursorData>
 {
     wreport::Varcode get_varcode() const override { return 0; }
-    wreport::Var get_var() const override { throw wreport::error_consistency("cursor not on a result"); }
+    wreport::Var get_var() const override
+    {
+        throw wreport::error_consistency("cursor not on a result");
+    }
     Level get_level() const override { return Level(); }
     Trange get_trange() const override { return Trange(); }
     Datetime get_datetime() const override { return Datetime(); }
@@ -50,10 +55,14 @@ struct EmptyCursorSummary : public EmptyCursor<impl::CursorSummary>
 
 struct EmptyCursorMessage : public EmptyCursor<impl::CursorMessage>
 {
-    std::shared_ptr<Message> get_message() const override { throw wreport::error_notfound("cannot retrieve a message from an empty result set"); }
+    std::shared_ptr<Message> get_message() const override
+    {
+        throw wreport::error_notfound(
+            "cannot retrieve a message from an empty result set");
+    }
 };
 
-}
+} // namespace
 
 std::shared_ptr<CursorStation> CursorStation::make_empty()
 {
@@ -80,5 +89,5 @@ std::shared_ptr<CursorMessage> CursorMessage::make_empty()
     return std::make_shared<EmptyCursorMessage>();
 }
 
-}
-}
+} // namespace impl
+} // namespace dballe

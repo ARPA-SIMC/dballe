@@ -1,5 +1,5 @@
-#include "tests.h"
 #include "defs.h"
+#include "tests.h"
 
 using namespace dballe;
 using namespace wreport::tests;
@@ -14,8 +14,6 @@ class Tests : public TestCase
     void register_tests() override;
 } test("core_defs");
 
-void Tests::register_tests()
-{
-}
+void Tests::register_tests() {}
 
-}
+} // namespace

@@ -1,14 +1,14 @@
 #ifndef DBALLE_DB_V7_STATION_H
 #define DBALLE_DB_V7_STATION_H
 
-#include <dballe/fwd.h>
-#include <dballe/core/fwd.h>
-#include <dballe/sql/fwd.h>
-#include <dballe/db/v7/fwd.h>
-#include <dballe/db/v7/cache.h>
-#include <memory>
 #include <cstdio>
+#include <dballe/core/fwd.h>
+#include <dballe/db/v7/cache.h>
+#include <dballe/db/v7/fwd.h>
+#include <dballe/fwd.h>
+#include <dballe/sql/fwd.h>
 #include <functional>
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -25,7 +25,9 @@ struct Station
 {
 protected:
     v7::Transaction& tr;
-    virtual void _dump(std::function<void(int, int, const Coords& coords, const char* ident)> out) = 0;
+    virtual void
+    _dump(std::function<void(int, int, const Coords& coords, const char* ident)>
+              out) = 0;
 
 public:
     Station(v7::Transaction& tr);
@@ -42,7 +44,8 @@ public:
     virtual int maybe_get_id(Tracer<>& trc, const dballe::DBStation& st) = 0;
 
     /**
-     * Insert a new station in the database, without checking if it already exists.
+     * Insert a new station in the database, without checking if it already
+     * exists.
      *
      * Returns the ID of the new station
      */
@@ -51,12 +54,16 @@ public:
     /**
      * Run a station query, iterating on the resulting stations
      */
-    virtual void run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::DBStation& station)>) = 0;
+    virtual void run_station_query(
+        Tracer<>& trc, const v7::StationQueryBuilder& qb,
+        std::function<void(const dballe::DBStation& station)>) = 0;
 
     /**
      * Export station variables
      */
-    virtual void get_station_vars(Tracer<>& trc, int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
+    virtual void get_station_vars(
+        Tracer<>& trc, int id_station,
+        std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 
     /**
      * Add all station variables (without attributes) to values.
@@ -64,7 +71,8 @@ public:
      * If the same variable exists in many different networks, the one with the
      * highest priority will be used.
      */
-    virtual void add_station_vars(Tracer<>& trc, int id_station, DBValues& values) = 0;
+    virtual void add_station_vars(Tracer<>& trc, int id_station,
+                                  DBValues& values) = 0;
 
     /**
      * Dump the entire contents of the table to an output stream
@@ -72,8 +80,7 @@ public:
     void dump(FILE* out);
 };
 
-}
-}
-}
+} // namespace v7
+} // namespace db
+} // namespace dballe
 #endif
-

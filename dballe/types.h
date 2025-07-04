@@ -6,10 +6,10 @@
  */
 
 #include <dballe/fwd.h>
-#include <wreport/varinfo.h>
-#include <memory>
-#include <iosfwd>
 #include <functional>
+#include <iosfwd>
+#include <memory>
+#include <wreport/varinfo.h>
 
 namespace wreport {
 class Var;
@@ -39,7 +39,7 @@ struct Date
      * A year of MISSING_INT constructs a missing Date. In any other case,
      * arguments are validated with Date::validate().
      */
-    Date(int ye, int mo=1, int da=1);
+    Date(int ye, int mo = 1, int da = 1);
 
     /// Copy constructor
     Date(const Date& d) = default;
@@ -84,11 +84,11 @@ struct Date
     /// Convert a calendar date into a Julian day
     static int calendar_to_julian(int year, int month, int day);
     /// Convert a Julian day into a calendar date
-    static void julian_to_calendar(int jday, unsigned short& year, unsigned char& month, unsigned char& day);
+    static void julian_to_calendar(int jday, unsigned short& year,
+                                   unsigned char& month, unsigned char& day);
 };
 
 std::ostream& operator<<(std::ostream& out, const Date& dt);
-
 
 /**
  * Time of the day.
@@ -111,7 +111,7 @@ struct Time
      * A hour of MISSING_INT constructs a missing Time. In any other case,
      * arguments are validated with Time::validate().
      */
-    Time(int ho, int mi=0, int se=0);
+    Time(int ho, int mi = 0, int se = 0);
 
     Time(const Time& t) = default;
 
@@ -154,7 +154,6 @@ struct Time
 
 std::ostream& operator<<(std::ostream& out, const Time& t);
 
-
 /**
  * Date and time
  *
@@ -180,10 +179,11 @@ struct Datetime
      * A year of MISSING_INT constructs a missing Datetime. In any other case,
      * arguments are validated with Datetime::validate().
      */
-    Datetime(int ye, int mo=1, int da=1, int ho=0, int mi=0, int se=0);
+    Datetime(int ye, int mo = 1, int da = 1, int ho = 0, int mi = 0,
+             int se = 0);
 
     /// Set the date from a Julian day
-    static Datetime from_julian(int jday, int ho=0, int mi=0, int se=0);
+    static Datetime from_julian(int jday, int ho = 0, int mi = 0, int se = 0);
 
     /**
      * Return a Datetime filling the parts set to MISSING_INT with their lowest
@@ -234,12 +234,12 @@ struct Datetime
     /**
      * Print to an output stream in ISO8601 combined format.
      */
-    int print_iso8601(FILE* out, char sep='T', const char* end="\n") const;
+    int print_iso8601(FILE* out, char sep = 'T', const char* end = "\n") const;
 
     /**
      * Print to an output stream in ISO8601 combined format.
      */
-    int print(FILE* out, const char* end="\n") const;
+    int print(FILE* out, const char* end = "\n") const;
 
     /**
      * Write the datetime to an output stream in ISO8601 combined format.
@@ -248,15 +248,17 @@ struct Datetime
      * @param sep the separator character between date and time
      * @param tz the timezone string to use at the end of the datetime
      */
-    void to_stream_iso8601(std::ostream& out, char sep='T', const char* tz="") const;
+    void to_stream_iso8601(std::ostream& out, char sep = 'T',
+                           const char* tz = "") const;
 
     /**
      * Write the datetime as a CSV field in ISO8601 date format.
      */
-    void to_csv_iso8601(CSVWriter& out, char sep='T', const char* tz="") const;
+    void to_csv_iso8601(CSVWriter& out, char sep = 'T',
+                        const char* tz = "") const;
 
     /// Write to a string in ISO8601 combined format
-    std::string to_string(char sep='T', const char* tz="") const;
+    std::string to_string(char sep = 'T', const char* tz = "") const;
 
     /**
      * Parse an ISO8601 datetime string.
@@ -279,11 +281,11 @@ struct Datetime
      * Convert a datetime with an hour of 24:00:00 to hour 00:00:00 of the
      * following day.
      */
-    static void normalise_h24(int& ye, int& mo, int& da, int& ho, int& mi, int& se);
+    static void normalise_h24(int& ye, int& mo, int& da, int& ho, int& mi,
+                              int& se);
 };
 
 std::ostream& operator<<(std::ostream& out, const Datetime& dt);
-
 
 /**
  * Range of datetimes.
@@ -299,10 +301,12 @@ struct DatetimeRange
     Datetime max;
 
     DatetimeRange() = default;
-    DatetimeRange(const Datetime& min, const Datetime& max) : min(min), max(max) {}
-    DatetimeRange(
-            int yemin, int momin, int damin, int homin, int mimin, int semin,
-            int yemax, int momax, int damax, int homax, int mimax, int semax);
+    DatetimeRange(const Datetime& min, const Datetime& max) : min(min), max(max)
+    {
+    }
+    DatetimeRange(int yemin, int momin, int damin, int homin, int mimin,
+                  int semin, int yemax, int momax, int damax, int homax,
+                  int mimax, int semax);
 
     /// Check if this range is open on both sides
     bool is_missing() const;
@@ -348,11 +352,10 @@ struct DatetimeRange
     bool is_disjoint(const DatetimeRange& dtr) const;
 
     /// Print to an output stream in ISO8601 combined format.
-    int print(FILE* out, const char* end="\n") const;
+    int print(FILE* out, const char* end = "\n") const;
 };
 
 std::ostream& operator<<(std::ostream& out, const DatetimeRange& dtr);
-
 
 /**
  * Coordinates
@@ -430,10 +433,10 @@ struct Coords
     bool operator>=(const Coords& o) const;
 
     /// Print to an output stream
-    int print(FILE* out, const char* end="\n") const;
+    int print(FILE* out, const char* end = "\n") const;
 
     /// Format to a string
-    std::string to_string(const char* undef="-") const;
+    std::string to_string(const char* undef = "-") const;
 
     /// Convert a latitude to the internal integer representation
     static int lat_to_int(double lat);
@@ -449,7 +452,6 @@ struct Coords
 };
 
 std::ostream& operator<<(std::ostream&, const Coords&);
-
 
 /**
  * Range of latitudes.
@@ -467,9 +469,9 @@ std::ostream& operator<<(std::ostream&, const Coords&);
 struct LatRange
 {
     /// Minimum possible integer value
-    static constexpr int IMIN = -9000000;
+    static constexpr int IMIN    = -9000000;
     /// Maximum possible integer value
-    static constexpr int IMAX = 9000000;
+    static constexpr int IMAX    = 9000000;
     /// Minimum possible double value
     static constexpr double DMIN = -90.0;
     /// Maximum possible double value
@@ -523,11 +525,10 @@ struct LatRange
      * @param out  The output stream
      * @param end  String to print after the Station
      */
-    int print(FILE* out, const char* end="\n") const;
+    int print(FILE* out, const char* end = "\n") const;
 };
 
 std::ostream& operator<<(std::ostream& out, const LatRange& lr);
-
 
 /**
  * Range of longitudes.
@@ -614,11 +615,10 @@ struct LonRange
      * @param out  The output stream
      * @param end  String to print after the Station
      */
-    int print(FILE* out, const char* end="\n") const;
+    int print(FILE* out, const char* end = "\n") const;
 };
 
 std::ostream& operator<<(std::ostream& out, const LonRange& lr);
-
 
 /// Vertical level or layer
 struct Level
@@ -632,8 +632,11 @@ struct Level
     /// L2 value of the second layer
     int l2;
 
-    Level(int ltype1=MISSING_INT, int l1=MISSING_INT, int ltype2=MISSING_INT, int l2=MISSING_INT)
-        : ltype1(ltype1), l1(l1), ltype2(ltype2), l2(l2) {}
+    Level(int ltype1 = MISSING_INT, int l1 = MISSING_INT,
+          int ltype2 = MISSING_INT, int l2 = MISSING_INT)
+        : ltype1(ltype1), l1(l1), ltype2(ltype2), l2(l2)
+    {
+    }
 
     /// Check if this level is fully set to the missing value
     bool is_missing() const;
@@ -660,10 +663,10 @@ struct Level
     std::string describe() const;
 
     /// Format to an output stream
-    void to_stream(std::ostream& out, const char* undef="-") const;
+    void to_stream(std::ostream& out, const char* undef = "-") const;
 
     /// Format to a string
-    std::string to_string(const char* undef="-") const;
+    std::string to_string(const char* undef = "-") const;
 
     /**
      * Write the datetime to a CSV writer as 4 fields
@@ -671,14 +674,13 @@ struct Level
     void to_csv(CSVWriter& out) const;
 
     /// Create a cloud special level
-    static Level cloud(int ltype2=MISSING_INT, int l2=MISSING_INT);
+    static Level cloud(int ltype2 = MISSING_INT, int l2 = MISSING_INT);
 
     /// Print to an output stream
-    int print(FILE* out, const char* undef="-", const char* end="\n") const;
+    int print(FILE* out, const char* undef = "-", const char* end = "\n") const;
 };
 
 std::ostream& operator<<(std::ostream& out, const Level& l);
-
 
 /**
  * Information on how a value has been sampled or computed with regards to time.
@@ -692,8 +694,10 @@ struct Trange
     /// Time range P2 indicator.
     int p2;
 
-    Trange(int pind=MISSING_INT, int p1=MISSING_INT, int p2=MISSING_INT)
-        : pind(pind), p1(p1), p2(p2) {}
+    Trange(int pind = MISSING_INT, int p1 = MISSING_INT, int p2 = MISSING_INT)
+        : pind(pind), p1(p1), p2(p2)
+    {
+    }
 
     /// Check if this level is fully set to the missing value
     bool is_missing() const;
@@ -720,10 +724,10 @@ struct Trange
     std::string describe() const;
 
     /// Format to an output stream
-    void to_stream(std::ostream& out, const char* undef="-") const;
+    void to_stream(std::ostream& out, const char* undef = "-") const;
 
     /// Format to a string
-    std::string to_string(const char* undef="-") const;
+    std::string to_string(const char* undef = "-") const;
 
     /**
      * Write the datetime to a CSV writer as 3 fields
@@ -734,11 +738,10 @@ struct Trange
     static Trange instant();
 
     /// Print to an output stream
-    int print(FILE* out, const char* undef="-", const char* end="\n") const;
+    int print(FILE* out, const char* undef = "-", const char* end = "\n") const;
 };
 
 std::ostream& operator<<(std::ostream& out, const Trange& l);
-
 
 /**
  * A station identifier, that can be any string (including the empty string) or
@@ -770,12 +773,30 @@ public:
     int compare(const Ident& o) const;
     int compare(const char* o) const;
     int compare(const std::string& o) const;
-    template<typename T> bool operator==(const T& o) const { return compare(o) == 0; }
-    template<typename T> bool operator!=(const T& o) const { return compare(o) != 0; }
-    template<typename T> bool operator<(const T& o) const  { return compare(o) < 0; }
-    template<typename T> bool operator<=(const T& o) const { return compare(o) <= 0; }
-    template<typename T> bool operator>(const T& o) const  { return compare(o) > 0; }
-    template<typename T> bool operator>=(const T& o) const { return compare(o) >= 0; }
+    template <typename T> bool operator==(const T& o) const
+    {
+        return compare(o) == 0;
+    }
+    template <typename T> bool operator!=(const T& o) const
+    {
+        return compare(o) != 0;
+    }
+    template <typename T> bool operator<(const T& o) const
+    {
+        return compare(o) < 0;
+    }
+    template <typename T> bool operator<=(const T& o) const
+    {
+        return compare(o) <= 0;
+    }
+    template <typename T> bool operator>(const T& o) const
+    {
+        return compare(o) > 0;
+    }
+    template <typename T> bool operator>=(const T& o) const
+    {
+        return compare(o) >= 0;
+    }
 
     /// Check if the Ident is set to the missing value
     bool is_missing() const;
@@ -785,7 +806,6 @@ public:
 };
 
 std::ostream& operator<<(std::ostream&, const Ident&);
-
 
 /**
  * Station information
@@ -801,7 +821,6 @@ struct Station
     /// Mobile station identifier
     Ident ident;
 
-
     Station() = default;
 
     /// Return true if all the station fields are empty
@@ -809,27 +828,33 @@ struct Station
 
     bool operator==(const Station& o) const
     {
-        return std::tie(report, coords, ident) == std::tie(o.report, o.coords, o.ident);
+        return std::tie(report, coords, ident) ==
+               std::tie(o.report, o.coords, o.ident);
     }
     bool operator!=(const Station& o) const
     {
-        return std::tie(report, coords, ident) != std::tie(o.report, o.coords, o.ident);
+        return std::tie(report, coords, ident) !=
+               std::tie(o.report, o.coords, o.ident);
     }
     bool operator<(const Station& o) const
     {
-        return std::tie(report, coords, ident) < std::tie(o.report, o.coords, o.ident);
+        return std::tie(report, coords, ident) <
+               std::tie(o.report, o.coords, o.ident);
     }
     bool operator<=(const Station& o) const
     {
-        return std::tie(report, coords, ident) <= std::tie(o.report, o.coords, o.ident);
+        return std::tie(report, coords, ident) <=
+               std::tie(o.report, o.coords, o.ident);
     }
     bool operator>(const Station& o) const
     {
-        return std::tie(report, coords, ident) > std::tie(o.report, o.coords, o.ident);
+        return std::tie(report, coords, ident) >
+               std::tie(o.report, o.coords, o.ident);
     }
     bool operator>=(const Station& o) const
     {
-        return std::tie(report, coords, ident) >= std::tie(o.report, o.coords, o.ident);
+        return std::tie(report, coords, ident) >=
+               std::tie(o.report, o.coords, o.ident);
     }
 
     /**
@@ -838,14 +863,13 @@ struct Station
      * @param out  The output stream
      * @param end  String to print after the Station
      */
-    int print(FILE* out, const char* end="\n") const;
+    int print(FILE* out, const char* end = "\n") const;
 
     /// Format to a string
-    std::string to_string(const char* undef="-") const;
+    std::string to_string(const char* undef = "-") const;
 };
 
 std::ostream& operator<<(std::ostream&, const Station&);
-
 
 struct DBStation : public Station
 {
@@ -856,7 +880,6 @@ struct DBStation : public Station
      */
     int id = MISSING_INT;
 
-
     DBStation() = default;
 
     /// Return true if all the station fields are empty
@@ -864,27 +887,33 @@ struct DBStation : public Station
 
     bool operator==(const DBStation& o) const
     {
-        return std::tie(id, report, coords, ident) == std::tie(o.id, o.report, o.coords, o.ident);
+        return std::tie(id, report, coords, ident) ==
+               std::tie(o.id, o.report, o.coords, o.ident);
     }
     bool operator!=(const DBStation& o) const
     {
-        return std::tie(id, report, coords, ident) != std::tie(o.id, o.report, o.coords, o.ident);
+        return std::tie(id, report, coords, ident) !=
+               std::tie(o.id, o.report, o.coords, o.ident);
     }
     bool operator<(const DBStation& o) const
     {
-        return std::tie(id, report, coords, ident) < std::tie(o.id, o.report, o.coords, o.ident);
+        return std::tie(id, report, coords, ident) <
+               std::tie(o.id, o.report, o.coords, o.ident);
     }
     bool operator<=(const DBStation& o) const
     {
-        return std::tie(id, report, coords, ident) <= std::tie(o.id, o.report, o.coords, o.ident);
+        return std::tie(id, report, coords, ident) <=
+               std::tie(o.id, o.report, o.coords, o.ident);
     }
     bool operator>(const DBStation& o) const
     {
-        return std::tie(id, report, coords, ident) > std::tie(o.id, o.report, o.coords, o.ident);
+        return std::tie(id, report, coords, ident) >
+               std::tie(o.id, o.report, o.coords, o.ident);
     }
     bool operator>=(const DBStation& o) const
     {
-        return std::tie(id, report, coords, ident) >= std::tie(o.id, o.report, o.coords, o.ident);
+        return std::tie(id, report, coords, ident) >=
+               std::tie(o.id, o.report, o.coords, o.ident);
     }
 
     /**
@@ -893,60 +922,60 @@ struct DBStation : public Station
      * @param out  The output stream
      * @param end  String to print after the Station
      */
-    int print(FILE* out, const char* end="\n") const;
+    int print(FILE* out, const char* end = "\n") const;
 
     /// Format to a string
-    std::string to_string(const char* undef="-") const;
+    std::string to_string(const char* undef = "-") const;
 };
 
 std::ostream& operator<<(std::ostream&, const DBStation&);
 
-}
+} // namespace dballe
 
 namespace std {
 
-template<> struct hash<dballe::Level>
+template <> struct hash<dballe::Level>
 {
     typedef dballe::Level argument_type;
     typedef size_t result_type;
     result_type operator()(argument_type const& o) const noexcept;
 };
 
-template<> struct hash<dballe::Trange>
+template <> struct hash<dballe::Trange>
 {
     typedef dballe::Trange argument_type;
     typedef size_t result_type;
     result_type operator()(argument_type const& o) const noexcept;
 };
 
-template<> struct hash<dballe::Coords>
+template <> struct hash<dballe::Coords>
 {
     typedef dballe::Coords argument_type;
     typedef size_t result_type;
     result_type operator()(argument_type const& o) const noexcept;
 };
 
-template<> struct hash<dballe::Ident>
+template <> struct hash<dballe::Ident>
 {
     typedef dballe::Ident argument_type;
     typedef size_t result_type;
     result_type operator()(argument_type const& o) const noexcept;
 };
 
-template<> struct hash<dballe::Station>
+template <> struct hash<dballe::Station>
 {
     typedef dballe::Station argument_type;
     typedef size_t result_type;
     result_type operator()(argument_type const& o) const noexcept;
 };
 
-template<> struct hash<dballe::DBStation>
+template <> struct hash<dballe::DBStation>
 {
     typedef dballe::DBStation argument_type;
     typedef size_t result_type;
     result_type operator()(argument_type const& o) const noexcept;
 };
 
-}
+} // namespace std
 
 #endif

@@ -4,18 +4,12 @@ namespace dballe {
 namespace impl {
 namespace msg {
 
-CursorStation::~CursorStation()
-{
-}
+CursorStation::~CursorStation() {}
 
-CursorStationData::~CursorStationData()
-{
-}
+CursorStationData::~CursorStationData() {}
 
-CursorData::~CursorData()
-{
-}
+CursorData::~CursorData() {}
 
-}
-}
-}
+} // namespace msg
+} // namespace impl
+} // namespace dballe

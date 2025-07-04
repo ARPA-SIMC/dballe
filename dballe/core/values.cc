@@ -10,10 +10,7 @@ namespace dballe {
 namespace core {
 namespace value {
 
-Encoder::Encoder()
-{
-    buf.reserve(64);
-}
+Encoder::Encoder() { buf.reserve(64); }
 
 void Encoder::append_uint16(uint16_t val)
 {
@@ -29,7 +26,7 @@ void Encoder::append_uint32(uint32_t val)
 
 void Encoder::append_cstring(const char* val)
 {
-    for ( ; *val; ++val)
+    for (; *val; ++val)
         buf.push_back(*val);
     buf.push_back(0);
 }
@@ -59,11 +56,17 @@ void Encoder::append_attributes(const wreport::Var& var)
         append(*a);
 }
 
-Decoder::Decoder(const std::vector<uint8_t>& buf) : buf(buf.data()), size(buf.size()) {}
+Decoder::Decoder(const std::vector<uint8_t>& buf)
+    : buf(buf.data()), size(buf.size())
+{
+}
 
 uint16_t Decoder::decode_uint16()
 {
-    if (size < 2) error_toolong::throwf("cannot decode a 16 bit integer: only %u bytes are left to read", size);
+    if (size < 2)
+        error_toolong::throwf(
+            "cannot decode a 16 bit integer: only %u bytes are left to read",
+            size);
     uint16_t res = ntohs(*(const uint16_t*)buf);
     buf += 2;
     size -= 2;
@@ -72,7 +75,10 @@ uint16_t Decoder::decode_uint16()
 
 uint32_t Decoder::decode_uint32()
 {
-    if (size < 4) error_toolong::throwf("cannot decode a 32 bit integer: only %u bytes are left to read", size);
+    if (size < 4)
+        error_toolong::throwf(
+            "cannot decode a 32 bit integer: only %u bytes are left to read",
+            size);
     uint32_t res = ntohl(*(const uint32_t*)buf);
     buf += 4;
     size -= 4;
@@ -81,12 +87,17 @@ uint32_t Decoder::decode_uint32()
 
 const char* Decoder::decode_cstring()
 {
-    if (!size) error_toolong::throwf("cannot decode a C string: the buffer is empty");
+    if (!size)
+        error_toolong::throwf("cannot decode a C string: the buffer is empty");
     const char* res = (const char*)buf;
     while (true)
     {
-        if (!size) error_toolong::throwf("cannot decode a C string: reached the end of buffer before finding the string terminator");
-        if (*buf == 0) break;
+        if (!size)
+            error_toolong::throwf(
+                "cannot decode a C string: reached the end of buffer before "
+                "finding the string terminator");
+        if (*buf == 0)
+            break;
         ++buf;
         --size;
     }
@@ -102,12 +113,15 @@ unique_ptr<wreport::Var> Decoder::decode_var()
     {
         case Vartype::Binary:
         case Vartype::String:
-            return unique_ptr<wreport::Var>(new wreport::Var(info, decode_cstring()));
+            return unique_ptr<wreport::Var>(
+                new wreport::Var(info, decode_cstring()));
         case Vartype::Integer:
         case Vartype::Decimal:
-            return unique_ptr<wreport::Var>(new wreport::Var(info, (int)decode_uint32()));
+            return unique_ptr<wreport::Var>(
+                new wreport::Var(info, (int)decode_uint32()));
         default:
-            error_consistency::throwf("unsupported variable type %d", (int)info->type);
+            error_consistency::throwf("unsupported variable type %d",
+                                      (int)info->type);
     }
 }
 
@@ -118,6 +132,6 @@ void Decoder::decode_attrs(const std::vector<uint8_t>& buf, wreport::Var& var)
         var.seta(move(dec.decode_var()));
 }
 
-}
-}
-}
+} // namespace value
+} // namespace core
+} // namespace dballe

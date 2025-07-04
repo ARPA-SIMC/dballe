@@ -3,13 +3,13 @@
 
 #include "api.h"
 #include "enq.h"
-#include <dballe/core/cursor.h>
-#include <dballe/core/enq.h>
-#include <dballe/values.h>
-#include <dballe/core/query.h>
-#include <dballe/core/data.h>
-#include <functional>
 #include <cstring>
+#include <dballe/core/cursor.h>
+#include <dballe/core/data.h>
+#include <dballe/core/enq.h>
+#include <dballe/core/query.h>
+#include <dballe/values.h>
+#include <functional>
 
 namespace dballe {
 namespace fortran {
@@ -48,18 +48,19 @@ public:
     virtual void set_varcode(wreport::Varcode varcode);
     virtual void query_attributes(Attributes& dest) = 0;
     virtual void insert_attributes(Values& qcinput) = 0;
-    virtual void remove_attributes() = 0;
+    virtual void remove_attributes()                = 0;
     virtual bool next_station();
     virtual wreport::Varcode next_data();
 
     virtual int enqi(const char* param) const = 0;
     virtual signed char enqb(const char* param) const;
     virtual float enqr(const char* param) const;
-    virtual double enqd(const char* param) const = 0;
+    virtual double enqd(const char* param) const                            = 0;
     virtual bool enqc(const char* param, char* res, unsigned res_len) const = 0;
     virtual void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const = 0;
-    virtual void enqtimerange(int& ptype, int& p1, int& p2) const = 0;
-    virtual void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) const = 0;
+    virtual void enqtimerange(int& ptype, int& p1, int& p2) const           = 0;
+    virtual void enqdate(int& year, int& month, int& day, int& hour, int& min,
+                         int& sec) const                                    = 0;
 };
 
 namespace {
@@ -71,28 +72,44 @@ inline Level cursor_get_level(const CursorSummary& c) { return c.get_level(); }
 inline Trange cursor_get_trange(const CursorStation& c) { return Trange(); }
 inline Trange cursor_get_trange(const CursorStationData& c) { return Trange(); }
 inline Trange cursor_get_trange(const CursorData& c) { return c.get_trange(); }
-inline Trange cursor_get_trange(const CursorSummary& c) { return c.get_trange(); }
-inline Datetime cursor_get_datetime(const CursorStation& c) { return Datetime(); }
-inline Datetime cursor_get_datetime(const CursorSummary& c) { return Datetime(); }
-inline Datetime cursor_get_datetime(const CursorStationData& c) { return Datetime(); }
-inline Datetime cursor_get_datetime(const CursorData& c) { return c.get_datetime(); }
-
+inline Trange cursor_get_trange(const CursorSummary& c)
+{
+    return c.get_trange();
+}
+inline Datetime cursor_get_datetime(const CursorStation& c)
+{
+    return Datetime();
+}
+inline Datetime cursor_get_datetime(const CursorSummary& c)
+{
+    return Datetime();
+}
+inline Datetime cursor_get_datetime(const CursorStationData& c)
+{
+    return Datetime();
+}
+inline Datetime cursor_get_datetime(const CursorData& c)
+{
+    return c.get_datetime();
 }
 
-template<typename Cursor>
-struct CursorOperation : public Operation
+} // namespace
+
+template <typename Cursor> struct CursorOperation : public Operation
 {
     std::shared_ptr<Cursor> cursor;
 
     ~CursorOperation()
     {
-        if (cursor) cursor->discard();
+        if (cursor)
+            cursor->discard();
     }
 
     int enqi(const char* param) const override
     {
         if (!cursor)
-            throw wreport::error_consistency("enqi called before running a query");
+            throw wreport::error_consistency(
+                "enqi called before running a query");
 
         impl::Enqi enq(param, strlen(param));
         cursor->enq(enq);
@@ -103,7 +120,8 @@ struct CursorOperation : public Operation
     double enqd(const char* param) const override
     {
         if (!cursor)
-            throw wreport::error_consistency("enqd called before running a query");
+            throw wreport::error_consistency(
+                "enqd called before running a query");
         impl::Enqd enq(param, strlen(param));
         cursor->enq(enq);
         if (enq.missing)
@@ -113,7 +131,8 @@ struct CursorOperation : public Operation
     bool enqc(const char* param, char* res, unsigned res_len) const override
     {
         if (!cursor)
-            throw wreport::error_consistency("enqc called before running a query");
+            throw wreport::error_consistency(
+                "enqc called before running a query");
         Enqc enq(param, strlen(param), res, res_len);
         cursor->enq(enq);
         return !enq.missing;
@@ -121,27 +140,28 @@ struct CursorOperation : public Operation
     void enqlevel(int& ltype1, int& l1, int& ltype2, int& l2) const override
     {
         Level lev = cursor_get_level(*cursor);
-        ltype1 = lev.ltype1 != MISSING_INT ? lev.ltype1 : API::missing_int;
-        l1     = lev.l1     != MISSING_INT ? lev.l1     : API::missing_int;
-        ltype2 = lev.ltype2 != MISSING_INT ? lev.ltype2 : API::missing_int;
-        l2     = lev.l2     != MISSING_INT ? lev.l2     : API::missing_int;
+        ltype1    = lev.ltype1 != MISSING_INT ? lev.ltype1 : API::missing_int;
+        l1        = lev.l1 != MISSING_INT ? lev.l1 : API::missing_int;
+        ltype2    = lev.ltype2 != MISSING_INT ? lev.ltype2 : API::missing_int;
+        l2        = lev.l2 != MISSING_INT ? lev.l2 : API::missing_int;
     }
     void enqtimerange(int& ptype, int& p1, int& p2) const override
     {
         Trange tr = cursor_get_trange(*cursor);
-        ptype = tr.pind != MISSING_INT ? tr.pind : API::missing_int;
-        p1    = tr.p1   != MISSING_INT ? tr.p1   : API::missing_int;
-        p2    = tr.p2   != MISSING_INT ? tr.p2   : API::missing_int;
+        ptype     = tr.pind != MISSING_INT ? tr.pind : API::missing_int;
+        p1        = tr.p1 != MISSING_INT ? tr.p1 : API::missing_int;
+        p2        = tr.p2 != MISSING_INT ? tr.p2 : API::missing_int;
     }
-    void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) const override
+    void enqdate(int& year, int& month, int& day, int& hour, int& min,
+                 int& sec) const override
     {
         Datetime dt = cursor_get_datetime(*cursor);
-        year = dt.year != 0xffff ? dt.year : API::missing_int;
-        month = dt.month != 0xff ? dt.month : API::missing_int;
-        day = dt.day != 0xff ? dt.day : API::missing_int;
-        hour = dt.hour != 0xff ? dt.hour : API::missing_int;
-        min = dt.minute != 0xff ? dt.minute : API::missing_int;
-        sec = dt.second != 0xff ? dt.second : API::missing_int;
+        year        = dt.year != 0xffff ? dt.year : API::missing_int;
+        month       = dt.month != 0xff ? dt.month : API::missing_int;
+        day         = dt.day != 0xff ? dt.day : API::missing_int;
+        hour        = dt.hour != 0xff ? dt.hour : API::missing_int;
+        min         = dt.minute != 0xff ? dt.minute : API::missing_int;
+        sec         = dt.second != 0xff ? dt.second : API::missing_int;
     }
 };
 
@@ -153,19 +173,21 @@ class CommonAPIImplementation : public API
 {
 public:
     enum Permissions {
-        PERM_ANA_RO =       (1 << 0),
-        PERM_ANA_WRITE =    (1 << 1),
-        PERM_DATA_RO =      (1 << 2),
-        PERM_DATA_ADD =     (1 << 3),
-        PERM_DATA_WRITE =   (1 << 4),
-        PERM_ATTR_RO =      (1 << 5),
-        PERM_ATTR_WRITE =   (1 << 6)
+        PERM_ANA_RO     = (1 << 0),
+        PERM_ANA_WRITE  = (1 << 1),
+        PERM_DATA_RO    = (1 << 2),
+        PERM_DATA_ADD   = (1 << 3),
+        PERM_DATA_WRITE = (1 << 4),
+        PERM_ATTR_RO    = (1 << 5),
+        PERM_ATTR_WRITE = (1 << 6)
     };
 
     /**
      * Set the permission bits, parsing the flags and doing consistency checks
      */
-    static unsigned compute_permissions(const char* anaflag, const char* dataflag, const char* attrflag);
+    static unsigned compute_permissions(const char* anaflag,
+                                        const char* dataflag,
+                                        const char* attrflag);
 
     unsigned perms = 0;
 
@@ -206,12 +228,12 @@ protected:
 public:
     CommonAPIImplementation();
     CommonAPIImplementation(const CommonAPIImplementation&) = delete;
-    CommonAPIImplementation(CommonAPIImplementation&&) = delete;
+    CommonAPIImplementation(CommonAPIImplementation&&)      = delete;
     virtual ~CommonAPIImplementation();
     CommonAPIImplementation& operator=(const CommonAPIImplementation&) = delete;
-    CommonAPIImplementation& operator=(CommonAPIImplementation&&) = delete;
+    CommonAPIImplementation& operator=(CommonAPIImplementation&&)      = delete;
 
-    template<typename Operation>
+    template <typename Operation>
     auto reset_operation(Operation* op) -> decltype(op->run())
     {
         delete operation;
@@ -242,10 +264,14 @@ public:
     void setlevel(int ltype1, int l1, int ltype2, int l2) override;
     void enqtimerange(int& ptype, int& p1, int& p2) override;
     void settimerange(int ptype, int p1, int p2) override;
-    void enqdate(int& year, int& month, int& day, int& hour, int& min, int& sec) override;
-    void setdate(int year, int month, int day, int hour, int min, int sec) override;
-    void setdatemin(int year, int month, int day, int hour, int min, int sec) override;
-    void setdatemax(int year, int month, int day, int hour, int min, int sec) override;
+    void enqdate(int& year, int& month, int& day, int& hour, int& min,
+                 int& sec) override;
+    void setdate(int year, int month, int day, int hour, int min,
+                 int sec) override;
+    void setdatemin(int year, int month, int day, int hour, int min,
+                    int sec) override;
+    void setdatemax(int year, int month, int day, int hour, int min,
+                    int sec) override;
     void unset(const char* param) override;
     void unsetall() override;
     void unsetb() override;
@@ -269,6 +295,6 @@ public:
     friend class Operation;
 };
 
-}
-}
+} // namespace fortran
+} // namespace dballe
 #endif

@@ -4,15 +4,14 @@
 #include <dballe/core/query.h>
 #include <dballe/db/db.h>
 #include <dballe/db/summary.h>
-#include <vector>
 #include <map>
 #include <set>
+#include <vector>
 
 namespace dballe {
 namespace db {
 
-template<typename Station>
-class BaseExplorer
+template <typename Station> class BaseExplorer
 {
 protected:
     /// Summary of the whole database
@@ -56,15 +55,19 @@ public:
         /// Load the explorer contents from JSON
         void add_json(core::json::Stream& in);
 
-        /// Merge the currently selected contents of another explorer into this one
-        template<typename OStation>
+        /// Merge the currently selected contents of another explorer into this
+        /// one
+        template <typename OStation>
         void add_explorer(const BaseExplorer<OStation>& explorer);
 
         /// Merge the contents of a message
-        void add_message(const dballe::Message& message, bool station_data=true, bool data=true);
+        void add_message(const dballe::Message& message,
+                         bool station_data = true, bool data = true);
 
         /// Merge the contents of a vector of messages
-        void add_messages(const std::vector<std::shared_ptr<dballe::Message>>& messages, bool station_data=true, bool data=true);
+        void add_messages(
+            const std::vector<std::shared_ptr<dballe::Message>>& messages,
+            bool station_data = true, bool data = true);
 
         void commit();
 
@@ -74,10 +77,10 @@ public:
     BaseExplorer();
     BaseExplorer(const std::string& pathname);
     BaseExplorer(const BaseExplorer&) = delete;
-    BaseExplorer(BaseExplorer&&) = delete;
+    BaseExplorer(BaseExplorer&&)      = delete;
     ~BaseExplorer();
     BaseExplorer& operator=(const BaseExplorer&) = delete;
-    BaseExplorer& operator=(BaseExplorer&&) = delete;
+    BaseExplorer& operator=(BaseExplorer&&)      = delete;
 
     /// Get the current filter
     const dballe::Query& get_filter() const;
@@ -109,7 +112,6 @@ public:
     void to_json(core::JSONWriter& writer) const;
 };
 
-
 /**
  * Explorer without database station IDs
  */
@@ -121,10 +123,12 @@ typedef BaseExplorer<dballe::Station> Explorer;
 typedef BaseExplorer<dballe::DBStation> DBExplorer;
 
 extern template class BaseExplorer<dballe::Station>;
-extern template void BaseExplorer<dballe::Station>::Update::add_explorer(const BaseExplorer<DBStation>&);
+extern template void BaseExplorer<dballe::Station>::Update::add_explorer(
+    const BaseExplorer<DBStation>&);
 extern template class BaseExplorer<dballe::DBStation>;
-extern template void BaseExplorer<dballe::DBStation>::Update::add_explorer(const BaseExplorer<Station>&);
+extern template void BaseExplorer<dballe::DBStation>::Update::add_explorer(
+    const BaseExplorer<Station>&);
 
-}
-}
+} // namespace db
+} // namespace dballe
 #endif

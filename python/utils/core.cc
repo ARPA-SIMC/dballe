@@ -4,4 +4,4 @@ namespace dballe {
 namespace python {
 
 }
-}
+} // namespace dballe

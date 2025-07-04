@@ -1,15 +1,15 @@
 #include <dballe/cmdline/cmdline.h>
-#include <wreport/vartable.h>
-#include <wreport/dtable.h>
-#include <wreport/conv.h>
-#include <wreport/utils/string.h>
+#include <dballe/core/csv.h>
 #include <dballe/types.h>
 #include <dballe/var.h>
-#include <dballe/core/csv.h>
+#include <wreport/conv.h>
+#include <wreport/dtable.h>
+#include <wreport/utils/string.h>
+#include <wreport/vartable.h>
 
+#include "config.h"
 #include <stdlib.h>
 #include <string.h>
-#include "config.h"
 
 using namespace dballe;
 using namespace dballe::cmdline;
@@ -32,28 +32,29 @@ struct FileCSV : CSVWriter
     }
 };
 
-
 struct VarinfoPrinter : public cmdline::Subcommand
 {
-    int op_csv = 0;
-    int op_crex = 0;
+    int op_csv         = 0;
+    int op_crex        = 0;
     CSVWriter* csv_out = nullptr;
 
-    ~VarinfoPrinter()
-    {
-        delete csv_out;
-    }
+    ~VarinfoPrinter() { delete csv_out; }
 
     void init() override
     {
-        if (op_csv) csv_out = new FileCSV(stdout);
+        if (op_csv)
+            csv_out = new FileCSV(stdout);
     }
 
     void add_to_optable(std::vector<poptOption>& opts) const override
     {
         Subcommand::add_to_optable(opts);
-        opts.push_back(poptOption{ "csv", 'c', POPT_ARG_NONE, const_cast<int*>(&op_csv), 0, "output variables in CSV format", 0 });
-        opts.push_back(poptOption{ "crex", 0,  POPT_ARG_NONE, const_cast<int*>(&op_crex), 0, "read CREX entries instead of BUFR", 0 });
+        opts.push_back(poptOption{"csv", 'c', POPT_ARG_NONE,
+                                  const_cast<int*>(&op_csv), 0,
+                                  "output variables in CSV format", 0});
+        opts.push_back(poptOption{"crex", 0, POPT_ARG_NONE,
+                                  const_cast<int*>(&op_crex), 0,
+                                  "read CREX entries instead of BUFR", 0});
     }
 
     const Vartable* load_vartable(const char* id)
@@ -100,23 +101,22 @@ struct VarinfoPrinter : public cmdline::Subcommand
         {
             case Vartype::String:
                 printf("%d%02d%03d %s [%s, %u characters]\n",
-                        WR_VAR_FXY(info->code), info->desc, info->unit,
-                        info->len);
+                       WR_VAR_FXY(info->code), info->desc, info->unit,
+                       info->len);
                 break;
             case Vartype::Binary:
-                printf("%d%02d%03d %s [%s, %u bits]\n",
-                        WR_VAR_FXY(info->code), info->desc, info->unit,
-                        info->bit_len);
+                printf("%d%02d%03d %s [%s, %u bits]\n", WR_VAR_FXY(info->code),
+                       info->desc, info->unit, info->bit_len);
                 break;
             case Vartype::Integer:
                 printf("%d%02d%03d %s [%s, %u digits] range (%d -- %d)\n",
-                        WR_VAR_FXY(info->code), info->desc, info->unit,
-                        info->len, info->imin, info->imax);
+                       WR_VAR_FXY(info->code), info->desc, info->unit,
+                       info->len, info->imin, info->imax);
                 break;
             case Vartype::Decimal:
                 printf("%d%02d%03d %s [%s, %s] range (%g -- %g)\n",
-                        WR_VAR_FXY(info->code), info->desc, info->unit,
-                        format_decimal(info).c_str(), info->dmin, info->dmax);
+                       WR_VAR_FXY(info->code), info->desc, info->unit,
+                       format_decimal(info).c_str(), info->dmin, info->dmax);
                 break;
         }
     }
@@ -160,7 +160,7 @@ struct Cat : public VarinfoPrinter
     {
         names.push_back("cat");
         usage = "cat tableid [tableid [...]]";
-        desc = "Output all the contents of a WMO B table.";
+        desc  = "Output all the contents of a WMO B table.";
     }
 
     int main(poptContext optCon) override
@@ -195,7 +195,8 @@ struct Grep : public VarinfoPrinter
     {
         names.push_back("grep");
         usage = "grep string";
-        desc = "Output all the contents of the local B table whose description contains the given string.";
+        desc = "Output all the contents of the local B table whose description "
+               "contains the given string.";
     }
 
     int main(poptContext optCon) override
@@ -204,7 +205,9 @@ struct Grep : public VarinfoPrinter
         poptGetArg(optCon);
 
         if (poptPeekArg(optCon) == NULL)
-            dba_cmdline_error(optCon, "there should be at least one B or D item to expand.  Examples are: B01002 or D03001");
+            dba_cmdline_error(optCon,
+                              "there should be at least one B or D item to "
+                              "expand.  Examples are: B01002 or D03001");
 
         std::string pattern = str::lower(poptGetArg(optCon));
 
@@ -288,7 +291,7 @@ struct ExpandCode : public cmdline::Subcommand
     {
         names.push_back("expandcode");
         usage = "expandcode varcode [varcode [...]]";
-        desc = "Expand the value of a packed variable code";
+        desc  = "Expand the value of a packed variable code";
     }
 
     int main(poptContext optCon) override
@@ -300,7 +303,7 @@ struct ExpandCode : public cmdline::Subcommand
         while ((item = poptGetArg(optCon)) != NULL)
         {
             int code = strtol(item, NULL, 10);
-            char c = 'B';
+            char c   = 'B';
             switch (WR_VAR_F(code))
             {
                 case 0: c = 'B'; break;
@@ -411,9 +414,10 @@ struct Describe : public cmdline::Subcommand
     Describe()
     {
         names.push_back("describe");
-        usage = "describe [options] what [values]";
-        desc = "Invoke the formatter to describe the given values";
-        longdesc = "Supported so far are: \"level ltype l1 l2\", \"trange pind p1 p2\"";
+        usage    = "describe [options] what [values]";
+        desc     = "Invoke the formatter to describe the given values";
+        longdesc = "Supported so far are: \"level ltype l1 l2\", \"trange pind "
+                   "p1 p2\"";
     }
 
     int main(poptContext optCon) override
@@ -423,55 +427,65 @@ struct Describe : public cmdline::Subcommand
         /* Throw away the command name */
         poptGetArg(optCon);
         if ((what = poptGetArg(optCon)) == NULL)
-            dba_cmdline_error(optCon, "you need to specify what you want to describe.  Available options are: 'level' and 'trange'");
+            dba_cmdline_error(optCon,
+                              "you need to specify what you want to describe.  "
+                              "Available options are: 'level' and 'trange'");
 
         if (strcmp(what, "level") == 0)
         {
             const char* sltype1 = poptGetArg(optCon);
-            const char* sl1 = poptGetArg(optCon);
+            const char* sl1     = poptGetArg(optCon);
             const char* sltype2 = poptGetArg(optCon);
-            const char* sl2 = poptGetArg(optCon);
+            const char* sl2     = poptGetArg(optCon);
             if (sltype1 == NULL)
-                dba_cmdline_error(optCon, "you need provide 1, 2, 3 or 4 numbers that identify the level or layer");
-            string formatted = Level(
-                    strtoul(sltype1, NULL, 10),
-                    sl1 == NULL ? 0 : strtoul(sl1, NULL, 10),
-                    sltype2 == NULL ? 0 : strtoul(sltype2, NULL, 10),
-                    sl2 == NULL ? 0 : strtoul(sl2, NULL, 10)).describe();
+                dba_cmdline_error(optCon,
+                                  "you need provide 1, 2, 3 or 4 numbers that "
+                                  "identify the level or layer");
+            string formatted =
+                Level(strtoul(sltype1, NULL, 10),
+                      sl1 == NULL ? 0 : strtoul(sl1, NULL, 10),
+                      sltype2 == NULL ? 0 : strtoul(sltype2, NULL, 10),
+                      sl2 == NULL ? 0 : strtoul(sl2, NULL, 10))
+                    .describe();
             puts(formatted.c_str());
-        } else if (strcmp(what, "trange") == 0) {
+        }
+        else if (strcmp(what, "trange") == 0)
+        {
             const char* sptype = poptGetArg(optCon);
-            const char* sp1 = poptGetArg(optCon);
-            const char* sp2 = poptGetArg(optCon);
+            const char* sp1    = poptGetArg(optCon);
+            const char* sp2    = poptGetArg(optCon);
             if (sptype == NULL)
-                dba_cmdline_error(optCon, "you need provide 1, 2 or 3 numbers that identify the time range");
-            string formatted = Trange(
-                    strtoul(sptype, NULL, 10),
-                    sp1 == NULL ? 0 : strtoul(sp1, NULL, 10),
-                    sp2 == NULL ? 0 : strtoul(sp2, NULL, 10)).describe();
+                dba_cmdline_error(optCon, "you need provide 1, 2 or 3 numbers "
+                                          "that identify the time range");
+            string formatted = Trange(strtoul(sptype, NULL, 10),
+                                      sp1 == NULL ? 0 : strtoul(sp1, NULL, 10),
+                                      sp2 == NULL ? 0 : strtoul(sp2, NULL, 10))
+                                   .describe();
             puts(formatted.c_str());
-        } else
-            dba_cmdline_error(optCon, "cannot handle %s.  Available options are: 'level' and 'trange'.", what);
+        }
+        else
+            dba_cmdline_error(optCon,
+                              "cannot handle %s.  Available options are: "
+                              "'level' and 'trange'.",
+                              what);
 
         return 0;
     }
 };
 
-
 int main(int argc, const char* argv[])
 {
     Command dbatbl;
-    dbatbl.name = "dbatbl";
-    dbatbl.desc = "Manage on-disk reference tables for DB-ALLe";
-    dbatbl.longdesc =
-        "This tool allows to index and query the tables that are "
-        "needed for normal functioning of DB-ALLe";
+    dbatbl.name     = "dbatbl";
+    dbatbl.desc     = "Manage on-disk reference tables for DB-ALLe";
+    dbatbl.longdesc = "This tool allows to index and query the tables that are "
+                      "needed for normal functioning of DB-ALLe";
 
     dbatbl.add_subcommand(new Cat);
     dbatbl.add_subcommand(new Grep);
-    //dbatbl.add_subcommand(new Expand);
+    // dbatbl.add_subcommand(new Expand);
     dbatbl.add_subcommand(new ExpandCode);
-    //dbatbl.add_subcommand(new Index);
+    // dbatbl.add_subcommand(new Index);
     dbatbl.add_subcommand(new Describe);
 
     return dbatbl.main(argc, argv);

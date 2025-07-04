@@ -4,7 +4,9 @@
 namespace dballe {
 namespace python {
 
-std::string build_method_doc(const char* name, const char* signature, const char* returns, const char* summary, const char* doc)
+std::string build_method_doc(const char* name, const char* signature,
+                             const char* returns, const char* summary,
+                             const char* doc)
 {
     std::string res;
     unsigned doc_indent = 0;
@@ -20,7 +22,7 @@ std::string build_method_doc(const char* name, const char* signature, const char
             else if (*c == '\n' || *c == '\r')
             {
                 // strip empty lines
-                doc = c;
+                doc    = c;
                 indent = 0;
             }
             else
@@ -46,7 +48,8 @@ std::string build_method_doc(const char* name, const char* signature, const char
     // Indented summary
     if (summary)
     {
-        for (unsigned i = 0; i < doc_indent; ++i) res += ' ';
+        for (unsigned i = 0; i < doc_indent; ++i)
+            res += ' ';
         res += summary;
     }
 
@@ -61,5 +64,5 @@ std::string build_method_doc(const char* name, const char* signature, const char
     return res;
 }
 
-}
-}
+} // namespace python
+} // namespace dballe

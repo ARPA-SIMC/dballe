@@ -2,18 +2,15 @@
 #include "defs.h"
 #include "query.h"
 #include <cmath>
-#include <vector>
 #include <iostream>
+#include <vector>
 
 using namespace std;
 using namespace wreport;
 
 namespace dballe {
 
-matcher::Result Matched::match_var_id(int) const
-{
-    return matcher::MATCH_NA;
-}
+matcher::Result Matched::match_var_id(int) const { return matcher::MATCH_NA; }
 matcher::Result Matched::match_station_id(int) const
 {
     return matcher::MATCH_NA;
@@ -37,20 +34,28 @@ matcher::Result Matched::match_rep_memo(const char* memo) const
 
 matcher::Result Matched::int_in_range(int val, int min, int max)
 {
-    if (min != MISSING_INT && val < min) return matcher::MATCH_NO;
-    if (max != MISSING_INT && max < val) return matcher::MATCH_NO;
+    if (min != MISSING_INT && val < min)
+        return matcher::MATCH_NO;
+    if (max != MISSING_INT && max < val)
+        return matcher::MATCH_NO;
     return matcher::MATCH_YES;
 }
 
 matcher::Result Matched::lon_in_range(int val, int min, int max)
 {
-    if (min == MISSING_INT && max == MISSING_INT) return matcher::MATCH_YES;
+    if (min == MISSING_INT && max == MISSING_INT)
+        return matcher::MATCH_YES;
     if (min == MISSING_INT || max == MISSING_INT)
-        throw error_consistency("both minimum and maximum values must be set when matching longitudes");
+        throw error_consistency("both minimum and maximum values must be set "
+                                "when matching longitudes");
     if (min < max)
-        return (val >= min && val <= max) ? matcher::MATCH_YES : matcher::MATCH_NO;
+        return (val >= min && val <= max) ? matcher::MATCH_YES
+                                          : matcher::MATCH_NO;
     else
-        return ((val >= min && val <= 18000000) || (val >= -18000000 && val <= max)) ? matcher::MATCH_YES : matcher::MATCH_NO;
+        return ((val >= min && val <= 18000000) ||
+                (val >= -18000000 && val <= max))
+                   ? matcher::MATCH_YES
+                   : matcher::MATCH_NO;
 }
 
 namespace matcher {
@@ -60,8 +65,8 @@ std::string result_format(Result res)
     switch (res)
     {
         case MATCH_YES: return "yes";
-        case MATCH_NO: return "no";
-        case MATCH_NA: return "n/a";
+        case MATCH_NO:  return "no";
+        case MATCH_NA:  return "n/a";
     }
     return "unknown";
 }
@@ -77,28 +82,24 @@ struct And : public Matcher
     virtual ~And()
     {
         for (std::vector<const Matcher*>::iterator i = exprs.begin();
-                i != exprs.end(); ++i)
+             i != exprs.end(); ++i)
             delete *i;
     }
 
     Result match(const Matched& item) const override
     {
-        if (exprs.empty()) return MATCH_YES;
+        if (exprs.empty())
+            return MATCH_YES;
 
         Result res = MATCH_NA;
         for (std::vector<const Matcher*>::const_iterator i = exprs.begin();
-                i != exprs.end() && res != MATCH_NO; ++i)
+             i != exprs.end() && res != MATCH_NO; ++i)
         {
             switch ((*i)->match(item))
             {
-                case MATCH_YES:
-                    res = MATCH_YES;
-                    break;
-                case MATCH_NO:
-                    res = MATCH_NO;
-                    break;
-                case MATCH_NA:
-                    break;
+                case MATCH_YES: res = MATCH_YES; break;
+                case MATCH_NO:  res = MATCH_NO; break;
+                case MATCH_NA:  break;
             }
         }
         return res;
@@ -107,7 +108,7 @@ struct And : public Matcher
     void to_query(core::Query& query) const override
     {
         for (std::vector<const Matcher*>::const_iterator i = exprs.begin();
-                i != exprs.end(); ++i)
+             i != exprs.end(); ++i)
             (*i)->to_query(query);
     }
 };
@@ -123,10 +124,7 @@ struct AnaIDMatcher : public Matcher
     {
         return v.match_station_id(ana_id) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
-    void to_query(core::Query& query) const override
-    {
-        query.ana_id = ana_id;
-    }
+    void to_query(core::Query& query) const override { query.ana_id = ana_id; }
 };
 
 struct WMOMatcher : public Matcher
@@ -134,11 +132,12 @@ struct WMOMatcher : public Matcher
     int block;
     int station;
 
-    WMOMatcher(int block, int station=-1) : block(block), station(station) {}
+    WMOMatcher(int block, int station = -1) : block(block), station(station) {}
 
     Result match(const Matched& v) const override
     {
-        return v.match_station_wmo(block, station) == MATCH_YES ? MATCH_YES : MATCH_NO;
+        return v.match_station_wmo(block, station) == MATCH_YES ? MATCH_YES
+                                                                : MATCH_NO;
     }
     void to_query(core::Query& query) const override
     {
@@ -149,7 +148,6 @@ struct WMOMatcher : public Matcher
             query.station = MISSING_INT;
     }
 };
-
 
 struct DateMatcher : public Matcher
 {
@@ -162,10 +160,7 @@ struct DateMatcher : public Matcher
         return v.match_datetime(range) == MATCH_YES ? MATCH_YES : MATCH_NO;
     }
 
-    void to_query(core::Query& query) const override
-    {
-        query.dtrange = range;
-    }
+    void to_query(core::Query& query) const override { query.dtrange = range; }
 };
 
 struct CoordMatcher : public Matcher
@@ -174,11 +169,14 @@ struct CoordMatcher : public Matcher
     LonRange lonrange;
 
     CoordMatcher(const LatRange& latrange, const LonRange& lonrange)
-        : latrange(latrange), lonrange(lonrange) {}
+        : latrange(latrange), lonrange(lonrange)
+    {
+    }
 
     Result match(const Matched& v) const override
     {
-        return v.match_coords(latrange, lonrange) == MATCH_YES ? MATCH_YES : MATCH_NO;
+        return v.match_coords(latrange, lonrange) == MATCH_YES ? MATCH_YES
+                                                               : MATCH_NO;
     }
 
     void to_query(core::Query& query) const override
@@ -204,15 +202,13 @@ struct ReteMatcher : public Matcher
 
     Result match(const Matched& v) const override
     {
-        return v.match_rep_memo(rete.c_str()) == MATCH_YES ? MATCH_YES : MATCH_NO;
+        return v.match_rep_memo(rete.c_str()) == MATCH_YES ? MATCH_YES
+                                                           : MATCH_NO;
     }
-    void to_query(core::Query& query) const override
-    {
-        query.report = rete;
-    }
+    void to_query(core::Query& query) const override { query.report = rete; }
 };
 
-}
+} // namespace matcher
 
 std::unique_ptr<Matcher> Matcher::create(const dballe::Query& query_gen)
 {
@@ -244,4 +240,4 @@ std::unique_ptr<Matcher> Matcher::create(const dballe::Query& query_gen)
     return unique_ptr<Matcher>(res.release());
 }
 
-}
+} // namespace dballe

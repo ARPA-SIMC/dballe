@@ -1,12 +1,12 @@
 #ifndef DBALLE_IMPORTER_H
 #define DBALLE_IMPORTER_H
 
+#include <cstdio>
 #include <dballe/fwd.h>
-#include <vector>
+#include <functional>
 #include <memory>
 #include <string>
-#include <cstdio>
-#include <functional>
+#include <vector>
 
 namespace wreport {
 struct Bulletin;
@@ -26,14 +26,12 @@ class ImporterOptions
 public:
     bool simplified = true;
 
-    enum class DomainErrors
-    {
+    enum class DomainErrors {
         THROW = 0,
         UNSET = 1,
         CLAMP = 2,
-        TAG = 3,
+        TAG   = 3,
     } domain_errors = DomainErrors::THROW;
-
 
     bool operator==(const ImporterOptions&) const;
     bool operator!=(const ImporterOptions&) const;
@@ -58,12 +56,11 @@ public:
 protected:
     ImporterOptions() = default;
     ImporterOptions(const std::string& s);
-    ImporterOptions(const ImporterOptions&) = default;
-    ImporterOptions(ImporterOptions&&) = default;
+    ImporterOptions(const ImporterOptions&)            = default;
+    ImporterOptions(ImporterOptions&&)                 = default;
     ImporterOptions& operator=(const ImporterOptions&) = default;
-    ImporterOptions& operator=(ImporterOptions&&) = default;
+    ImporterOptions& operator=(ImporterOptions&&)      = default;
 };
-
 
 /**
  * Message importer interface
@@ -77,11 +74,11 @@ protected:
 
 public:
     Importer(const Importer&) = delete;
-    Importer(Importer&&) = delete;
+    Importer(Importer&&)      = delete;
     virtual ~Importer();
 
     Importer& operator=(const Importer&) = delete;
-    Importer& operator=(Importer&&) = delete;
+    Importer& operator=(Importer&&)      = delete;
 
     /**
      * Return the encoding for this importer
@@ -96,12 +93,14 @@ public:
      * @retval msgs
      *   The resulting messages
      */
-    std::vector<std::shared_ptr<Message>> from_binary(const BinaryMessage& msg) const;
+    std::vector<std::shared_ptr<Message>>
+    from_binary(const BinaryMessage& msg) const;
 
     /**
      * Import a decoded BUFR/CREX message
      */
-    virtual std::vector<std::shared_ptr<Message>> from_bulletin(const wreport::Bulletin& msg) const;
+    virtual std::vector<std::shared_ptr<Message>>
+    from_bulletin(const wreport::Bulletin& msg) const;
 
     /**
      * Decode a message from its raw encoded representation, calling \a dest on
@@ -113,9 +112,12 @@ public:
      *   Encoded message.
      * @param dest
      *   The function that consumes the decoded messages.
-     * @returns true if it got to the end of decoding, false if dest returned false.
+     * @returns true if it got to the end of decoding, false if dest returned
+     * false.
      */
-    virtual bool foreach_decoded(const BinaryMessage& msg, std::function<bool(std::shared_ptr<Message>)> dest) const = 0;
+    virtual bool foreach_decoded(
+        const BinaryMessage& msg,
+        std::function<bool(std::shared_ptr<Message>)> dest) const = 0;
 
     /**
      * Instantiate an importer
@@ -125,7 +127,9 @@ public:
      * @param opts
      *   Options controlling import behaviour
      */
-    static std::unique_ptr<Importer> create(Encoding type, const ImporterOptions& opts=ImporterOptions::defaults);
+    static std::unique_ptr<Importer>
+    create(Encoding type,
+           const ImporterOptions& opts = ImporterOptions::defaults);
 
     /**
      * Instantiate an importer
@@ -135,9 +139,9 @@ public:
      * @param opts
      *   Options controlling import behaviour
      */
-    static std::unique_ptr<Importer> create(Encoding type, const std::string& opts);
+    static std::unique_ptr<Importer> create(Encoding type,
+                                            const std::string& opts);
 };
-
 
 class BulletinImporter : public Importer
 {
@@ -147,9 +151,10 @@ public:
     /**
      * Import a decoded BUFR/CREX message
      */
-    std::vector<std::shared_ptr<Message>> from_bulletin(const wreport::Bulletin& msg) const override = 0;
+    std::vector<std::shared_ptr<Message>>
+    from_bulletin(const wreport::Bulletin& msg) const override = 0;
 };
 
-}
+} // namespace dballe
 
 #endif

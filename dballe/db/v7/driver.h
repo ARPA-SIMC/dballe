@@ -1,16 +1,16 @@
 #ifndef DBALLE_DB_V7_DRIVER_H
 #define DBALLE_DB_V7_DRIVER_H
 
+#include <cstdio>
 #include <dballe/core/defs.h>
 #include <dballe/db/defs.h>
-#include <dballe/sql/fwd.h>
-#include <dballe/db/v7/fwd.h>
 #include <dballe/db/v7/data.h>
-#include <wreport/var.h>
-#include <memory>
+#include <dballe/db/v7/fwd.h>
+#include <dballe/sql/fwd.h>
 #include <functional>
+#include <memory>
 #include <vector>
-#include <cstdio>
+#include <wreport/var.h>
 
 namespace dballe {
 namespace db {
@@ -25,16 +25,19 @@ public:
     virtual ~Driver();
 
     /// Precompiled queries to manipulate the repinfo table
-    virtual std::unique_ptr<v7::Repinfo> create_repinfo(v7::Transaction& tr) = 0;
+    virtual std::unique_ptr<v7::Repinfo>
+    create_repinfo(v7::Transaction& tr) = 0;
 
     /// Precompiled queries to manipulate the station table
-    virtual std::unique_ptr<v7::Station> create_station(v7::Transaction& tr) = 0;
+    virtual std::unique_ptr<v7::Station>
+    create_station(v7::Transaction& tr) = 0;
 
     /// Precompiled queries to manipulate the levtr table
     virtual std::unique_ptr<v7::LevTr> create_levtr(v7::Transaction& tr) = 0;
 
     /// Precompiled queries to manipulate the data table
-    virtual std::unique_ptr<v7::StationData> create_station_data(v7::Transaction& tr) = 0;
+    virtual std::unique_ptr<v7::StationData>
+    create_station_data(v7::Transaction& tr) = 0;
 
     /// Precompiled queries to manipulate the data table
     virtual std::unique_ptr<v7::Data> create_data(v7::Transaction& tr) = 0;
@@ -54,7 +57,8 @@ public:
     /// Empty all tables for a DB with the given format
     void remove_all(db::Format format);
 
-    /// Empty all tables for V7 databases, assuming that they exist, without touching the repinfo table
+    /// Empty all tables for V7 databases, assuming that they exist, without
+    /// touching the repinfo table
     virtual void remove_all_v7();
 
     /// Perform database cleanup/maintenance on v7 databases
@@ -64,7 +68,7 @@ public:
     static std::unique_ptr<Driver> create(dballe::sql::Connection& conn);
 };
 
-}
-}
-}
+} // namespace v7
+} // namespace db
+} // namespace dballe
 #endif

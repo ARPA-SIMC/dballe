@@ -18,16 +18,18 @@ class Tests : public TestCase
 void Tests::register_tests()
 {
 
-add_method("clone", []() {
-    auto q = Query::create();
-    q->set_datetimerange(DatetimeRange(
-            2015, 5, MISSING_INT, MISSING_INT, MISSING_INT, MISSING_INT,
-            2015, 5, MISSING_INT, MISSING_INT, MISSING_INT, MISSING_INT));
+    add_method("clone", []() {
+        auto q = Query::create();
+        q->set_datetimerange(DatetimeRange(
+            2015, 5, MISSING_INT, MISSING_INT, MISSING_INT, MISSING_INT, 2015,
+            5, MISSING_INT, MISSING_INT, MISSING_INT, MISSING_INT));
 
-    auto q1 = q->clone();
-    wassert(actual(q1->get_datetimerange().min) == Datetime(2015, 5, 1, 0, 0, 0));
-    wassert(actual(q1->get_datetimerange().max) == Datetime(2015, 5, 31, 23, 59, 59));
-});
+        auto q1 = q->clone();
+        wassert(actual(q1->get_datetimerange().min) ==
+                Datetime(2015, 5, 1, 0, 0, 0));
+        wassert(actual(q1->get_datetimerange().max) ==
+                Datetime(2015, 5, 31, 23, 59, 59));
+    });
 
 #if 0
 add_method("foreach_key", []() {
@@ -51,7 +53,6 @@ add_method("foreach_key", []() {
     wassert(actual(foreach_key("latmin=45.0, latmax=46.0, lonmin=11.0, lonmax=11.5")) == "latmin=45.00000, latmax=46.00000, lonmin=11.00000, lonmax=11.50000");
 });
 #endif
-
 }
 
-}
+} // namespace

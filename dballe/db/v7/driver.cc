@@ -20,21 +20,18 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-Driver::Driver(sql::Connection& connection)
-    : connection(connection)
-{
-}
+Driver::Driver(sql::Connection& connection) : connection(connection) {}
 
-Driver::~Driver()
-{
-}
+Driver::~Driver() {}
 
 void Driver::create_tables(db::Format format)
 {
     switch (format)
     {
         case Format::V7: create_tables_v7(); break;
-        default: throw wreport::error_consistency("cannot create tables on the given DB format");
+        default:
+            throw wreport::error_consistency(
+                "cannot create tables on the given DB format");
     }
 }
 
@@ -43,7 +40,9 @@ void Driver::delete_tables(db::Format format)
     switch (format)
     {
         case Format::V7: delete_tables_v7(); break;
-        default: throw wreport::error_consistency("cannot delete tables on the given DB format");
+        default:
+            throw wreport::error_consistency(
+                "cannot delete tables on the given DB format");
     }
 }
 
@@ -52,7 +51,9 @@ void Driver::remove_all(db::Format format)
     switch (format)
     {
         case Format::V7: remove_all_v7(); break;
-        default: throw wreport::error_consistency("cannot empty a database with the given format");
+        default:
+            throw wreport::error_consistency(
+                "cannot empty a database with the given format");
     }
 }
 
@@ -71,7 +72,8 @@ std::unique_ptr<Driver> Driver::create(dballe::sql::Connection& conn)
     if (SQLiteConnection* c = dynamic_cast<SQLiteConnection*>(&conn))
         return unique_ptr<Driver>(new sqlite::Driver(*c));
 #ifdef HAVE_LIBPQ
-    else if (PostgreSQLConnection* c = dynamic_cast<PostgreSQLConnection*>(&conn))
+    else if (PostgreSQLConnection* c =
+                 dynamic_cast<PostgreSQLConnection*>(&conn))
         return unique_ptr<Driver>(new postgresql::Driver(*c));
 #endif
 #ifdef HAVE_MYSQL
@@ -81,14 +83,14 @@ std::unique_ptr<Driver> Driver::create(dballe::sql::Connection& conn)
     else
         throw error_unimplemented("DB drivers only implemented for "
 #ifdef HAVE_LIBPQ
-                "PostgreSQL, "
+                                  "PostgreSQL, "
 #endif
 #ifdef HAVE_MYSQL
-                "MySQL, "
+                                  "MySQL, "
 #endif
-                "SQLite connectors");
+                                  "SQLite connectors");
 }
 
-}
-}
-}
+} // namespace v7
+} // namespace db
+} // namespace dballe

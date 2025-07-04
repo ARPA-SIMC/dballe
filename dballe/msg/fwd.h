@@ -9,8 +9,8 @@ class Context;
 class CursorStation;
 class CursorStationData;
 class CursorData;
-}
-}
-}
+} // namespace msg
+} // namespace impl
+} // namespace dballe
 
 #endif
