@@ -730,20 +730,47 @@ bool QueryBuilder::add_ltr_where(const char* tbl)
         sql_where.append_listf("%s.ltype1=%d", tbl, query.level.ltype1);
         found = true;
     }
-    if (query.level.l1 != MISSING_INT)
+    switch (query.level.l1)
     {
-        sql_where.append_listf("%s.l1=%d", tbl, query.level.l1);
-        found = true;
+        case MISSING_INT:          break;
+        case REQUIRED_MISSING_INT: {
+            sql_where.append_listf("%s.l1=%d", tbl, MISSING_INT);
+            found = true;
+            break;
+        }
+        default: {
+            sql_where.append_listf("%s.l1=%d", tbl, query.level.l1);
+            found = true;
+            break;
+        }
     }
-    if (query.level.ltype2 != MISSING_INT)
+    switch (query.level.ltype2)
     {
-        sql_where.append_listf("%s.ltype2=%d", tbl, query.level.ltype2);
-        found = true;
+        case MISSING_INT:          break;
+        case REQUIRED_MISSING_INT: {
+            sql_where.append_listf("%s.ltype2=%d", tbl, MISSING_INT);
+            found = true;
+            break;
+        }
+        default: {
+            sql_where.append_listf("%s.ltype2=%d", tbl, query.level.ltype2);
+            found = true;
+            break;
+        }
     }
-    if (query.level.l2 != MISSING_INT)
+    switch (query.level.l2)
     {
-        sql_where.append_listf("%s.l2=%d", tbl, query.level.l2);
-        found = true;
+        case MISSING_INT:          break;
+        case REQUIRED_MISSING_INT: {
+            sql_where.append_listf("%s.l2=%d", tbl, MISSING_INT);
+            found = true;
+            break;
+        }
+        default: {
+            sql_where.append_listf("%s.l2=%d", tbl, query.level.l2);
+            found = true;
+            break;
+        }
     }
     if (query.trange.pind != MISSING_INT)
     {
