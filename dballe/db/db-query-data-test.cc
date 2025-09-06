@@ -509,6 +509,48 @@ template <typename DB> void EmptyFixtureTests<DB>::register_tests()
             wassert(actual(cur->get_var().enqd()) == 281.15);
         }
     });
+
+    this->add_method("require_missing_int", [](Fixture& f) {
+        auto insert = [&](const std::string& str) {
+            core::Data data;
+            data.set_from_test_string("lon=1, year=2000, pindicator=1, "
+                                      "rep_memo=synop, B12101=280.15, " +
+                                      str);
+            wassert(f.tr->insert_data(data));
+            return data;
+        };
+        auto results = [&](const char* query_string) {
+            core::Query query;
+            query.set_from_test_string(query_string);
+            auto cur = f.tr->query_data(query);
+            std::vector<unsigned> results;
+            while (cur->next())
+                results.emplace_back(cur->get_station().coords.dlat());
+            return results;
+        };
+
+        insert("lat=1, leveltype1=1");
+        insert("lat=2, leveltype1=1, l1=1");
+        insert("lat=3, leveltype1=1, l1=1, leveltype2=2");
+        insert("lat=4, leveltype1=1, l1=1, leveltype2=2, l2=2");
+        insert("lat=5, leveltype1=1, leveltype2=2, l2=2");
+        insert("lat=6, leveltype1=1, leveltype2=2");
+
+        wassert(actual(results("leveltype1=1")) ==
+                std::vector<unsigned>{1, 2, 3, 4, 5, 6});
+        wassert(actual(results("leveltype1=1, l1=-")) ==
+                std::vector<unsigned>{1, 5, 6});
+        wassert(actual(results("leveltype1=1, leveltype2=-")) ==
+                std::vector<unsigned>{1, 2});
+        wassert(actual(results("leveltype1=1, l2=-")) ==
+                std::vector<unsigned>{1, 2, 3, 6});
+        wassert(actual(results("leveltype1=1, l1=-, l2=-")) ==
+                std::vector<unsigned>{1, 6});
+        wassert(actual(results("leveltype1=1, l1=-, leveltype2=-")) ==
+                std::vector<unsigned>{1});
+        wassert(actual(results("leveltype1=1, l1=-, leveltype2=-, l2=-")) ==
+                std::vector<unsigned>{1});
+    });
 }
 
 } // namespace
