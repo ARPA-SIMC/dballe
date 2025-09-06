@@ -244,14 +244,174 @@ add_method("all_set", []() {
                        q.set_from_test_string("month=6"));
     });
 
+    add_method("setf_invalid_int", [] {
+        core::Query q;
+        wassert_throws(wreport::error_domain, q.set_from_string("priomin=1Kg"));
+        wassert_throws(wreport::error_domain,
+                       q.set_from_string("priomin=1 Kg"));
+        wassert_throws(wreport::error_domain,
+                       q.set_from_string("leveltype2=1Km"));
+        wassert_throws(wreport::error_domain, q.set_from_string("year=2025ce"));
+        wassert_throws(wreport::error_domain,
+                       q.set_from_string("month=january"));
+        wassert_throws(wreport::error_domain, q.set_from_string("lat=45°"));
+        wassert_throws(wreport::error_domain, q.set_from_string("latmax=45°"));
+        wassert_throws(wreport::error_domain, q.set_from_string("latmin=45°"));
+        wassert_throws(wreport::error_domain, q.set_from_string("lon=11°"));
+        wassert_throws(wreport::error_domain, q.set_from_string("lonmax=11°"));
+        wassert_throws(wreport::error_domain, q.set_from_string("lonmin=11°"));
+        // Spaces in the end are ok
+        q.set_from_string("priomin=1   ");
+    });
+
     add_method("setf_unset", []() {
         core::Query q;
 
-        q.set_from_string("leveltype2=42");
-        wassert(actual(q.level.ltype2) == 42);
+        q.set_from_string("priority=-");
+        wassert(actual(q.priomin) == MISSING_INT);
+        wassert(actual(q.priomax) == MISSING_INT);
 
+        q.set_from_test_string("priomin=1, priomax=-");
+        wassert(actual(q.priomin) == 1);
+        wassert(actual(q.priomax) == MISSING_INT);
+
+        q.set_from_test_string("priomin=-, priomax=1");
+        wassert(actual(q.priomin) == MISSING_INT);
+        wassert(actual(q.priomax) == 1);
+
+        q.set_from_string("rep_memo=-");
+        wassert(actual(q.report) == std::string());
+        q.set_from_string("report=-");
+        wassert(actual(q.report) == std::string());
+
+        q.set_from_string("ana_id=-");
+        wassert(actual(q.ana_id) == MISSING_INT);
+
+        q.set_from_string("mobile=-");
+        wassert(actual(q.mobile) == MISSING_INT);
+
+        q.set_from_string("ident=-");
+        wassert(actual(q.ident.is_missing()).istrue());
+
+        q.set_from_string("lat=-");
+        wassert(actual(q.latrange.is_missing()).istrue());
+
+        q.set_from_string("lon=-");
+        wassert(actual(q.lonrange.is_missing()).istrue());
+
+        wassert(q.set_from_test_string("latmin=1, latmax=-"));
+        wassert(actual(q.latrange.imin) == Coords::lat_to_int(1));
+        wassert(actual(q.latrange.imax) == LatRange::IMAX);
+        wassert(q.set_from_test_string("latmin=-, latmax=1"));
+        wassert(actual(q.latrange.imin) == LatRange::IMIN);
+        wassert(actual(q.latrange.imax) == Coords::lat_to_int(1));
+
+        wassert(q.set_from_test_string("lonmin=-, lonmax=-"));
+        wassert(actual(q.lonrange.imin) == MISSING_INT);
+        wassert(actual(q.lonrange.imax) == MISSING_INT);
+
+        q.set_from_string("year=-");
+        wassert(actual(q.dtrange.min.year) == 0xffff);
+        wassert(actual(q.dtrange.max.year) == 0xffff);
+        q.set_from_string("month=-");
+        wassert(actual(q.dtrange.min.month) == 0xff);
+        wassert(actual(q.dtrange.max.month) == 0xff);
+        q.set_from_string("day=-");
+        wassert(actual(q.dtrange.min.day) == 0xff);
+        wassert(actual(q.dtrange.max.day) == 0xff);
+        q.set_from_string("hour=-");
+        wassert(actual(q.dtrange.min.hour) == 0xff);
+        wassert(actual(q.dtrange.max.hour) == 0xff);
+        q.set_from_string("min=-");
+        wassert(actual(q.dtrange.min.minute) == 0xff);
+        wassert(actual(q.dtrange.max.minute) == 0xff);
+        q.set_from_string("sec=-");
+        wassert(actual(q.dtrange.min.second) == 0xff);
+        wassert(actual(q.dtrange.max.second) == 0xff);
+
+        // TODO: use actual_int from newer wreport/wobble
+        wassert(q.set_from_test_string("yearmin=1, yearmax=-"));
+        wassert(actual((int)q.dtrange.min.year) == 1);
+        wassert(actual((int)q.dtrange.max.year) == 0xffff);
+        wassert(q.set_from_test_string("yearmin=-, yearmax=1"));
+        wassert(actual((int)q.dtrange.min.year) == 0xffff);
+        wassert(actual((int)q.dtrange.max.year) == 1);
+        wassert(q.set_from_test_string("year=2025, monthmin=1, monthmax=-"));
+        wassert(actual((int)q.dtrange.min.month) == 1);
+        wassert(actual((int)q.dtrange.max.month) == 12);
+        wassert(q.set_from_test_string("year=2025, monthmin=-, monthmax=1"));
+        wassert(actual((int)q.dtrange.min.month) == 1);
+        wassert(actual((int)q.dtrange.max.month) == 1);
+        wassert(
+            q.set_from_test_string("year=2025, month=9, daymin=-, daymax=15"));
+        wassert(actual((int)q.dtrange.min.day) == 1);
+        wassert(actual((int)q.dtrange.max.day) == 15);
+        wassert(
+            q.set_from_test_string("year=2025, month=9, daymin=15, daymax=-"));
+        wassert(actual((int)q.dtrange.min.day) == 15);
+        wassert(actual((int)q.dtrange.max.day) == 30);
+        wassert(q.set_from_test_string(
+            "year=2025, month=9, day=15, hourmin=-, hourmax=15"));
+        wassert(actual((int)q.dtrange.min.hour) == 0);
+        wassert(actual((int)q.dtrange.max.hour) == 15);
+        wassert(q.set_from_test_string(
+            "year=2025, month=9, day=15, hourmin=15, hourmax=-"));
+        wassert(actual((int)q.dtrange.min.hour) == 15);
+        wassert(actual((int)q.dtrange.max.hour) == 23);
+        wassert(q.set_from_test_string(
+            "year=2025, month=9, day=15, hour=12, minumin=-, minumax=30"));
+        wassert(actual((int)q.dtrange.min.minute) == 0);
+        wassert(actual((int)q.dtrange.max.minute) == 30);
+        wassert(q.set_from_test_string(
+            "year=2025, month=9, day=15, hour=12, minumin=30, minumax=-"));
+        wassert(actual((int)q.dtrange.min.minute) == 30);
+        wassert(actual((int)q.dtrange.max.minute) == 59);
+        wassert(q.set_from_test_string("year=2025, month=9, day=15, hour=12, "
+                                       "min=30, secmin=-, secmax=30"));
+        wassert(actual((int)q.dtrange.min.second) == 0);
+        wassert(actual((int)q.dtrange.max.second) == 30);
+        wassert(q.set_from_test_string("year=2025, month=9, day=15, hour=12, "
+                                       "min=30, secmin=30, secmax=-"));
+        wassert(actual((int)q.dtrange.min.second) == 30);
+        wassert(actual((int)q.dtrange.max.second) == 59);
+
+        q.set_from_string("leveltype1=-");
+        wassert(actual(q.level.ltype1) == MISSING_INT);
+        q.set_from_string("l1=-");
+        wassert(actual(q.level.l1) == REQUIRED_MISSING_INT);
         q.set_from_string("leveltype2=-");
-        wassert(actual(q.level.ltype2) == MISSING_INT);
+        wassert(actual(q.level.ltype2) == REQUIRED_MISSING_INT);
+        q.set_from_string("l2=-");
+        wassert(actual(q.level.l2) == REQUIRED_MISSING_INT);
+
+        q.set_from_string("pindicator=-");
+        wassert(actual(q.trange.pind) == MISSING_INT);
+        q.set_from_string("p1=-");
+        wassert(actual(q.trange.p1) == MISSING_INT);
+        q.set_from_string("p2=-");
+        wassert(actual(q.trange.p2) == MISSING_INT);
+
+        q.set_from_string("var=-");
+        wassert(actual(q.varcodes.empty()).istrue());
+        q.set_from_string("varlist=-");
+        wassert(actual(q.varcodes.empty()).istrue());
+
+        q.set_from_string("query=-");
+        wassert(actual(q.query) == std::string());
+        q.set_from_string("ana_filter=-");
+        wassert(actual(q.ana_filter) == std::string());
+        q.set_from_string("data_filter=-");
+        wassert(actual(q.data_filter) == std::string());
+        q.set_from_string("attr_filter=-");
+        wassert(actual(q.attr_filter) == std::string());
+
+        q.set_from_string("limit=-");
+        wassert(actual(q.limit) == MISSING_INT);
+
+        q.set_from_string("block=-");
+        wassert(actual(q.block) == MISSING_INT);
+        q.set_from_string("station=-");
+        wassert(actual(q.station) == MISSING_INT);
     });
 }
 

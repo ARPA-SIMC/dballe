@@ -6,12 +6,39 @@ using namespace wreport;
 
 namespace dballe::core {
 
+// Check if a string is empty or contains only spaces
+static bool spaces_only(const char* str)
+{
+    while (*str && isspace(*str))
+        ++str;
+    return *str == 0;
+}
+
+static long strtol_checked(const char* val)
+{
+    char* endptr = nullptr;
+    auto res     = strtol(val, &endptr, 10);
+    if (!spaces_only(endptr))
+        wreport::error_domain::throwf("value '%s' is not a valid integer", val);
+    return res;
+}
+
+static double strtod_checked(const char* val)
+{
+    char* endptr = nullptr;
+    auto res     = strtod(val, &endptr);
+    if (!spaces_only(endptr))
+        wreport::error_domain::throwf(
+            "value '%s' is not a valid floating point value", val);
+    return res;
+}
+
 static int dballe_int(const char* val)
 {
     if (strcmp(val, "-") == 0)
         return MISSING_INT;
     else
-        return strtol(val, nullptr, 10);
+        return strtol_checked(val);
 }
 
 static int dballe_lev_int(const char* val)
@@ -19,7 +46,7 @@ static int dballe_lev_int(const char* val)
     if (strcmp(val, "-") == 0)
         return REQUIRED_MISSING_INT;
     else
-        return strtol(val, nullptr, 10);
+        return strtol_checked(val);
 }
 
 static uint16_t dballe_int16(const char* val)
@@ -27,7 +54,7 @@ static uint16_t dballe_int16(const char* val)
     if (strcmp(val, "-") == 0)
         return 0xffff;
     else
-        return strtol(val, nullptr, 10);
+        return strtol_checked(val);
 }
 
 static uint8_t dballe_int8(const char* val)
@@ -35,7 +62,7 @@ static uint8_t dballe_int8(const char* val)
     if (strcmp(val, "-") == 0)
         return 0xff;
     else
-        return strtol(val, nullptr, 10);
+        return strtol_checked(val);
 }
 
 static std::string dballe_string(const char* val)
@@ -71,7 +98,7 @@ void Query::setf(const char* key, unsigned len, const char* val)
                 latrange = LatRange();
             else
             {
-                double dval = strtod(val, nullptr);
+                double dval = strtod_checked(val);
                 latrange.set(dval, dval);
             }
         case "lon":
@@ -79,29 +106,29 @@ void Query::setf(const char* key, unsigned len, const char* val)
                 lonrange = LonRange();
             else
             {
-                double dval = strtod(val, nullptr);
+                double dval = strtod_checked(val);
                 lonrange.set(dval, dval);
             }
         case "latmax":
             if (strcmp(val, "-") == 0)
                 latrange.imax = LatRange::IMAX;
             else
-                latrange.imax = Coords::lat_to_int(strtod(val, nullptr));
+                latrange.imax = Coords::lat_to_int(strtod_checked(val));
         case "latmin":
             if (strcmp(val, "-") == 0)
                 latrange.imin = LatRange::IMIN;
             else
-                latrange.imin = Coords::lat_to_int(strtod(val, nullptr));
+                latrange.imin = Coords::lat_to_int(strtod_checked(val));
         case "lonmax":
             if (strcmp(val, "-") == 0)
                 lonrange.imax = MISSING_INT;
             else
-                lonrange.imax = Coords::lon_to_int(strtod(val, nullptr));
+                lonrange.imax = Coords::lon_to_int(strtod_checked(val));
         case "lonmin":
             if (strcmp(val, "-") == 0)
                 lonrange.imin = MISSING_INT;
             else
-                lonrange.imin = Coords::lon_to_int(strtod(val, nullptr));
+                lonrange.imin = Coords::lon_to_int(strtod_checked(val));
         case "year":       dtrange.min.year = dtrange.max.year = dballe_int16(val);
         case "month":      dtrange.min.month = dtrange.max.month = dballe_int8(val);
         case "day":        dtrange.min.day = dtrange.max.day = dballe_int8(val);
