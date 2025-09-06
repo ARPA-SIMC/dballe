@@ -1,3 +1,7 @@
+# New in version UNRELEASED
+
+* When querying, `leveltype2`, `l1` or `l2` set to `-` now mean requiring the values to be unset (#201)
+
 # New in version 9.11
 
 * Fixed build error about "#warning" (#292)
@@ -28,7 +32,7 @@
 
 # New in version 9.5
 
-* Fixed dangling reference to a temporary in register_synop (#279)
+* Fixed dangling reference to a temporary in `register_synop` (#279)
 * Removed std::move that prevented copy elision
 
 # New in version 9.4
