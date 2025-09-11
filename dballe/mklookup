@@ -18,7 +18,7 @@ import os
 from collections import defaultdict
 from contextlib import contextmanager
 from pathlib import Path
-from typing import IO, List, Optional, Never
+from typing import IO, List, Optional, NoReturn
 
 log = logging.getLogger("mklookup")
 
@@ -134,7 +134,7 @@ class Block(abc.ABC):
     def parse_line(self, lineno: int, line: str) -> Optional["Block"]:
         """Parse a line, optionally starting a new block."""
 
-    def parse_error(self, lineno: int, line: str, message: str) -> Never:
+    def parse_error(self, lineno: int, line: str, message: str) -> NoReturn:
         raise RuntimeError(f"{lineno}: {message} (line: {line!r})")
 
     @abc.abstractmethod
