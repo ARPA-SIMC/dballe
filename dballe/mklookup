@@ -261,7 +261,8 @@ def parse(fname: Path) -> List[Block]:
     blocks: List[Block] = [Verbatim()]
     with fname.open() as fd:
         for lineno, line in enumerate(fd, start=1):
-            if next_block := blocks[-1].parse_line(lineno, line.rstrip()):
+            next_block = blocks[-1].parse_line(lineno, line.rstrip())
+            if next_block:
                 blocks.append(next_block)
     return blocks
 
