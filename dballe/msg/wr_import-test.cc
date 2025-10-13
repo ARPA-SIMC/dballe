@@ -587,6 +587,16 @@ void Tests::register_tests()
                 "Rocca San Giovanni, C.da Vallev\xc3");
             IS2(WR_VAR(0, 13, 11), Level(1), Trange(1, 0, 21600), 0.0);
         });
+
+    add_bufr_simplified_method("issue290.bufr", [](const impl::Messages& msgs) {
+        wassert(actual(msgs.size()) == 1u);
+        const impl::Message& msg = impl::Message::downcast(*msgs[0]);
+        wassert(actual(msg.type) == MessageType::BUOY);
+        IS(ident, "1501797");
+        wassert(actual(msg.get_datetime()) == Datetime(2025, 3, 18, 12, 30));
+        IS(st_name, "SIO Lagrangian Drifter Lab");
+        IS2(WR_VAR(0, 22, 43), Level(1), Trange(254, 0, 0), 301.12);
+    });
 }
 
 } // namespace

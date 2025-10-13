@@ -64,6 +64,7 @@ void WMOImporter::import_var(const Var& var)
         case WR_VAR(0, 1, 12): set(var, sc::st_dir); break;
         case WR_VAR(0, 1, 13): set(var, sc::st_speed); break;
         case WR_VAR(0, 1, 63): set(var, sc::st_name_icao); break;
+        case WR_VAR(0, 1, 87): set(var, sc::ident); break;
         case WR_VAR(0, 2, 1):  set(var, sc::st_type); break;
         case WR_VAR(0, 1, 15): set(var, sc::st_name); break;
         case WR_VAR(0, 4, 1):  set(var, sc::year); break;
