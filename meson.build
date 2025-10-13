@@ -1,4 +1,4 @@
-project('dballe', 'cpp', 'fortran', version: '9.11', license : 'GPL-2.0-or-later', default_options: ['warning_level=3', 'cpp_std=c++17'], meson_version: '>= 0.58')
+project('dballe', 'cpp', 'fortran', version: '9.12', license : 'GPL-2.0-or-later', default_options: ['warning_level=3', 'cpp_std=c++17'], meson_version: '>= 0.58')
 # TODO: use warning_level=everything in meson from 1.0
 
 cpp = meson.get_compiler('cpp')

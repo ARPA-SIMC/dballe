@@ -4,7 +4,7 @@
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 9.11
+Version: 9.12
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -287,6 +287,10 @@ mv $RPM_BUILD_ROOT%{_includedir}/dballe/dballef.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Mon Oct 13 2025 Daniele Branchini <dbranchini@arpae.it> - 9.12-1
+- When querying, `leveltype2`, `l1` or `l2` set to `-` now mean requiring the values to be unset (#201)
+- Added initial support for TM315009 drifting data buoys (#290)
+
 * Fri Jun 20 2025 Daniele Branchini <dbranchini@arpae.it> - 9.11-1
 - Fixed build error about "#warning" (#292)
 - Updated python tests

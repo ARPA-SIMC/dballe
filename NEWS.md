@@ -1,4 +1,4 @@
-# New in version UNRELEASED
+# New in version 9.12
 
 * When querying, `leveltype2`, `l1` or `l2` set to `-` now mean requiring the values to be unset (#201)
 * Added initial support for TM315009 drifting data buoys (#290)
