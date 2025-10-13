@@ -1,8 +1,7 @@
 #include "methods.h"
 #include <string>
 
-namespace dballe {
-namespace python {
+namespace dballe::python {
 
 std::string build_method_doc(const char* name, const char* signature,
                              const char* returns, const char* summary,
@@ -64,5 +63,4 @@ std::string build_method_doc(const char* name, const char* signature,
     return res;
 }
 
-} // namespace python
-} // namespace dballe
+} // namespace dballe::python

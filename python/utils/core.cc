@@ -1,7 +1,5 @@
 #include "core.h"
 
-namespace dballe {
-namespace python {
+namespace dballe::python {
 
-}
-} // namespace dballe
+} // namespace dballe::python

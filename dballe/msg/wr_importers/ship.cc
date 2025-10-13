@@ -32,6 +32,7 @@ public:
             case 1:
                 switch (bulletin.data_subcategory_local)
                 {
+                    case 2:
                     case 21: return MessageType::BUOY;
                     case 9:
                     case 11:
@@ -64,6 +65,9 @@ void ShipImporter::import_var(const Var& var)
 {
     switch (var.code())
     {
+        // Station name
+        case WR_VAR(0, 1, 19): msg->set_st_name_var(var); break;
+
         // Icing and ice
         case WR_VAR(0, 20, 31):
         case WR_VAR(0, 20, 32):

@@ -9,8 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace dballe {
-namespace python {
+namespace dballe::python {
 
 /// Base template for all from_python shortcuts
 template <typename T> inline T from_python(PyObject*)
@@ -156,7 +155,6 @@ inline PyObject* to_python(const std::vector<std::filesystem::path>& val)
     return pathlist_to_python(val);
 }
 
-} // namespace python
-} // namespace dballe
+} // namespace dballe::python
 
 #endif
