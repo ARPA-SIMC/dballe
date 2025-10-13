@@ -6,8 +6,7 @@
 #include "values.h"
 #include <Python.h>
 
-namespace dballe {
-namespace python {
+namespace dballe::python {
 
 template <typename T>
 inline void set_dict(PyObject* dict, const char* key, const T& val)
@@ -29,7 +28,6 @@ inline void set_dict(PyObject* dict, const char* key, pyo_unique_ptr& val)
         throw PythonException();
 }
 
-} // namespace python
-} // namespace dballe
+} // namespace dballe::python
 
 #endif

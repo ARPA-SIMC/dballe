@@ -5,8 +5,7 @@
 #include "methods.h"
 #include <array>
 
-namespace dballe {
-namespace python {
+namespace dballe::python {
 
 template <typename Child, typename IMPL> struct Getter
 {
@@ -264,7 +263,6 @@ template <typename Child, typename IMPL> struct Type
     }
 };
 
-} // namespace python
-} // namespace dballe
+} // namespace dballe::python
 
 #endif

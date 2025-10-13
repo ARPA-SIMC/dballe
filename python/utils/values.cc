@@ -2,8 +2,7 @@
 #include "core.h"
 #include <string>
 
-namespace dballe {
-namespace python {
+namespace dballe::python {
 
 PyObject* cstring_to_python(const char* str)
 {
@@ -17,13 +16,16 @@ PyObject* string_to_python(const std::string& str)
 
 std::string string_from_python(PyObject* o)
 {
-    if (!PyUnicode_Check(o))
+    if (PyUnicode_Check(o))
     {
-        PyErr_SetString(PyExc_TypeError, "value must be an instance of str");
-        throw PythonException();
+        ssize_t size;
+        const char* res = throw_ifnull(PyUnicode_AsUTF8AndSize(o, &size));
+        return std::string(res, size);
     }
+
+    pyo_unique_ptr str(throw_ifnull(PyObject_Str(o)));
     ssize_t size;
-    const char* res = throw_ifnull(PyUnicode_AsUTF8AndSize(o, &size));
+    const char* res = throw_ifnull(PyUnicode_AsUTF8AndSize(str, &size));
     return std::string(res, size);
 }
 
@@ -174,5 +176,4 @@ PyObject* pathlist_to_python(const std::vector<std::filesystem::path>& val)
     return res.release();
 }
 
-} // namespace python
-} // namespace dballe
+} // namespace dballe::python
