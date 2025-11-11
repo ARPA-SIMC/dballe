@@ -1,3 +1,7 @@
+# New in version UNRELEASED
+
+* Clarify that report names are always lowercased (#236)
+
 # New in version 9.12
 
 * When querying, `leveltype2`, `l1` or `l2` set to `-` now mean requiring the values to be unset (#201)
