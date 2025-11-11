@@ -154,7 +154,7 @@ Transaction::query_messages(const Query& query)
                 msg = &vec.back();
                 msg->msg->set_datetime(datetime);
                 msg->msg->station_data.set(
-                    newvar(WR_VAR(0, 1, 194), station.report));
+                    newvar(WR_VAR(0, 1, 194), (std::string)station.report));
                 msg->msg->type =
                     impl::Message::type_from_repmemo(station.report.c_str());
                 msg->msg->station_data.set(

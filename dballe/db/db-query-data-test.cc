@@ -36,6 +36,22 @@ static inline core::Query query_minmax(const Datetime& min, const Datetime& max)
     return query;
 }
 
+struct ReportCaseResult
+{
+    int id;
+    std::string report;
+    std::string value;
+
+    bool operator==(const ReportCaseResult& o) const
+    {
+        return std::tie(id, report, value) == std::tie(o.id, o.report, o.value);
+    }
+};
+static std::ostream& operator<<(std::ostream& o, const ReportCaseResult& r)
+{
+    return o << r.id << ":" << r.report << ":" << r.value;
+}
+
 struct DateHourDataSet : public TestDataSet
 {
     DateHourDataSet()
@@ -550,6 +566,78 @@ template <typename DB> void EmptyFixtureTests<DB>::register_tests()
                 std::vector<unsigned>{1});
         wassert(actual(results("leveltype1=1, l1=-, leveltype2=-, l2=-")) ==
                 std::vector<unsigned>{1});
+    });
+
+    this->add_method("report_case", [](Fixture& f) {
+        using Result = ReportCaseResult;
+        // See issue #236: "report/network only lowercase?"
+        auto insert  = [&](const std::string& report, unsigned id) {
+            core::Data data;
+            data.set_from_test_string(
+                "lon=1, year=2000, leveltype1=1, l1=1, pindicator=1");
+            data.set_from_test_string("lat="s + std::to_string(id));
+            data.set_from_test_string("rep_memo=" + report);
+            data.set_from_test_string("B20019=" + report);
+            impl::DBInsertOptions opts;
+            opts.can_replace = true;
+            wassert(f.tr->insert_data(data, opts));
+            return data;
+        };
+
+        auto results = [&](const char* report) {
+            core::Query query;
+            query.set_from_test_string("rep_memo="s + report);
+            auto cur = f.tr->query_data(query);
+            std::vector<Result> results;
+            while (cur->next())
+            {
+                auto station = cur->get_station();
+                auto var     = cur->get_var();
+                wassert(actual(var.code()) == WR_VAR(0, 20, 19));
+                results.emplace_back(Result{(int)station.coords.dlat(),
+                                            station.report, var.enqs()});
+            }
+            return results;
+        };
+
+        insert("Upper", 1);
+        insert("lower", 2);
+        insert("Both", 3);
+        insert("both", 4);
+        insert("conflict", 5);
+
+        wassert(actual(results("Upper")) == std::vector<Result>{
+                                                Result{1, "upper", "Upper"}
+        });
+        wassert(actual(results("upper")) == std::vector<Result>{
+                                                Result{1, "upper", "Upper"}
+        });
+        wassert(actual(results("lower")) == std::vector<Result>{
+                                                Result{2, "lower", "lower"}
+        });
+        wassert(actual(results("LOWER")) == std::vector<Result>{
+                                                Result{2, "lower", "lower"}
+        });
+        wassert(actual(results("both")) ==
+                std::vector<Result>{
+                    Result{3, "both", "Both"},
+                    Result{4, "both", "both"}
+        });
+        wassert(actual(results("BOTH")) ==
+                std::vector<Result>{
+                    Result{3, "both", "Both"},
+                    Result{4, "both", "both"}
+        });
+        wassert(actual(results("conflict")) ==
+                std::vector<Result>{
+                    Result{5, "conflict", "conflict"}
+        });
+
+        insert("Conflict", 5);
+        wassert(actual(results("conflict")) ==
+                std::vector<Result>{
+                    Result{5, "conflict", "Conflict"}
+        });
     });
 }
 

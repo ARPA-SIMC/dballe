@@ -444,7 +444,7 @@ struct report
             if (self->val.report.empty())
                 Py_RETURN_NONE;
             else
-                return to_python(self->val.report);
+                return to_python((std::string)self->val.report);
         }
         DBALLE_CATCH_RETURN_PYO
     }

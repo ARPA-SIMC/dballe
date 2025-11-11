@@ -1,4 +1,5 @@
 #include "json.h"
+#include "dballe/types.h"
 #include "dballe/values.h"
 #include <cctype>
 #include <cmath>
@@ -270,6 +271,14 @@ void JSONWriter::add_ident(const Ident& val)
         add_null();
     else
         add_cstring(val);
+}
+
+void JSONWriter::add_report(const Report& val)
+{
+    if (val.empty())
+        add_null();
+    else
+        add_string(val);
 }
 
 void JSONWriter::add_break() { out << "\n"; }

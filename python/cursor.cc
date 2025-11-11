@@ -71,7 +71,7 @@ template <typename Impl> struct remaining : Getter<remaining<Impl>, Impl>
 
 void _set_query(PyObject* dict, const DBStation& station)
 {
-    set_dict(dict, "report", station.report);
+    set_dict(dict, "report", (std::string)station.report);
     set_dict(dict, "lat", dballe_int_lat_to_python(station.coords.lat));
     set_dict(dict, "lon", dballe_int_lon_to_python(station.coords.lon));
     if (station.ident.is_missing())
@@ -147,7 +147,7 @@ void _set_data(core::Data& data, const DBStation& station)
 
 void _set_data(PyObject* dict, const DBStation& station)
 {
-    set_dict(dict, "report", station.report);
+    set_dict(dict, "report", (std::string)station.report);
     set_dict(dict, "lat", dballe_int_lat_to_python(station.coords.lat));
     set_dict(dict, "lon", dballe_int_lon_to_python(station.coords.lon));
     if (!station.ident.is_missing())

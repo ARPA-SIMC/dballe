@@ -348,6 +348,54 @@ void Tests::register_tests()
         wassert(actual(Ident("blinda") > Ident("antani")).istrue());
         wassert(actual(Ident("blinda") >= Ident("antani")).istrue());
     });
+
+    add_method("report", [] {
+        // Constructors
+        wassert(actual(Report()) == "");
+        wassert(actual(Report("foo")) == "foo");
+        wassert(actual(Report("Foo")) == "foo");
+        wassert(actual(Report("FOO")) == "foo");
+        wassert(actual(Report("foo"s)) == "foo");
+        wassert(actual(Report("Foo"s)) == "foo");
+        wassert(actual(Report("FOO"s)) == "foo");
+        Report r1(Report("FOO"));
+        wassert(actual(r1) == "foo");
+        Report r2(std::move(r1));
+        wassert(actual(r2) == "foo");
+        wassert(actual(r1) == "");
+
+        // Assignment
+        r1 = "BAR";
+        wassert(actual(r1) == "bar");
+        r1 = "Baz"s;
+        wassert(actual(r1) == "baz");
+        r1 = r2;
+        wassert(actual(r1) == "foo");
+        r1 = std::move(r2);
+        wassert(actual(r1) == "foo");
+        wassert(actual(r2) == "");
+
+        wassert(actual((const char*)r1) == "foo");
+        wassert(actual((std::string)r1) == "foo");
+
+        wassert(actual(Report("foO")) < "Zot");
+        wassert(actual(Report("foO")) <= "Zot");
+        wassert(actual(Report("foO")) <= "FOO");
+        wassert(actual(Report("foO")) > "AAA");
+        wassert(actual(Report("foO")) >= "AAA");
+        wassert(actual(Report("foO")) >= "FOO");
+        wassert(actual(Report("foo")) == "FOO");
+        wassert(actual(Report("foo")) != "bar");
+
+        wassert(actual(r1.empty()).isfalse());
+        wassert(actual(r2.empty()).istrue());
+
+        r1.clear();
+        wassert(actual(r1) == "");
+
+        r1 = "Foo";
+        wassert(actual(r1.c_str()) == "foo");
+    });
 }
 
 } // namespace
