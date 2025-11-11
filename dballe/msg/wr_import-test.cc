@@ -597,6 +597,13 @@ void Tests::register_tests()
         IS(st_name, "SIO Lagrangian Drifter Lab");
         IS2(WR_VAR(0, 22, 43), Level(1), Trange(254, 0, 0), 301.12);
     });
+    add_bufr_simplified_method("issue289.bufr", [](const impl::Messages& msgs) {
+        wassert(actual(msgs.size()) == 1u);
+        const impl::Message& msg = impl::Message::downcast(*msgs[0]);
+        wassert(actual(msg.type) == MessageType::SYNOP);
+        IS(st_name, "PIACENZA S. DAMIANO");
+        wassert(actual(msg.get_datetime()) == Datetime(2025, 1, 22, 3, 0, 0));
+    });
 }
 
 } // namespace
