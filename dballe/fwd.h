@@ -45,6 +45,7 @@ struct LonRange;
 struct Level;
 struct Trange;
 struct Ident;
+struct Report;
 struct Station;
 struct DBStation;
 

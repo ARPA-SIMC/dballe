@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <ostream>
 #include <wreport/error.h>
+#include <wreport/utils/string.h>
 
 using namespace wreport;
 using namespace std;
@@ -1784,6 +1785,38 @@ std::ostream& operator<<(std::ostream& out, const Ident& i)
     else
         return out << (const char*)i;
 }
+
+/*
+ * Report
+ */
+
+Report::Report(const char* value) : value(str::lower(value)) {}
+Report::Report(const std::string& value) : value(str::lower(value)) {}
+Report::Report(const Report& value) : value(value) {}
+Report::Report(Report&& value) : value(std::move(value.value)) {}
+
+Report& Report::operator=(const char* value)
+{
+    this->value = str::lower(value);
+    return *this;
+}
+Report& Report::operator=(const std::string& value)
+{
+    this->value = str::lower(value);
+    return *this;
+}
+Report& Report::operator=(const Report& value)
+{
+    this->value = value.value;
+    return *this;
+}
+Report& Report::operator=(Report&& value)
+{
+    this->value = std::move(value.value);
+    return *this;
+}
+
+Report::~Report() {}
 
 /*
  * Station

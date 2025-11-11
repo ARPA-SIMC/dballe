@@ -808,12 +808,77 @@ public:
 std::ostream& operator<<(std::ostream&, const Ident&);
 
 /**
+ * A report name.
+ *
+ * This is a string that is forced to lowercase.
+ */
+class Report
+{
+protected:
+    std::string value;
+
+public:
+    Report() = default;
+    // cppcheck-suppress noExplicitConstructor
+    Report(const char* value);
+    // cppcheck-suppress noExplicitConstructor
+    Report(const std::string& value);
+    Report(const Report& value);
+    Report(Report&& value);
+
+    Report& operator=(const char* value);
+    Report& operator=(const std::string& value);
+    Report& operator=(const Report& value);
+    Report& operator=(Report&& value);
+
+    ~Report();
+
+    operator const char*() const { return value.c_str(); }
+    operator std::string() const { return value; }
+
+    bool operator<(const Report& o) const { return value < o.value; }
+    template <typename T> bool operator<(const T& o) const
+    {
+        return *this < Report(o);
+    }
+    bool operator<=(const Report& o) const { return value <= o.value; }
+    template <typename T> bool operator<=(const T& o) const
+    {
+        return *this <= Report(o);
+    }
+    bool operator>(const Report& o) const { return value > o.value; }
+    template <typename T> bool operator>(const T& o) const
+    {
+        return *this > Report(o);
+    }
+    bool operator>=(const Report& o) const { return value >= o.value; }
+    template <typename T> bool operator>=(const T& o) const
+    {
+        return *this >= Report(o);
+    }
+    bool operator==(const Report& o) const { return value == o.value; }
+    template <typename T> bool operator==(const T& o) const
+    {
+        return *this == Report(o);
+    }
+    bool operator!=(const Report& o) const { return value != o.value; }
+    template <typename T> bool operator!=(const T& o) const
+    {
+        return *this != Report(o);
+    }
+
+    bool empty() const { return value.empty(); }
+    void clear() { return value.clear(); }
+    const char* c_str() const { return value.c_str(); }
+};
+
+/**
  * Station information
  */
 struct Station
 {
     /// Report name for this station
-    std::string report;
+    Report report;
 
     /// Station coordinates
     Coords coords;

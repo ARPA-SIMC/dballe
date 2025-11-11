@@ -80,6 +80,7 @@ public:
     void add_datetimerange(const DatetimeRange& val);
     void add_coords(const Coords& val);
     void add_ident(const Ident& val);
+    void add_report(const Report& val);
     void add_var(const wreport::Var& val);
     void add_station(const Station& s);
     void add_dbstation(const DBStation& s);
@@ -100,6 +101,7 @@ public:
     void add(const DatetimeRange& val) { add_datetimerange(val); }
     void add(const Coords& val) { add_coords(val); }
     void add(const Ident& val) { add_ident(val); }
+    void add(const Report& val) { add_report(val); }
     void add(const wreport::Var& val) { add_var(val); }
     void add(const Station& s) { add_station(s); }
     void add(const DBStation& s) { add_dbstation(s); }

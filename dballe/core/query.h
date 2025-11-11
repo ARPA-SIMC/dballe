@@ -52,7 +52,7 @@ struct Query : public dballe::Query
     int ana_id            = MISSING_INT;
     int priomin           = MISSING_INT;
     int priomax           = MISSING_INT;
-    std::string report;
+    Report report;
     int mobile = MISSING_INT;
     Ident ident;
     LatRange latrange;
