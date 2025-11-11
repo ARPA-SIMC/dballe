@@ -23,7 +23,7 @@ data in the file given as argument.
 The file is in CSV format, with 6 columns:
 
 1. Report code (corresponding to parameter ``rep_cod``)
-2. Mnemonic name (corresponding to parameter ``rep_memo``)
+2. Mnemonic name (corresponding to parameter ``rep_memo``, forced to lowercase)
 3. Report description
 4. Report priority (corresponding to parameter ``priority``)
 5. Ignored

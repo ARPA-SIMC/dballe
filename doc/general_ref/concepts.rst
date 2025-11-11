@@ -24,6 +24,8 @@ preferred over a value computed by a forecast model (see :ref:`parms_query_modif
 Priorities associated to the report type can be customized when creating the
 database.
 
+Report names are always lowercased before use.
+
 
 .. _station:
 

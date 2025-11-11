@@ -18,8 +18,8 @@ Name              Type      Description                             Comment
                                                                     It can be changed by editing /etc/dballe/repinfo.csv
 ``priomax``       Integer   Maximum priority of reports queed
 ``priomin``       Integer   Minimum priority of reports queed
-``report``        String    Type of report                          Alias for ``rep_memo``
-``rep_memo``      String    Type of report                          Alias for ``report``
+``report``        String    Type of report                          Alias for ``rep_memo``, forced to lower case
+``rep_memo``      String    Type of report                          Alias for ``report``, forced to lower case
 ``ana_id``        Integer   Station database ID                     internal DB-ALLe ID referring to an existing station, usable as a shortcut reference
                                                                     instead of specifying the full data
 ``mobile``        Integer   Station is mobile                       Set to 1 to query mobile station, such as a ship or a flight; to 0 to query only
@@ -53,8 +53,8 @@ Name              Type      Description                         Comment
                                                                 It can be changed by editing /etc/dballe/repinfo.csv
 ``priomax``       Integer   Maximum priority of reports queed
 ``priomin``       Integer   Minimum priority of reports queed
-``report``        String    Type of report                      Alias for ``rep_memo``
-``rep_memo``      String    Type of report                      Alias for ``report``
+``report``        String    Type of report                      Alias for ``rep_memo``, forced to lower case
+``rep_memo``      String    Type of report                      Alias for ``report``, forced to lower case
 ``ana_id``        Integer   Station database ID                 internal DB-ALLe ID referring to an existing station, usable as a shortcut reference instead of specifying the full data
 ``mobile``        Integer   Station is mobile                   Set to 1 to query mobile station, such as a ship or a flight; to 0 to query only fixed stations, such as synop or metar
 ``ident``         String    Station identifier
@@ -87,8 +87,8 @@ Name              Type                   Description                         Com
                                                                              It can be changed by editing /etc/dballe/repinfo.csv
 ``priomax``       Integer                Maximum priority of reports queed
 ``priomin``       Integer                Minimum priority of reports queed
-``report``        String                 Type of report                      Alias for ``rep_memo``
-``rep_memo``      String                 Type of report                      Alias for ``report``
+``report``        String                 Type of report                      Alias for ``rep_memo``, forced to lower case
+``rep_memo``      String                 Type of report                      Alias for ``report``, forced to lower case
 ``ana_id``        Integer                Station database ID                 internal DB-ALLe ID referring to an existing station, usable as a shortcut reference instead of specifying the full data
 ``mobile``        Integer                Station is mobile                   Set to 1 to query mobile station, such as a ship or a flight; to 0 to query only fixed stations, such as synop or metar
 ``ident``         String                 Station identifier
