@@ -56,6 +56,7 @@ public:
 
     void run() override
     {
+        WMOImporter::run();
         for (pos = 0; pos < subset->size(); ++pos)
         {
             const Var& var = (*subset)[pos];
