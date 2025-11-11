@@ -79,6 +79,7 @@ public:
 
     void run() override
     {
+        WMOImporter::run();
         // Scan the input variables
         for (pos = 0; pos < subset->size(); ++pos)
         {

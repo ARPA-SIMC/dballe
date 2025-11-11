@@ -40,6 +40,7 @@ public:
 
     void run() override
     {
+        Importer::run();
         for (size_t pos = 0; pos < subset->size(); ++pos)
         {
             const Var& var = (*subset)[pos];

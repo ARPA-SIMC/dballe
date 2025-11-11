@@ -27,12 +27,29 @@ static const Trange tr_std_wind_max10m(205, 0, 600);
 
 void Importer::init() {}
 
-void Importer::import(const wreport::Subset& subset, Message& msg)
+void Importer::run() {}
+
+void Importer::postprocess()
 {
-    this->subset = &subset;
-    this->msg    = &msg;
+    auto msg_datetime = msg->get_datetime();
+    if (msg_datetime.is_missing() && bulletin->rep_year &&
+        bulletin->rep_year != 0xffff && bulletin->rep_month &&
+        bulletin->rep_month != 0xff && bulletin->rep_day &&
+        bulletin->rep_day != 0xff)
+        msg->set_datetime(Datetime(bulletin->rep_year, bulletin->rep_month,
+                                   bulletin->rep_day, bulletin->rep_hour,
+                                   bulletin->rep_minute, bulletin->rep_second));
+}
+
+void Importer::import_subset(const wreport::Bulletin& bulletin,
+                             const wreport::Subset& subset, Message& msg)
+{
+    this->bulletin = &bulletin;
+    this->subset   = &subset;
+    this->msg      = &msg;
     init();
     run();
+    postprocess();
 }
 
 void Importer::set(const wreport::Var& var, const Shortcut& shortcut)
@@ -557,6 +574,7 @@ void SynopBaseImporter::init()
 
 void SynopBaseImporter::run()
 {
+    WMOImporter::run();
     for (pos = 0; pos < subset->size(); ++pos)
     {
         const Var& var = (*subset)[pos];

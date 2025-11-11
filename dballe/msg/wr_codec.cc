@@ -110,7 +110,7 @@ bool WRImporter::foreach_decoded_bulletin(
     {
         auto newmsg  = std::make_shared<Message>();
         newmsg->type = type;
-        importer->import(msg.subsets[i], *newmsg);
+        importer->import_subset(msg, msg.subsets[i], *newmsg);
         if (!dest(newmsg))
             return false;
     }

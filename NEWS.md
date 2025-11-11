@@ -1,6 +1,7 @@
 # New in version UNRELEASED
 
 * Clarify that report names are always lowercased (#236)
+* Use datetime information from bulletin header when they are missing in BUFR data (#289)
 
 # New in version 9.12
 

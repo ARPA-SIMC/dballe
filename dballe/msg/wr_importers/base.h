@@ -21,11 +21,13 @@ class Importer
 {
 protected:
     const dballe::ImporterOptions& opts;
+    const wreport::Bulletin* bulletin;
     const wreport::Subset* subset;
     impl::Message* msg;
 
     virtual void init();
-    virtual void run() = 0;
+    virtual void run();
+    virtual void postprocess();
 
     void set(const wreport::Var& var, const Shortcut& shortcut);
     void set(const wreport::Var& var, wreport::Varcode code, const Level& level,
@@ -37,7 +39,8 @@ public:
 
     virtual MessageType scanType(const wreport::Bulletin& bulletin) const = 0;
 
-    void import(const wreport::Subset& subset, impl::Message& msg);
+    void import_subset(const wreport::Bulletin& bulletin,
+                       const wreport::Subset& subset, impl::Message& msg);
 
     static std::unique_ptr<Importer>
     createSynop(const dballe::ImporterOptions&);
@@ -71,7 +74,7 @@ protected:
 
 public:
     WMOImporter(const dballe::ImporterOptions& opts) : Importer(opts) {}
-    virtual ~WMOImporter() {}
+    ~WMOImporter() override {}
 };
 
 /// Keep track of level context changes
@@ -233,8 +236,8 @@ protected:
     void set(std::unique_ptr<Interpreted> val);
 
 public:
-    SynopBaseImporter(const dballe::ImporterOptions& opts);
-    ~SynopBaseImporter();
+    explicit SynopBaseImporter(const dballe::ImporterOptions& opts);
+    ~SynopBaseImporter() override;
 
     void init() override;
     void run() override;
