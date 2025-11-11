@@ -19,7 +19,7 @@ BuildRequires: gcc-c++
 BuildRequires: gperf
 BuildRequires: doxygen
 BuildRequires: pkgconfig(lua) > 5.1.1
-BuildRequires: pkgconfig(libwreport) >= 3.38
+BuildRequires: pkgconfig(libwreport) >= 3.41
 BuildRequires: python3-devel
 BuildRequires: pkgconfig(popt)
 BuildRequires: pkgconfig(libpq)
@@ -127,7 +127,7 @@ Group: Applications/Meteo
 Summary:   DB-ALL.e core shared library
 Group:    Applications/Meteo
 Requires: %{name}-common >= %{?epoch:%epoch:}%{version}-%{release}
-Requires: pkgconfig(libwreport) >= 3.29
+Requires: pkgconfig(libwreport) >= 3.41
 Obsoletes: libdballe6 < 8.21
 
 %description -n libdballe9

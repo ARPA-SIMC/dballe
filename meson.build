@@ -64,7 +64,7 @@ conf_data.set_quoted('TABLE_DIR', get_option('prefix') / table_dir)
 toplevel_inc = include_directories('.')
 
 # Dependencies
-libwreport_dep = dependency('libwreport', version: '>= 3.38')
+libwreport_dep = dependency('libwreport', version: '>= 3.41')
 sqlite3_dep = dependency('sqlite3')
 libpq_dep = dependency('libpq', required: false)
 conf_data.set('HAVE_LIBPQ', libpq_dep.found())
