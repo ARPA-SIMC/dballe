@@ -4,7 +4,7 @@
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 9.12
+Version: 9.13
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -287,6 +287,12 @@ mv $RPM_BUILD_ROOT%{_includedir}/dballe/dballef.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Wed Nov 12 2025 Daniele Branchini <dbranchini@arpae.it> - 9.13-1
+- Clarify that report names are always lowercased (#236)
+- Use datetime information from bulletin header when they are missing in BUFR data (#289)
+- Updated required version of wreport (>= 3.41)
+- Added variable 13240 (specific graupel content)
+
 * Mon Oct 13 2025 Daniele Branchini <dbranchini@arpae.it> - 9.12-1
 - When querying, `leveltype2`, `l1` or `l2` set to `-` now mean requiring the values to be unset (#201)
 - Added initial support for TM315009 drifting data buoys (#290)

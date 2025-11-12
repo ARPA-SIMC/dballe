@@ -1,8 +1,9 @@
-# New in version UNRELEASED
+# New in version 9.13
 
 * Clarify that report names are always lowercased (#236)
 * Use datetime information from bulletin header when they are missing in BUFR data (#289)
 * Updated required version of wreport (>= 3.41)
+* Added variable 13240 (specific graupel content)
 
 # New in version 9.12
 
