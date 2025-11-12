@@ -226,6 +226,7 @@
  013237 Total solid precipitation                                        KG/M**2                    1           -1  14 KG/M**2                   1          5
  013238 Local horizontal water speed                                     M/S                        3            0  15 M/S                       3          5
  013239 Volume of basin (basins > 2km^3)                                 M**3                      -5            0  30 M**3                     -5          9
+ 013240 Specific precipitating graupel content                           KG/KG                      8            0  27 KG/KG                     8          8
  014002 Long-wave radiation, integrated over period specified            J/M**2                    -3       -65536  17 J/M**2                   -3          5
  014004 Short-wave radiation, integrated over period specified           J/M**2                    -3       -65536  17 J/M**2                   -3          5
  014016 NET RADIATION                                                    J/M**2                    -4       -16384  15 J/M**2                   -4          5
