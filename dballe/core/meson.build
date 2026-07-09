@@ -1,16 +1,16 @@
 shortcuts_h = custom_target(
-	'shortcuts.h', output: 'shortcuts.h', input: '../vars.csv',
-	command: [mkvars, '-t', 'shortcuts.h', '@INPUT@', '-o', '@OUTPUT@'],
-	install_dir: get_option('includedir') + '/' + 'dballe/core',
-	build_by_default: true)
+    'shortcuts.h', output: 'shortcuts.h', input: '../vars.csv',
+    command: [mkvars, '-t', 'shortcuts.h', '@INPUT@', '-o', '@OUTPUT@'],
+    install_dir: get_option('includedir') + '/' + 'dballe/core',
+    build_by_default: true)
 shortcuts_cc = custom_target(
         'shortcuts.cc', output: 'shortcuts.cc', input: '../vars.csv',
-	command: [mkvars, '-t', 'shortcuts.cc', '@INPUT@', '-o', '@OUTPUT@'],
-	build_by_default: true)
+    command: [mkvars, '-t', 'shortcuts.cc', '@INPUT@', '-o', '@OUTPUT@'],
+    build_by_default: true)
 shortcuts_access_in_cc = custom_target(
         'shortcuts-access.in.cc', output: 'shortcuts-access.in.cc', input: '../vars.csv',
-	command: [mkvars, '-t', 'shortcuts-access.in.cc', '@INPUT@', '-o', '@OUTPUT@'],
-	build_by_default: true)
+    command: [mkvars, '-t', 'shortcuts-access.in.cc', '@INPUT@', '-o', '@OUTPUT@'],
+    build_by_default: true)
 
 libdballe_sources += files(
         'error.cc',
@@ -33,28 +33,28 @@ libdballe_sources += files(
 )
 
 install_headers(
-	'fwd.h',
-	'error.h',
-	'enq.h',
-	'cursor.h',
-	'aliases.h',
-	'benchmark.h',
-	'defs.h',
-	'var.h',
-	'values.h',
-	'file.h',
-	'arrayfile.h',
-	'csv.h',
-	'data.h',
-	'query.h',
-	'structbuf.h',
-	'matcher.h',
-	'match-wreport.h',
-	'smallset.h',
-	'varmatch.h',
-	'string.h',
-	'trace.h',
-	'json.h',
+    'fwd.h',
+    'error.h',
+    'enq.h',
+    'cursor.h',
+    'aliases.h',
+    'benchmark.h',
+    'defs.h',
+    'var.h',
+    'values.h',
+    'file.h',
+    'arrayfile.h',
+    'csv.h',
+    'data.h',
+    'query.h',
+    'structbuf.h',
+    'matcher.h',
+    'match-wreport.h',
+    'smallset.h',
+    'varmatch.h',
+    'string.h',
+    'trace.h',
+    'json.h',
         subdir: 'dballe/core',
 )
 

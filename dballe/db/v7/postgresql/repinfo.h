@@ -3,9 +3,9 @@
 
 #include <dballe/db/v7/repinfo.h>
 #include <dballe/sql/fwd.h>
-#include <vector>
-#include <string>
 #include <map>
+#include <string>
+#include <vector>
 
 namespace dballe {
 namespace db {
@@ -24,7 +24,7 @@ struct PostgreSQLRepinfo : public v7::Repinfo
     dballe::sql::PostgreSQLConnection& conn;
 
     PostgreSQLRepinfo(dballe::sql::PostgreSQLConnection& conn);
-    PostgreSQLRepinfo(const PostgreSQLRepinfo&) = delete;
+    PostgreSQLRepinfo(const PostgreSQLRepinfo&)  = delete;
     PostgreSQLRepinfo(const PostgreSQLRepinfo&&) = delete;
     virtual ~PostgreSQLRepinfo();
     PostgreSQLRepinfo& operator=(const PostgreSQLRepinfo&) = delete;
@@ -41,8 +41,8 @@ protected:
     void insert_auto_entry(const char* memo) override;
 };
 
-}
-}
-}
-}
+} // namespace postgresql
+} // namespace v7
+} // namespace db
+} // namespace dballe
 #endif

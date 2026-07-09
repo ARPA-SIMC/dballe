@@ -1,4 +1,4 @@
-project('dballe', 'cpp', 'fortran', version: '9.7', license : 'GPL-2.0-or-later', default_options: ['warning_level=3', 'cpp_std=c++17'])
+project('dballe', 'cpp', 'fortran', version: '9.13', license : 'GPL-2.0-or-later', default_options: ['warning_level=3', 'cpp_std=c++17'], meson_version: '>= 0.58')
 # TODO: use warning_level=everything in meson from 1.0
 
 cpp = meson.get_compiler('cpp')
@@ -10,12 +10,13 @@ warning_control = [
   '-Werror=deprecated-copy-dtor',
   '-Werror=missing-declarations',
   '-Werror=overloaded-virtual',
-  '-Werror=cast-qual',                
+  '-Werror=cast-qual',
   '-Werror=duplicated-branches',
   '-Werror=logical-op',
   '-Werror=catch-value',
-  '-Werror=conditionally-supported',   
-  '-Werror=c++23-extensions',
+  '-Werror=conditionally-supported',
+  # This errors out when #warning is used on Fedora 42
+  # '-Werror=c++23-extensions',
   '-Werror=dangling-else',
   '-Werror=suggest-attribute=format',
   '-Werror=deprecated-declarations',
@@ -51,7 +52,7 @@ add_project_arguments(
   cpp.get_supported_arguments(warning_control),
   language : 'cpp')
 
-libdballe_so_version = '9.7.0'
+libdballe_so_version = '9.8.0'
 libdballef_so_version = '5.0.0'
 
 table_dir = get_option('datadir') / 'wreport'
@@ -63,7 +64,7 @@ conf_data.set_quoted('TABLE_DIR', get_option('prefix') / table_dir)
 toplevel_inc = include_directories('.')
 
 # Dependencies
-libwreport_dep = dependency('libwreport', version: '>= 3.38')
+libwreport_dep = dependency('libwreport', version: '>= 3.41')
 sqlite3_dep = dependency('sqlite3')
 libpq_dep = dependency('libpq', required: false)
 conf_data.set('HAVE_LIBPQ', libpq_dep.found())
@@ -117,8 +118,8 @@ configure_file(output: 'config.h', configuration: conf_data)
 
 # Generate the builddir's version of run-local
 run_local_cfg = configure_file(output: 'run-local', input: 'run-local.in', configuration: {
-    'top_srcdir': meson.source_root(),
-    'top_builddir': meson.build_root(),
+    'top_srcdir': meson.project_source_root(),
+    'top_builddir': meson.project_build_root(),
 })
 # Just using the configure_file object in a custom_target command gives:
 #   'AttributeError: 'File' object has no attribute 'replace'
@@ -126,6 +127,7 @@ run_local_cfg = configure_file(output: 'run-local', input: 'run-local.in', confi
 # See https://github.com/mesonbuild/meson/issues/8039
 run_local = find_program(run_local_cfg)
 
+subdir('tables')
 subdir('dballe')
 subdir('fortran')
 subdir('src')
@@ -137,8 +139,6 @@ endif
 if build_docs
     subdir('doc')
 endif
-
-subdir('tables')
 
 
 # Generate pkg-config metadata

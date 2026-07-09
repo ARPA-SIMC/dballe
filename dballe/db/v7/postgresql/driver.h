@@ -20,14 +20,15 @@ struct Driver : public v7::Driver
     std::unique_ptr<v7::Station> create_station(v7::Transaction& tr) override;
     std::unique_ptr<v7::LevTr> create_levtr(v7::Transaction& tr) override;
     std::unique_ptr<v7::Data> create_data(v7::Transaction& tr) override;
-    std::unique_ptr<v7::StationData> create_station_data(v7::Transaction& tr) override;
+    std::unique_ptr<v7::StationData>
+    create_station_data(v7::Transaction& tr) override;
     void create_tables_v7() override;
     void delete_tables_v7() override;
     void vacuum_v7() override;
 };
 
-}
-}
-}
-}
+} // namespace postgresql
+} // namespace v7
+} // namespace db
+} // namespace dballe
 #endif

@@ -1,23 +1,23 @@
 #ifndef DBALLE_CORE_MATCHER_H
 #define DBALLE_CORE_MATCHER_H
 
-#include <dballe/types.h>
 #include <dballe/core/fwd.h>
+#include <dballe/types.h>
 #include <memory>
 
 namespace dballe {
 namespace matcher {
 
 enum Result {
-    MATCH_YES,  // Item matches
-    MATCH_NO,   // Item does not match
-    MATCH_NA    // Match not applicable to this item
+    MATCH_YES, // Item matches
+    MATCH_NO,  // Item does not match
+    MATCH_NA   // Match not applicable to this item
 };
 
 /// Format a Result into a string
 std::string result_format(Result res);
 
-}
+} // namespace matcher
 
 /**
  * Common interface for things that are matched.
@@ -49,7 +49,8 @@ struct Matched
      *
      * If station is -1, only match the block.
      */
-    virtual matcher::Result match_station_wmo(int block, int station=-1) const;
+    virtual matcher::Result match_station_wmo(int block,
+                                              int station = -1) const;
 
     /// Match datetime
     virtual matcher::Result match_datetime(const DatetimeRange& range) const;
@@ -60,7 +61,8 @@ struct Matched
      * Any value can be set to MISSING_INT if not applicable or to represent an
      * open bound
      */
-    virtual matcher::Result match_coords(const LatRange& latrange, const LonRange& lonrange) const;
+    virtual matcher::Result match_coords(const LatRange& latrange,
+                                         const LonRange& lonrange) const;
 
     /**
      * Match rep_memo
@@ -72,8 +74,8 @@ struct Matched
     /**
      * Match if min <= val <= max
      *
-     * It correctly deals with min and max being set to MISSING_INT to signify an open
-     * bound.
+     * It correctly deals with min and max being set to MISSING_INT to signify
+     * an open bound.
      */
     static matcher::Result int_in_range(int val, int min, int max);
 
@@ -92,11 +94,11 @@ struct Matcher
     virtual ~Matcher() {}
 
     virtual matcher::Result match(const Matched& item) const = 0;
-    virtual void to_query(dballe::core::Query& query) const = 0;
+    virtual void to_query(dballe::core::Query& query) const  = 0;
 
     static std::unique_ptr<Matcher> create(const dballe::Query& query);
 };
 
-}
+} // namespace dballe
 
 #endif

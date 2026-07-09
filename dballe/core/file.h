@@ -1,12 +1,12 @@
 #ifndef DBA_CORE_FILE_H
 #define DBA_CORE_FILE_H
 
-#include <dballe/file.h>
+#include <cstdio>
 #include <dballe/core/defs.h>
+#include <dballe/file.h>
+#include <functional>
 #include <memory>
 #include <string>
-#include <cstdio>
-#include <functional>
 
 namespace dballe {
 namespace core {
@@ -25,12 +25,12 @@ protected:
     int idx;
 
 public:
-    File(const std::string& name, FILE* fd, bool close_on_exit=true);
+    File(const std::string& name, FILE* fd, bool close_on_exit = true);
     virtual ~File();
 
     std::string pathname() const override { return m_name; }
     void close() override;
-    bool foreach(std::function<bool(const BinaryMessage&)> dest) override;
+    bool foreach (std::function<bool(const BinaryMessage&)> dest) override;
 
     /**
      * Resolve the location of a test data file
@@ -44,14 +44,17 @@ public:
      *
      * This should only be used during dballe unit tests.
      */
-    static std::unique_ptr<dballe::File> open_test_data_file(Encoding type, const std::string& name);
+    static std::unique_ptr<dballe::File>
+    open_test_data_file(Encoding type, const std::string& name);
 };
 
 class BufrFile : public dballe::core::File
 {
 public:
-    BufrFile(const std::string& name, FILE* fd, bool close_on_exit=true)
-        : File(name, fd, close_on_exit) {}
+    BufrFile(const std::string& name, FILE* fd, bool close_on_exit = true)
+        : File(name, fd, close_on_exit)
+    {
+    }
 
     Encoding encoding() const override { return Encoding::BUFR; }
     BinaryMessage read() override;
@@ -61,8 +64,10 @@ public:
 class CrexFile : public dballe::core::File
 {
 public:
-    CrexFile(const std::string& name, FILE* fd, bool close_on_exit=true)
-        : File(name, fd, close_on_exit) {}
+    CrexFile(const std::string& name, FILE* fd, bool close_on_exit = true)
+        : File(name, fd, close_on_exit)
+    {
+    }
 
     Encoding encoding() const override { return Encoding::CREX; }
     BinaryMessage read() override;
@@ -72,14 +77,16 @@ public:
 class JsonFile : public dballe::core::File
 {
 public:
-    JsonFile(const std::string& name, FILE* fd, bool close_on_exit=true)
-        : File(name, fd, close_on_exit) {}
+    JsonFile(const std::string& name, FILE* fd, bool close_on_exit = true)
+        : File(name, fd, close_on_exit)
+    {
+    }
 
     Encoding encoding() const override { return Encoding::JSON; }
     BinaryMessage read() override;
     void write(const std::string& msg) override;
 };
 
-}
-}
+} // namespace core
+} // namespace dballe
 #endif

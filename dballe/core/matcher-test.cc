@@ -1,8 +1,8 @@
-#include "tests.h"
 #include "matcher.h"
+#include "tests.h"
 
-#include <sstream>
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 using namespace dballe;
@@ -27,8 +27,7 @@ class Tests : public TestCase
 
 void Tests::register_tests()
 {
-add_method("empty", []() noexcept {
-});
+    add_method("empty", []() noexcept {});
 #if 0
 // Test station_id matcher
 add_method("station_id", []() {
@@ -228,4 +227,4 @@ add_method("empty", []() {
 #endif
 }
 
-}
+} // namespace

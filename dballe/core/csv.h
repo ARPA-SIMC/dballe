@@ -27,14 +27,13 @@
  * Routines to parse data in CSV format
  */
 
-#include <wreport/var.h>
-#include <vector>
-#include <string>
 #include <iosfwd>
 #include <stdio.h>
+#include <string>
+#include <vector>
+#include <wreport/var.h>
 
-namespace dballe
-{
+namespace dballe {
 
 /**
  * Parse a CSV line.
@@ -113,7 +112,7 @@ public:
      *
      * @returns true if a data line has been found, false if we reached EOF
      */
-    bool move_to_data(unsigned number_col=0);
+    bool move_to_data(unsigned number_col = 0);
 
     /// Read the next CSV line, returning false if EOF is reached
     bool next();
@@ -185,6 +184,5 @@ public:
     virtual void flush_row() = 0;
 };
 
-
-}
+} // namespace dballe
 #endif

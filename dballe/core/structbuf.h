@@ -22,17 +22,17 @@
 #ifndef DBALLE_CORE_STRUCTBUF_H
 #define DBALLE_CORE_STRUCTBUF_H
 
-#include <wreport/error.h>
 #include <cstdlib>
-#include <unistd.h>
 #include <sys/mman.h>
+#include <unistd.h>
+#include <wreport/error.h>
 
 namespace dballe {
 
 namespace structbuf {
 int make_anonymous_tmpfile();
 void write_buffer(int fd, void* buf, size_t size);
-}
+} // namespace structbuf
 
 /**
  * Buffer of simple structures that becomes file backed if it grows beyond a
@@ -41,8 +41,7 @@ void write_buffer(int fd, void* buf, size_t size);
  * bufsize is the number of T items that we keep in memory before becoming
  * file-backed.
  */
-template<typename T, int bufsize=1024>
-class Structbuf
+template <typename T, int bufsize = 1024> class Structbuf
 {
 protected:
     /**
@@ -68,10 +67,7 @@ protected:
     int tmpfile_fd = -1;
 
 public:
-    Structbuf()
-        : membuf(new T[bufsize])
-    {
-    }
+    Structbuf() : membuf(new T[bufsize]) {}
     ~Structbuf()
     {
         delete[] membuf;
@@ -93,7 +89,8 @@ public:
     void append(const T& val)
     {
         if (readbuf != MAP_FAILED)
-            throw wreport::error_consistency("writing to a Structbuf that is already being read");
+            throw wreport::error_consistency(
+                "writing to a Structbuf that is already being read");
         if (membuf_last == bufsize)
             write_to_file();
         membuf[membuf_last++] = val;
@@ -108,20 +105,20 @@ public:
         else
         {
             // Flush the remaining memory data to file
-            if (membuf_last) write_to_file();
+            if (membuf_last)
+                write_to_file();
 
             // mmap the file for reading
-            readbuf = (const T*)mmap(nullptr, m_count * sizeof(T), PROT_READ, MAP_SHARED, tmpfile_fd, 0);
+            readbuf = (const T*)mmap(nullptr, m_count * sizeof(T), PROT_READ,
+                                     MAP_SHARED, tmpfile_fd, 0);
             if (readbuf == MAP_FAILED)
-                throw wreport::error_system("cannot map temporary file contents to memory");
+                throw wreport::error_system(
+                    "cannot map temporary file contents to memory");
         }
     }
 
     /// Read back an item
-    const T& operator[](size_t idx) const
-    {
-        return readbuf[idx];
-    }
+    const T& operator[](size_t idx) const { return readbuf[idx]; }
 
 protected:
     void write_to_file()
@@ -133,6 +130,6 @@ protected:
     }
 };
 
-}
+} // namespace dballe
 
 #endif

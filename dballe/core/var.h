@@ -6,8 +6,8 @@
  */
 
 #include <dballe/var.h>
-#include <set>
 #include <functional>
+#include <set>
 
 namespace dballe {
 
@@ -15,20 +15,27 @@ namespace dballe {
  * Convenience functions to quickly create variables from the local B table
  */
 
-/// Resolve a comma-separated varcode list performing careful validation, inserting results in \a out
-void resolve_varlist(const std::string& varlist, std::set<wreport::Varcode>& out);
+/// Resolve a comma-separated varcode list performing careful validation,
+/// inserting results in \a out
+void resolve_varlist(const std::string& varlist,
+                     std::set<wreport::Varcode>& out);
 
-/// Resolve a comma-separated varcode list performing careful validation, calling \a dest on each result
-void resolve_varlist(const std::string& varlist, std::function<void(wreport::Varcode)> out);
+/// Resolve a comma-separated varcode list performing careful validation,
+/// calling \a dest on each result
+void resolve_varlist(const std::string& varlist,
+                     std::function<void(wreport::Varcode)> out);
 
-/// Create a new Var, copying \a var and all its attributes except the unset ones
-std::unique_ptr<wreport::Var> var_copy_without_unset_attrs(const wreport::Var& var);
+/// Create a new Var, copying \a var and all its attributes except the unset
+/// ones
+std::unique_ptr<wreport::Var>
+var_copy_without_unset_attrs(const wreport::Var& var);
 
 /**
  * Create a new Var with code \a code, copying the value from \a var and all
  * its attributes except the unset ones
  */
-std::unique_ptr<wreport::Var> var_copy_without_unset_attrs(const wreport::Var& var, wreport::Varcode code);
+std::unique_ptr<wreport::Var>
+var_copy_without_unset_attrs(const wreport::Var& var, wreport::Varcode code);
 
 /**
  * Format the code to its string representation
@@ -47,6 +54,6 @@ void format_bcode(wreport::Varcode code, char* buf);
 /// Return \a code, or its DB-All.e equivalent
 wreport::Varcode map_code_to_dballe(wreport::Varcode code);
 
-}
+} // namespace dballe
 
 #endif

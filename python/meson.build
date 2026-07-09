@@ -69,4 +69,5 @@ test('python', runtest, args: ['PYTHON'],
          'PYTHON=' + python3_path,
          'PYTHONPATH=' + meson.current_source_dir() + ':' + meson.current_build_dir(),
      ],
+     depends: [py_dballe] + tables
 )

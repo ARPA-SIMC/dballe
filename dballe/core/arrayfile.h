@@ -30,7 +30,7 @@ public:
     void write(const std::string& msg) override;
 };
 
-}
-}
+} // namespace core
+} // namespace dballe
 
 #endif

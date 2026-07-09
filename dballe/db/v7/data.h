@@ -1,26 +1,25 @@
 #ifndef DBALLE_DB_V7_DATAV7_H
 #define DBALLE_DB_V7_DATAV7_H
 
-#include <dballe/fwd.h>
-#include <dballe/values.h>
-#include <dballe/core/fwd.h>
+#include <cstdio>
 #include <dballe/core/defs.h>
-#include <dballe/sql/fwd.h>
+#include <dballe/core/fwd.h>
 #include <dballe/db/defs.h>
 #include <dballe/db/v7/fwd.h>
-#include <wreport/var.h>
+#include <dballe/fwd.h>
+#include <dballe/sql/fwd.h>
+#include <dballe/values.h>
+#include <functional>
+#include <list>
 #include <memory>
 #include <vector>
-#include <list>
-#include <cstdio>
-#include <functional>
+#include <wreport/var.h>
 
 namespace dballe {
 namespace db {
 namespace v7 {
 
-template<typename Traits>
-class DataCommon
+template <typename Traits> class DataCommon
 {
 protected:
     typedef typename Traits::BatchValue BatchValue;
@@ -37,12 +36,14 @@ protected:
      * Load attributes from the database into a Values, except those whose
      * Varcode is in `exclude`
      */
-    void read_attrs_into_values(Tracer<>& trc, int id_data, Values& values, const db::AttrList& exclude);
+    void read_attrs_into_values(Tracer<>& trc, int id_data, Values& values,
+                                const db::AttrList& exclude);
 
     /**
      * Replace the attributes of a variable with those in Values
      */
-    virtual void write_attrs(Tracer<>& trc, int id_data, const Values& values) = 0;
+    virtual void write_attrs(Tracer<>& trc, int id_data,
+                             const Values& values) = 0;
 
     /**
      * Remove all attributes from a variable
@@ -64,7 +65,9 @@ public:
      *   Function that will be called to consume the attrbutes as they are
      *   loaded.
      */
-    virtual void read_attrs(Tracer<>& trc, int id_data, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
+    virtual void
+    read_attrs(Tracer<>& trc, int id_data,
+               std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 
     /**
      * Merge the given attributes with the existing attributes of the given
@@ -82,7 +85,9 @@ public:
     void remove_attrs(Tracer<>& trc, int data_id, const db::AttrList& attrs);
 
     /// Bulk variable update
-    virtual void update(Tracer<>& trc, std::vector<typename Traits::BatchValue>& vars, bool with_attrs) = 0;
+    virtual void update(Tracer<>& trc,
+                        std::vector<typename Traits::BatchValue>& vars,
+                        bool with_attrs) = 0;
 
     /// Run the query to delete all records selected by the given QueryBuilder
     virtual void remove(Tracer<>& trc, const v7::IdQueryBuilder& qb) = 0;
@@ -96,7 +101,6 @@ public:
     virtual void clear_cache() = 0;
 };
 
-
 struct StationDataDumper
 {
     unsigned count = 0;
@@ -105,7 +109,8 @@ struct StationDataDumper
     StationDataDumper(FILE* out);
 
     void print_head();
-    void print_row(int id, int id_station, wreport::Varcode code, const char* val, const std::vector<uint8_t>& attrs);
+    void print_row(int id, int id_station, wreport::Varcode code,
+                   const char* val, const std::vector<uint8_t>& attrs);
     void print_tail();
 };
 
@@ -117,7 +122,9 @@ struct DataDumper
     DataDumper(FILE* out);
 
     void print_head();
-    void print_row(int id, int id_station, int id_levtr, const Datetime& dt, wreport::Varcode code, const char* val, const std::vector<uint8_t>& attrs);
+    void print_row(int id, int id_station, int id_levtr, const Datetime& dt,
+                   wreport::Varcode code, const char* val,
+                   const std::vector<uint8_t>& attrs);
     void print_tail();
 };
 
@@ -141,15 +148,22 @@ struct StationData : public DataCommon<StationDataTraits>
     using DataCommon<StationDataTraits>::DataCommon;
 
     /// Bulk variable insert
-    virtual void insert(Tracer<>& trc, int id_station, std::vector<batch::StationDatum>& vars, bool with_attrs) = 0;
+    virtual void insert(Tracer<>& trc, int id_station,
+                        std::vector<batch::StationDatum>& vars,
+                        bool with_attrs) = 0;
 
     /// Query contents of the data table
-    virtual void query(Tracer<>& trc, int id_station, std::function<void(int id, wreport::Varcode code)> dest) = 0;
+    virtual void
+    query(Tracer<>& trc, int id_station,
+          std::function<void(int id, wreport::Varcode code)> dest) = 0;
 
     /**
      * Run a station data query, iterating on the resulting variables
      */
-    virtual void run_station_data_query(Tracer<>& trc, const v7::DataQueryBuilder& qb, std::function<void(const dballe::DBStation& station, int id_data, std::unique_ptr<wreport::Var> var)>) = 0;
+    virtual void run_station_data_query(
+        Tracer<>& trc, const v7::DataQueryBuilder& qb,
+        std::function<void(const dballe::DBStation& station, int id_data,
+                           std::unique_ptr<wreport::Var> var)>) = 0;
 };
 
 struct Data : public DataCommon<DataTraits>
@@ -157,23 +171,36 @@ struct Data : public DataCommon<DataTraits>
     using DataCommon<DataTraits>::DataCommon;
 
     /// Bulk variable insert
-    virtual void insert(Tracer<>& trc, int id_station, const Datetime& datetime, std::vector<batch::MeasuredDatum>& vars, bool with_attrs) = 0;
+    virtual void insert(Tracer<>& trc, int id_station, const Datetime& datetime,
+                        std::vector<batch::MeasuredDatum>& vars,
+                        bool with_attrs) = 0;
 
     /// Query contents of the data table
-    virtual void query(Tracer<>& trc, int id_station, const Datetime& datetime, std::function<void(int id, int id_levtr, wreport::Varcode code)> dest) = 0;
+    virtual void
+    query(Tracer<>& trc, int id_station, const Datetime& datetime,
+          std::function<void(int id, int id_levtr, wreport::Varcode code)>
+              dest) = 0;
 
     /**
      * Run a data query, iterating on the resulting variables
      */
-    virtual void run_data_query(Tracer<>& trc, const v7::DataQueryBuilder& qb, std::function<void(const dballe::DBStation& station, int id_levtr, const Datetime& datetime, int id_data, std::unique_ptr<wreport::Var> var)>) = 0;
+    virtual void run_data_query(
+        Tracer<>& trc, const v7::DataQueryBuilder& qb,
+        std::function<void(const dballe::DBStation& station, int id_levtr,
+                           const Datetime& datetime, int id_data,
+                           std::unique_ptr<wreport::Var> var)>) = 0;
 
     /**
      * Run a summary query, iterating on the resulting variables
      */
-    virtual void run_summary_query(Tracer<>& trc, const v7::SummaryQueryBuilder& qb, std::function<void(const dballe::DBStation& station, int id_levtr, wreport::Varcode code, const DatetimeRange& datetime, size_t size)>) = 0;
+    virtual void run_summary_query(
+        Tracer<>& trc, const v7::SummaryQueryBuilder& qb,
+        std::function<void(const dballe::DBStation& station, int id_levtr,
+                           wreport::Varcode code, const DatetimeRange& datetime,
+                           size_t size)>) = 0;
 };
 
-}
-}
-}
+} // namespace v7
+} // namespace db
+} // namespace dballe
 #endif

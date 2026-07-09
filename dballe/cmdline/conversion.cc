@@ -1,10 +1,10 @@
 #include "conversion.h"
-#include "processor.h"
+#include "dballe/exporter.h"
 #include "dballe/file.h"
 #include "dballe/message.h"
-#include "dballe/exporter.h"
-#include "dballe/msg/msg.h"
 #include "dballe/msg/context.h"
+#include "dballe/msg/msg.h"
+#include "processor.h"
 
 #include <wreport/bulletin.h>
 
@@ -16,51 +16,67 @@ namespace cmdline {
 
 Converter::~Converter()
 {
-    if (file) delete file;
-    if (exporter) delete exporter;
+    if (file)
+        delete file;
+    if (exporter)
+        delete exporter;
 }
 
-void Converter::set_exporter(dballe::Encoding encoding, const impl::ExporterOptions& opts)
+void Converter::set_exporter(dballe::Encoding encoding,
+                             const impl::ExporterOptions& opts)
 {
-    exporter = Exporter::create(encoding, opts).release();
+    exporter  = Exporter::create(encoding, opts).release();
     bexporter = dynamic_cast<const BulletinExporter*>(exporter);
 }
 
-void Converter::process_bufrex_msg(const BinaryMessage& orig, const Bulletin& msg)
+void Converter::process_bufrex_msg(const BinaryMessage& orig,
+                                   const Bulletin& msg)
 {
     string raw;
-    try {
+    try
+    {
         raw = msg.encode();
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         throw ProcessingException(orig.pathname, orig.index, e);
     }
     file->write(raw);
 }
 
-void Converter::process_dba_msg(const BinaryMessage& orig, const std::vector<std::shared_ptr<dballe::Message>>& msgs)
+void Converter::process_dba_msg(
+    const BinaryMessage& orig,
+    const std::vector<std::shared_ptr<dballe::Message>>& msgs)
 {
     string raw;
-    try {
+    try
+    {
         raw = exporter->to_binary(msgs);
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         throw ProcessingException(orig.pathname, orig.index, e);
     }
     file->write(raw);
 }
 
-// Recompute data_category and data_subcategory according to WMO international values
-static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const std::vector<std::shared_ptr<dballe::Message>>& msgs)
+// Recompute data_category and data_subcategory according to WMO international
+// values
+static void compute_wmo_categories(
+    Bulletin& b, const Bulletin& orig,
+    const std::vector<std::shared_ptr<dballe::Message>>& msgs)
 {
-    b.data_category = orig.data_category;
+    b.data_category          = orig.data_category;
     b.data_subcategory_local = 255;
     switch (orig.data_category)
     {
-        case 0:
-        {
+        case 0: {
             // BC01-SYNOP
             // Get the hour from the first message
             // Default to 1 to simulate an odd observation time
-            int hour = msgs[0]->get_datetime().is_missing() ? 1 : msgs[0]->get_datetime().hour;
+            int hour = msgs[0]->get_datetime().is_missing()
+                           ? 1
+                           : msgs[0]->get_datetime().hour;
 
             if ((hour % 6) == 0)
                 // 002 at main synoptic times 00, 06, 12, 18 UTC,
@@ -69,14 +85,16 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const std:
                 // 001 at intermediate synoptic times 03, 09, 15, 21 UTC,
                 b.data_subcategory = 1;
             else
-                // 000 at observation times 01, 02, 04, 05, 07, 08, 10, 11, 13, 14, 16, 17, 19, 20, 22 and 23 UTC.
+                // 000 at observation times 01, 02, 04, 05, 07, 08, 10, 11, 13,
+                // 14, 16, 17, 19, 20, 22 and 23 UTC.
                 b.data_subcategory = 0;
             break;
         }
         case 1:
             // BC10-SHIP
-            // If required, the international data sub-category shall be included for SHIP data as 000 at all
-            // observation times 00, 01, 02, ..., 23 UTC.
+            // If required, the international data sub-category shall be
+            // included for SHIP data as 000 at all observation times 00, 01,
+            // 02, ..., 23 UTC.
             b.data_subcategory = 0;
             break;
         case 2:
@@ -87,8 +105,9 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const std:
                 // 001 for PILOT data,
                 case MessageType::PILOT:
                     b.data_subcategory = 1;
-                    // ncdf_pilot     =  4 ,& ! indicator for proc. NetCDF PILOT (z-levels)   input
-                    // ncdf_pilot_p   =  5 ,& ! indicator for proc. NetCDF PILOT (p-levels)   input
+                    // ncdf_pilot     =  4 ,& ! indicator for proc. NetCDF PILOT
+                    // (z-levels)   input ncdf_pilot_p   =  5 ,& ! indicator for
+                    // proc. NetCDF PILOT (p-levels)   input
                     break;
                 // 002 for PILOT SHIP data, (TODO)
                 // 003 for PILOT MOBIL data. (TODO)
@@ -98,8 +117,10 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const std:
                 case MessageType::TEMP_SHIP: b.data_subcategory = 5; break;
                 // 006 for TEMP MOBIL data (TODO)
                 // Default to TEMP
-                default: b.data_subcategory = 4; break;
-                // TODO-items are not supported since I have never seen one
+                default:
+                    b.data_subcategory = 4;
+                    break;
+                    // TODO-items are not supported since I have never seen one
             }
             break;
         // Missing data from this onwards
@@ -108,37 +129,40 @@ static void compute_wmo_categories(Bulletin& b, const Bulletin& orig, const std:
             switch (msgs[0]->get_type())
             {
                 case MessageType::AIREP: b.data_subcategory = 1; break;
-                default: b.data_subcategory = 0; break;
+                default:                 b.data_subcategory = 0; break;
             }
             break;
-        case 5: b.data_subcategory = 0; break;
-        case 6: b.data_subcategory = 0; break;
-        case 7: b.data_subcategory = 0; break;
-        case 8: b.data_subcategory = 0; break;
-        case 9: b.data_subcategory = 0; break;
-        case 10: b.data_subcategory = 1; break;
-        case 12: b.data_subcategory = 0; break;
-        case 21: b.data_subcategory = 5; break;
-        case 31: b.data_subcategory = 0; break;
+        case 5:   b.data_subcategory = 0; break;
+        case 6:   b.data_subcategory = 0; break;
+        case 7:   b.data_subcategory = 0; break;
+        case 8:   b.data_subcategory = 0; break;
+        case 9:   b.data_subcategory = 0; break;
+        case 10:  b.data_subcategory = 1; break;
+        case 12:  b.data_subcategory = 0; break;
+        case 21:  b.data_subcategory = 5; break;
+        case 31:  b.data_subcategory = 0; break;
         case 101: b.data_subcategory = 7; break;
-        default: b.data_subcategory = 255; break;
+        default:  b.data_subcategory = 255; break;
     }
 }
 
 // Compute local data_subcategory to tell bufr2netcdf output files apart using
 // lokal-specific categorisation
-static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, const std::vector<std::shared_ptr<dballe::Message>>& msgs)
+static void compute_bufr2netcdf_categories(
+    Bulletin& b, const Bulletin& orig,
+    const std::vector<std::shared_ptr<dballe::Message>>& msgs)
 {
     switch (orig.data_category)
     {
         case 0:
-            // Force data_subcategory to 0, as bufr2netcdf processing doesn't need the
-            // hour distinction
-            b.data_subcategory = 0;
+            // Force data_subcategory to 0, as bufr2netcdf processing doesn't
+            // need the hour distinction
+            b.data_subcategory       = 0;
             // 13 for fixed stations
             // 14 for mobile stations
             b.data_subcategory_local = 13;
-            if (const wreport::Var* v = impl::Message::downcast(msgs[0])->get_ident_var())
+            if (const wreport::Var* v =
+                    impl::Message::downcast(msgs[0])->get_ident_var())
                 if (v->isset())
                     b.data_subcategory_local = 14;
             break;
@@ -148,9 +172,9 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
                 // 4 for z-level pilots
                 // 5 for p-level pilots
                 // Arbitrary default to z-level pilots
-                auto msg = impl::Message::downcast(msgs[0]);
+                auto msg                 = impl::Message::downcast(msgs[0]);
                 b.data_subcategory_local = 4;
-                for (const auto& ctx: msg->data)
+                for (const auto& ctx : msg->data)
                 {
                     switch (ctx.level.ltype1)
                     {
@@ -169,32 +193,39 @@ static void compute_bufr2netcdf_categories(Bulletin& b, const Bulletin& orig, co
             {
                 case MessageType::AMDAR: b.data_subcategory_local = 8; break;
                 case MessageType::ACARS: b.data_subcategory_local = 9; break;
-                default: break;
+                default:                 break;
             }
             break;
     }
 }
 
-
-void Converter::process_dba_msg_from_bulletin(const BinaryMessage& orig, const Bulletin& bulletin, const std::vector<std::shared_ptr<dballe::Message>>& msgs)
+void Converter::process_dba_msg_from_bulletin(
+    const BinaryMessage& orig, const Bulletin& bulletin,
+    const std::vector<std::shared_ptr<dballe::Message>>& msgs)
 {
     if (!bexporter)
-        throw error_consistency("process_dba_msg_from_bulletin called with a non-bulleting exporter");
+        throw error_consistency("process_dba_msg_from_bulletin called with a "
+                                "non-bulleting exporter");
     string raw;
-    try {
+    try
+    {
         unique_ptr<Bulletin> b1 = bexporter->to_bulletin(msgs);
         if (bufr2netcdf_categories)
         {
             compute_wmo_categories(*b1, bulletin, msgs);
             compute_bufr2netcdf_categories(*b1, bulletin, msgs);
-        } else {
-            b1->data_category = bulletin.data_category;
-            b1->data_subcategory = bulletin.data_subcategory;
+        }
+        else
+        {
+            b1->data_category          = bulletin.data_category;
+            b1->data_subcategory       = bulletin.data_subcategory;
             b1->data_subcategory_local = bulletin.data_subcategory_local;
         }
 
         raw = b1->encode();
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         throw ProcessingException(orig.pathname, orig.index, e);
     }
     file->write(raw);
@@ -204,35 +235,45 @@ bool Converter::operator()(const cmdline::Item& item)
 {
     if (item.msgs == NULL || item.msgs->size() == 0)
     {
-        fprintf(stderr, "No interpreted information available: is a recoding enough?\n");
+        fprintf(
+            stderr,
+            "No interpreted information available: is a recoding enough?\n");
         // See if we can just recode the raw data
 
         // We want bufrex raw data
         if (item.bulletin == NULL)
         {
-            fprintf(stderr, "No BUFREX raw data to attempt low-level bufrex recoding\n");
+            fprintf(
+                stderr,
+                "No BUFREX raw data to attempt low-level bufrex recoding\n");
             return false;
         }
 
         // No report override
         if (dest_rep_memo != NULL)
         {
-            fprintf(stderr, "report override not allowed for low-level bufrex recoding\n");
+            fprintf(
+                stderr,
+                "report override not allowed for low-level bufrex recoding\n");
             return false;
         }
 
         // No template change
         if (dest_template != NULL)
         {
-            fprintf(stderr, "template change not supported for low-level bufrex recoding\n");
+            fprintf(stderr, "template change not supported for low-level "
+                            "bufrex recoding\n");
             return false;
         }
 
         // Same encoding
-        if ((file->encoding() == Encoding::BUFR && string(item.bulletin->encoding_name()) == "CREX")
-                || (file->encoding() == Encoding::CREX && string(item.bulletin->encoding_name()) == "BUFR"))
+        if ((file->encoding() == Encoding::BUFR &&
+             string(item.bulletin->encoding_name()) == "CREX") ||
+            (file->encoding() == Encoding::CREX &&
+             string(item.bulletin->encoding_name()) == "BUFR"))
         {
-            fprintf(stderr, "encoding change not yet supported for low-level bufrex recoding\n");
+            fprintf(stderr, "encoding change not yet supported for low-level "
+                            "bufrex recoding\n");
             return false;
         }
 
@@ -246,7 +287,7 @@ bool Converter::operator()(const cmdline::Item& item)
     {
         // Force message type (will also influence choice of template later)
         MessageType type = impl::Message::type_from_repmemo(dest_rep_memo);
-        for (auto& msg: *item.msgs)
+        for (auto& msg : *item.msgs)
             impl::Message::downcast(msg)->type = type;
     }
 
@@ -258,5 +299,5 @@ bool Converter::operator()(const cmdline::Item& item)
     return true;
 }
 
-}
-}
+} // namespace cmdline
+} // namespace dballe

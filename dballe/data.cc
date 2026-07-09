@@ -11,5 +11,4 @@ std::unique_ptr<Data> Data::create()
     return unique_ptr<Data>(new core::Data);
 }
 
-}
-
+} // namespace dballe

@@ -1,6 +1,6 @@
-#include "dballe/msg/msg.h"
-#include "dballe/db/tests.h"
 #include "config.h"
+#include "dballe/db/tests.h"
+#include "dballe/msg/msg.h"
 #include <cstring>
 
 using namespace dballe;
@@ -21,9 +21,7 @@ class Tests : public TestCase
 void Tests::register_tests()
 {
 
-add_method("empty", []() noexcept {
-});
-
+    add_method("empty", []() noexcept {});
 }
 
-}
+} // namespace

@@ -7,11 +7,11 @@
  * Sorted storage for all the dba_msg_datum present on one level.
  */
 
-#include <dballe/var.h>
 #include <dballe/types.h>
 #include <dballe/values.h>
-#include <vector>
+#include <dballe/var.h>
 #include <memory>
+#include <vector>
 
 namespace dballe {
 namespace impl {
@@ -35,10 +35,10 @@ public:
 
     Context(const Level& lev, const Trange& tr);
     Context(const Context& c) = default;
-    Context(Context&& c) = default;
+    Context(Context&& c)      = default;
 
     Context& operator=(const Context& src) = default;
-    Context& operator=(Context&& src) = default;
+    Context& operator=(Context&& src)      = default;
 
     /**
      * Compare two dba_msg_context strutures, for use in sorting.
@@ -88,8 +88,8 @@ public:
     unsigned diff(const Context& ctx) const;
 };
 
-}
-}
-}
+} // namespace msg
+} // namespace impl
+} // namespace dballe
 
 #endif

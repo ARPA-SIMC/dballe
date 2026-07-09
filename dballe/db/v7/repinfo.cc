@@ -1,9 +1,9 @@
 #include "repinfo.h"
-#include "dballe/db/db.h"
-#include "dballe/core/query.h"
 #include "dballe/core/csv.h"
-#include <wreport/error.h>
+#include "dballe/core/query.h"
+#include "dballe/db/db.h"
 #include <algorithm>
+#include <wreport/error.h>
 
 using namespace wreport;
 using namespace std;
@@ -12,10 +12,7 @@ namespace dballe {
 namespace db {
 namespace v7 {
 
-Repinfo::Repinfo(dballe::sql::Connection& conn)
-    : conn(conn)
-{
-}
+Repinfo::Repinfo(dballe::sql::Connection& conn) : conn(conn) {}
 
 const char* Repinfo::get_rep_memo(int id)
 {
@@ -32,10 +29,12 @@ int Repinfo::get_id(const char* memo)
         lc_memo[i] = tolower(memo[i]);
     lc_memo[i] = 0;
 
-    if (memo_idx.empty()) rebuild_memo_idx();
+    if (memo_idx.empty())
+        rebuild_memo_idx();
 
     int pos = cache_find_by_memo(lc_memo);
-    if (pos == -1) return -1;
+    if (pos == -1)
+        return -1;
     return memo_idx[pos].id;
 }
 
@@ -49,7 +48,7 @@ std::map<std::string, int> Repinfo::get_priorities()
 {
     std::map<std::string, int> res;
     for (std::vector<repinfo::Cache>::const_iterator i = cache.begin();
-            i != cache.end(); ++i)
+         i != cache.end(); ++i)
         res[i->memo] = i->prio;
     return res;
 }
@@ -62,7 +61,8 @@ int Repinfo::obtain_id(const char* memo)
         lc_memo[i] = tolower(memo[i]);
     lc_memo[i] = 0;
 
-    if (memo_idx.empty()) rebuild_memo_idx();
+    if (memo_idx.empty())
+        rebuild_memo_idx();
 
     int pos = cache_find_by_memo(lc_memo);
     if (pos == -1)
@@ -78,10 +78,12 @@ std::vector<int> Repinfo::ids_by_prio(const core::Query& q)
 {
     vector<int> res;
     for (std::vector<repinfo::Cache>::const_iterator i = cache.begin();
-            i != cache.end(); ++i)
+         i != cache.end(); ++i)
     {
-        if (q.priomin != MISSING_INT && i->prio < q.priomin) continue;
-        if (q.priomax != MISSING_INT && i->prio > q.priomax) continue;
+        if (q.priomin != MISSING_INT && i->prio < q.priomin)
+            continue;
+        if (q.priomax != MISSING_INT && i->prio > q.priomax)
+            continue;
         res.push_back(i->id);
     }
 
@@ -97,7 +99,8 @@ const repinfo::Cache* Repinfo::get_by_id(unsigned id) const
 const repinfo::Cache* Repinfo::get_by_memo(const char* memo) const
 {
     int pos = cache_find_by_memo(memo);
-    if (pos == -1) return NULL;
+    if (pos == -1)
+        return NULL;
     return get_by_id(memo_idx[pos].id);
 }
 
@@ -141,13 +144,15 @@ int Repinfo::cache_find_by_memo(const char* memo) const
         return begin;
 }
 
-void Repinfo::cache_append(unsigned id, const char* memo, const char* desc, int prio, const char* descriptor, int tablea)
+void Repinfo::cache_append(unsigned id, const char* memo, const char* desc,
+                           int prio, const char* descriptor, int tablea)
 {
     /* Ensure that we are adding things in order */
     if (!cache.empty() && cache.back().id >= id)
         error_consistency::throwf(
-                "checking that value to append to repinfo cache (%u) "
-                "is greather than the last value in che cache (%u)", id, (unsigned)cache.back().id);
+            "checking that value to append to repinfo cache (%u) "
+            "is greather than the last value in che cache (%u)",
+            id, (unsigned)cache.back().id);
 
     memo_idx.clear();
 
@@ -162,7 +167,7 @@ void Repinfo::rebuild_memo_idx() const
     for (size_t i = 0; i < cache.size(); ++i)
     {
         memo_idx[i].memo = cache[i].memo;
-        memo_idx[i].id = cache[i].id;
+        memo_idx[i].id   = cache[i].id;
     }
     std::sort(memo_idx.begin(), memo_idx.end());
 }
@@ -180,7 +185,7 @@ inline void inplace_tolower(std::string& buf)
     for (string::iterator i = buf.begin(); i != buf.end(); ++i)
         *i = tolower(*i);
 }
-}
+} // namespace
 
 std::vector<repinfo::Cache> Repinfo::read_repinfo_file(const char* deffile)
 {
@@ -202,25 +207,30 @@ std::vector<repinfo::Cache> Repinfo::read_repinfo_file(const char* deffile)
         int id, pos;
 
         if (columns.size() != 6)
-            error_parse::throwf(deffile, line, "Expected 6 columns, got %zd", columns.size());
+            error_parse::throwf(deffile, line, "Expected 6 columns, got %zd",
+                                columns.size());
 
         // Lowercase all rep_memos
         inplace_tolower(columns[1]);
 
-        id = strtol(columns[0].c_str(), 0, 10);
+        id  = strtol(columns[0].c_str(), 0, 10);
         pos = cache_find_by_id(id);
         if (pos == -1)
         {
             /* New entry */
-            newitems.push_back(repinfo::Cache(id, columns[1], columns[2], strtol(columns[3].c_str(), 0, 10), columns[4], strtol(columns[5].c_str(), 0, 10)));
+            newitems.push_back(repinfo::Cache(
+                id, columns[1], columns[2], strtol(columns[3].c_str(), 0, 10),
+                columns[4], strtol(columns[5].c_str(), 0, 10)));
             newitems.back().make_new();
-        } else {
+        }
+        else
+        {
             /* Possible update on an existing entry */
-            cache[pos].new_memo = columns[1];
-            cache[pos].new_desc = columns[2];
-            cache[pos].new_prio = strtol(columns[3].c_str(), 0, 10);
+            cache[pos].new_memo       = columns[1];
+            cache[pos].new_desc       = columns[2];
+            cache[pos].new_prio       = strtol(columns[3].c_str(), 0, 10);
             cache[pos].new_descriptor = columns[4];
-            cache[pos].new_tablea = strtol(columns[5].c_str(), 0, 10);
+            cache[pos].new_tablea     = strtol(columns[5].c_str(), 0, 10);
         }
     }
 
@@ -231,10 +241,10 @@ std::vector<repinfo::Cache> Repinfo::read_repinfo_file(const char* deffile)
         if (cache[i].memo.empty() || cache[i].new_memo.empty())
             continue;
         if (cache[i].memo != cache[i].new_memo)
-            error_consistency::throwf("cannot rename rep_cod %d (previous rep_memo was %s, new rep_memo is %s)",
-                    (int)cache[i].id,
-                    cache[i].memo.c_str(),
-                    cache[i].new_memo.c_str());
+            error_consistency::throwf("cannot rename rep_cod %d (previous "
+                                      "rep_memo was %s, new rep_memo is %s)",
+                                      (int)cache[i].id, cache[i].memo.c_str(),
+                                      cache[i].new_memo.c_str());
         for (size_t j = i + 1; j < cache.size(); ++j)
         {
             /* Skip empty items or items that will be deleted */
@@ -242,33 +252,32 @@ std::vector<repinfo::Cache> Repinfo::read_repinfo_file(const char* deffile)
                 continue;
             if (cache[j].new_prio == cache[i].new_prio)
                 error_consistency::throwf("%s has the same priority (%d) as %s",
-                        cache[j].new_memo.c_str(),
-                        (int)cache[j].new_prio,
-                        cache[i].new_memo.c_str());
+                                          cache[j].new_memo.c_str(),
+                                          (int)cache[j].new_prio,
+                                          cache[i].new_memo.c_str());
         }
         for (vector<repinfo::Cache>::const_iterator j = newitems.begin();
-                j != newitems.end(); ++j)
+             j != newitems.end(); ++j)
         {
             if (j->new_prio == cache[i].new_prio)
                 error_consistency::throwf("%s has the same priority (%d) as %s",
-                        j->new_memo.c_str(),
-                        (int)j->new_prio,
-                        cache[i].new_memo.c_str());
+                                          j->new_memo.c_str(), (int)j->new_prio,
+                                          cache[i].new_memo.c_str());
         }
     }
     for (vector<repinfo::Cache>::const_iterator i = newitems.begin();
-            i != newitems.end(); ++i)
+         i != newitems.end(); ++i)
     {
         /*fprintf(stderr, "prio %d\n", cur->item.new_prio);*/
         for (vector<repinfo::Cache>::const_iterator j = i + 1;
-                j != newitems.end(); ++j)
+             j != newitems.end(); ++j)
         {
             if (i->new_prio == j->new_prio)
                 error_consistency::throwf("%s has the same priority (%d) as %s",
-                        i->new_memo.c_str(), (int)i->new_prio, j->new_memo.c_str());
+                                          i->new_memo.c_str(), (int)i->new_prio,
+                                          j->new_memo.c_str());
         }
     }
-
 
     /*
     fprintf(stderr, "POST PARSE:\n");
@@ -279,7 +288,8 @@ std::vector<repinfo::Cache> Repinfo::read_repinfo_file(const char* deffile)
     return newitems;
 }
 
-void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated)
+void Repinfo::update(const char* deffile, int* added, int* deleted,
+                     int* updated)
 {
     *added = *deleted = *updated = 0;
 
@@ -290,12 +300,14 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
     // in use
     for (const auto& entry : cache)
     {
-        /* Ensure that we are not deleting a repinfo entry that is already in use */
+        /* Ensure that we are not deleting a repinfo entry that is already in
+         * use */
         if (!entry.memo.empty() && entry.new_memo.empty())
             if (id_use_count(entry.id, entry.memo.c_str()) > 0)
-                error_consistency::throwf(
-                        "trying to delete repinfo entry %u,%s which is currently in use",
-                        (unsigned)entry.id, entry.memo.c_str());
+                error_consistency::throwf("trying to delete repinfo entry "
+                                          "%u,%s which is currently in use",
+                                          (unsigned)entry.id,
+                                          entry.memo.c_str());
     }
 
     // Perform the changes
@@ -307,7 +319,9 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
             // Delete the items that were deleted */
             delete_entry(entry.id);
             ++*deleted;
-        } else if (!entry.memo.empty() && !entry.new_memo.empty()) {
+        }
+        else if (!entry.memo.empty() && !entry.new_memo.empty())
+        {
             // Update the items that were modified
             update_entry(entry);
             ++*updated;
@@ -327,35 +341,33 @@ void Repinfo::update(const char* deffile, int* added, int* deleted, int* updated
 
 namespace repinfo {
 
-Cache::Cache(int id, const std::string& memo, const std::string& desc, int prio, const std::string& descriptor, int tablea)
-    : id(id), memo(memo), desc(desc), prio(prio), descriptor(descriptor), tablea(tablea),
-      new_prio(0), new_tablea(0)
+Cache::Cache(int id, const std::string& memo, const std::string& desc, int prio,
+             const std::string& descriptor, int tablea)
+    : id(id), memo(memo), desc(desc), prio(prio), descriptor(descriptor),
+      tablea(tablea), new_prio(0), new_tablea(0)
 {
 }
 
 void Cache::make_new()
 {
-    new_memo = memo;
-    new_desc = desc;
-    new_prio = prio;
+    new_memo       = memo;
+    new_desc       = desc;
+    new_prio       = prio;
     new_descriptor = descriptor;
-    new_tablea = tablea;
+    new_tablea     = tablea;
 }
 
 void Cache::dump(FILE* out) const
 {
-    fprintf(stderr, "%u: %s %s %d %s %u (%s %s %d %s %u)\n",
-            id, memo.c_str(), desc.c_str(), prio, descriptor.c_str(), tablea,
-            new_memo.c_str(), new_desc.c_str(), new_prio, new_descriptor.c_str(), new_tablea);
+    fprintf(stderr, "%u: %s %s %d %s %u (%s %s %d %s %u)\n", id, memo.c_str(),
+            desc.c_str(), prio, descriptor.c_str(), tablea, new_memo.c_str(),
+            new_desc.c_str(), new_prio, new_descriptor.c_str(), new_tablea);
 }
 
-bool Memoidx::operator<(const Memoidx& val) const
-{
-    return memo < val.memo;
-}
+bool Memoidx::operator<(const Memoidx& val) const { return memo < val.memo; }
 
-}
+} // namespace repinfo
 
-}
-}
-}
+} // namespace v7
+} // namespace db
+} // namespace dballe

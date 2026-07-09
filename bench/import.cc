@@ -1,6 +1,6 @@
+#include <dballe/core/benchmark.h>
 #include <dballe/db/db.h>
 #include <dballe/file.h>
-#include <dballe/core/benchmark.h>
 #include <dballe/msg/msg.h>
 #include <vector>
 
@@ -13,11 +13,12 @@ struct BenchmarkImport : public dballe::benchmark::Task
     unsigned hours;
     unsigned minutes;
 
-    BenchmarkImport(const char* name, const char* pathname, unsigned hours=24, unsigned minutes=1)
+    BenchmarkImport(const char* name, const char* pathname, unsigned hours = 24,
+                    unsigned minutes = 1)
         : m_name(name), m_pathname(pathname), hours(hours), minutes(minutes)
     {
         auto options = dballe::DBConnectOptions::test_create();
-        db = dballe::db::DB::downcast(dballe::DB::connect(*options));
+        db           = dballe::db::DB::downcast(dballe::DB::connect(*options));
     }
 
     const char* name() const override { return m_name; }
@@ -33,21 +34,20 @@ struct BenchmarkImport : public dballe::benchmark::Task
             for (unsigned month = 1; month <= 12; ++month)
                 for (unsigned hour = 0; hour < hours; ++hour)
                     for (unsigned minute = 0; minute < minutes; ++minute)
-                        messages.duplicate(size, dballe::Datetime(year, month, 1, hour, minute));
+                        messages.duplicate(
+                            size,
+                            dballe::Datetime(year, month, 1, hour, minute));
     }
 
     void run_once() override
     {
         auto tr = db->transaction();
-        for (const auto& msgs: messages)
+        for (const auto& msgs : messages)
             tr->import_messages(msgs);
         tr->commit();
     }
 
-    void teardown() override
-    {
-        db->remove_all();
-    }
+    void teardown() override { db->remove_all(); }
 };
 
 int main(int argc, const char* argv[])
@@ -62,7 +62,7 @@ int main(int argc, const char* argv[])
     Benchmark benchmark;
     dballe::benchmark::Whitelist whitelist(argc, argv);
 
-    for (auto task: tasks)
+    for (auto task : tasks)
         if (whitelist.has(task->name()))
             benchmark.timeit(*task);
 

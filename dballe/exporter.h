@@ -1,12 +1,12 @@
 #ifndef DBALLE_EXPORTER_H
 #define DBALLE_EXPORTER_H
 
+#include <cstdio>
 #include <dballe/fwd.h>
-#include <vector>
+#include <functional>
 #include <memory>
 #include <string>
-#include <cstdio>
-#include <functional>
+#include <vector>
 
 namespace wreport {
 struct Bulletin;
@@ -27,12 +27,11 @@ public:
     /// Name of template to use for output (leave empty to autodetect)
     std::string template_name;
     /// Originating centre
-    int centre = MISSING_INT;
+    int centre      = MISSING_INT;
     /// Originating subcentre
-    int subcentre = MISSING_INT;
+    int subcentre   = MISSING_INT;
     /// Originating application ID
     int application = MISSING_INT;
-
 
     bool operator==(const ExporterOptions&) const;
     bool operator!=(const ExporterOptions&) const;
@@ -52,13 +51,12 @@ public:
 
 protected:
     /// Create new Options initialised with default values
-    ExporterOptions() = default;
-    ExporterOptions(const ExporterOptions&) = default;
-    ExporterOptions(ExporterOptions&&) = default;
+    ExporterOptions()                                  = default;
+    ExporterOptions(const ExporterOptions&)            = default;
+    ExporterOptions(ExporterOptions&&)                 = default;
     ExporterOptions& operator=(const ExporterOptions&) = default;
-    ExporterOptions& operator=(ExporterOptions&&) = default;
+    ExporterOptions& operator=(ExporterOptions&&)      = default;
 };
-
 
 /**
  * Message exporter interface
@@ -72,11 +70,11 @@ protected:
 
 public:
     Exporter(const Exporter&) = delete;
-    Exporter(Exporter&&) = delete;
+    Exporter(Exporter&&)      = delete;
     virtual ~Exporter();
 
     Exporter& operator=(const Exporter&) = delete;
-    Exporter& operator=(Exporter&&) = delete;
+    Exporter& operator=(Exporter&&)      = delete;
 
     /**
      * Encode a message
@@ -86,12 +84,14 @@ public:
      * @returns
      *   The resulting encoded data
      */
-    virtual std::string to_binary(const std::vector<std::shared_ptr<Message>>& messages) const = 0;
+    virtual std::string
+    to_binary(const std::vector<std::shared_ptr<Message>>& messages) const = 0;
 
     /**
      * Export to a Bulletin
      */
-    virtual std::unique_ptr<wreport::Bulletin> to_bulletin(const std::vector<std::shared_ptr<Message>>& msgs) const;
+    virtual std::unique_ptr<wreport::Bulletin>
+    to_bulletin(const std::vector<std::shared_ptr<Message>>& msgs) const;
 
     /**
      * Create a bulletin that works with this exporter.
@@ -101,9 +101,10 @@ public:
      */
     virtual std::unique_ptr<wreport::Bulletin> make_bulletin() const;
 
-
     /// Instantiate the right importer for the given type
-    static std::unique_ptr<Exporter> create(Encoding type, const ExporterOptions& opts=ExporterOptions::defaults);
+    static std::unique_ptr<Exporter>
+    create(Encoding type,
+           const ExporterOptions& opts = ExporterOptions::defaults);
 };
 
 class BulletinExporter : public Exporter
@@ -114,9 +115,10 @@ public:
     /**
      * Export to a Bulletin
      */
-    std::unique_ptr<wreport::Bulletin> to_bulletin(const std::vector<std::shared_ptr<Message>>& msgs) const override = 0;
+    std::unique_ptr<wreport::Bulletin> to_bulletin(
+        const std::vector<std::shared_ptr<Message>>& msgs) const override = 0;
 };
 
-}
+} // namespace dballe
 
 #endif

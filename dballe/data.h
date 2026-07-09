@@ -3,8 +3,8 @@
 
 #include <dballe/fwd.h>
 #include <dballe/types.h>
-#include <wreport/var.h>
 #include <memory>
+#include <wreport/var.h>
 
 namespace dballe {
 
@@ -17,12 +17,12 @@ namespace dballe {
 class Data
 {
 public:
-    Data() = default;
+    Data()            = default;
     Data(const Data&) = default;
-    Data(Data&&) = default;
+    Data(Data&&)      = default;
     virtual ~Data() {}
     Data& operator=(const Data& o) = default;
-    Data& operator=(Data&& o) = default;
+    Data& operator=(Data&& o)      = default;
 
     /// Create a new Record
     static std::unique_ptr<Data> create();
@@ -46,6 +46,5 @@ public:
     virtual void print(FILE* out) const = 0;
 };
 
-}
+} // namespace dballe
 #endif
-

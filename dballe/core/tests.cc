@@ -1,10 +1,10 @@
 #include "tests.h"
 #include "matcher.h"
-#include <wreport/utils/string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <pwd.h>
 #include <fnmatch.h>
+#include <pwd.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <wreport/utils/string.h>
 
 using namespace wreport;
 using namespace dballe::tests;
@@ -16,44 +16,16 @@ namespace tests {
 static std::string tag;
 
 const static Varcode generator_varcodes[] = {
-	WR_VAR(0,  1,   1),
-	WR_VAR(0,  1,   2),
-	WR_VAR(0,  1,   8),
-	WR_VAR(0,  1,  11),
-	WR_VAR(0,  1,  12),
-	WR_VAR(0,  1,  13),
-	WR_VAR(0,  2,   1),
-	WR_VAR(0,  2,   2),
-	WR_VAR(0,  2,   5),
-	WR_VAR(0,  2,  11),
-	WR_VAR(0,  2,  12),
-	WR_VAR(0,  2,  61),
-	WR_VAR(0,  2,  62),
-	WR_VAR(0,  2,  63),
-	WR_VAR(0,  2,  70),
-	WR_VAR(0,  4,   1),
-	WR_VAR(0,  4,   2),
-	WR_VAR(0,  4,   3),
-	WR_VAR(0,  4,   4),
-	WR_VAR(0,  4,   5),
-	WR_VAR(0,  5,   1),
-	WR_VAR(0,  6,   1),
-	WR_VAR(0,  7,  30),
-	WR_VAR(0,  7,   2),
-	WR_VAR(0,  7,  31),
-	WR_VAR(0,  8,   1),
-	WR_VAR(0,  8,   4),
-	WR_VAR(0,  8,  21),
-	WR_VAR(0, 10,   3),
-	WR_VAR(0, 10,   4),
-	WR_VAR(0, 10,  51),
-	WR_VAR(0, 10,  61),
-	WR_VAR(0, 10,  63),
-	WR_VAR(0, 10, 197),
-	WR_VAR(0, 11,   1),
-	WR_VAR(0, 11,   2),
-	WR_VAR(0, 11,   3),
-	WR_VAR(0, 11,   4),
+    WR_VAR(0, 1, 1),   WR_VAR(0, 1, 2),    WR_VAR(0, 1, 8),   WR_VAR(0, 1, 11),
+    WR_VAR(0, 1, 12),  WR_VAR(0, 1, 13),   WR_VAR(0, 2, 1),   WR_VAR(0, 2, 2),
+    WR_VAR(0, 2, 5),   WR_VAR(0, 2, 11),   WR_VAR(0, 2, 12),  WR_VAR(0, 2, 61),
+    WR_VAR(0, 2, 62),  WR_VAR(0, 2, 63),   WR_VAR(0, 2, 70),  WR_VAR(0, 4, 1),
+    WR_VAR(0, 4, 2),   WR_VAR(0, 4, 3),    WR_VAR(0, 4, 4),   WR_VAR(0, 4, 5),
+    WR_VAR(0, 5, 1),   WR_VAR(0, 6, 1),    WR_VAR(0, 7, 30),  WR_VAR(0, 7, 2),
+    WR_VAR(0, 7, 31),  WR_VAR(0, 8, 1),    WR_VAR(0, 8, 4),   WR_VAR(0, 8, 21),
+    WR_VAR(0, 10, 3),  WR_VAR(0, 10, 4),   WR_VAR(0, 10, 51), WR_VAR(0, 10, 61),
+    WR_VAR(0, 10, 63), WR_VAR(0, 10, 197), WR_VAR(0, 11, 1),  WR_VAR(0, 11, 2),
+    WR_VAR(0, 11, 3),  WR_VAR(0, 11, 4),
 };
 
 #if 0
@@ -170,7 +142,8 @@ cleanup:
 std::filesystem::path datafile(const std::string& fname)
 {
     // Skip appending the test data path for pathnames starting with ./
-    if (fname[0] == '.') return fname;
+    if (fname[0] == '.')
+        return fname;
     auto testdatadir = path_from_env("DBA_TESTDATA");
     return testdatadir / fname;
 }
@@ -183,7 +156,7 @@ unique_ptr<File> open_test_data(const char* filename, Encoding type)
 BinaryMessage read_rawmsg(const char* filename, Encoding type)
 {
     unique_ptr<File> f = wcallchecked(open_test_data(filename, type));
-    BinaryMessage res = f->read();
+    BinaryMessage res  = f->read();
     wassert(actual(res).istrue());
     return res;
 }
@@ -236,19 +209,26 @@ core::Query core_query_from_string(const std::string& s)
 
 void ActualMatcherResult::operator==(int expected) const
 {
-    if (expected == _actual) return;
+    if (expected == _actual)
+        return;
     std::stringstream ss;
-    ss << "actual match result is " << matcher::result_format((matcher::Result)_actual) << " but it should be " << matcher::result_format((matcher::Result)expected);
+    ss << "actual match result is "
+       << matcher::result_format((matcher::Result)_actual)
+       << " but it should be "
+       << matcher::result_format((matcher::Result)expected);
     throw TestFailed(ss.str());
 }
 
 void ActualMatcherResult::operator!=(int expected) const
 {
-    if (expected != _actual) return;
+    if (expected != _actual)
+        return;
     std::stringstream ss;
-    ss << "actual match result is " << matcher::result_format((matcher::Result)_actual) << " but it should not be";
+    ss << "actual match result is "
+       << matcher::result_format((matcher::Result)_actual)
+       << " but it should not be";
     throw TestFailed(ss.str());
 }
 
-}
-}
+} // namespace tests
+} // namespace dballe

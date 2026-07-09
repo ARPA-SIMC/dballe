@@ -1,11 +1,11 @@
+#include "config.h"
 #include "dballe/db/tests.h"
-#include "dballe/sql/sql.h"
 #include "dballe/db/v7/db.h"
-#include "dballe/db/v7/transaction.h"
 #include "dballe/db/v7/driver.h"
 #include "dballe/db/v7/repinfo.h"
+#include "dballe/db/v7/transaction.h"
+#include "dballe/sql/sql.h"
 #include <wreport/utils/sys.h>
-#include "config.h"
 
 using namespace dballe;
 using namespace dballe::db;
@@ -15,7 +15,7 @@ using namespace wreport;
 
 namespace {
 
-template<typename DB>
+template <typename DB>
 class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
 {
     using FixtureTestCase<EmptyTransactionFixture<DB>>::FixtureTestCase;
@@ -54,7 +54,9 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             wassert(actual(ri.get_id("synop")) == 1);
 
             int added, deleted, updated;
-            ri.update((string(getenv("DBA_TESTDATA")) + "/test-repinfo1.csv").c_str(), &added, &deleted, &updated);
+            ri.update(
+                (string(getenv("DBA_TESTDATA")) + "/test-repinfo1.csv").c_str(),
+                &added, &deleted, &updated);
 
             wassert(actual(added) == 3);
             wassert(actual(deleted) == 11);
@@ -70,7 +72,9 @@ class Tests : public FixtureTestCase<EmptyTransactionFixture<DB>>
             wassert(actual(ri.get_priority("generic")) == 1000);
 
             int added, deleted, updated;
-            wassert(ri.update((string(getenv("DBA_TESTDATA")) + "/test-repinfo2.csv").c_str(), &added, &deleted, &updated));
+            wassert(ri.update(
+                (string(getenv("DBA_TESTDATA")) + "/test-repinfo2.csv").c_str(),
+                &added, &deleted, &updated));
 
             wassert(actual(added) == 3);
             wassert(actual(deleted) == 11);
@@ -123,4 +127,4 @@ Tests<V7DB> test_psqlv7("db_v7_repinfo_postgresql", "POSTGRESQL");
 Tests<V7DB> test_mysqlv7("db_v7_repinfo_mysql", "MYSQL");
 #endif
 
-}
+} // namespace

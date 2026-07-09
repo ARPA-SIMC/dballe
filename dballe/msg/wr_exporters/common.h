@@ -7,7 +7,7 @@ namespace wreport {
 struct Subset;
 struct Bulletin;
 struct Var;
-}
+} // namespace wreport
 
 namespace dballe {
 namespace impl {
@@ -19,12 +19,14 @@ class ExporterModule
 protected:
     // Subset being written
     wreport::Subset* subset;
-    const Message* msg = 0;
-    const msg::Context* c_ana = 0;
+    const Message* msg                    = 0;
+    const msg::Context* c_ana             = 0;
     const msg::Context* c_surface_instant = 0;
 
-    void add(wreport::Varcode code, const msg::Context* ctx, const Shortcut& shortcut) const;
-    void add(wreport::Varcode code, const msg::Context* ctx, wreport::Varcode srccode) const;
+    void add(wreport::Varcode code, const msg::Context* ctx,
+             const Shortcut& shortcut) const;
+    void add(wreport::Varcode code, const msg::Context* ctx,
+             wreport::Varcode srccode) const;
     void add(wreport::Varcode code, const msg::Context* ctx) const;
     void add(wreport::Varcode code, const wreport::Var* var) const;
 
@@ -110,13 +112,15 @@ public:
      * Add B07032 sensor height, taking the value from the var attributes or
      * the context, as appropriate.
      */
-    void add_sensor_height(const msg::Context& c, const wreport::Var* sample_var=NULL);
+    void add_sensor_height(const msg::Context& c,
+                           const wreport::Var* sample_var = NULL);
 
     /**
      * Add B07032 and B07033 sensor heights, taking the value from the var
      * attributes or the context, as appropriate.
      */
-    void add_marine_sensor_height(const msg::Context& c, const wreport::Var* sample_var=NULL);
+    void add_marine_sensor_height(const msg::Context& c,
+                                  const wreport::Var* sample_var = NULL);
 
     /**
      * Add an extreme temperature group, with the measured value added with the
@@ -141,12 +145,13 @@ public:
      * Add a B04025 or B04025 time period variable, with data taken from its
      * parameters as needed
      */
-    void add_time_period(wreport::Varcode code, const msg::Context& c, const wreport::Var* sample_var, const Trange& tr_std);
+    void add_time_period(wreport::Varcode code, const msg::Context& c,
+                         const wreport::Var* sample_var, const Trange& tr_std);
 };
 
-}
-}
-}
-}
+} // namespace wr
+} // namespace msg
+} // namespace impl
+} // namespace dballe
 
 #endif

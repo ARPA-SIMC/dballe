@@ -4,11 +4,11 @@
 #ifndef DBALLE_SQL_MYSQL_H
 #define DBALLE_SQL_MYSQL_H
 
-#include <dballe/sql/sql.h>
-#include <mysql.h>
 #include <cstdlib>
-#include <vector>
+#include <dballe/sql/sql.h>
 #include <functional>
+#include <mysql.h>
+#include <vector>
 
 namespace dballe {
 namespace sql {
@@ -23,11 +23,12 @@ struct error_mysql : public error_db
 
     error_mysql(MYSQL* db, const std::string& msg);
     error_mysql(const std::string& dbmsg, const std::string& msg);
-    ~error_mysql() throw () {}
+    ~error_mysql() throw() {}
 
     const char* what() const noexcept override { return msg.c_str(); }
 
-    static void throwf(MYSQL* db, const char* fmt, ...) WREPORT_THROWF_ATTRS(2, 3);
+    static void throwf(MYSQL* db, const char* fmt, ...)
+        WREPORT_THROWF_ATTRS(2, 3);
 };
 
 namespace mysql {
@@ -46,14 +47,15 @@ struct ConnectInfo
     // Reset everything to defaults
     void reset();
     void parse_url(const std::string& url);
-    // Modeled after http://dev.mysql.com/doc/connector-j/en/connector-j-reference-configuration-properties.html
+    // Modeled after
+    // http://dev.mysql.com/doc/connector-j/en/connector-j-reference-configuration-properties.html
     std::string to_url() const;
 };
 
 struct Row
 {
     MYSQL_RES* res = nullptr;
-    MYSQL_ROW row = nullptr;
+    MYSQL_ROW row  = nullptr;
 
     Row(MYSQL_RES* res, MYSQL_ROW row) : res(res), row(row) {}
 
@@ -62,12 +64,19 @@ struct Row
     operator MYSQL_ROW() const { return row; }
 
     int as_int(unsigned col) const { return strtol(row[col], 0, 10); }
-    unsigned as_unsigned(unsigned col) const { return strtoul(row[col], 0, 10); }
+    unsigned as_unsigned(unsigned col) const
+    {
+        return strtoul(row[col], 0, 10);
+    }
     const char* as_cstring(unsigned col) const { return row[col]; }
-    std::string as_string(unsigned col) const { return std::string(row[col], mysql_fetch_lengths(res)[col]); }
+    std::string as_string(unsigned col) const
+    {
+        return std::string(row[col], mysql_fetch_lengths(res)[col]);
+    }
     std::vector<uint8_t> as_blob(unsigned col) const
     {
-        return std::vector<uint8_t>(row[col], row[col] + mysql_fetch_lengths(res)[col]);
+        return std::vector<uint8_t>(row[col],
+                                    row[col] + mysql_fetch_lengths(res)[col]);
     }
     Datetime as_datetime(int col) const;
     bool isnull(unsigned col) const { return row[col] == nullptr; }
@@ -79,15 +88,21 @@ struct Result
 
     Result() : res(nullptr) {}
     Result(MYSQL_RES* res) : res(res) {}
-    ~Result() { if (res) mysql_free_result(res); }
+    ~Result()
+    {
+        if (res)
+            mysql_free_result(res);
+    }
 
     /// Implement move
     Result(Result&& o) : res(o.res) { o.res = nullptr; }
     Result& operator=(Result&& o)
     {
-        if (this == &o) return *this;
-        if (res) mysql_free_result(res);
-        res = o.res;
+        if (this == &o)
+            return *this;
+        if (res)
+            mysql_free_result(res);
+        res   = o.res;
         o.res = nullptr;
         return *this;
     }
@@ -115,23 +130,23 @@ struct Result
     Row fetch() { return Row(res, mysql_fetch_row(res)); }
 
     // Prevent copy
-    Result(const Result&) = delete;
+    Result(const Result&)            = delete;
     Result& operator=(const Result&) = delete;
 };
 
-}
-
+} // namespace mysql
 
 /// Database connection
 class MySQLConnection : public Connection
 {
 protected:
     /// Database connection
-    MYSQL* db = nullptr;
+    MYSQL* db   = nullptr;
     /// Marker to catch attempts to reuse connections in forked processes
     bool forked = false;
 
-    void send_result(mysql::Result&& res, std::function<void(const mysql::Row&)> dest);
+    void send_result(mysql::Result&& res,
+                     std::function<void(const mysql::Row&)> dest);
 
 protected:
     void init_after_connect();
@@ -148,17 +163,18 @@ protected:
     void check_connection();
 
 public:
-    MySQLConnection(const MySQLConnection&) = delete;
+    MySQLConnection(const MySQLConnection&)  = delete;
     MySQLConnection(const MySQLConnection&&) = delete;
     ~MySQLConnection();
-    MySQLConnection& operator=(const MySQLConnection&) = delete;
+    MySQLConnection& operator=(const MySQLConnection&)  = delete;
     MySQLConnection& operator=(const MySQLConnection&&) = delete;
 
     static std::shared_ptr<MySQLConnection> create();
 
     operator MYSQL*() { return db; }
 
-    // See http://dev.mysql.com/doc/connector-j/en/connector-j-reference-configuration-properties.html
+    // See
+    // http://dev.mysql.com/doc/connector-j/en/connector-j-reference-configuration-properties.html
     void open_url(const std::string& url);
     void open_test();
 
@@ -183,11 +199,13 @@ public:
     // Run a query, with a locally stored result
     mysql::Result exec_store(const std::string& query);
     // Run a query, with a remotely fetched result
-    void exec_use(const char* query, std::function<void(const mysql::Row&)> dest);
+    void exec_use(const char* query,
+                  std::function<void(const mysql::Row&)> dest);
     // Run a query, with a remotely fetched result
-    void exec_use(const std::string& query, std::function<void(const mysql::Row&)> dest);
+    void exec_use(const std::string& query,
+                  std::function<void(const mysql::Row&)> dest);
 
-    std::unique_ptr<Transaction> transaction(bool readonly=false) override;
+    std::unique_ptr<Transaction> transaction(bool readonly = false) override;
     bool has_table(const std::string& name) override;
     std::string get_setting(const std::string& key) override;
     void set_setting(const std::string& key, const std::string& value) override;
@@ -209,7 +227,6 @@ public:
     int get_last_insert_id();
 };
 
-}
-}
+} // namespace sql
+} // namespace dballe
 #endif
-

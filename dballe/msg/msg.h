@@ -1,19 +1,19 @@
 #ifndef DBALLE_MSG_H
 #define DBALLE_MSG_H
 
-#include <dballe/message.h>
-#include <dballe/var.h>
-#include <dballe/core/fwd.h>
-#include <dballe/msg/fwd.h>
 #include <dballe/core/defs.h>
+#include <dballe/core/fwd.h>
 #include <dballe/core/matcher.h>
-#include <dballe/msg/context.h>
-#include <dballe/importer.h>
 #include <dballe/exporter.h>
+#include <dballe/importer.h>
+#include <dballe/message.h>
+#include <dballe/msg/context.h>
+#include <dballe/msg/fwd.h>
+#include <dballe/var.h>
+#include <iosfwd>
+#include <memory>
 #include <stdio.h>
 #include <vector>
-#include <memory>
-#include <iosfwd>
 
 namespace dballe {
 struct CSVReader;
@@ -26,10 +26,10 @@ struct ImporterOptions : public dballe::ImporterOptions
 {
     ImporterOptions() = default;
     ImporterOptions(const std::string& s) : dballe::ImporterOptions(s) {}
-    ImporterOptions(const ImporterOptions&) = default;
-    ImporterOptions(ImporterOptions&&) = default;
+    ImporterOptions(const ImporterOptions&)            = default;
+    ImporterOptions(ImporterOptions&&)                 = default;
     ImporterOptions& operator=(const ImporterOptions&) = default;
-    ImporterOptions& operator=(ImporterOptions&&) = default;
+    ImporterOptions& operator=(ImporterOptions&&)      = default;
     using dballe::ImporterOptions::operator==;
     using dballe::ImporterOptions::operator!=;
 };
@@ -37,16 +37,17 @@ struct ImporterOptions : public dballe::ImporterOptions
 /// ExporterOptions with default constructor usable
 struct ExporterOptions : public dballe::ExporterOptions
 {
-    ExporterOptions() = default;
-    ExporterOptions(const ExporterOptions&) = default;
-    ExporterOptions(ExporterOptions&&) = default;
+    ExporterOptions()                                  = default;
+    ExporterOptions(const ExporterOptions&)            = default;
+    ExporterOptions(ExporterOptions&&)                 = default;
     ExporterOptions& operator=(const ExporterOptions&) = default;
-    ExporterOptions& operator=(ExporterOptions&&) = default;
+    ExporterOptions& operator=(ExporterOptions&&)      = default;
     using dballe::ExporterOptions::operator==;
     using dballe::ExporterOptions::operator!=;
 };
 
-// Compatibility/shortcut from old Messages implementation to new vector of shared_ptr
+// Compatibility/shortcut from old Messages implementation to new vector of
+// shared_ptr
 typedef std::vector<std::shared_ptr<dballe::Message>> Messages;
 
 namespace msg {
@@ -77,13 +78,13 @@ unsigned messages_diff(const Messages& msgs1, const Messages& msgs2);
 /// Print all the contents of all the messages to an output stream
 void messages_print(const Messages& msgs, FILE* out);
 
-
 class Contexts
 {
 public:
     typedef std::vector<msg::Context>::const_iterator const_iterator;
     typedef std::vector<msg::Context>::iterator iterator;
-    typedef std::vector<msg::Context>::const_reverse_iterator const_reverse_iterator;
+    typedef std::vector<msg::Context>::const_reverse_iterator
+        const_reverse_iterator;
     typedef std::vector<msg::Context>::reverse_iterator reverse_iterator;
 
 protected:
@@ -92,11 +93,11 @@ protected:
     iterator insert_new(const Level& level, const Trange& trange);
 
 public:
-    Contexts() = default;
-    Contexts(const Contexts&) = default;
-    Contexts(Contexts&&) = default;
+    Contexts()                           = default;
+    Contexts(const Contexts&)            = default;
+    Contexts(Contexts&&)                 = default;
     Contexts& operator=(const Contexts&) = default;
-    Contexts& operator=(Contexts&&) = default;
+    Contexts& operator=(Contexts&&)      = default;
 
     const_iterator begin() const { return m_contexts.begin(); }
     const_iterator end() const { return m_contexts.end(); }
@@ -116,13 +117,15 @@ public:
     size_t size() const { return m_contexts.size(); }
     bool empty() const { return m_contexts.empty(); }
     void clear() { return m_contexts.clear(); }
-    void reserve(typename std::vector<Value>::size_type size) { m_contexts.reserve(size); }
+    void reserve(typename std::vector<Value>::size_type size)
+    {
+        m_contexts.reserve(size);
+    }
     iterator erase(iterator pos) { return m_contexts.erase(pos); }
     // iterator erase(const_iterator pos) { return m_contexts.erase(pos); }
 };
 
-}
-
+} // namespace msg
 
 /**
  * Storage for related physical data
@@ -135,19 +138,24 @@ protected:
      */
     int find_index(const Level& lev, const Trange& tr) const;
 
-    const wreport::Var* get_impl(const Level& lev, const Trange& tr, wreport::Varcode code) const override;
-    void set_impl(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var) override;
+    const wreport::Var* get_impl(const Level& lev, const Trange& tr,
+                                 wreport::Varcode code) const override;
+    void set_impl(const Level& lev, const Trange& tr,
+                  std::unique_ptr<wreport::Var> var) override;
 
-    void seti(const Level& lev, const Trange& tr, wreport::Varcode code, int val, int conf);
-    void setd(const Level& lev, const Trange& tr, wreport::Varcode code, double val, int conf);
-    void setc(const Level& lev, const Trange& tr, wreport::Varcode code, const char* val, int conf);
+    void seti(const Level& lev, const Trange& tr, wreport::Varcode code,
+              int val, int conf);
+    void setd(const Level& lev, const Trange& tr, wreport::Varcode code,
+              double val, int conf);
+    void setc(const Level& lev, const Trange& tr, wreport::Varcode code,
+              const char* val, int conf);
 
 public:
-    Message() = default;
-    Message(const Message&) = default;
-    Message(Message&&) = default;
+    Message()                            = default;
+    Message(const Message&)              = default;
+    Message(Message&&)                   = default;
     Message& operator=(const Message& m) = default;
-    Message& operator=(Message&& m) = default;
+    Message& operator=(Message&& m)      = default;
 
     /// Source of the data
     MessageType type = MessageType::GENERIC;
@@ -175,7 +183,8 @@ public:
      *
      * Throws an exception if \a o is not an impl::Message.
      */
-    static std::shared_ptr<Message> downcast(std::shared_ptr<dballe::Message> o);
+    static std::shared_ptr<Message>
+    downcast(std::shared_ptr<dballe::Message> o);
 
     std::shared_ptr<dballe::Message> clone() const override;
     Datetime get_datetime() const override;
@@ -183,7 +192,8 @@ public:
     Ident get_ident() const override;
     std::string get_report() const override;
     MessageType get_type() const override { return type; }
-    bool foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)>) const override;
+    bool foreach_var(std::function<bool(const Level&, const Trange&,
+                                        const wreport::Var&)>) const override;
     void print(FILE* out) const override;
     unsigned diff(const dballe::Message& msg) const override;
 
@@ -282,7 +292,8 @@ public:
      * @return
      *   The variable found, or NULL if it was not found.
      */
-    wreport::Var* edit(wreport::Varcode code, const Level& lev, const Trange& tr);
+    wreport::Var* edit(wreport::Varcode code, const Level& lev,
+                       const Trange& tr);
 
 #if 0
     /**
@@ -304,8 +315,8 @@ public:
      * Remove the sounding significance from the level descriptions and pack
      * together the data at the same pressure level.
      *
-     * This is used to postprocess data after decoding, where the l2 field of the
-     * level description is temporarily used to store the vertical sounding
+     * This is used to postprocess data after decoding, where the l2 field of
+     * the level description is temporarily used to store the vertical sounding
      * significance, to simplify decoding.
      */
     void sounding_pack_levels();
@@ -322,10 +333,14 @@ public:
     /// Output in CSV format
     void to_csv(CSVWriter& out) const;
 
-    std::shared_ptr<dballe::CursorStation> query_stations(const Query& query) const override;
-    std::shared_ptr<dballe::CursorStationData> query_station_data(const Query& query) const override;
-    std::shared_ptr<dballe::CursorData> query_data(const Query& query) const override;
-    std::shared_ptr<dballe::CursorData> query_station_and_data(const Query& query) const;
+    std::shared_ptr<dballe::CursorStation>
+    query_stations(const Query& query) const override;
+    std::shared_ptr<dballe::CursorStationData>
+    query_station_data(const Query& query) const override;
+    std::shared_ptr<dballe::CursorData>
+    query_data(const Query& query) const override;
+    std::shared_ptr<dballe::CursorData>
+    query_station_and_data(const Query& query) const;
 
     /// Output the CSV header
     static void csv_header(CSVWriter& out);
@@ -343,7 +358,6 @@ public:
 #include <dballe/msg/msg-extravars.h>
 };
 
-
 /**
  * Match adapter for impl::Message
  */
@@ -356,12 +370,13 @@ struct MatchedMsg : public Matched
 
     matcher::Result match_var_id(int val) const override;
     matcher::Result match_station_id(int val) const override;
-    matcher::Result match_station_wmo(int block, int station=-1) const override;
+    matcher::Result match_station_wmo(int block,
+                                      int station = -1) const override;
     matcher::Result match_datetime(const DatetimeRange& range) const override;
-    matcher::Result match_coords(const LatRange& latrange, const LonRange& lonrange) const override;
+    matcher::Result match_coords(const LatRange& latrange,
+                                 const LonRange& lonrange) const override;
     matcher::Result match_rep_memo(const char* memo) const override;
 };
-
 
 /**
  * Match adapter for Messages
@@ -375,12 +390,14 @@ struct MatchedMessages : public Matched
 
     matcher::Result match_var_id(int val) const override;
     matcher::Result match_station_id(int val) const override;
-    matcher::Result match_station_wmo(int block, int station=-1) const override;
+    matcher::Result match_station_wmo(int block,
+                                      int station = -1) const override;
     matcher::Result match_datetime(const DatetimeRange& range) const override;
-    matcher::Result match_coords(const LatRange& latrange, const LonRange& lonrange) const override;
+    matcher::Result match_coords(const LatRange& latrange,
+                                 const LonRange& lonrange) const override;
     matcher::Result match_rep_memo(const char* memo) const override;
 };
 
-}
-}
+} // namespace impl
+} // namespace dballe
 #endif

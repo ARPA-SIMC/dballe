@@ -14,15 +14,13 @@ struct ConnectorFixture : public Fixture
     std::shared_ptr<MySQLConnection> conn;
     bool conn_open = false;
 
-    ConnectorFixture(const char* backend)
-        : conn(MySQLConnection::create())
-    {
-    }
+    ConnectorFixture(const char* backend) : conn(MySQLConnection::create()) {}
 
     void test_setup()
     {
         Fixture::test_setup();
-        if (!has_driver("MYSQL")) throw TestSkipped();
+        if (!has_driver("MYSQL"))
+            throw TestSkipped();
         if (!conn_open)
         {
             conn->open_test();
@@ -103,7 +101,8 @@ class Tests : public FixtureTestCase<ConnectorFixture>
             wassert(actual(info.port) == 1234);
             wassert(actual(info.unix_socket) == "");
 
-            info.parse_url("mysql://localhost:1234/foo?user=enrico&password=secret");
+            info.parse_url(
+                "mysql://localhost:1234/foo?user=enrico&password=secret");
             wassert(actual(info.host) == "localhost");
             wassert(actual(info.user) == "enrico");
             wassert(actual(info.has_passwd).istrue());
@@ -142,7 +141,7 @@ class Tests : public FixtureTestCase<ConnectorFixture>
 
             auto res = f.conn->exec_store("SELECT val FROM dballe_test");
 
-            int val = 0;
+            int val        = 0;
             unsigned count = 0;
             while (Row row = res.fetch())
             {
@@ -162,8 +161,8 @@ class Tests : public FixtureTestCase<ConnectorFixture>
             auto res = f.conn->exec_store("SELECT val FROM dballe_testnull");
             wassert(actual(res.rowcount()) == 2);
 
-            int val = 0;
-            unsigned count = 0;
+            int val             = 0;
+            unsigned count      = 0;
             unsigned countnulls = 0;
             while (auto row = res.fetch())
             {
@@ -182,12 +181,13 @@ class Tests : public FixtureTestCase<ConnectorFixture>
             // Test querying unsigned values
             f.conn->drop_table_if_exists("dballe_testbig");
             f.conn->exec_no_data("CREATE TABLE dballe_testbig (val BIGINT)");
-            f.conn->exec_no_data("INSERT INTO dballe_testbig VALUES (0xFFFFFFFE)");
+            f.conn->exec_no_data(
+                "INSERT INTO dballe_testbig VALUES (0xFFFFFFFE)");
 
             auto res = f.conn->exec_store("SELECT val FROM dballe_testbig");
             wassert(actual(res.rowcount()) == 1);
 
-            unsigned val = 0;
+            unsigned val   = 0;
             unsigned count = 0;
             while (auto row = res.fetch())
             {
@@ -200,13 +200,14 @@ class Tests : public FixtureTestCase<ConnectorFixture>
         add_method("query_unsigned_short", [](Fixture& f) {
             // Test querying unsigned short values
             char buf[200];
-            snprintf(buf, 200, "INSERT INTO dballe_test VALUES (%d)", (int)WR_VAR(3, 1, 12));
+            snprintf(buf, 200, "INSERT INTO dballe_test VALUES (%d)",
+                     (int)WR_VAR(3, 1, 12));
             f.conn->exec_no_data(buf);
 
             auto res = f.conn->exec_store("SELECT val FROM dballe_test");
             wassert(actual(res.rowcount()) == 1);
 
-            Varcode val = 0;
+            Varcode val    = 0;
             unsigned count = 0;
             while (auto row = res.fetch())
             {
@@ -220,10 +221,12 @@ class Tests : public FixtureTestCase<ConnectorFixture>
             // Test querying unsigned short values
             auto& conn = f.conn;
             conn->drop_table_if_exists("dballe_testbytes");
-            conn->exec_no_data("CREATE TABLE dballe_testbytes (val VARBINARY(2048))");
-            conn->exec_no_data("INSERT INTO dballe_testbytes VALUES (x'0011EEFF')");
+            conn->exec_no_data(
+                "CREATE TABLE dballe_testbytes (val VARBINARY(2048))");
+            conn->exec_no_data(
+                "INSERT INTO dballe_testbytes VALUES (x'0011EEFF')");
 
-            auto s = conn->exec_store("SELECT val FROM dballe_testbytes");
+            auto s   = conn->exec_store("SELECT val FROM dballe_testbytes");
             auto row = s.expect_one_result();
             std::vector<uint8_t> val = row.as_blob(0);
             wassert(actual(val.size()) == 4);
@@ -234,10 +237,11 @@ class Tests : public FixtureTestCase<ConnectorFixture>
 
             val[0] = 0xff;
             val[3] = 0x00;
-            conn->exec_no_data("UPDATE dballe_testbytes SET val=x'" + conn->escape(val) + "'");
+            conn->exec_no_data("UPDATE dballe_testbytes SET val=x'" +
+                               conn->escape(val) + "'");
 
             val.clear();
-            s = conn->exec_store("SELECT val FROM dballe_testbytes");
+            s   = conn->exec_store("SELECT val FROM dballe_testbytes");
             row = s.expect_one_result();
             val = row.as_blob(0);
             wassert(actual(val.size()) == 4);
@@ -248,7 +252,8 @@ class Tests : public FixtureTestCase<ConnectorFixture>
         });
         add_method("has_tables", [](Fixture& f) {
             // Test has_tables
-            wassert(actual(f.conn->has_table("this_should_not_exist")).isfalse());
+            wassert(
+                actual(f.conn->has_table("this_should_not_exist")).isfalse());
             wassert(actual(f.conn->has_table("dballe_test")).istrue());
         });
         add_method("settings", [](Fixture& f) {
@@ -266,7 +271,8 @@ class Tests : public FixtureTestCase<ConnectorFixture>
         add_method("auto_increment", [](Fixture& f) {
             // Test auto_increment
             f.conn->drop_table_if_exists("dballe_testai");
-            f.conn->exec_no_data("CREATE TABLE dballe_testai (id INTEGER AUTO_INCREMENT PRIMARY KEY, val INTEGER)");
+            f.conn->exec_no_data("CREATE TABLE dballe_testai (id INTEGER "
+                                 "AUTO_INCREMENT PRIMARY KEY, val INTEGER)");
             f.conn->exec_no_data("INSERT INTO dballe_testai (val) VALUES (42)");
             wassert(actual(f.conn->get_last_insert_id()) == 1);
             f.conn->exec_no_data("INSERT INTO dballe_testai (val) VALUES (43)");
@@ -275,4 +281,4 @@ class Tests : public FixtureTestCase<ConnectorFixture>
     }
 } test("db_sql_mysql", "MYSQL");
 
-}
+} // namespace

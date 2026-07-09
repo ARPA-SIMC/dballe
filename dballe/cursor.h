@@ -3,9 +3,9 @@
 
 #include <dballe/fwd.h>
 #include <dballe/values.h>
-#include <wreport/var.h>
 #include <memory>
 #include <vector>
+#include <wreport/var.h>
 
 namespace dballe {
 
@@ -39,7 +39,8 @@ public:
      * Get a new item from the results of a query
      *
      * @returns
-     *   true if a new record has been read, false if there is no more data to read
+     *   true if a new record has been read, false if there is no more data to
+     * read
      */
     virtual bool next() = 0;
 
@@ -120,5 +121,5 @@ public:
     virtual std::shared_ptr<Message> get_message() const = 0;
 };
 
-}
+} // namespace dballe
 #endif

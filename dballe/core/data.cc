@@ -7,9 +7,7 @@ using namespace wreport;
 namespace dballe {
 namespace core {
 
-Data::~Data()
-{
-}
+Data::~Data() {}
 
 const Data& Data::downcast(const dballe::Data& data)
 {
@@ -27,10 +25,7 @@ Data& Data::downcast(dballe::Data& data)
     return *ptr;
 }
 
-void Data::validate()
-{
-    datetime.set_lower_bound();
-}
+void Data::validate() { datetime.set_lower_bound(); }
 
 #if 0
 void Record::set_datetime(const Datetime& dt)
@@ -102,13 +97,15 @@ void Record::set_lonrange(const LonRange& lr)
 bool Data::operator==(const dballe::Data& other) const
 {
     const auto& o = downcast(other);
-    return std::tie(station, datetime, level, trange, values) == std::tie(o.station, o.datetime, o.level, o.trange, o.values);
+    return std::tie(station, datetime, level, trange, values) ==
+           std::tie(o.station, o.datetime, o.level, o.trange, o.values);
 }
 
 bool Data::operator!=(const dballe::Data& other) const
 {
     const auto& o = downcast(other);
-    return std::tie(station, datetime, level, trange, values) != std::tie(o.station, o.datetime, o.level, o.trange, o.values);
+    return std::tie(station, datetime, level, trange, values) !=
+           std::tie(o.station, o.datetime, o.level, o.trange, o.values);
 }
 
 void Data::clear_ids()
@@ -117,17 +114,14 @@ void Data::clear_ids()
     values.clear_ids();
 }
 
-void Data::clear_vars()
-{
-    values.clear();
-}
+void Data::clear_vars() { values.clear(); }
 
 void Data::clear()
 {
-    station = DBStation();
+    station  = DBStation();
     datetime = Datetime();
-    level = Level();
-    trange = Trange();
+    level    = Level();
+    trange   = Trange();
     values.clear();
 }
 
@@ -217,7 +211,9 @@ void Data::set_from_string(const char* str)
     // Split the input as name=val
     const char* s = strchr(str, '=');
 
-    if (!s) error_consistency::throwf("there should be an = between the name and the value in '%s'", str);
+    if (!s)
+        error_consistency::throwf(
+            "there should be an = between the name and the value in '%s'", str);
 
     std::string key(str, s - str);
     setf(key.data(), key.size(), s + 1);
@@ -225,7 +221,8 @@ void Data::set_from_string(const char* str)
 
 void Data::set_from_test_string(const std::string& s)
 {
-    if (s.empty()) return;
+    if (s.empty())
+        return;
     size_t cur = 0;
     while (true)
     {
@@ -234,7 +231,9 @@ void Data::set_from_test_string(const std::string& s)
         {
             set_from_string(s.substr(cur).c_str());
             break;
-        } else {
+        }
+        else
+        {
             set_from_string(s.substr(cur, next - cur).c_str());
             cur = next + 2;
         }
@@ -249,7 +248,7 @@ struct BufferPrinter
     std::stringstream s;
     bool first = true;
 
-    template<typename KEY, typename VAL>
+    template <typename KEY, typename VAL>
     void print(const KEY& key, const VAL& val)
     {
         if (first)
@@ -264,17 +263,13 @@ struct FilePrinter
 {
     FILE* out;
 
-    template<typename VAL>
-    void print(const char* key, const VAL& val)
+    template <typename VAL> void print(const char* key, const VAL& val)
     {
         fprintf(out, "%s=", key);
         val.print(out);
     }
 
-    void print(const char* key, int val)
-    {
-        fprintf(out, "%s=%d\n", key, val);
-    }
+    void print(const char* key, int val) { fprintf(out, "%s=%d\n", key, val); }
 
     void print(const char* key, const std::string& val)
     {
@@ -282,17 +277,21 @@ struct FilePrinter
     }
 };
 
-}
+} // namespace
 
 std::string Data::to_string() const
 {
     BufferPrinter printer;
 
-    if (!station.is_missing()) printer.print("station", station);
-    if (!datetime.is_missing()) printer.print("datetime", datetime);
-    if (!level.is_missing()) printer.print("level", level);
-    if (!trange.is_missing()) printer.print("trange", trange);
-    for (const auto& val: values)
+    if (!station.is_missing())
+        printer.print("station", station);
+    if (!datetime.is_missing())
+        printer.print("datetime", datetime);
+    if (!level.is_missing())
+        printer.print("level", level);
+    if (!trange.is_missing())
+        printer.print("trange", trange);
+    for (const auto& val : values)
         printer.print(varcode_format(val.code()), val);
 
     return printer.s.str();
@@ -303,13 +302,17 @@ void Data::print(FILE* out) const
     FilePrinter printer;
     printer.out = out;
 
-    if (!station.is_missing()) printer.print("station", station);
-    if (!datetime.is_missing()) printer.print("datetime", datetime);
-    if (!level.is_missing()) printer.print("level", level);
-    if (!trange.is_missing()) printer.print("trange", trange);
-    for (const auto& var: values)
+    if (!station.is_missing())
+        printer.print("station", station);
+    if (!datetime.is_missing())
+        printer.print("datetime", datetime);
+    if (!level.is_missing())
+        printer.print("level", level);
+    if (!trange.is_missing())
+        printer.print("trange", trange);
+    for (const auto& var : values)
         var.print(out);
 }
 
-}
-}
+} // namespace core
+} // namespace dballe

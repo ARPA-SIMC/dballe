@@ -13,19 +13,22 @@ namespace dballe {
 
 wreport::Varinfo varinfo(wreport::Varcode code)
 {
-    if (!local) local = Vartable::get_bufr("dballe");
+    if (!local)
+        local = Vartable::get_bufr("dballe");
     return local->query(code);
 }
 
 wreport::Varinfo varinfo(const char* code)
 {
-    if (!local) local = Vartable::get_bufr("dballe");
+    if (!local)
+        local = Vartable::get_bufr("dballe");
     return local->query(resolve_varcode(code));
 }
 
 wreport::Varinfo varinfo(const std::string& code)
 {
-    if (!local) local = Vartable::get_bufr("dballe");
+    if (!local)
+        local = Vartable::get_bufr("dballe");
     return local->query(resolve_varcode(code));
 }
 
@@ -38,7 +41,8 @@ wreport::Varcode resolve_varcode(const char* name)
 
     // Try looking up among aliases
     Varcode res = varcode_alias_resolve(name);
-    if (res) return res;
+    if (res)
+        return res;
 
     if (name[0] != 'B')
         error_notfound::throwf("cannot parse a Varcode out of '%s'", name);
@@ -58,18 +62,20 @@ wreport::Varcode resolve_varcode(const std::string& name)
 
     // Try looking up among aliases
     Varcode res = varcode_alias_resolve(name);
-    if (res) return res;
+    if (res)
+        return res;
 
     if (name[0] != 'B')
-        error_notfound::throwf("cannot parse a Varcode out of '%s'", name.c_str());
+        error_notfound::throwf("cannot parse a Varcode out of '%s'",
+                               name.c_str());
 
     // Ensure that B is followed by 5 integers
     for (unsigned i = 1; i < 6; ++i)
         if (!name[i] || !isdigit(name[i]))
-            error_notfound::throwf("cannot parse a Varcode out of '%s'", name.c_str());
+            error_notfound::throwf("cannot parse a Varcode out of '%s'",
+                                   name.c_str());
 
     return WR_STRING_TO_VAR(name.data() + 1);
 }
 
-
-}
+} // namespace dballe

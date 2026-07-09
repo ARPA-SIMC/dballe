@@ -1,5 +1,5 @@
-#include "tests.h"
 #include "json.h"
+#include "tests.h"
 #include <sstream>
 
 using namespace std;
@@ -103,4 +103,4 @@ class Tests : public TestCase
     };
 } test("core_json");
 
-}
+} // namespace

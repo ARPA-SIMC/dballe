@@ -32,7 +32,8 @@ VarEntry VarEntry::from_json(core::json::Stream& in)
         else if (key == "c")
             res.count = in.parse_unsigned<size_t>();
         else
-            throw core::JSONParseException("unsupported key \"" + key + "\" for summary::VarEntry");
+            throw core::JSONParseException("unsupported key \"" + key +
+                                           "\" for summary::VarEntry");
     });
     return res;
 }
@@ -41,8 +42,10 @@ void VarEntry::dump(FILE* out) const
 {
     char buf[7];
     format_code(var.varcode, buf);
-    fprintf(out, "      Level: "); var.level.print(out);
-    fprintf(out, "      Trange: "); var.trange.print(out);
+    fprintf(out, "      Level: ");
+    var.level.print(out);
+    fprintf(out, "      Trange: ");
+    var.trange.print(out);
     fprintf(out, "      Varcode: %s\n", buf);
     fprintf(out, "      Datetime range: ");
     dtrange.min.print_iso8601(out, 'T', " to ");
@@ -50,9 +53,10 @@ void VarEntry::dump(FILE* out) const
     fprintf(out, "      Count: %zd\n", count);
 }
 
-
-template<typename Station>
-void StationEntry<Station>::add(const VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count)
+template <typename Station>
+void StationEntry<Station>::add(const VarDesc& vd,
+                                const dballe::DatetimeRange& dtrange,
+                                size_t count)
 {
     iterator i = find(vd);
     if (i != end())
@@ -61,21 +65,23 @@ void StationEntry<Station>::add(const VarDesc& vd, const dballe::DatetimeRange& 
         SmallSet::add(VarEntry(vd, dtrange, count));
 }
 
-template<typename Station> template<typename OStation>
+template <typename Station>
+template <typename OStation>
 void StationEntry<Station>::add(const StationEntry<OStation>& entries)
 {
-    for (const auto& entry: entries)
+    for (const auto& entry : entries)
         add(entry.var, entry.dtrange, entry.count);
 }
 
-template<typename Station>
-void StationEntry<Station>::add_filtered(const StationEntry& entries, const dballe::Query& query)
+template <typename Station>
+void StationEntry<Station>::add_filtered(const StationEntry& entries,
+                                         const dballe::Query& query)
 {
     const core::Query& q = core::Query::downcast(query);
 
     DatetimeRange wanted_dtrange = q.get_datetimerange();
 
-    for (const auto& entry: entries)
+    for (const auto& entry : entries)
     {
         if (!q.level.is_missing() && q.level != entry.var.level)
             continue;
@@ -83,7 +89,8 @@ void StationEntry<Station>::add_filtered(const StationEntry& entries, const dbal
         if (!q.trange.is_missing() && q.trange != entry.var.trange)
             continue;
 
-        if (!q.varcodes.empty() && q.varcodes.find(entry.var.varcode) == q.varcodes.end())
+        if (!q.varcodes.empty() &&
+            q.varcodes.find(entry.var.varcode) == q.varcodes.end())
             continue;
 
         if (wanted_dtrange.is_disjoint(entry.dtrange))
@@ -93,14 +100,18 @@ void StationEntry<Station>::add_filtered(const StationEntry& entries, const dbal
     }
 }
 
-template<typename Station>
-bool StationEntry<Station>::iter_filtered(const dballe::Query& query, std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange& dtrange, size_t count)> dest) const
+template <typename Station>
+bool StationEntry<Station>::iter_filtered(
+    const dballe::Query& query,
+    std::function<bool(const Station&, const summary::VarDesc&,
+                       const DatetimeRange& dtrange, size_t count)>
+        dest) const
 {
     const core::Query& q = core::Query::downcast(query);
 
     DatetimeRange wanted_dtrange = q.get_datetimerange();
 
-    for (const auto& entry: *this)
+    for (const auto& entry : *this)
     {
         if (!q.level.is_missing() && q.level != entry.var.level)
             continue;
@@ -108,7 +119,8 @@ bool StationEntry<Station>::iter_filtered(const dballe::Query& query, std::funct
         if (!q.trange.is_missing() && q.trange != entry.var.trange)
             continue;
 
-        if (!q.varcodes.empty() && q.varcodes.find(entry.var.varcode) == q.varcodes.end())
+        if (!q.varcodes.empty() &&
+            q.varcodes.find(entry.var.varcode) == q.varcodes.end())
             continue;
 
         if (wanted_dtrange.is_disjoint(entry.dtrange))
@@ -120,7 +132,7 @@ bool StationEntry<Station>::iter_filtered(const dballe::Query& query, std::funct
     return true;
 }
 
-template<typename Station>
+template <typename Station>
 void StationEntry<Station>::to_json(core::JSONWriter& writer) const
 {
     writer.start_mapping();
@@ -128,13 +140,13 @@ void StationEntry<Station>::to_json(core::JSONWriter& writer) const
     writer.add(station);
     writer.add("v");
     writer.start_list();
-    for (const auto& entry: *this)
+    for (const auto& entry : *this)
         entry.to_json(writer);
     writer.end_list();
     writer.end_mapping();
 }
 
-template<typename Station>
+template <typename Station>
 StationEntry<Station> StationEntry<Station>::from_json(core::json::Stream& in)
 {
     StationEntry res;
@@ -142,27 +154,27 @@ StationEntry<Station> StationEntry<Station>::from_json(core::json::Stream& in)
         if (key == "s")
             res.station = in.parse<Station>();
         else if (key == "v")
-            in.parse_array([&]{
-                res.add(VarEntry::from_json(in));
-            });
+            in.parse_array([&] { res.add(VarEntry::from_json(in)); });
         else
-            throw core::JSONParseException("unsupported key \"" + key + "\" for summary::StationEntry");
+            throw core::JSONParseException("unsupported key \"" + key +
+                                           "\" for summary::StationEntry");
     });
     return res;
 }
 
-template<typename Station>
-void StationEntry<Station>::dump(FILE* out) const
+template <typename Station> void StationEntry<Station>::dump(FILE* out) const
 {
-    fprintf(out, "   Station: "); station.print(out);
+    fprintf(out, "   Station: ");
+    station.print(out);
     fprintf(out, "   Vars:\n");
-    for (const auto& entry: *this)
+    for (const auto& entry : *this)
         entry.dump(out);
 }
 
-
-template<typename Station>
-void StationEntries<Station>::add(const Station& station, const VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count)
+template <typename Station>
+void StationEntries<Station>::add(const Station& station, const VarDesc& vd,
+                                  const dballe::DatetimeRange& dtrange,
+                                  size_t count)
 {
     iterator cur = this->find(station);
 
@@ -172,14 +184,14 @@ void StationEntries<Station>::add(const Station& station, const VarDesc& vd, con
         Parent::add(StationEntry<Station>(station, vd, dtrange, count));
 }
 
-template<typename Station>
+template <typename Station>
 void StationEntries<Station>::add(const StationEntries<Station>& entries)
 {
-    for (const auto& entry: entries)
+    for (const auto& entry : entries)
         add(entry);
 }
 
-template<typename Station>
+template <typename Station>
 void StationEntries<Station>::add(const StationEntry<Station>& entry)
 {
     iterator cur = this->find(entry.station);
@@ -189,13 +201,14 @@ void StationEntries<Station>::add(const StationEntry<Station>& entry)
         Parent::add(entry);
 }
 
-template<typename Station> template<typename OStation>
+template <typename Station>
+template <typename OStation>
 void StationEntries<Station>::add(const StationEntries<OStation>& entries)
 {
-    for (const auto& entry: entries)
+    for (const auto& entry : entries)
     {
         Station station = convert_station<Station, OStation>(entry.station);
-        iterator cur = this->find(station);
+        iterator cur    = this->find(station);
         if (cur != end())
             cur->add(entry);
         else
@@ -203,12 +216,13 @@ void StationEntries<Station>::add(const StationEntries<OStation>& entries)
     }
 }
 
-template<typename Station>
-void StationEntries<Station>::add_filtered(const StationEntries& entries, const dballe::Query& query)
+template <typename Station>
+void StationEntries<Station>::add_filtered(const StationEntries& entries,
+                                           const dballe::Query& query)
 {
     StationFilter<Station> filter(query);
 
-    for (auto entry: entries)
+    for (auto entry : entries)
     {
         if (!filter.matches_station(entry.station))
             continue;
@@ -216,7 +230,8 @@ void StationEntries<Station>::add_filtered(const StationEntries& entries, const 
         iterator cur = this->find(entry.station);
         if (cur != end())
             cur->add_filtered(entry, query);
-        else {
+        else
+        {
             StationEntry<Station> se(entry, query);
             if (!se.empty())
                 Parent::add(std::move(se));
@@ -224,14 +239,18 @@ void StationEntries<Station>::add_filtered(const StationEntries& entries, const 
     }
 }
 
-template<typename Station>
-bool StationEntries<Station>::iter_filtered(const dballe::Query& query, std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange& dtrange, size_t count)> dest) const
+template <typename Station>
+bool StationEntries<Station>::iter_filtered(
+    const dballe::Query& query,
+    std::function<bool(const Station&, const summary::VarDesc&,
+                       const DatetimeRange& dtrange, size_t count)>
+        dest) const
 {
     StationFilter<Station> filter(query);
 
     if (filter.has_flt_station)
     {
-        for (auto entry: *this)
+        for (auto entry : *this)
         {
             if (!filter.matches_station(entry.station))
                 continue;
@@ -239,43 +258,49 @@ bool StationEntries<Station>::iter_filtered(const dballe::Query& query, std::fun
             if (!entry.iter_filtered(query, dest))
                 return false;
         }
-    } else {
-        for (auto entry: *this)
+    }
+    else
+    {
+        for (auto entry : *this)
             if (!entry.iter_filtered(query, dest))
                 return false;
     }
     return true;
 }
 
-
 template class StationEntry<dballe::Station>;
 template class StationEntry<dballe::DBStation>;
 template class StationEntries<dballe::Station>;
-template void StationEntries<dballe::Station>::add(const StationEntries<dballe::DBStation>&);
+template void
+StationEntries<dballe::Station>::add(const StationEntries<dballe::DBStation>&);
 template class StationEntries<dballe::DBStation>;
-template void StationEntries<dballe::DBStation>::add(const StationEntries<dballe::Station>&);
+template void
+StationEntries<dballe::DBStation>::add(const StationEntries<dballe::Station>&);
 
-template<typename Station>
+template <typename Station>
 Cursor<Station>::Cursor(const BaseSummary<Station>& summary, const Query& query)
 {
-    summary.iter_filtered(query, [&](const Station& station, const summary::VarDesc& var, const DatetimeRange& dtrange, size_t count) {
-        results.add(station, var, dtrange, count);
-        ++_remaining;
-        return true;
-    });
+    summary.iter_filtered(
+        query, [&](const Station& station, const summary::VarDesc& var,
+                   const DatetimeRange& dtrange, size_t count) {
+            results.add(station, var, dtrange, count);
+            ++_remaining;
+            return true;
+        });
 }
 
-template<typename Station>
-Cursor<Station>::Cursor(const summary::StationEntries<Station>& entries, const Query& query)
+template <typename Station>
+Cursor<Station>::Cursor(const summary::StationEntries<Station>& entries,
+                        const Query& query)
 {
     results.add_filtered(entries, query);
-    for (const auto& s: results)
+    for (const auto& s : results)
         _remaining += s.size();
 }
 
 template class Cursor<dballe::Station>;
 template class Cursor<dballe::DBStation>;
 
-}
-}
-}
+} // namespace summary
+} // namespace db
+} // namespace dballe

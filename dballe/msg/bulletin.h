@@ -31,7 +31,7 @@ public:
     void output_bulletin(const wreport::Bulletin& bulletin);
 };
 
-}
-}
+} // namespace msg
+} // namespace dballe
 
 #endif

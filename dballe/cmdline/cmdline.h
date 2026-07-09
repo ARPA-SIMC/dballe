@@ -6,14 +6,14 @@
  * Common functions for commandline tools
  */
 
-#include <wreport/error.h>
 #include <dballe/file.h>
 #include <dballe/fwd.h>
-#include <popt.h>
-#include <memory>
-#include <vector>
 #include <list>
+#include <memory>
+#include <popt.h>
 #include <string>
+#include <vector>
+#include <wreport/error.h>
 
 namespace dballe {
 namespace cmdline {
@@ -43,11 +43,12 @@ struct Subcommand
      * poptContext will refer to data inside it, so the lifetime of the vector
      * should be at least as long as the lifetime of the resulting poptContext.
      */
-    poptContext make_popt_context(int argc, const char* argv[], std::vector<poptOption>& opts) const;
+    poptContext make_popt_context(int argc, const char* argv[],
+                                  std::vector<poptOption>& opts) const;
     void manpage_print_options(FILE* out);
 };
 
-#define ODT_END { NULL, NULL, NULL, NULL, NULL, NULL }
+#define ODT_END {NULL, NULL, NULL, NULL, NULL, NULL}
 
 struct Command
 {
@@ -82,14 +83,13 @@ struct error_cmdline : public std::exception
 
     /// @param msg error message
     error_cmdline(const std::string& msg) : msg(msg) {}
-    ~error_cmdline() throw () {}
+    ~error_cmdline() throw() {}
 
     const char* what() const noexcept override { return msg.c_str(); }
 
     /// Throw the exception, building the message printf-style
     static void throwf(const char* fmt, ...) WREPORT_THROWF_ATTRS(1, 2);
 };
-
 
 /**
  * Print informations about the last error to stderr
@@ -100,7 +100,8 @@ void dba_cmdline_print_dba_error();
  * Print an error that happened when parsing commandline arguments, then add
  * usage informations and exit
  */
-[[noreturn]] void dba_cmdline_error(poptContext optCon, const char* fmt, ...) __attribute__((format(printf, 2, 3))) ;
+[[noreturn]] void dba_cmdline_error(poptContext optCon, const char* fmt, ...)
+    __attribute__((format(printf, 2, 3)));
 
 /**
  * Return the File::Encoding that corresponds to the name in the string
@@ -122,6 +123,6 @@ void list_templates();
 /// Read all the command line arguments and return them as a list
 std::list<std::string> get_filenames(poptContext optCon);
 
-}
-}
+} // namespace cmdline
+} // namespace dballe
 #endif

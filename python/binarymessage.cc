@@ -1,8 +1,8 @@
 #define _DBALLE_LIBRARY_CODE
-#include "common.h"
 #include "binarymessage.h"
-#include "utils/type.h"
+#include "common.h"
 #include "utils/methods.h"
+#include "utils/type.h"
 #include "utils/values.h"
 
 using namespace std;
@@ -19,77 +19,89 @@ namespace {
 struct encoding : Getter<encoding, dpy_BinaryMessage>
 {
     constexpr static const char* name = "encoding";
-    constexpr static const char* doc = "message encoding";
+    constexpr static const char* doc  = "message encoding";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             Encoding encoding = self->message.encoding;
             return to_python(File::encoding_name(encoding));
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct pathname : Getter<pathname, dpy_BinaryMessage>
 {
     constexpr static const char* name = "pathname";
-    constexpr static const char* doc = "pathname of the file the message came from, or None if unknown";
+    constexpr static const char* doc =
+        "pathname of the file the message came from, or None if unknown";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             if (self->message.pathname.empty())
                 Py_RETURN_NONE;
             else
                 return to_python(self->message.pathname);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct offset : Getter<offset, dpy_BinaryMessage>
 {
     constexpr static const char* name = "offset";
-    constexpr static const char* doc = "offset of the message in the input file, or None if unknown";
+    constexpr static const char* doc =
+        "offset of the message in the input file, or None if unknown";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             if (self->message.offset == (off_t)-1)
                 Py_RETURN_NONE;
             else
                 return PyLong_FromSize_t((size_t)self->message.offset);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct index : Getter<index, dpy_BinaryMessage>
 {
     constexpr static const char* name = "index";
-    constexpr static const char* doc = "index of the message in the input file, or None if unknown";
+    constexpr static const char* doc =
+        "index of the message in the input file, or None if unknown";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             if (self->message.index == MISSING_INT)
                 Py_RETURN_NONE;
             else
                 return PyLong_FromLong((long)self->message.index);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct __bytes__ : MethNoargs<__bytes__, dpy_BinaryMessage>
 {
     constexpr static const char* name = "__bytes__";
-    constexpr static const char* summary = "Returns the contents of this message as a bytes object";
+    constexpr static const char* summary =
+        "Returns the contents of this message as a bytes object";
     static PyObject* run(Impl* self)
     {
-        return PyBytes_FromStringAndSize(self->message.data.data(), self->message.data.size());
+        return PyBytes_FromStringAndSize(self->message.data.data(),
+                                         self->message.data.size());
     }
 };
 
-
 struct Definition : public Type<Definition, dpy_BinaryMessage>
 {
-    constexpr static const char* name = "BinaryMessage";
+    constexpr static const char* name      = "BinaryMessage";
     constexpr static const char* qual_name = "dballe.BinaryMessage";
-    constexpr static const char* doc = R"(
+    constexpr static const char* doc       = R"(
 Binary message.
 
 This is basically a simple wrapper around a bytes() object, providing extra
@@ -108,16 +120,20 @@ read. Is it used by :class:`dballe.File` to return the binary messages it reads.
 
     static int _init(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { "data", "encoding", "pathname", "offset", "index", nullptr };
-        PyObject* py_data = nullptr;
-        const char* encoding = nullptr;
-        const char* pathname = nullptr;
-        Py_ssize_t offset = -1;
-        Py_ssize_t index = -1;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "Os|snn", const_cast<char**>(kwlist), &py_data, &encoding, &pathname, &offset, &index))
+        static const char* kwlist[] = {"data",   "encoding", "pathname",
+                                       "offset", "index",    nullptr};
+        PyObject* py_data           = nullptr;
+        const char* encoding        = nullptr;
+        const char* pathname        = nullptr;
+        Py_ssize_t offset           = -1;
+        Py_ssize_t index            = -1;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "Os|snn",
+                                         const_cast<char**>(kwlist), &py_data,
+                                         &encoding, &pathname, &offset, &index))
             return -1;
 
-        try {
+        try
+        {
             pyo_unique_ptr py_bytes(throw_ifnull(PyBytes_FromObject(py_data)));
 
             char* buf;
@@ -130,37 +146,44 @@ read. Is it used by :class:`dballe.File` to return the binary messages it reads.
 
             self->message.data.assign(buf, len);
 
-            if (pathname) self->message.pathname = pathname;
-            if (offset != -1) self->message.offset = offset;
-            if (index != -1) self->message.index = index;
-        } DBALLE_CATCH_RETURN_INT
+            if (pathname)
+                self->message.pathname = pathname;
+            if (offset != -1)
+                self->message.offset = offset;
+            if (index != -1)
+                self->message.index = index;
+        }
+        DBALLE_CATCH_RETURN_INT
         return 0;
     }
 };
 
 Definition* definition = nullptr;
 
-}
+} // namespace
 
 namespace dballe {
 namespace python {
 
 dpy_BinaryMessage* binarymessage_create(const BinaryMessage& message)
 {
-    dpy_BinaryMessage* res = PyObject_New(dpy_BinaryMessage, dpy_BinaryMessage_Type);
-    if (!res) return nullptr;
+    dpy_BinaryMessage* res =
+        PyObject_New(dpy_BinaryMessage, dpy_BinaryMessage_Type);
+    if (!res)
+        return nullptr;
     new (&(res->message)) BinaryMessage(message);
     return res;
 }
 
 dpy_BinaryMessage* binarymessage_create(BinaryMessage&& message)
 {
-    dpy_BinaryMessage* res = PyObject_New(dpy_BinaryMessage, dpy_BinaryMessage_Type);
-    if (!res) return nullptr;
+    dpy_BinaryMessage* res =
+        PyObject_New(dpy_BinaryMessage, dpy_BinaryMessage_Type);
+    if (!res)
+        return nullptr;
     new (&(res->message)) BinaryMessage(std::move(message));
     return res;
 }
-
 
 void register_binarymessage(PyObject* m)
 {
@@ -170,5 +193,5 @@ void register_binarymessage(PyObject* m)
     definition->define(dpy_BinaryMessage_Type, m);
 }
 
-}
-}
+} // namespace python
+} // namespace dballe

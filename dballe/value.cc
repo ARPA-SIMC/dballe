@@ -1,7 +1,7 @@
 #include "value.h"
 #include "dballe/core/var.h"
-#include <wreport/var.h>
 #include <ostream>
+#include <wreport/var.h>
 
 namespace dballe {
 
@@ -10,17 +10,14 @@ Value::Value(const Value& o)
 {
 }
 
-Value::Value(const wreport::Var& var)
-    : m_var(new wreport::Var(var)) {}
+Value::Value(const wreport::Var& var) : m_var(new wreport::Var(var)) {}
 
-Value::~Value()
-{
-    delete m_var;
-}
+Value::~Value() { delete m_var; }
 
 Value& Value::operator=(const Value& o)
 {
-    if (this == &o) return *this;
+    if (this == &o)
+        return *this;
     delete m_var;
     m_var = o.m_var ? new wreport::Var(*o.m_var) : nullptr;
     return *this;
@@ -28,24 +25,29 @@ Value& Value::operator=(const Value& o)
 
 Value& Value::operator=(Value&& o)
 {
-    if (this == &o) return *this;
+    if (this == &o)
+        return *this;
     delete m_var;
-    m_var = o.m_var;
+    m_var   = o.m_var;
     o.m_var = nullptr;
     return *this;
 }
 
 bool Value::operator==(const Value& o) const
 {
-    if (m_var == o.m_var) return true;
-    if (!m_var || !o.m_var) return false;
+    if (m_var == o.m_var)
+        return true;
+    if (!m_var || !o.m_var)
+        return false;
     return *m_var == *o.m_var;
 }
 
 bool Value::operator!=(const Value& o) const
 {
-    if (m_var == o.m_var) return false;
-    if (!m_var || !o.m_var) return true;
+    if (m_var == o.m_var)
+        return false;
+    if (!m_var || !o.m_var)
+        return true;
     return *m_var != *o.m_var;
 }
 
@@ -57,10 +59,7 @@ void Value::print(FILE* out) const
         m_var->print(out);
 }
 
-wreport::Varcode Value::code() const
-{
-    return m_var ? m_var->code() : 0;
-}
+wreport::Varcode Value::code() const { return m_var ? m_var->code() : 0; }
 
 void Value::reset(const wreport::Var& var)
 {
@@ -80,7 +79,6 @@ std::unique_ptr<wreport::Var> Value::release()
     m_var = nullptr;
     return res;
 }
-
 
 bool DBValue::operator==(const DBValue& o) const
 {
@@ -126,4 +124,4 @@ std::ostream& operator<<(std::ostream& o, const DBValue& val)
     return o << bcode << ":" << val->format();
 }
 
-}
+} // namespace dballe

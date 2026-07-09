@@ -1,3 +1,32 @@
+# New in version 9.13
+
+* Clarify that report names are always lowercased (#236)
+* Use datetime information from bulletin header when they are missing in BUFR data (#289)
+* Updated required version of wreport (>= 3.41)
+* Added variable 13240 (specific graupel content)
+
+# New in version 9.12
+
+* When querying, `leveltype2`, `l1` or `l2` set to `-` now mean requiring the values to be unset (#201)
+* Added initial support for TM315009 drifting data buoys (#290)
+
+# New in version 9.11
+
+* Fixed build error about "#warning" (#292)
+* Updated python tests
+
+# New in version 9.10
+
+* restructure "volume of basin" variables (#291)
+
+# New in version 9.9
+
+* Fix msg-extravars.h installation (#287)
+
+# New in version 9.8
+
+* Add variable B13238, river current speed
+
 # New in version 9.7
 
 * Updated code to use C++17 features and new wreport
@@ -11,7 +40,7 @@
 
 # New in version 9.5
 
-* Fixed dangling reference to a temporary in register_synop (#279)
+* Fixed dangling reference to a temporary in `register_synop` (#279)
 * Removed std::move that prevented copy elision
 
 # New in version 9.4

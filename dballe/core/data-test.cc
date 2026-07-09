@@ -1,5 +1,5 @@
-#include "tests.h"
 #include "data.h"
+#include "tests.h"
 
 using namespace dballe::tests;
 using namespace dballe;
@@ -86,8 +86,6 @@ add_method("extremes", []() {
     wassert(actual(dtr.max) == Datetime(2011, 2, 3, 4, 5, 6));
 });
 #endif
-
 }
 
-}
-
+} // namespace

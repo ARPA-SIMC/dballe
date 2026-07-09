@@ -1,20 +1,20 @@
-#include "config.h"
-#include <wreport/python.h>
+#include "binarymessage.h"
 #include "common.h"
-#include "types.h"
+#include "config.h"
+#include "cursor.h"
 #include "data.h"
 #include "db.h"
-#include "cursor.h"
-#include "binarymessage.h"
-#include "file.h"
-#include "message.h"
-#include "importer.h"
-#include "exporter.h"
-#include "explorer.h"
-#include "utils/wreport.h"
 #include "dballe/python.h"
 #include "dballe/types.h"
 #include "dballe/var.h"
+#include "explorer.h"
+#include "exporter.h"
+#include "file.h"
+#include "importer.h"
+#include "message.h"
+#include "types.h"
+#include "utils/wreport.h"
+#include <wreport/python.h>
 
 using namespace std;
 using namespace dballe;
@@ -23,7 +23,8 @@ using namespace wreport;
 
 extern "C" {
 
-static PyObject* dballe_varinfo(PyTypeObject *type, PyObject *args, PyObject *kw)
+static PyObject* dballe_varinfo(PyTypeObject* type, PyObject* args,
+                                PyObject* kw)
 {
     const char* var_name;
     if (!PyArg_ParseTuple(args, "s", &var_name))
@@ -31,7 +32,7 @@ static PyObject* dballe_varinfo(PyTypeObject *type, PyObject *args, PyObject *kw
     return wreport_api.varinfo_create(dballe::varinfo(varcode_parse(var_name)));
 }
 
-static PyObject* dballe_var_uncaught(PyTypeObject *type, PyObject *args)
+static PyObject* dballe_var_uncaught(PyTypeObject* type, PyObject* args)
 {
     const char* var_name;
     PyObject* val = 0;
@@ -44,54 +45,77 @@ static PyObject* dballe_var_uncaught(PyTypeObject *type, PyObject *args)
             double v = PyFloat_AsDouble(val);
             if (v == -1.0 && PyErr_Occurred())
                 return nullptr;
-            return wreport_api.var_create(dballe::varinfo(resolve_varcode(var_name)), v);
-        } else if (PyLong_Check(val)) {
+            return wreport_api.var_create(
+                dballe::varinfo(resolve_varcode(var_name)), v);
+        }
+        else if (PyLong_Check(val))
+        {
             long v = PyLong_AsLong(val);
             if (v == -1 && PyErr_Occurred())
                 return nullptr;
-            return wreport_api.var_create(dballe::varinfo(resolve_varcode(var_name)), (int)v);
-        } else if (PyUnicode_Check(val) || PyBytes_Check(val)) {
+            return wreport_api.var_create(
+                dballe::varinfo(resolve_varcode(var_name)), (int)v);
+        }
+        else if (PyUnicode_Check(val) || PyBytes_Check(val))
+        {
             string v = string_from_python(val);
-            return wreport_api.var_create(dballe::varinfo(resolve_varcode(var_name)), v);
-        } else if (wreport_api.var_check(val)) {
+            return wreport_api.var_create(
+                dballe::varinfo(resolve_varcode(var_name)), v);
+        }
+        else if (wreport_api.var_check(val))
+        {
             wreport::Var& src = wreport_api.var(val);
-            return wreport_api.var_create(dballe::varinfo(resolve_varcode(var_name)), src);
-        } else if (val == Py_None) {
-            return wreport_api.var_create(dballe::varinfo(resolve_varcode(var_name)));
-        } else {
-            PyErr_SetString(PyExc_TypeError, "Expected int, float, str, unicode, or None");
+            return wreport_api.var_create(
+                dballe::varinfo(resolve_varcode(var_name)), src);
+        }
+        else if (val == Py_None)
+        {
+            return wreport_api.var_create(
+                dballe::varinfo(resolve_varcode(var_name)));
+        }
+        else
+        {
+            PyErr_SetString(PyExc_TypeError,
+                            "Expected int, float, str, unicode, or None");
             return NULL;
         }
-    } else
-        return wreport_api.var_create(dballe::varinfo(resolve_varcode(var_name)));
+    }
+    else
+        return wreport_api.var_create(
+            dballe::varinfo(resolve_varcode(var_name)));
 }
 
-static PyObject* dballe_var(PyTypeObject *type, PyObject *args)
+static PyObject* dballe_var(PyTypeObject* type, PyObject* args)
 {
-    try {
+    try
+    {
         return dballe_var_uncaught(type, args);
-    } DBALLE_CATCH_RETURN_PYO
+    }
+    DBALLE_CATCH_RETURN_PYO
 }
 
-#define get_int_or_missing(intvar, ovar) \
-    int intvar; \
-    if (ovar == Py_None) \
-        intvar = MISSING_INT; \
-    else { \
-        intvar = PyLong_AsLong(ovar); \
-        if (intvar == -1 && PyErr_Occurred()) \
-            return NULL; \
+#define get_int_or_missing(intvar, ovar)                                       \
+    int intvar;                                                                \
+    if (ovar == Py_None)                                                       \
+        intvar = MISSING_INT;                                                  \
+    else                                                                       \
+    {                                                                          \
+        intvar = PyLong_AsLong(ovar);                                          \
+        if (intvar == -1 && PyErr_Occurred())                                  \
+            return NULL;                                                       \
     }
 
-
-static PyObject* dballe_describe_level(PyTypeObject *type, PyObject *args, PyObject* kw)
+static PyObject* dballe_describe_level(PyTypeObject* type, PyObject* args,
+                                       PyObject* kw)
 {
-    static const char* kwlist[] = { "ltype1", "l1", "ltype2", "l2", NULL };
-    PyObject* oltype1 = Py_None;
-    PyObject* ol1 = Py_None;
-    PyObject* oltype2 = Py_None;
-    PyObject* ol2 = Py_None;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|OOO", const_cast<char**>(kwlist), &oltype1, &ol1, &oltype2, &ol2))
+    static const char* kwlist[] = {"ltype1", "l1", "ltype2", "l2", NULL};
+    PyObject* oltype1           = Py_None;
+    PyObject* ol1               = Py_None;
+    PyObject* oltype2           = Py_None;
+    PyObject* ol2               = Py_None;
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|OOO",
+                                     const_cast<char**>(kwlist), &oltype1, &ol1,
+                                     &oltype2, &ol2))
         return NULL;
 
     get_int_or_missing(ltype1, oltype1);
@@ -104,13 +128,15 @@ static PyObject* dballe_describe_level(PyTypeObject *type, PyObject *args, PyObj
     return PyUnicode_FromString(desc.c_str());
 }
 
-static PyObject* dballe_describe_trange(PyTypeObject *type, PyObject *args, PyObject* kw)
+static PyObject* dballe_describe_trange(PyTypeObject* type, PyObject* args,
+                                        PyObject* kw)
 {
-    static const char* kwlist[] = { "pind", "p1", "p2", NULL };
-    PyObject* opind = Py_None;
-    PyObject* op1 = Py_None;
-    PyObject* op2 = Py_None;
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|OO", const_cast<char**>(kwlist), &opind, &op1, &op2))
+    static const char* kwlist[] = {"pind", "p1", "p2", NULL};
+    PyObject* opind             = Py_None;
+    PyObject* op1               = Py_None;
+    PyObject* op2               = Py_None;
+    if (!PyArg_ParseTupleAndKeywords(
+            args, kw, "O|OO", const_cast<char**>(kwlist), &opind, &op1, &op2))
         return NULL;
 
     get_int_or_missing(pind, opind);
@@ -123,36 +149,37 @@ static PyObject* dballe_describe_trange(PyTypeObject *type, PyObject *args, PyOb
 }
 
 static PyMethodDef dballe_methods[] = {
-    {"varinfo", (PyCFunction)dballe_varinfo, METH_VARARGS, R"(
+    {"varinfo",         (PyCFunction)dballe_varinfo,         METH_VARARGS, R"(
 varinfo(str) -> dballe.Varinfo
 
-Query the DB-All.e variable table returning a Varinfo)" },
-    {"var", (PyCFunction)dballe_var, METH_VARARGS, R"(
+Query the DB-All.e variable table returning a Varinfo)"},
+    {"var",             (PyCFunction)dballe_var,             METH_VARARGS, R"(
 var(code, val: Any=None) -> dballe.Var
 
-Query the DB-All.e variable table returning a Var, optionally initialized with a value)" },
-    {"describe_level", (PyCFunction)dballe_describe_level, METH_VARARGS | METH_KEYWORDS, R"(
+Query the DB-All.e variable table returning a Var, optionally initialized with a value)"},
+    {"describe_level",  (PyCFunction)dballe_describe_level,
+     METH_VARARGS | METH_KEYWORDS,                                         R"(
 describe_level(ltype1: int, l1: int=None, ltype2: int=None, l2: int=None) -> str
 
-Return a string description for a level)" },
-    {"describe_trange", (PyCFunction)dballe_describe_trange, METH_VARARGS | METH_KEYWORDS, R"(
+Return a string description for a level)"},
+    {"describe_trange", (PyCFunction)dballe_describe_trange,
+     METH_VARARGS | METH_KEYWORDS,                                         R"(
 describe_trange(pind: int, p1: int=None, p2: int=None) -> str
 
-Return a string description for a time range)" },
+Return a string description for a time range)"},
     PyMethodDef(),
 };
 
-
 static PyModuleDef dballe_module = {
     PyModuleDef_HEAD_INIT,
-    "_dballe",       /* m_name */
-    "DB-All.e Python interface.",  /* m_doc */
-    -1,             /* m_size */
-    dballe_methods, /* m_methods */
-    NULL,           /* m_reload */
-    NULL,           /* m_traverse */
-    NULL,           /* m_clear */
-    NULL,           /* m_free */
+    "_dballe",                    /* m_name */
+    "DB-All.e Python interface.", /* m_doc */
+    -1,                           /* m_size */
+    dballe_methods,               /* m_methods */
+    NULL,                         /* m_reload */
+    NULL,                         /* m_traverse */
+    NULL,                         /* m_clear */
+    NULL,                         /* m_free */
 
 };
 
@@ -164,7 +191,8 @@ PyMODINIT_FUNC PyInit__dballe(void)
 
     static dbapy_c_api c_api;
 
-    try {
+    try
+    {
         memset(&c_api, 0, sizeof(dbapy_c_api));
         c_api.version_major = 1;
         c_api.version_minor = 0;
@@ -183,13 +211,14 @@ PyMODINIT_FUNC PyInit__dballe(void)
         register_explorer(m);
 
         // Create a Capsule containing the API struct's address
-        pyo_unique_ptr c_api_object(throw_ifnull(PyCapsule_New((void *)&c_api, "_dballe._C_API", nullptr)));
+        pyo_unique_ptr c_api_object(throw_ifnull(
+            PyCapsule_New((void*)&c_api, "_dballe._C_API", nullptr)));
         int res = PyModule_AddObject(m, "_C_API", c_api_object.release());
         if (res)
             return nullptr;
 
         return m.release();
-    } DBALLE_CATCH_RETURN_PYO
+    }
+    DBALLE_CATCH_RETURN_PYO
 }
-
 }

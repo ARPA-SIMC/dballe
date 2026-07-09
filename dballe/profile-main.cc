@@ -1,9 +1,9 @@
+#include <cstdio>
+#include <cstring>
+#include <dballe/db/db.h>
 #include <dballe/file.h>
 #include <dballe/importer.h>
-#include <dballe/db/db.h>
 #include <vector>
-#include <cstring>
-#include <cstdio>
 
 using namespace dballe;
 using namespace std;
@@ -17,8 +17,7 @@ struct Scenario
     virtual int run(int argc, const char* argv[]) = 0;
 };
 
-
-struct ImportSynopOneStation: public Scenario
+struct ImportSynopOneStation : public Scenario
 {
     std::vector<std::vector<std::shared_ptr<Message>>> input;
 
@@ -26,9 +25,10 @@ struct ImportSynopOneStation: public Scenario
 
     void read_input()
     {
-        unique_ptr<File> f = File::create(Encoding::BUFR, "extra/bufr/cdfin_synop.bufr", "r");
+        unique_ptr<File> f =
+            File::create(Encoding::BUFR, "extra/bufr/cdfin_synop.bufr", "r");
         std::unique_ptr<Importer> importer = Importer::create(Encoding::BUFR);
-        f->foreach([&](const BinaryMessage& msg) {
+        f->foreach ([&](const BinaryMessage& msg) {
             input.emplace_back(importer->from_binary(msg));
             return true;
         });
@@ -37,14 +37,14 @@ struct ImportSynopOneStation: public Scenario
     void import()
     {
         auto options = DBConnectOptions::test_create();
-        auto db = db::DB::downcast(DB::connect(*options));
+        auto db      = db::DB::downcast(DB::connect(*options));
         db->reset();
-        auto t = db->transaction();
-        auto opts = DBImportOptions::create();
-        opts->report = "synop";
+        auto t                  = db->transaction();
+        auto opts               = DBImportOptions::create();
+        opts->report            = "synop";
         opts->import_attributes = true;
-        opts->overwrite = true;
-        for (const auto& msgs: input)
+        opts->overwrite         = true;
+        for (const auto& msgs : input)
             t->import_messages(msgs, *opts);
         t->commit();
     }
@@ -57,8 +57,7 @@ struct ImportSynopOneStation: public Scenario
     }
 };
 
-
-struct ImportSynopManyTimes: public Scenario
+struct ImportSynopManyTimes : public Scenario
 {
     std::vector<std::shared_ptr<Message>> messages;
 
@@ -66,9 +65,10 @@ struct ImportSynopManyTimes: public Scenario
 
     void read_input()
     {
-        unique_ptr<File> f = File::create(Encoding::BUFR, "extra/bufr/synop-groundtemp.bufr", "r");
+        unique_ptr<File> f = File::create(
+            Encoding::BUFR, "extra/bufr/synop-groundtemp.bufr", "r");
         std::unique_ptr<Importer> importer = Importer::create(Encoding::BUFR);
-        f->foreach([&](const BinaryMessage& msg) {
+        f->foreach ([&](const BinaryMessage& msg) {
             messages = importer->from_binary(msg);
             return true;
         });
@@ -77,12 +77,12 @@ struct ImportSynopManyTimes: public Scenario
     void import()
     {
         auto options = DBConnectOptions::test_create();
-        auto db = db::DB::downcast(DB::connect(*options));
+        auto db      = db::DB::downcast(DB::connect(*options));
         db->reset();
-        auto opts = DBImportOptions::create();
-        opts->report = "synop";
+        auto opts               = DBImportOptions::create();
+        opts->report            = "synop";
         opts->import_attributes = true;
-        opts->overwrite = true;
+        opts->overwrite         = true;
         {
             auto t = db->transaction();
             t->import_messages(messages, *opts);
@@ -108,14 +108,12 @@ struct ImportSynopManyTimes: public Scenario
     }
 };
 
-
 struct Profile
 {
     vector<Scenario*> profiles;
     const char* argv0 = nullptr;
 
-    Profile(const char* argv0)
-        : argv0(argv0)
+    Profile(const char* argv0) : argv0(argv0)
     {
         profiles.push_back(new ImportSynopOneStation);
         profiles.push_back(new ImportSynopManyTimes);
@@ -123,7 +121,7 @@ struct Profile
 
     ~Profile()
     {
-        for (auto i: profiles)
+        for (auto i : profiles)
             delete i;
     }
 
@@ -132,7 +130,8 @@ struct Profile
         fprintf(out, "Usage: %s {", argv0);
         for (auto i = profiles.begin(); i != profiles.end(); ++i)
         {
-            if (i != profiles.begin()) putc('|', out);
+            if (i != profiles.begin())
+                putc('|', out);
             fputs((*i)->name(), out);
         }
         fputs("} [args...]\n", out);
@@ -140,9 +139,10 @@ struct Profile
 
     int run(const char* name, int argc, const char* argv[])
     {
-        for (auto& scen: profiles)
+        for (auto& scen : profiles)
         {
-            if (strcmp(name, scen->name()) != 0) continue;
+            if (strcmp(name, scen->name()) != 0)
+                continue;
             return scen->run(argc, argv);
         }
 
@@ -152,7 +152,7 @@ struct Profile
     }
 };
 
-int main (int argc, const char* argv[])
+int main(int argc, const char* argv[])
 {
     Profile profile(argv[0]);
 

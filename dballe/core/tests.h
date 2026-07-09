@@ -1,17 +1,17 @@
-#include <wreport/tests.h>
+#include <climits>
+#include <cstdlib>
+#include <dballe/core/csv.h>
+#include <dballe/core/defs.h>
+#include <dballe/core/query.h>
 #include <dballe/file.h>
 #include <dballe/values.h>
-#include <dballe/core/query.h>
-#include <dballe/core/defs.h>
-#include <dballe/core/csv.h>
-#include <cstdlib>
-#include <climits>
 #include <filesystem>
-#include <string>
-#include <vector>
-#include <sstream>
 #include <iostream>
 #include <memory>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <wreport/tests.h>
 
 namespace dballe {
 namespace tests {
@@ -106,11 +106,17 @@ struct ActualMatcherResult : public Actual<int>
     void operator!=(int expected) const;
 };
 
-inline ActualMatcherResult actual_matcher_result(int actual) { return ActualMatcherResult(actual); }
+inline ActualMatcherResult actual_matcher_result(int actual)
+{
+    return ActualMatcherResult(actual);
+}
 
 using wreport::tests::actual;
 
-inline ActualCString actual(const dballe::Ident& ident) { return ActualCString(ident); }
+inline ActualCString actual(const dballe::Ident& ident)
+{
+    return ActualCString(ident);
+}
 
-}
-}
+} // namespace tests
+} // namespace dballe

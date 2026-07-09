@@ -85,7 +85,7 @@ struct Enqc : public impl::Enq
     }
 };
 
-}
-}
+} // namespace fortran
+} // namespace dballe
 
 #endif

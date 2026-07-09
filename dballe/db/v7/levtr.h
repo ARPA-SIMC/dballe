@@ -1,14 +1,14 @@
 #ifndef DBALLE_DB_V7_LEVTR_H
 #define DBALLE_DB_V7_LEVTR_H
 
+#include <cstdio>
 #include <dballe/core/defs.h>
 #include <dballe/db/v7/cache.h>
 #include <dballe/db/v7/fwd.h>
 #include <dballe/msg/fwd.h>
+#include <functional>
 #include <memory>
 #include <set>
-#include <cstdio>
-#include <functional>
 
 namespace dballe {
 namespace db {
@@ -22,7 +22,8 @@ struct LevTr
 protected:
     v7::Transaction& tr;
     LevTrCache cache;
-    virtual void _dump(std::function<void(int, const Level&, const Trange&)> out) = 0;
+    virtual void
+    _dump(std::function<void(int, const Level&, const Trange&)> out) = 0;
 
 public:
     LevTr(v7::Transaction& tr);
@@ -37,7 +38,8 @@ public:
     void clear_cache();
 
     /**
-     * Given a set of IDs, load LevTr information for them and add it to the cache.
+     * Given a set of IDs, load LevTr information for them and add it to the
+     * cache.
      */
     virtual void prefetch_ids(Tracer<>& trc, const std::set<int>& ids) = 0;
 
@@ -49,7 +51,8 @@ public:
     impl::msg::Context* to_msg(Tracer<>& trc, int id, impl::Message& msg);
 
     /**
-     * Lookup a LevTr entry from the cache, throwing an exception if it is not found
+     * Lookup a LevTr entry from the cache, throwing an exception if it is not
+     * found
      */
     const LevTrEntry& lookup_cache(int id);
 
@@ -66,7 +69,7 @@ public:
     void dump(FILE* out);
 };
 
-}
-}
-}
+} // namespace v7
+} // namespace db
+} // namespace dballe
 #endif

@@ -1,11 +1,11 @@
 #define _DBALLE_LIBRARY_CODE
 #include "explorer.h"
-#include "summary_memory.h"
-#include "dballe/core/query.h"
-#include "dballe/core/json.h"
-#include <wreport/utils/string.h>
-#include <cstring>
 #include "config.h"
+#include "dballe/core/json.h"
+#include "dballe/core/query.h"
+#include "summary_memory.h"
+#include <cstring>
+#include <wreport/utils/string.h>
 
 #ifdef HAVE_XAPIAN
 #include "summary_xapian.h"
@@ -26,14 +26,13 @@ bool has_db<dballe::DBStation>() { return true; }
 }
 #endif
 
-template<typename Station>
-BaseExplorer<Station>::BaseExplorer()
+template <typename Station> BaseExplorer<Station>::BaseExplorer()
 {
     _global_summary = make_shared<db::BaseSummaryMemory<Station>>();
     _active_summary = _global_summary;
 }
 
-template<typename Station>
+template <typename Station>
 BaseExplorer<Station>::BaseExplorer(const std::string& pathname)
 {
     using namespace wreport;
@@ -50,41 +49,41 @@ BaseExplorer<Station>::BaseExplorer(const std::string& pathname)
     _active_summary = _global_summary;
 }
 
-template<typename Station>
-BaseExplorer<Station>::~BaseExplorer()
-{
-}
+template <typename Station> BaseExplorer<Station>::~BaseExplorer() {}
 
-template<typename Station>
-const dballe::db::BaseSummary<Station>& BaseExplorer<Station>::global_summary() const
+template <typename Station>
+const dballe::db::BaseSummary<Station>&
+BaseExplorer<Station>::global_summary() const
 {
     if (!_global_summary)
-        throw std::runtime_error("global summary is not available, call rebuild or update first");
+        throw std::runtime_error(
+            "global summary is not available, call rebuild or update first");
     return *_global_summary;
 }
 
-template<typename Station>
-const dballe::db::BaseSummary<Station>& BaseExplorer<Station>::active_summary() const
+template <typename Station>
+const dballe::db::BaseSummary<Station>&
+BaseExplorer<Station>::active_summary() const
 {
     if (!_active_summary)
-        throw std::runtime_error("active summary is not available, call rebuild or update first");
+        throw std::runtime_error(
+            "active summary is not available, call rebuild or update first");
     return *_active_summary;
 }
 
-template<typename Station>
-void BaseExplorer<Station>::commit()
+template <typename Station> void BaseExplorer<Station>::commit()
 {
     if (_global_summary)
         _global_summary->commit();
 }
 
-template<typename Station>
+template <typename Station>
 const dballe::Query& BaseExplorer<Station>::get_filter() const
 {
     return filter;
 }
 
-template<typename Station>
+template <typename Station>
 void BaseExplorer<Station>::set_filter(const dballe::Query& query)
 {
     filter = core::Query::downcast(query);
@@ -92,7 +91,7 @@ void BaseExplorer<Station>::set_filter(const dballe::Query& query)
         update_active_summary();
 }
 
-template<typename Station>
+template <typename Station>
 typename BaseExplorer<Station>::Update BaseExplorer<Station>::rebuild()
 {
     if (!_global_summary)
@@ -103,7 +102,7 @@ typename BaseExplorer<Station>::Update BaseExplorer<Station>::rebuild()
     return Update(this);
 }
 
-template<typename Station>
+template <typename Station>
 typename BaseExplorer<Station>::Update BaseExplorer<Station>::update()
 {
     if (!_global_summary)
@@ -112,8 +111,7 @@ typename BaseExplorer<Station>::Update BaseExplorer<Station>::update()
     return Update(this);
 }
 
-template<typename Station>
-void BaseExplorer<Station>::update_active_summary()
+template <typename Station> void BaseExplorer<Station>::update_active_summary()
 {
     if (filter.empty())
         _active_summary = _global_summary;
@@ -125,7 +123,7 @@ void BaseExplorer<Station>::update_active_summary()
     }
 }
 
-template<typename Station>
+template <typename Station>
 void BaseExplorer<Station>::to_json(core::JSONWriter& writer) const
 {
     writer.start_mapping();
@@ -134,25 +132,26 @@ void BaseExplorer<Station>::to_json(core::JSONWriter& writer) const
     writer.end_mapping();
 }
 
-template<typename Station>
+template <typename Station>
 BaseExplorer<Station>::Update::Update(BaseExplorer<Station>* explorer)
-    : explorer(explorer) {}
+    : explorer(explorer)
+{
+}
 
-template<typename Station>
-BaseExplorer<Station>::Update::Update() {}
+template <typename Station> BaseExplorer<Station>::Update::Update() {}
 
-template<typename Station>
-BaseExplorer<Station>::Update::Update(Update&& o)
-    : explorer(o.explorer) { o.explorer = nullptr; }
+template <typename Station>
+BaseExplorer<Station>::Update::Update(Update&& o) : explorer(o.explorer)
+{
+    o.explorer = nullptr;
+}
 
-template<typename Station>
-BaseExplorer<Station>::Update::~Update()
+template <typename Station> BaseExplorer<Station>::Update::~Update()
 {
     commit();
 }
 
-template<typename Station>
-void BaseExplorer<Station>::Update::commit()
+template <typename Station> void BaseExplorer<Station>::Update::commit()
 {
     if (!explorer)
         return;
@@ -161,16 +160,18 @@ void BaseExplorer<Station>::Update::commit()
     explorer = nullptr;
 }
 
-template<typename Station>
-typename BaseExplorer<Station>::Update& BaseExplorer<Station>::Update::operator=(Update&& o)
+template <typename Station>
+typename BaseExplorer<Station>::Update&
+BaseExplorer<Station>::Update::operator=(Update&& o)
 {
-    if (&o == this) return *this;
-    explorer = o.explorer;
+    if (&o == this)
+        return *this;
+    explorer   = o.explorer;
     o.explorer = nullptr;
     return *this;
 }
 
-template<typename Station>
+template <typename Station>
 void BaseExplorer<Station>::Update::add_db(dballe::db::Transaction& tr)
 {
     core::Query query;
@@ -180,60 +181,74 @@ void BaseExplorer<Station>::Update::add_db(dballe::db::Transaction& tr)
     add_cursor(*cur);
 }
 
-template<typename Station>
+template <typename Station>
 void BaseExplorer<Station>::Update::add_cursor(dballe::CursorSummary& cur)
 {
     while (cur.next())
         explorer->_global_summary->add_cursor(cur);
 }
 
-template<typename Station>
+template <typename Station>
 void BaseExplorer<Station>::Update::add_json(core::json::Stream& in)
 {
     in.parse_object([&](const std::string& key) {
         if (key == "summary")
             explorer->_global_summary->load_json(in);
         else
-            throw core::JSONParseException("unsupported key \"" + key + "\" for db::Explorer");
+            throw core::JSONParseException("unsupported key \"" + key +
+                                           "\" for db::Explorer");
     });
 }
 
-template<typename Station> template<typename OStation>
-void BaseExplorer<Station>::Update::add_explorer(const BaseExplorer<OStation>& explorer)
+template <typename Station>
+template <typename OStation>
+void BaseExplorer<Station>::Update::add_explorer(
+    const BaseExplorer<OStation>& explorer)
 {
     this->explorer->_global_summary->add_summary(explorer.active_summary());
 }
-template<> template<>
-void BaseExplorer<Station>::Update::add_explorer(const BaseExplorer<Station>& explorer)
+template <>
+template <>
+void BaseExplorer<Station>::Update::add_explorer(
+    const BaseExplorer<Station>& explorer)
 {
     if (this->explorer == &explorer)
-        wreport::error_consistency::throwf("Adding an Explorer to itself is not supported");
+        wreport::error_consistency::throwf(
+            "Adding an Explorer to itself is not supported");
     this->explorer->_global_summary->add_summary(explorer.active_summary());
 }
-template<> template<>
-void BaseExplorer<DBStation>::Update::add_explorer(const BaseExplorer<DBStation>& explorer)
+template <>
+template <>
+void BaseExplorer<DBStation>::Update::add_explorer(
+    const BaseExplorer<DBStation>& explorer)
 {
     if (this->explorer == &explorer)
-        wreport::error_consistency::throwf("Adding an Explorer to itself is not supported");
+        wreport::error_consistency::throwf(
+            "Adding an Explorer to itself is not supported");
     this->explorer->_global_summary->add_summary(explorer.active_summary());
 }
 
-template<typename Station>
-void BaseExplorer<Station>::Update::add_message(const dballe::Message& message, bool station_data, bool data)
+template <typename Station>
+void BaseExplorer<Station>::Update::add_message(const dballe::Message& message,
+                                                bool station_data, bool data)
 {
     this->explorer->_global_summary->add_message(message, station_data, data);
 }
 
-template<typename Station>
-void BaseExplorer<Station>::Update::add_messages(const std::vector<std::shared_ptr<Message>>& messages, bool station_data, bool data)
+template <typename Station>
+void BaseExplorer<Station>::Update::add_messages(
+    const std::vector<std::shared_ptr<Message>>& messages, bool station_data,
+    bool data)
 {
     this->explorer->_global_summary->add_messages(messages, station_data, data);
 }
 
 template class BaseExplorer<dballe::Station>;
-template void BaseExplorer<dballe::Station>::Update::add_explorer(const BaseExplorer<DBStation>&);
+template void BaseExplorer<dballe::Station>::Update::add_explorer(
+    const BaseExplorer<DBStation>&);
 template class BaseExplorer<dballe::DBStation>;
-template void BaseExplorer<dballe::DBStation>::Update::add_explorer(const BaseExplorer<Station>&);
+template void BaseExplorer<dballe::DBStation>::Update::add_explorer(
+    const BaseExplorer<Station>&);
 
-}
-}
+} // namespace db
+} // namespace dballe

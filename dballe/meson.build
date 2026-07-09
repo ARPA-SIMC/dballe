@@ -219,7 +219,7 @@ if xapian_dep.found()
         ]
 endif
 
-test_dballe = executable('test-dballe', test_dballe_sources,
+test_dballe = executable('test-dballe', test_dballe_sources + tables,
         include_directories: toplevel_inc,
         cpp_pch: 'pch/dballe_pch.h',
         link_with: [

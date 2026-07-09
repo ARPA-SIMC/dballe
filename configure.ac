@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(dballe, [9.7], [enrico@enricozini.org])
+AC_INIT(dballe, [9.13], [enrico@enricozini.org])
 AC_CONFIG_SRCDIR([configure.ac])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_CONFIG_HEADER(config.h)
@@ -209,13 +209,13 @@ fi
 
 PKGCONFIG_LIBS="-lm"
 PKGCONFIG_CFLAGS=""
-PKGCONFIG_REQUIRES="libwreport >= 3.19 sqlite3"
+PKGCONFIG_REQUIRES="libwreport >= 3.41 sqlite3"
 AC_SUBST(PKGCONFIG_LIBS)
 AC_SUBST(PKGCONFIG_CFLAGS)
 AC_SUBST(PKGCONFIG_REQUIRES)
 
 dnl Check for wreport
-PKG_CHECK_MODULES(WREPORT,libwreport >= 3.22)
+PKG_CHECK_MODULES(WREPORT,libwreport >= 3.41)
 
 dnl Check for sqlite3
 PKG_CHECK_MODULES(SQLITE3, sqlite3)
