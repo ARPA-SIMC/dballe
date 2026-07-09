@@ -1,4 +1,14 @@
-dballe (9.7-2) UNRELEASED; urgency=medium
+dballe (9.13-1) unstable; urgency=medium
+
+  * New upstream version
+  * Updated Standards-Version, no changes required
+  * Added Rules-Requires-Root: no
+  * Added Testsuite: autopkgtest-pkg-python
+  * Minor packaging cleanups
+
+ -- Enrico Zini <enrico@debian.org>  Thu, 09 Jul 2026 13:14:52 +0200
+
+dballe (9.7-2) unstable; urgency=medium
 
   * Explicitly include dballef.mod in debian/libdballef-dev.install.
     Closes: #1028098
