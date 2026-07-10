@@ -1,6 +1,5 @@
 Source: dballe
 Section: misc
-Priority: optional
 Maintainer: Enrico Zini <enrico@debian.org>
 Build-Depends:
   debhelper-compat (= 13),
