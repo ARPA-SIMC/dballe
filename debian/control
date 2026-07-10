@@ -7,7 +7,7 @@ Build-Depends:
   dh-sequence-sphinxdoc,
   dh-sequence-fortran-mod,
   dh-python,
-  pkg-config,
+  pkgconf,
   meson,
   doxygen,
   help2man,
