@@ -1,3 +1,9 @@
+dballe (9.13-2) UNRELEASED; urgency=medium
+
+  * Drop unnecessary dh arguments: --parallel
+
+ -- enrico <enrico@f76b70a38c9d>  Fri, 10 Jul 2026 11:03:20 +0000
+
 dballe (9.13-1) unstable; urgency=medium
 
   * New upstream version

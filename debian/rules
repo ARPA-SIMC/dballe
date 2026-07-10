@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 
 %:
-	dh $@ --buildsystem=pybuild --without autoreconf --parallel
+	dh $@ --buildsystem=pybuild --without autoreconf
 
 override_dh_makeshlibs:
 	# For new symbols when compiled with GCC 7. See: #871272
