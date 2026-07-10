@@ -1,5 +1,6 @@
 dballe (9.13-2) UNRELEASED; urgency=medium
 
+  [ Enrico Zini ]
   * Drop unnecessary dh arguments: --parallel
   * Remove field Section on binary packages dballe, dballe-common that
     duplicates source.
@@ -9,8 +10,9 @@ dballe (9.13-2) UNRELEASED; urgency=medium
   * Trim trailing whitespace.
   * Update standards version to 4.7.4, no changes needed.
   * Set upstream metadata fields: Bug-Database, Repository-Browse.
+  * dballe: depend on python3 and python3-dballe
 
- -- enrico <enrico@f76b70a38c9d>  Fri, 10 Jul 2026 11:03:20 +0000
+ -- Enrico Zini <enrico@debian.org>  Fri, 10 Jul 2026 11:03:20 +0000
 
 dballe (9.13-1) unstable; urgency=medium
 

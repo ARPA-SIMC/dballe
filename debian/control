@@ -131,8 +131,7 @@ Description: Common data files for all DB-All.e modules
 
 Package: dballe
 Architecture: any
-Depends: dballe-common, ${shlibs:Depends}, ${misc:Depends}
-Recommends: python3-dballe
+Depends: python3, python3-dballe, dballe-common, ${shlibs:Depends}, ${misc:Depends}
 Description: Database for point-based meteorological data (Command line tools)
  DB-All.e is a fast on-disk database where meteorological observed and
  forecast data can be stored, searched, retrieved and updated.
