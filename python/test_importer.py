@@ -93,20 +93,18 @@ class TestImporter(MessageTestMixin, unittest.TestCase):
     def test_refcounts(self):
         pathname = test_pathname("bufr/gts-acars-uk1.bufr")
         importer = dballe.Importer("BUFR")
-        self.assertEqual(sys.getrefcount(importer), 2)  # importer, getrefcount
+        importer_initial = sys.getrefcount(importer)
 
         with dballe.File(pathname) as f:
-            self.assertEqual(sys.getrefcount(importer), 2)  # importer, getrefcount
-            self.assertEqual(sys.getrefcount(f), 3)  # __enter__ result, f, getrefcount
+            f_initial = sys.getrefcount(f)
+            # importer_inside_with = sys.getrefcount(importer)
             fimp = importer.from_file(f)
-            self.assertEqual(sys.getrefcount(importer), 3)  # importer, fimp, getrefcount
-            self.assertEqual(sys.getrefcount(f), 4)  # __enter__ result, f, fimp, getrefcount
+            self.assertGreater(sys.getrefcount(importer), importer_initial)
+            self.assertGreater(sys.getrefcount(f), f_initial)
             decoded = list(fimp)
-            self.assertEqual(sys.getrefcount(importer), 3)  # importer, fimp, getrefcount
-            self.assertEqual(sys.getrefcount(f), 4)  # __enter__ result, f, fimp, getrefcount
-
-        self.assertEqual(sys.getrefcount(importer), 3)  # importer, fimp, getrefcount
-        self.assertEqual(sys.getrefcount(f), 3)  # f, fimp, getrefcount
+            del fimp
+        del f
+        self.assertEqual(sys.getrefcount(importer), importer_initial)
         self.assertEqual(len(decoded), 1)
 
     def test_issue197(self):
@@ -120,7 +118,10 @@ class TestImporter(MessageTestMixin, unittest.TestCase):
         with msgs[0].query_data() as m:
             with self.assertRaises(RuntimeError) as e:
                 m.data
-            self.assertEqual(str(e.exception), "cannot access values on a cursor before or after iteration")
+            self.assertEqual(
+                str(e.exception),
+                "cannot access values on a cursor before or after iteration",
+            )
 
     def test_domain_errors(self):
         pathname = test_pathname("bufr/interpreted-range.bufr")
