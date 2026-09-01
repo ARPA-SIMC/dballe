@@ -1,3 +1,7 @@
+# New in version 9.14
+
+* Do not assume exact changes in refcounts, as python 3.14 breaks some (#295)
+
 # New in version 9.13
 
 * Clarify that report names are always lowercased (#236)

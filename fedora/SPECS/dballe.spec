@@ -4,7 +4,7 @@
 
 Summary: DB-ALLe is a database for point-based metereological data  (Command line tools)
 Name: dballe
-Version: 9.13
+Version: 9.14
 Release: %{releaseno}%{dist}
 License: GPL
 Group: Applications/Meteo
@@ -287,6 +287,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/dballe/dballef.mod $RPM_BUILD_ROOT%{_fmoddir}
 
 
 %changelog
+* Tue Sep 01 2026 Daniele Branchini  <dbranchini@arpae.it> - 9.14-1
+- Do not assume exact changes in refcounts, as python 3.14 breaks some (#295)
+
 * Wed Nov 12 2025 Daniele Branchini <dbranchini@arpae.it> - 9.13-1
 - Clarify that report names are always lowercased (#236)
 - Use datetime information from bulletin header when they are missing in BUFR data (#289)
