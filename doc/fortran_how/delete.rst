@@ -10,12 +10,12 @@ Deleting data
 Clearing the database
 ---------------------
 
-You can initialise or reinitialise the database using :c:func:`idba_reinit_db`::
+You can initialise or reinitialise the database using :ref:`idba_reinit_db`::
 
    ! Start the work with a clean database
    ierr = idba_reinit_db(handle, "repinfo.csv")
 
-:c:func:`idba_reinit_db` clears the database if it exists, then recreates all the
+:ref:`idba_reinit_db` clears the database if it exists, then recreates all the
 needed tables.  Finally, it populates the informations about the reports (such
 as the available report types, their mnemonics and their priority) using the
 data in the file given as argument.
@@ -23,13 +23,13 @@ data in the file given as argument.
 The file is in CSV format, with 6 columns:
 
 1. Report code (corresponding to parameter ``rep_cod``)
-2. Mnemonic name (corresponding to parameter ``rep_memo``)
+2. Mnemonic name (corresponding to parameter ``rep_memo``, forced to lowercase)
 3. Report description
 4. Report priority (corresponding to parameter ``priority``)
 5. Ignored
 6. Ignored
 
-If ``""`` is given instead of the file name, :c:func:`idba_reinit_db` will read the
+If ``""`` is given instead of the file name, :ref:`idba_reinit_db` will read the
 data from ``/etc/repinfo.csv``.
 
 .. highlight:: csv
@@ -48,14 +48,14 @@ This is an example of the contents of the file::
 
 .. highlight:: fortran
 
-:c:func:`idba_reinit_db` will not work unless ``rewrite`` has been enabled for the
+:ref:`idba_reinit_db` will not work unless ``rewrite`` has been enabled for the
 data when opening the database.
 
 
 Deleting data
 -------------
 
-Data is deleted using :c:func:`idba_remove_data`::
+Data is deleted using :ref:`idba_remove_data`::
 
     ! Delete all data from the station with id 4 in year 2002
     ierr = idba_seti(handle, "ana_id", 4)
@@ -64,7 +64,7 @@ Data is deleted using :c:func:`idba_remove_data`::
 
 This code introduces a new function:
 
-* :c:func:`idba_remove_data`: deletes all the data found in the extremes specified in input.
+* :ref:`idba_remove_data`: deletes all the data found in the extremes specified in input.
 
-:c:func:`idba_remove_data` will not work unless ``rewrite`` has been enabled for
+:ref:`idba_remove_data` will not work unless ``rewrite`` has been enabled for
 the data when opening the database.

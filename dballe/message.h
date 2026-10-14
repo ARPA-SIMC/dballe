@@ -3,9 +3,9 @@
 
 #include <dballe/fwd.h>
 #include <dballe/types.h>
-#include <wreport/varinfo.h>
-#include <memory>
 #include <iosfwd>
+#include <memory>
+#include <wreport/varinfo.h>
 
 namespace wreport {
 struct Var;
@@ -28,7 +28,12 @@ namespace dballe {
 class Message : public std::enable_shared_from_this<Message>
 {
 public:
+    Message() {}
+    Message(const Message&) = default;
     virtual ~Message();
+
+    Message& operator=(const Message& o) = default;
+    Message& operator=(Message&& o)      = default;
 
     /// Return the type of the data in the message
     virtual MessageType get_type() const = 0;
@@ -54,7 +59,8 @@ public:
      * @return
      *   A pointer to the variable, or nullptr if it was not found.
      */
-    const wreport::Var* get(const Level& lev, const Trange& tr, wreport::Varcode code) const;
+    const wreport::Var* get(const Level& lev, const Trange& tr,
+                            wreport::Varcode code) const;
 
     /**
      * Get a variable given its shortcut name
@@ -85,7 +91,8 @@ public:
      * @param var
      *   The Var with the value to set
      */
-    void set(const Level& lev, const Trange& tr, wreport::Varcode code, const wreport::Var& var);
+    void set(const Level& lev, const Trange& tr, wreport::Varcode code,
+             const wreport::Var& var);
 
     /**
      * Add or replace a value
@@ -108,10 +115,11 @@ public:
      * @param tr
      *   The Trange of the value
      * @param var
-     *   The Var with the value to set.  This Message will take ownership of memory
-     *   management.
+     *   The Var with the value to set.  This Message will take ownership of
+     * memory management.
      */
-    void set(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var);
+    void set(const Level& lev, const Trange& tr,
+             std::unique_ptr<wreport::Var> var);
 
     /**
      * Add or replace a value, taking ownership of the source variable without
@@ -120,8 +128,8 @@ public:
      * @param shortcut
      *   Shortcut name mapping to a (Level, Trange, Varcode) triplet
      * @param var
-     *   The Var with the value to set.  This Message will take ownership of memory
-     *   management.
+     *   The Var with the value to set.  This Message will take ownership of
+     * memory management.
      */
     void set(const char* shortcut, std::unique_ptr<wreport::Var> var);
 
@@ -139,7 +147,9 @@ public:
     /**
      * Iterate the contents of the message
      */
-    virtual bool foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)>) const = 0;
+    virtual bool foreach_var(
+        std::function<bool(const Level&, const Trange&, const wreport::Var&)>)
+        const = 0;
 
     /**
      * Return a Cursor to access the station information in the message.
@@ -152,7 +162,8 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::shared_ptr<CursorStation> query_stations(const Query& query) const = 0;
+    virtual std::shared_ptr<CursorStation>
+    query_stations(const Query& query) const = 0;
 
     /**
      * Query the station variables in the message.
@@ -162,7 +173,8 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::shared_ptr<CursorStationData> query_station_data(const Query& query) const = 0;
+    virtual std::shared_ptr<CursorStationData>
+    query_station_data(const Query& query) const = 0;
 
     /**
      * Query the variables in the message.
@@ -172,7 +184,8 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::shared_ptr<CursorData> query_data(const Query& query) const = 0;
+    virtual std::shared_ptr<CursorData>
+    query_data(const Query& query) const = 0;
 
     /// Print all the contents of this message to an output stream
     virtual void print(FILE* out) const = 0;
@@ -195,12 +208,14 @@ public:
 
 protected:
     /// Implementation of get(const Level&, const Trange&, wreport::Varcode)
-    virtual const wreport::Var* get_impl(const Level& lev, const Trange& tr, wreport::Varcode code) const = 0;
+    virtual const wreport::Var* get_impl(const Level& lev, const Trange& tr,
+                                         wreport::Varcode code) const = 0;
 
-    /// Implementation of set(const Level& const Trange&, std::unique_ptr<wreport::Var>)
-    virtual void set_impl(const Level& lev, const Trange& tr, std::unique_ptr<wreport::Var> var) = 0;
+    /// Implementation of set(const Level& const Trange&,
+    /// std::unique_ptr<wreport::Var>)
+    virtual void set_impl(const Level& lev, const Trange& tr,
+                          std::unique_ptr<wreport::Var> var) = 0;
 };
-
 
 /**
  * Return a string with the name of a MessageType.
@@ -212,9 +227,8 @@ protected:
  */
 const char* format_message_type(MessageType type);
 
-
 /// Serialize MessageType
 std::ostream& operator<<(std::ostream&, const dballe::MessageType&);
 
-}
+} // namespace dballe
 #endif

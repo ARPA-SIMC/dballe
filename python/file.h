@@ -1,9 +1,9 @@
 #ifndef DBALLE_PYTHON_FILE_H
 #define DBALLE_PYTHON_FILE_H
 
+#include "common.h"
 #include <dballe/file.h>
 #include <memory>
-#include "common.h"
 
 namespace dballe {
 namespace python {
@@ -15,41 +15,38 @@ protected:
 
 public:
     FileWrapper(const FileWrapper&) = delete;
-    FileWrapper(FileWrapper&&) = delete;
+    FileWrapper(FileWrapper&&)      = delete;
     virtual ~FileWrapper();
     FileWrapper& operator=(const FileWrapper&) = delete;
-    FileWrapper& operator=(FileWrapper&&) = delete;
+    FileWrapper& operator=(FileWrapper&&)      = delete;
 
-    virtual void close() = 0;
+    virtual void close()         = 0;
     virtual dballe::File& file() = 0;
 };
 
-}
-}
+} // namespace python
+} // namespace dballe
 
 extern "C" {
 
-typedef struct {
-    PyObject_HEAD
-    dballe::python::FileWrapper* file;
+typedef struct
+{
+    PyObject_HEAD dballe::python::FileWrapper* file;
 } dpy_File;
 
 extern PyTypeObject* dpy_File_Type;
 
-#define dpy_File_Check(ob) \
-    (Py_TYPE(ob) == dpy_File_Type || \
+#define dpy_File_Check(ob)                                                     \
+    (Py_TYPE(ob) == dpy_File_Type ||                                           \
      PyType_IsSubtype(Py_TYPE(ob), dpy_File_Type))
-
-
 }
-
 
 namespace dballe {
 namespace python {
 
 /**
- * Create a FileWrapper from a python object, open for reading, autodetecting the
- * encoding.
+ * Create a FileWrapper from a python object, open for reading, autodetecting
+ * the encoding.
  *
  * The python object can be a string with the file name, or a file-like object.
  */
@@ -60,7 +57,8 @@ std::unique_ptr<FileWrapper> wrapper_r_from_object(PyObject* o);
  *
  * The python object can be a string with the file name, or a file-like object.
  */
-std::unique_ptr<FileWrapper> wrapper_r_from_object(PyObject* o, Encoding encoding);
+std::unique_ptr<FileWrapper> wrapper_r_from_object(PyObject* o,
+                                                   Encoding encoding);
 
 /**
  * Create a dpy_File from a python object, open for reading, autodetecting the
@@ -79,7 +77,7 @@ dpy_File* file_create_r_from_object(PyObject* o, Encoding encoding);
 
 void register_file(PyObject* m);
 
-}
-}
+} // namespace python
+} // namespace dballe
 
 #endif

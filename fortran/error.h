@@ -18,6 +18,6 @@ int error(wreport::error& e);
 /// Return a success code, updating the error information accordingly
 int success();
 
-}
-}
+} // namespace fortran
+} // namespace dballe
 #endif

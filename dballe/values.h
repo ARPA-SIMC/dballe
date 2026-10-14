@@ -8,15 +8,14 @@
 #include <dballe/fwd.h>
 #include <dballe/value.h>
 #include <dballe/var.h>
-#include <vector>
 #include <functional>
 #include <iosfwd>
+#include <vector>
 
 namespace dballe {
 namespace impl {
 
-template<typename Value>
-class ValuesBase
+template <typename Value> class ValuesBase
 {
 public:
     typedef typename std::vector<Value>::const_iterator const_iterator;
@@ -29,10 +28,10 @@ protected:
 
 public:
     ValuesBase() {}
-    ValuesBase(const ValuesBase&) = default;
-    ValuesBase(ValuesBase&&) = default;
+    ValuesBase(const ValuesBase&)            = default;
+    ValuesBase(ValuesBase&&)                 = default;
     ValuesBase& operator=(const ValuesBase&) = default;
-    ValuesBase& operator=(ValuesBase&&) = default;
+    ValuesBase& operator=(ValuesBase&&)      = default;
 
     const_iterator begin() const { return m_values.begin(); }
     const_iterator end() const { return m_values.end(); }
@@ -45,7 +44,10 @@ public:
     size_t size() const { return m_values.size(); }
     bool empty() const { return m_values.empty(); }
     void clear() { return m_values.clear(); }
-    void reserve(typename std::vector<Value>::size_type size) { m_values.reserve(size); }
+    void reserve(typename std::vector<Value>::size_type size)
+    {
+        m_values.reserve(size);
+    }
     bool operator==(const ValuesBase<Value>& o) const;
     bool operator!=(const ValuesBase<Value>& o) const;
 
@@ -68,10 +70,12 @@ public:
     void merge(ValuesBase<Value>&& vals);
 
     /// Set a variable value, creating it if it does not exist
-    template<typename C, typename T> void set(const C& code, const T& val) { this->set(newvar(code, val)); }
+    template <typename C, typename T> void set(const C& code, const T& val)
+    {
+        this->set(newvar(code, val));
+    }
 
-    template<typename C, typename T>
-    void setf(const C& code, const T& val)
+    template <typename C, typename T> void setf(const C& code, const T& val)
     {
         auto var = newvar(code);
         var->setf(val);
@@ -82,48 +86,82 @@ public:
      * Lookup a value, throwing an exception if not found
      */
     const Value& value(wreport::Varcode code) const;
-    const Value& value(const char* code) const { return value(resolve_varcode(code)); }
-    const Value& value(const std::string& code) const { return value(resolve_varcode(code)); }
+    const Value& value(const char* code) const
+    {
+        return value(resolve_varcode(code));
+    }
+    const Value& value(const std::string& code) const
+    {
+        return value(resolve_varcode(code));
+    }
 
     /**
      * Lookup a wreport::Var, throwing an exception if not found
      */
     const wreport::Var& var(wreport::Varcode code) const;
-    const wreport::Var& var(const char* code) const { return var(resolve_varcode(code)); }
-    const wreport::Var& var(const std::string& code) const { return var(resolve_varcode(code)); }
+    const wreport::Var& var(const char* code) const
+    {
+        return var(resolve_varcode(code));
+    }
+    const wreport::Var& var(const std::string& code) const
+    {
+        return var(resolve_varcode(code));
+    }
 
     /**
-     * Lookup a wreport::Var, throwing an exception if not found (non-const version)
+     * Lookup a wreport::Var, throwing an exception if not found (non-const
+     * version)
      */
     wreport::Var& var(wreport::Varcode code);
     wreport::Var& var(const char* code) { return var(resolve_varcode(code)); }
-    wreport::Var& var(const std::string& code) { return var(resolve_varcode(code)); }
+    wreport::Var& var(const std::string& code)
+    {
+        return var(resolve_varcode(code));
+    }
 
     /**
      * Lookup a value, returning nullptr if not found
      */
     const Value* maybe_value(wreport::Varcode code) const;
-    const Value* maybe_value(const char* code) const { return maybe_value(resolve_varcode(code)); }
-    const Value* maybe_value(const std::string& code) const { return maybe_value(resolve_varcode(code)); }
+    const Value* maybe_value(const char* code) const
+    {
+        return maybe_value(resolve_varcode(code));
+    }
+    const Value* maybe_value(const std::string& code) const
+    {
+        return maybe_value(resolve_varcode(code));
+    }
 
     /**
      * Lookup a variable, returning nullptr if not found
      */
     const wreport::Var* maybe_var(wreport::Varcode code) const;
-    const wreport::Var* maybe_var(const char* code) const { return maybe_var(resolve_varcode(code)); }
-    const wreport::Var* maybe_var(const std::string& code) const { return maybe_var(resolve_varcode(code)); }
+    const wreport::Var* maybe_var(const char* code) const
+    {
+        return maybe_var(resolve_varcode(code));
+    }
+    const wreport::Var* maybe_var(const std::string& code) const
+    {
+        return maybe_var(resolve_varcode(code));
+    }
 
     /**
      * Lookup a variable, returning nullptr if not found (non-const version)
      */
     wreport::Var* maybe_var(wreport::Varcode code);
-    wreport::Var* maybe_var(const char* code) { return maybe_var(resolve_varcode(code)); }
-    wreport::Var* maybe_var(const std::string& code) { return maybe_var(resolve_varcode(code)); }
+    wreport::Var* maybe_var(const char* code)
+    {
+        return maybe_var(resolve_varcode(code));
+    }
+    wreport::Var* maybe_var(const std::string& code)
+    {
+        return maybe_var(resolve_varcode(code));
+    }
 
     /**
      * Get the value of a variable, or def if it is not set
      */
-    template<typename C, typename T> T enq(C code, const T& def)
+    template <typename C, typename T> T enq(C code, const T& def)
     {
         if (const wreport::Var* var = maybe_var(code))
             return var->enq(def);
@@ -160,13 +198,14 @@ public:
     /**
      * Decode variables from a DB-All.e specific binary representation
      */
-    static void decode(const std::vector<uint8_t>& buf, std::function<void(std::unique_ptr<wreport::Var>)> dest);
+    static void decode(const std::vector<uint8_t>& buf,
+                       std::function<void(std::unique_ptr<wreport::Var>)> dest);
 };
 
 extern template struct ValuesBase<Value>;
 extern template struct ValuesBase<DBValue>;
 
-}
+} // namespace impl
 
 struct DBValues;
 
@@ -183,7 +222,6 @@ struct Values : public impl::ValuesBase<Value>
     Values& operator=(const DBValues&);
     Values& operator=(DBValues&&);
 };
-
 
 /**
  * Collection of DBValue objects, indexed by wreport::Varcode
@@ -216,6 +254,6 @@ public:
 std::ostream& operator<<(std::ostream&, const Values&);
 std::ostream& operator<<(std::ostream&, const DBValues&);
 
-}
+} // namespace dballe
 
 #endif

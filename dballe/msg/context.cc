@@ -1,8 +1,8 @@
 #include "dballe/msg/context.h"
-#include <wreport/notes.h>
-#include <sstream>
 #include <cstdlib>
 #include <cstring>
+#include <sstream>
+#include <wreport/notes.h>
 
 using namespace wreport;
 using namespace std;
@@ -11,22 +11,21 @@ namespace dballe {
 namespace impl {
 namespace msg {
 
-Context::Context(const Level& lev, const Trange& tr)
-    : level(lev), trange(tr)
-{
-}
+Context::Context(const Level& lev, const Trange& tr) : level(lev), trange(tr) {}
 
 int Context::compare(const Context& ctx) const
 {
     int res;
-    if ((res = level.compare(ctx.level))) return res;
+    if ((res = level.compare(ctx.level)))
+        return res;
     return trange.compare(ctx.trange);
 }
 
 int Context::compare(const Level& lev, const Trange& tr) const
 {
     int res;
-    if ((res = level.compare(lev))) return res;
+    if ((res = level.compare(lev)))
+        return res;
     return trange.compare(tr);
 }
 
@@ -48,7 +47,8 @@ static void var_summary(const Var& var, ostream& out)
     out << varcode_format(var.code()) << "[" << var.info()->desc << "]";
 }
 
-static void context_var_summary(const msg::Context& c, const Var& var, ostream& out)
+static void context_var_summary(const msg::Context& c, const Var& var,
+                                ostream& out)
 {
     out << "Variable ";
     context_summary(c, out);
@@ -60,17 +60,15 @@ unsigned Context::diff(const Context& ctx) const
 {
     if (level != ctx.level || trange != ctx.trange)
     {
-        notes::log() << "the contexts are different (first is "
-            << level << ", " << trange
-            << " second is "
-            << ctx.level << ", " << ctx.trange
-            << ")" << endl;
+        notes::log() << "the contexts are different (first is " << level << ", "
+                     << trange << " second is " << ctx.level << ", "
+                     << ctx.trange << ")" << endl;
         return 1;
     }
 
     Values::const_iterator i1 = values.begin();
     Values::const_iterator i2 = ctx.values.begin();
-    unsigned diffs = 0;
+    unsigned diffs            = 0;
     while (i1 != values.end() && i2 != ctx.values.end())
     {
         int cmp = (int)i1->code() - (int)i2->code();
@@ -79,7 +77,9 @@ unsigned Context::diff(const Context& ctx) const
             diffs += (*i1)->diff(**i2);
             ++i1;
             ++i2;
-        } else if (cmp < 0) {
+        }
+        else if (cmp < 0)
+        {
             if ((*i1)->isset())
             {
                 context_var_summary(*this, **i1, notes::log());
@@ -87,7 +87,9 @@ unsigned Context::diff(const Context& ctx) const
                 ++diffs;
             }
             ++i1;
-        } else {
+        }
+        else
+        {
             if ((*i2)->isset())
             {
                 context_var_summary(ctx, **i2, notes::log());
@@ -117,19 +119,22 @@ unsigned Context::diff(const Context& ctx) const
 const Var* Context::find_vsig() const
 {
     // Check if we have the right context information
-    if ((level.ltype1 != 100 && level.ltype1 != 102 && level.ltype1 != 103) || trange != Trange::instant())
+    if ((level.ltype1 != 100 && level.ltype1 != 102 && level.ltype1 != 103) ||
+        trange != Trange::instant())
         return NULL;
     // Look for VSS variable
     const Var* res = values.maybe_var(WR_VAR(0, 8, 42));
-    if (!res) return nullptr;
+    if (!res)
+        return nullptr;
 
     // Ensure it is not undefined
-    if (!res->isset()) return nullptr;
+    if (!res->isset())
+        return nullptr;
 
     // Finally return it
     return res;
 }
 
-}
-}
-}
+} // namespace msg
+} // namespace impl
+} // namespace dballe

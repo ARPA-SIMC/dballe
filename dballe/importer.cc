@@ -1,9 +1,9 @@
 #include "importer.h"
-#include "file.h"
-#include "dballe/msg/wr_codec.h"
 #include "dballe/msg/json_codec.h"
-#include <wreport/error.h>
+#include "dballe/msg/wr_codec.h"
+#include "file.h"
 #include <wreport/bulletin.h>
+#include <wreport/error.h>
 
 #include "config.h"
 
@@ -52,29 +52,29 @@ std::unique_ptr<ImporterOptions> ImporterOptions::create(const std::string& s)
     return std::unique_ptr<ImporterOptions>(new ImporterOptions(s));
 }
 
+Importer::Importer(const ImporterOptions& opts) : opts(opts) {}
 
-Importer::Importer(const ImporterOptions& opts)
-    : opts(opts)
-{
-}
+Importer::~Importer() {}
 
-Importer::~Importer()
-{
-}
-
-std::vector<std::shared_ptr<Message>> Importer::from_binary(const BinaryMessage& msg) const
+std::vector<std::shared_ptr<Message>>
+Importer::from_binary(const BinaryMessage& msg) const
 {
     std::vector<std::shared_ptr<Message>> res;
-    foreach_decoded(msg, [&](std::shared_ptr<Message> m) { res.emplace_back(m); return true; });
+    foreach_decoded(msg, [&](std::shared_ptr<Message> m) {
+        res.emplace_back(m);
+        return true;
+    });
     return res;
 }
 
-std::vector<std::shared_ptr<Message>> Importer::from_bulletin(const wreport::Bulletin& msg) const
+std::vector<std::shared_ptr<Message>>
+Importer::from_bulletin(const wreport::Bulletin& msg) const
 {
     throw wreport::error_unimplemented("this exporter cannot read bulletins");
 }
 
-std::unique_ptr<Importer> Importer::create(Encoding type, const ImporterOptions& opts)
+std::unique_ptr<Importer> Importer::create(Encoding type,
+                                           const ImporterOptions& opts)
 {
     switch (type)
     {
@@ -85,13 +85,15 @@ std::unique_ptr<Importer> Importer::create(Encoding type, const ImporterOptions&
         case Encoding::JSON:
             return std::unique_ptr<Importer>(new impl::msg::JsonImporter(opts));
         default:
-            error_unimplemented::throwf("%s importer is not implemented yet", File::encoding_name(type));
+            error_unimplemented::throwf("%s importer is not implemented yet",
+                                        File::encoding_name(type));
     }
 }
 
-std::unique_ptr<Importer> Importer::create(Encoding type, const std::string& opts)
+std::unique_ptr<Importer> Importer::create(Encoding type,
+                                           const std::string& opts)
 {
     return Importer::create(type, ImporterOptions(opts));
 }
 
-}
+} // namespace dballe

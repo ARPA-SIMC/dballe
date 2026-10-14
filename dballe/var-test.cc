@@ -30,4 +30,4 @@ class Tests : public TestCase
     }
 } test("dballe_var");
 
-}
+} // namespace

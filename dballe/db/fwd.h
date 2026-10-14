@@ -9,8 +9,7 @@ class CursorData;
 class CursorSummary;
 class DB;
 class Transaction;
-}
-}
+} // namespace db
+} // namespace dballe
 
 #endif
-

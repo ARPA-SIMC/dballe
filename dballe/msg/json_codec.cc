@@ -1,19 +1,18 @@
 #include "json_codec.h"
-#include "domain_errors.h"
 #include "dballe/core/json.h"
 #include "dballe/file.h"
 #include "dballe/msg/msg.h"
-#include <wreport/error.h>
-#include <wreport/options.h>
+#include "domain_errors.h"
 #include <sstream>
 #include <stack>
+#include <wreport/error.h>
+#include <wreport/options.h>
 
 namespace dballe {
 namespace impl {
 namespace msg {
 
 using core::JSONParseException;
-
 
 struct JSONMsgReader : public core::JSONReader
 {
@@ -60,13 +59,15 @@ struct JSONMsgReader : public core::JSONReader
 
     JSONMsgReader() {}
 
-    bool parse_msgs(const std::string& buf, std::function<bool(std::shared_ptr<impl::Message>)> cb)
+    bool parse_msgs(const std::string& buf,
+                    std::function<bool(std::shared_ptr<impl::Message>)> cb)
     {
         std::stringstream in(buf);
         while (!in.eof())
         {
             parse(in);
-            if (not state.empty() && state.top() == MSG_END) {
+            if (not state.empty() && state.top() == MSG_END)
+            {
                 state.pop();
                 if (!cb(std::move(msg)))
                     return false;
@@ -88,7 +89,8 @@ struct JSONMsgReader : public core::JSONReader
     {
         throw_error_if_empty_state();
         State s = state.top();
-        switch (s) {
+        switch (s)
+        {
             case MSG_DATA_KEY:
                 state.pop();
                 state.push(MSG_DATA_LIST);
@@ -111,11 +113,12 @@ struct JSONMsgReader : public core::JSONReader
     {
         throw_error_if_empty_state();
         State s = state.top();
-        switch (s) {
-            case MSG_DATA_LIST: state.pop(); break;
-            case MSG_DATA_LIST_ITEM_LEVEL_LIST: state.pop(); break;
+        switch (s)
+        {
+            case MSG_DATA_LIST:                  state.pop(); break;
+            case MSG_DATA_LIST_ITEM_LEVEL_LIST:  state.pop(); break;
             case MSG_DATA_LIST_ITEM_TRANGE_LIST: state.pop(); break;
-            default: throw JSONParseException("Invalid JSON value end_list");
+            default:                             throw JSONParseException("Invalid JSON value end_list");
         }
     }
 
@@ -129,7 +132,8 @@ struct JSONMsgReader : public core::JSONReader
         else
         {
             State s = state.top();
-            switch (s) {
+            switch (s)
+            {
                 case MSG_DATA_LIST:
                     state.push(MSG_DATA_LIST_ITEM);
                     ctx.reset(new impl::msg::Context(Level(), Trange()));
@@ -146,7 +150,9 @@ struct JSONMsgReader : public core::JSONReader
                     state.pop();
                     state.push(MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING);
                     break;
-                default: throw JSONParseException("Invalid JSON value start_mapping");
+                default:
+                    throw JSONParseException(
+                        "Invalid JSON value start_mapping");
             }
         }
     }
@@ -155,15 +161,14 @@ struct JSONMsgReader : public core::JSONReader
     {
         throw_error_if_empty_state();
         State s = state.top();
-        switch (s) {
-            case MSG:
-            {
+        switch (s)
+        {
+            case MSG: {
                 state.pop();
                 state.push(MSG_END);
                 break;
             }
-            case MSG_DATA_LIST_ITEM:
-            {
+            case MSG_DATA_LIST_ITEM: {
                 // NOTE: station context could be already created, because
                 // of "lon", "lat", "ident", "network".
                 // Then, context overwrite is allowed.
@@ -171,8 +176,11 @@ struct JSONMsgReader : public core::JSONReader
                 if (ctx->level.is_missing() && ctx->trange.is_missing())
                 {
                     msg->station_data.merge(ctx->values);
-                } else {
-                    impl::msg::Context& ctx2 = msg->obtain_context(ctx->level, ctx->trange);
+                }
+                else
+                {
+                    impl::msg::Context& ctx2 =
+                        msg->obtain_context(ctx->level, ctx->trange);
                     ctx2.values.merge(ctx->values);
                 }
                 state.pop();
@@ -191,10 +199,9 @@ struct JSONMsgReader : public core::JSONReader
     {
         throw_error_if_empty_state();
         State s = state.top();
-        switch (s) {
-            case MSG_IDENT_KEY:
-                state.pop();
-                break;
+        switch (s)
+        {
+            case MSG_IDENT_KEY: state.pop(); break;
             case MSG_DATA_LIST_ITEM_LEVEL_LIST_LTYPE1:
                 ctx->level.ltype1 = MISSING_INT;
                 state.pop();
@@ -247,7 +254,8 @@ struct JSONMsgReader : public core::JSONReader
     {
         throw_error_if_empty_state();
         State s = state.top();
-        switch (s) {
+        switch (s)
+        {
             case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY:
                 var->set(val);
                 ctx->values.set(*var);
@@ -267,7 +275,8 @@ struct JSONMsgReader : public core::JSONReader
     {
         throw_error_if_empty_state();
         State s = state.top();
-        switch (s) {
+        switch (s)
+        {
             case MSG_LON_KEY:
                 msg->set_longitude_var(dballe::var("B06001", val));
                 state.pop();
@@ -330,7 +339,8 @@ struct JSONMsgReader : public core::JSONReader
     {
         throw_error_if_empty_state();
         State s = state.top();
-        switch (s) {
+        switch (s)
+        {
             case MSG_DATA_LIST_ITEM_VARS_MAPPING_VAR_KEY:
                 var->set(val);
                 ctx->values.set(*var);
@@ -350,7 +360,8 @@ struct JSONMsgReader : public core::JSONReader
     {
         throw_error_if_empty_state();
         State s = state.top();
-        switch (s) {
+        switch (s)
+        {
             case MSG:
                 if (val == "ident")
                     state.push(MSG_IDENT_KEY);
@@ -414,7 +425,8 @@ struct JSONMsgReader : public core::JSONReader
                 state.pop();
                 break;
             case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING:
-                state.push(MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY);
+                state.push(
+                    MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY);
                 attr = newvar(val);
                 break;
             case MSG_DATA_LIST_ITEM_VARS_MAPPING_ATTR_MAPPING_VAR_KEY:
@@ -428,13 +440,15 @@ struct JSONMsgReader : public core::JSONReader
     }
 };
 
-
-JsonImporter::JsonImporter(const dballe::ImporterOptions& opts)
-    : Importer(opts) {}
+JsonImporter::JsonImporter(const dballe::ImporterOptions& opts) : Importer(opts)
+{
+}
 
 JsonImporter::~JsonImporter() {}
 
-bool JsonImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(std::shared_ptr<dballe::Message>)> dest) const
+bool JsonImporter::foreach_decoded(
+    const BinaryMessage& msg,
+    std::function<bool(std::shared_ptr<dballe::Message>)> dest) const
 {
     WreportVarOptionsForImport wreport_config(opts.domain_errors);
 
@@ -442,24 +456,28 @@ bool JsonImporter::foreach_decoded(const BinaryMessage& msg, std::function<bool(
     return jsonreader.parse_msgs(msg.data, dest);
 }
 
-
-JsonExporter::JsonExporter(const dballe::ExporterOptions& opts)
-    : Exporter(opts) {}
+JsonExporter::JsonExporter(const dballe::ExporterOptions& opts) : Exporter(opts)
+{
+}
 
 JsonExporter::~JsonExporter() {}
 
-std::string JsonExporter::to_binary(const std::vector<std::shared_ptr<dballe::Message>>& msgs) const
+std::string JsonExporter::to_binary(
+    const std::vector<std::shared_ptr<dballe::Message>>& msgs) const
 {
     std::stringstream buf;
     core::JSONWriter json(buf);
 
-    for (const auto& mi: msgs) {
+    for (const auto& mi : msgs)
+    {
         auto msg = impl::Message::downcast(mi);
         json.start_mapping();
         json.add("version");
         json.add(DBALLE_JSON_VERSION);
         json.add("network");
-        json.add(msg->get_rep_memo_var() ? msg->get_rep_memo_var()->enqc() : dballe::impl::Message::repmemo_from_type(msg->type));
+        json.add(msg->get_rep_memo_var()
+                     ? msg->get_rep_memo_var()->enqc()
+                     : dballe::impl::Message::repmemo_from_type(msg->type));
         json.add("ident");
         if (msg->get_ident_var() != NULL)
             json.add(msg->get_ident_var()->enqc());
@@ -475,21 +493,22 @@ std::string JsonExporter::to_binary(const std::vector<std::shared_ptr<dballe::Me
         json.add(ss.str().c_str());
         json.add("data");
         json.start_list();
+        json.start_mapping();
+        json.add("vars");
+        json.add(msg->station_data);
+        json.end_mapping();
+        for (const auto& ctx : msg->data)
+        {
             json.start_mapping();
+            json.add("timerange");
+            json.add(ctx.trange);
+            json.add("level");
+            json.add(ctx.level);
             json.add("vars");
-            json.add(msg->station_data);
+            json.add(ctx.values);
             json.end_mapping();
-            for (const auto& ctx: msg->data) {
-                json.start_mapping();
-                json.add("timerange");
-                json.add(ctx.trange);
-                json.add("level");
-                json.add(ctx.level);
-                json.add("vars");
-                json.add(ctx.values);
-                json.end_mapping();
-            }
-            json.end_list();
+        }
+        json.end_list();
         json.end_mapping();
         json.add_break();
     }
@@ -497,6 +516,6 @@ std::string JsonExporter::to_binary(const std::vector<std::shared_ptr<dballe::Me
     return buf.str();
 }
 
-}
-}
-}
+} // namespace msg
+} // namespace impl
+} // namespace dballe

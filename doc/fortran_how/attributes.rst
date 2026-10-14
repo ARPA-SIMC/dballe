@@ -10,7 +10,7 @@ Working with attributes
 Reading attributes
 ------------------
 
-Attributes are read using :c:func:`idba_next_attribute`::
+Attributes are read using :ref:`idba_next_attribute`::
 
     ! ...setup a query...
     idba_query_data(handle, count)
@@ -31,11 +31,11 @@ Attributes are read using :c:func:`idba_next_attribute`::
 
 This code introduces two new functions:
 
-* :c:func:`idba_query_attributes`:
+* :ref:`idba_query_attributes`:
   Performs a query to retrieve attributes for the last variable read by
-  :c:func:`idba_next_data`.  It returns the number of attributes available.
-* :c:func:`idba_next_attribute`:
-  Retrieves one by one the values queried by :c:func:`idba_query_attributes` if
+  :ref:`idba_next_data`.  It returns the number of attributes available.
+* :ref:`idba_next_attribute`:
+  Retrieves one by one the values queried by :ref:`idba_query_attributes` if
   there are no more items available, the function will fail.
 
   The parameter ``param`` will be set to the name (in the form ``*Bxxyyy``) of
@@ -72,12 +72,12 @@ table value::
 Writing attributes
 ------------------
 
-Attributes are written using :c:func:`idba_insert_attributes`, which can be used after an
-:c:func:`idba_next_data`, after an :c:func:`idba_insert_data` or at any time using a stored data
-id.  These three case differ on how to communicate to :c:func:`idba_insert_attributes` what is
+Attributes are written using :ref:`idba_insert_attributes`, which can be used after an
+:ref:`idba_next_data`, after an :ref:`idba_insert_data` or at any time using a stored data
+id.  These three case differ on how to communicate to :ref:`idba_insert_attributes` what is
 the data about which to write attributes.
 
-When used after :c:func:`idba_next_data`, :c:func:`idba_insert_attributes` can refer directly to the
+When used after :ref:`idba_next_data`, :ref:`idba_insert_attributes` can refer directly to the
 last data retrieved::
 
     ! ...setup a query...
@@ -94,8 +94,8 @@ last data retrieved::
       count = count - 1
     enddo
 
-After an :c:func:`idba_insert_data` instead, since :c:func:`idba_insert_data` can write more than
-one data at a time, we need to tell :c:func:`idba_insert_attributes` which of them we are
+After an :ref:`idba_insert_data` instead, since :ref:`idba_insert_data` can write more than
+one data at a time, we need to tell :ref:`idba_insert_attributes` which of them we are
 referring to::
 
     ! Insert wind speed and temperature
@@ -111,7 +111,7 @@ referring to::
 
     ierr = idba_insert_attributes(handle)
 
-:c:func:`idba_insert_attributes` can also be called at any time using a previously stored data it::
+:ref:`idba_insert_attributes` can also be called at any time using a previously stored data it::
 
     ! ...perform a query with idba_query_data...
     do while (count.gt.0)
@@ -139,17 +139,17 @@ referring to::
 
 This code introduces a new function:
 
-* :c:func:`idba_insert_attributes`
+* :ref:`idba_insert_attributes`
   Set one or more attributes about a variable.
   
   The variable can be identified directly by using ``idba_seti(handle, "*context_id", id)`` and ``idba_seti(handle, "*var_related", name)``.
-  These parameters are automatically set by the :c:func:`idba_next_data` and
-  :c:func:`idba_insert_data` action routines.
+  These parameters are automatically set by the :ref:`idba_next_data` and
+  :ref:`idba_insert_data` action routines.
 
-  The attributes and values are set as input to :c:func:`idba_insert_attributes` using the
+  The attributes and values are set as input to :ref:`idba_insert_attributes` using the
   `idba_set*` functions with an asterisk in front of the variable name.
 
-:c:func:`idba_insert_attributes` will work in different ways according to the attributes
+:ref:`idba_insert_attributes` will work in different ways according to the attributes
 opening mode of the database:
 
 * ``"read"``: attributes cannot be modified in any way.
@@ -160,7 +160,7 @@ opening mode of the database:
 Deleting attributes
 -------------------
 
-Attributes are deleted using :c:func:`idba_remove_attributes`::
+Attributes are deleted using :ref:`idba_remove_attributes`::
 
     ! Delete the confidence interval from the wind speed
 
@@ -175,8 +175,8 @@ Attributes are deleted using :c:func:`idba_remove_attributes`::
 
 This code introduces a new function:
 
-* :c:func:`idba_remove_attributes`:
+* :ref:`idba_remove_attributes`:
   Delete attributes from a variable identified in the same way as with
 
-:c:func:`idba_remove_attributes` will not work unless the database has been opened in
+:ref:`idba_remove_attributes` will not work unless the database has been opened in
 attribute `rewrite` mode.

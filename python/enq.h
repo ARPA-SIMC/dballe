@@ -1,10 +1,10 @@
 #ifndef DBALLE_PYTHON_ENQ_H
 #define DBALLE_PYTHON_ENQ_H
 
-#include <dballe/core/enq.h>
 #include "common.h"
 #include "types.h"
 #include "utils/wreport.h"
+#include <dballe/core/enq.h>
 
 namespace dballe {
 namespace python {
@@ -18,13 +18,13 @@ struct Enqs : public impl::Enq
 
     void set_bool(bool val) override
     {
-        res = val ? "1" : "0";
+        res     = val ? "1" : "0";
         missing = false;
     }
 
     void set_int(int val) override
     {
-        res = std::to_string(val);
+        res     = std::to_string(val);
         missing = false;
     }
 
@@ -32,13 +32,13 @@ struct Enqs : public impl::Enq
     {
         if (val == MISSING_INT)
             return;
-        res = std::to_string(val);
+        res     = std::to_string(val);
         missing = false;
     }
 
     void set_string(const std::string& val) override
     {
-        res = val;
+        res     = val;
         missing = false;
     }
 
@@ -46,7 +46,7 @@ struct Enqs : public impl::Enq
     {
         if (ident.is_missing())
             return;
-        res = ident.get();
+        res     = ident.get();
         missing = false;
     }
 
@@ -54,7 +54,7 @@ struct Enqs : public impl::Enq
     {
         char buf[7];
         dballe::format_bcode(val, buf);
-        res = buf;
+        res     = buf;
         missing = false;
     }
 
@@ -62,7 +62,7 @@ struct Enqs : public impl::Enq
     {
         if (lat == MISSING_INT)
             return;
-        res = std::to_string(lat);
+        res     = std::to_string(lat);
         missing = false;
     }
 
@@ -70,17 +70,16 @@ struct Enqs : public impl::Enq
     {
         if (lon == MISSING_INT)
             return;
-        res = std::to_string(lon);
+        res     = std::to_string(lon);
         missing = false;
     }
 
     void set_var_value(const wreport::Var& var) override
     {
         missing = false;
-        res = var.enqs();
+        res     = var.enqs();
     }
 };
-
 
 struct Enqf : public impl::Enq
 {
@@ -91,13 +90,13 @@ struct Enqf : public impl::Enq
 
     void set_bool(bool val) override
     {
-        res = val ? "1" : "0";
+        res     = val ? "1" : "0";
         missing = false;
     }
 
     void set_int(int val) override
     {
-        res = std::to_string(val);
+        res     = std::to_string(val);
         missing = false;
     }
 
@@ -105,13 +104,13 @@ struct Enqf : public impl::Enq
     {
         if (val == MISSING_INT)
             return;
-        res = std::to_string(val);
+        res     = std::to_string(val);
         missing = false;
     }
 
     void set_string(const std::string& val) override
     {
-        res = val;
+        res     = val;
         missing = false;
     }
 
@@ -119,7 +118,7 @@ struct Enqf : public impl::Enq
     {
         if (ident.is_missing())
             return;
-        res = ident.get();
+        res     = ident.get();
         missing = false;
     }
 
@@ -127,7 +126,7 @@ struct Enqf : public impl::Enq
     {
         char buf[7];
         dballe::format_bcode(val, buf);
-        res = buf;
+        res     = buf;
         missing = false;
     }
 
@@ -137,7 +136,7 @@ struct Enqf : public impl::Enq
             return;
         char buf[15];
         snprintf(buf, 14, "%.5f", Coords::lat_from_int(lat));
-        res = buf;
+        res     = buf;
         missing = false;
     }
 
@@ -147,17 +146,16 @@ struct Enqf : public impl::Enq
             return;
         char buf[15];
         snprintf(buf, 14, "%.5f", Coords::lon_from_int(lon));
-        res = buf;
+        res     = buf;
         missing = false;
     }
 
     void set_var_value(const wreport::Var& var) override
     {
         missing = false;
-        res = var.format();
+        res     = var.format();
     }
 };
-
 
 struct Enqpy : public impl::Enq
 {
@@ -175,7 +173,7 @@ struct Enqpy : public impl::Enq
 
     void set_int(int val) override
     {
-        res = throw_ifnull(PyLong_FromLong(val));
+        res     = throw_ifnull(PyLong_FromLong(val));
         missing = false;
     }
 
@@ -185,14 +183,15 @@ struct Enqpy : public impl::Enq
         {
             res = Py_None;
             Py_INCREF(res);
-        } else
+        }
+        else
             res = throw_ifnull(PyLong_FromLong(val));
         missing = false;
     }
 
     void set_string(const std::string& val) override
     {
-        res = string_to_python(val);
+        res     = string_to_python(val);
         missing = false;
     }
 
@@ -202,7 +201,8 @@ struct Enqpy : public impl::Enq
         {
             res = Py_None;
             Py_INCREF(res);
-        } else
+        }
+        else
             res = throw_ifnull(PyUnicode_FromString(ident.get()));
         missing = false;
     }
@@ -211,21 +211,23 @@ struct Enqpy : public impl::Enq
     {
         char buf[7];
         dballe::format_bcode(val, buf);
-        res = throw_ifnull(PyUnicode_FromStringAndSize(buf, 6));
+        res     = throw_ifnull(PyUnicode_FromStringAndSize(buf, 6));
         missing = false;
     }
 
     void set_var(const wreport::Var* val) override
     {
-        if (!val) return;
-        res = (PyObject*)throw_ifnull(wreport_api.var_create(*val));
+        if (!val)
+            return;
+        res     = (PyObject*)throw_ifnull(wreport_api.var_create(*val));
         missing = false;
     }
 
     void set_attrs(const wreport::Var* val) override
     {
-        if (!val) return;
-        res = attrs_to_python(*val);
+        if (!val)
+            return;
+        res     = attrs_to_python(*val);
         missing = false;
     }
 
@@ -233,7 +235,7 @@ struct Enqpy : public impl::Enq
     {
         if (lat == MISSING_INT)
             return;
-        res = dballe_int_lat_to_python(lat);
+        res     = dballe_int_lat_to_python(lat);
         missing = false;
     }
 
@@ -241,54 +243,53 @@ struct Enqpy : public impl::Enq
     {
         if (lon == MISSING_INT)
             return;
-        res = dballe_int_lon_to_python(lon);
+        res     = dballe_int_lon_to_python(lon);
         missing = false;
     }
 
     void set_coords(const Coords& coords) override
     {
-        res = coords_to_python(coords);
+        res     = coords_to_python(coords);
         missing = false;
     }
 
     void set_station(const Station& s) override
     {
-        res = station_to_python(s);
+        res     = station_to_python(s);
         missing = false;
     }
 
     void set_dbstation(const DBStation& s) override
     {
-        res = station_to_python(s);
+        res     = station_to_python(s);
         missing = false;
     }
 
     void set_datetime(const Datetime& dt) override
     {
-        res = datetime_to_python(dt);
+        res     = datetime_to_python(dt);
         missing = false;
     }
 
     void set_level(const Level& lev) override
     {
-        res = level_to_python(lev);
+        res     = level_to_python(lev);
         missing = false;
     }
 
     void set_trange(const Trange& tr) override
     {
-        res = trange_to_python(tr);
+        res     = trange_to_python(tr);
         missing = false;
     }
 
     void set_var_value(const wreport::Var& var) override
     {
         missing = false;
-        res = (PyObject*)throw_ifnull(wreport_api.var_create(var));
+        res     = (PyObject*)throw_ifnull(wreport_api.var_create(var));
     }
 };
 
-
-}
-}
+} // namespace python
+} // namespace dballe
 #endif

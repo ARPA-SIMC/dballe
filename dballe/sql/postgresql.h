@@ -4,12 +4,12 @@
 #ifndef DBALLE_SQL_POSTGRESQL_H
 #define DBALLE_SQL_POSTGRESQL_H
 
-#include <dballe/sql/sql.h>
-#include <libpq-fe.h>
 #include <arpa/inet.h>
-#include <vector>
+#include <dballe/sql/sql.h>
 #include <functional>
+#include <libpq-fe.h>
 #include <unordered_set>
+#include <vector>
 
 namespace dballe {
 namespace sql {
@@ -24,12 +24,14 @@ struct error_postgresql : public error_db
     error_postgresql(PGconn* db, const std::string& msg);
     error_postgresql(PGresult* db, const std::string& msg);
     error_postgresql(const std::string& dbmsg, const std::string& msg);
-    ~error_postgresql() throw () {}
+    ~error_postgresql() throw() {}
 
     const char* what() const noexcept override { return msg.c_str(); }
 
-    static void throwf(PGconn* db, const char* fmt, ...) WREPORT_THROWF_ATTRS(2, 3);
-    static void throwf(PGresult* db, const char* fmt, ...) WREPORT_THROWF_ATTRS(2, 3);
+    static void throwf(PGconn* db, const char* fmt, ...)
+        WREPORT_THROWF_ATTRS(2, 3);
+    static void throwf(PGresult* db, const char* fmt, ...)
+        WREPORT_THROWF_ATTRS(2, 3);
 };
 
 namespace postgresql {
@@ -38,7 +40,7 @@ int64_t encode_datetime(const Datetime& arg);
 int64_t encode_int64_t(int64_t arg);
 
 /// Argument list for PQexecParams built at compile time
-template<typename... ARGS> struct Params
+template <typename... ARGS> struct Params
 {
     static const int count = sizeof...(ARGS);
     const char* args[sizeof...(ARGS)];
@@ -46,104 +48,100 @@ template<typename... ARGS> struct Params
     int formats[sizeof...(ARGS)];
     void* local[sizeof...(ARGS)];
 
-    Params(const ARGS&... args)
-    {
-        _add(0, args...);
-    }
+    Params(const ARGS&... args) { _add(0, args...); }
     ~Params()
     {
-        for (auto& i: local)
+        for (auto& i : local)
             free(i);
     }
 
-    Params(const Params&) = delete;
-    Params(const Params&&) = delete;
-    Params& operator=(const Params&) = delete;
+    Params(const Params&)             = delete;
+    Params(const Params&&)            = delete;
+    Params& operator=(const Params&)  = delete;
     Params& operator=(const Params&&) = delete;
 
 protected:
     /// Terminating condition for compile-time arg expansion
-    void _add(unsigned pos)
-    {
-    }
+    void _add(unsigned pos) {}
 
     /// Fill in the argument structures
-    template<typename... REST>
+    template <typename... REST>
     void _add(unsigned pos, std::nullptr_t arg, const REST&... rest)
     {
-        local[pos] = nullptr;
-        args[pos] = nullptr;
+        local[pos]   = nullptr;
+        args[pos]    = nullptr;
         lengths[pos] = 0;
         formats[pos] = 0;
         _add(pos + 1, rest...);
     }
 
     /// Fill in the argument structures
-    template<typename... REST>
+    template <typename... REST>
     void _add(unsigned pos, int32_t arg, const REST&... rest)
     {
-        local[pos] = malloc(sizeof(int32_t));
+        local[pos]            = malloc(sizeof(int32_t));
         *(int32_t*)local[pos] = (int32_t)htonl((uint32_t)arg);
-        args[pos] = (const char*)local[pos];
-        lengths[pos] = sizeof(int32_t);
-        formats[pos] = 1;
+        args[pos]             = (const char*)local[pos];
+        lengths[pos]          = sizeof(int32_t);
+        formats[pos]          = 1;
         _add(pos + 1, rest...);
     }
 
     /// Fill in the argument structures
-    template<typename... REST>
+    template <typename... REST>
     void _add(unsigned pos, uint64_t arg, const REST&... rest)
     {
-        local[pos] = malloc(sizeof(int64_t));
+        local[pos]            = malloc(sizeof(int64_t));
         *(int64_t*)local[pos] = encode_int64_t(arg);
-        args[pos] = (const char*)local[pos];
-        lengths[pos] = sizeof(int64_t);
-        formats[pos] = 1;
+        args[pos]             = (const char*)local[pos];
+        lengths[pos]          = sizeof(int64_t);
+        formats[pos]          = 1;
         _add(pos + 1, rest...);
     }
 
     /// Fill in the argument structures
-    template<typename... REST>
+    template <typename... REST>
     void _add(unsigned pos, const char* arg, const REST&... rest)
     {
-        local[pos] = nullptr;
-        args[pos] = arg;
+        local[pos]   = nullptr;
+        args[pos]    = arg;
         lengths[pos] = 0;
         formats[pos] = 0;
         _add(pos + 1, rest...);
     }
 
     /// Fill in the argument structures
-    template<typename... REST>
+    template <typename... REST>
     void _add(unsigned pos, const std::string& arg, const REST&... rest)
     {
-        local[pos] = nullptr;
-        args[pos] = arg.data();
+        local[pos]   = nullptr;
+        args[pos]    = arg.data();
         lengths[pos] = arg.size();
         formats[pos] = 0;
         _add(pos + 1, rest...);
     }
 
     /// Fill in the argument structures
-    template<typename... REST>
-    void _add(unsigned pos, const std::vector<uint8_t>& arg, const REST&... rest)
+    template <typename... REST>
+    void _add(unsigned pos, const std::vector<uint8_t>& arg,
+              const REST&... rest)
     {
-        local[pos] = nullptr;
-        args[pos] = (const char*)arg.data();
+        local[pos]   = nullptr;
+        args[pos]    = (const char*)arg.data();
         lengths[pos] = arg.size();
         formats[pos] = 1;
         _add(pos + 1, rest...);
     }
 
     /// Fill in the argument structures
-    template<typename... REST>
+    template <typename... REST>
     void _add(unsigned pos, const Datetime& arg, const REST&... rest)
     {
-        local[pos] = malloc(sizeof(int64_t));
+        local[pos]            = malloc(sizeof(int64_t));
         *(int64_t*)local[pos] = encode_datetime(arg);
-        args[pos] = (const char*)local[pos];
-        lengths[pos] = sizeof(int64_t);
-        formats[pos] = 1;
+        args[pos]             = (const char*)local[pos];
+        lengths[pos]          = sizeof(int64_t);
+        formats[pos]          = 1;
         _add(pos + 1, rest...);
     }
 };
@@ -161,9 +159,10 @@ struct Result
     Result(Result&& o) : res(o.res) { o.res = nullptr; }
     Result& operator=(Result&& o)
     {
-        if (this == &o) return *this;
+        if (this == &o)
+            return *this;
         PQclear(res);
-        res = o.res;
+        res   = o.res;
         o.res = nullptr;
         return *this;
     }
@@ -230,12 +229,11 @@ struct Result
     Datetime get_timestamp(unsigned row, unsigned col) const;
 
     // Prevent copy
-    Result(const Result&) = delete;
+    Result(const Result&)            = delete;
     Result& operator=(const Result&) = delete;
 };
 
-}
-
+} // namespace postgresql
 
 /// Database connection
 class PostgreSQLConnection : public Connection
@@ -259,7 +257,7 @@ protected:
     void check_connection();
 
 public:
-    PostgreSQLConnection(const PostgreSQLConnection&) = delete;
+    PostgreSQLConnection(const PostgreSQLConnection&)  = delete;
     PostgreSQLConnection(const PostgreSQLConnection&&) = delete;
     ~PostgreSQLConnection();
 
@@ -278,7 +276,7 @@ public:
     void open_url(const std::string& connection_string);
     void open_test();
 
-    std::unique_ptr<Transaction> transaction(bool readonly=false) override;
+    std::unique_ptr<Transaction> transaction(bool readonly = false) override;
 
     /// Precompile a query
     void prepare(const std::string& name, const std::string& query);
@@ -286,74 +284,77 @@ public:
     postgresql::Result exec_unchecked(const char* query)
     {
         check_connection();
-        auto res = PQexecParams(db, query, 0, nullptr, nullptr, nullptr, nullptr, 1);
+        auto res =
+            PQexecParams(db, query, 0, nullptr, nullptr, nullptr, nullptr, 1);
         if (!res)
-            throw error_postgresql(db, std::string("cannot execute query ") + query);
+            throw error_postgresql(db, std::string("cannot execute query ") +
+                                           query);
         return res;
     }
 
     postgresql::Result exec_unchecked(const std::string& query)
     {
         check_connection();
-        auto res = PQexecParams(db, query.c_str(), 0, nullptr, nullptr, nullptr, nullptr, 1);
+        auto res = PQexecParams(db, query.c_str(), 0, nullptr, nullptr, nullptr,
+                                nullptr, 1);
         if (!res)
             throw error_postgresql(db, "cannot execute query " + query);
         return res;
     }
 
-    template<typename STRING>
-    void exec_no_data(STRING query)
+    template <typename STRING> void exec_no_data(STRING query)
     {
         postgresql::Result res(exec_unchecked(query));
         res.expect_no_data(query);
     }
 
-    template<typename STRING>
-    postgresql::Result exec(STRING query)
+    template <typename STRING> postgresql::Result exec(STRING query)
     {
         postgresql::Result res(exec_unchecked(query));
         res.expect_result(query);
         return res;
     }
 
-    template<typename STRING>
-    postgresql::Result exec_one_row(STRING query)
+    template <typename STRING> postgresql::Result exec_one_row(STRING query)
     {
         postgresql::Result res(exec_unchecked(query));
         res.expect_one_row(query);
         return res;
     }
 
-    template<typename ...ARGS>
+    template <typename... ARGS>
     postgresql::Result exec_unchecked(const char* query, ARGS... args)
     {
         check_connection();
         postgresql::Params<ARGS...> params(args...);
-        auto res = PQexecParams(db, query, params.count, nullptr, params.args, params.lengths, params.formats, 1);
+        auto res = PQexecParams(db, query, params.count, nullptr, params.args,
+                                params.lengths, params.formats, 1);
         if (!res)
-            throw error_postgresql(db, std::string("cannot execute query ") + query);
+            throw error_postgresql(db, std::string("cannot execute query ") +
+                                           query);
         return res;
     }
 
-    template<typename ...ARGS>
+    template <typename... ARGS>
     postgresql::Result exec_unchecked(const std::string& query, ARGS... args)
     {
         check_connection();
         postgresql::Params<ARGS...> params(args...);
-        auto res = PQexecParams(db, query.c_str(), params.count, nullptr, params.args, params.lengths, params.formats, 1);
+        auto res = PQexecParams(db, query.c_str(), params.count, nullptr,
+                                params.args, params.lengths, params.formats, 1);
         if (!res)
             throw error_postgresql(db, "cannot execute query " + query);
         return res;
     }
 
-    template<typename STRING, typename ...ARGS>
+    template <typename STRING, typename... ARGS>
     void exec_no_data(STRING query, ARGS... args)
     {
         postgresql::Result res(exec_unchecked(query, args...));
         res.expect_no_data(query);
     }
 
-    template<typename STRING, typename ...ARGS>
+    template <typename STRING, typename... ARGS>
     postgresql::Result exec(STRING query, ARGS... args)
     {
         postgresql::Result res(exec_unchecked(query, args...));
@@ -361,7 +362,7 @@ public:
         return res;
     }
 
-    template<typename STRING, typename ...ARGS>
+    template <typename STRING, typename... ARGS>
     postgresql::Result exec_one_row(STRING query, ARGS... args)
     {
         postgresql::Result res(exec_unchecked(query, args...));
@@ -374,35 +375,35 @@ public:
         check_connection();
         auto res = PQexecPrepared(db, name, 0, nullptr, nullptr, nullptr, 1);
         if (!res)
-            throw error_postgresql(db, std::string("cannot execute prepared query ") + name);
+            throw error_postgresql(
+                db, std::string("cannot execute prepared query ") + name);
         return res;
     }
 
     postgresql::Result exec_prepared_unchecked(const std::string& name)
     {
         check_connection();
-        auto res = PQexecPrepared(db, name.c_str(), 0, nullptr, nullptr, nullptr, 1);
+        auto res =
+            PQexecPrepared(db, name.c_str(), 0, nullptr, nullptr, nullptr, 1);
         if (!res)
             throw error_postgresql(db, "cannot execute prepared query " + name);
         return res;
     }
 
-    template<typename STRING>
-    void exec_prepared_no_data(STRING name)
+    template <typename STRING> void exec_prepared_no_data(STRING name)
     {
         postgresql::Result res(exec_prepared_unchecked(name));
         res.expect_no_data(name);
     }
 
-    template<typename STRING>
-    postgresql::Result exec_prepared(STRING name)
+    template <typename STRING> postgresql::Result exec_prepared(STRING name)
     {
         postgresql::Result res(exec_prepared_unchecked(name));
         res.expect_result(name);
         return res;
     }
 
-    template<typename STRING>
+    template <typename STRING>
     postgresql::Result exec_prepared_one_row(STRING name)
     {
         postgresql::Result res(exec_prepared_unchecked(name));
@@ -410,28 +411,31 @@ public:
         return res;
     }
 
-    template<typename ...ARGS>
+    template <typename... ARGS>
     postgresql::Result exec_prepared_unchecked(const char* name, ARGS... args)
     {
         postgresql::Params<ARGS...> params(args...);
-        return PQexecPrepared(db, name, params.count, params.args, params.lengths, params.formats, 1);
+        return PQexecPrepared(db, name, params.count, params.args,
+                              params.lengths, params.formats, 1);
     }
 
-    template<typename ...ARGS>
-    postgresql::Result exec_prepared_unchecked(const std::string& name, ARGS... args)
+    template <typename... ARGS>
+    postgresql::Result exec_prepared_unchecked(const std::string& name,
+                                               ARGS... args)
     {
         postgresql::Params<ARGS...> params(args...);
-        return PQexecPrepared(db, name.c_str(), params.count, params.args, params.lengths, params.formats, 1);
+        return PQexecPrepared(db, name.c_str(), params.count, params.args,
+                              params.lengths, params.formats, 1);
     }
 
-    template<typename STRING, typename ...ARGS>
+    template <typename STRING, typename... ARGS>
     void exec_prepared_no_data(STRING name, ARGS... args)
     {
         postgresql::Result res(exec_prepared_unchecked(name, args...));
         res.expect_no_data(name);
     }
 
-    template<typename STRING, typename ...ARGS>
+    template <typename STRING, typename... ARGS>
     postgresql::Result exec_prepared(STRING name, ARGS... args)
     {
         postgresql::Result res(exec_prepared_unchecked(name, args...));
@@ -439,7 +443,7 @@ public:
         return res;
     }
 
-    template<typename STRING, typename ...ARGS>
+    template <typename STRING, typename... ARGS>
     postgresql::Result exec_prepared_one_row(STRING name, ARGS... args)
     {
         postgresql::Result res(exec_prepared_unchecked(name, args...));
@@ -480,7 +484,9 @@ public:
     void pqexec_nothrow(const std::string& query) noexcept;
 
     /// Retrieve query results in single row mode
-    void run_single_row_mode(const std::string& query_desc, std::function<void(const postgresql::Result&)> dest);
+    void
+    run_single_row_mode(const std::string& query_desc,
+                        std::function<void(const postgresql::Result&)> dest);
 
     /// Escape the string as a literal value and append it to qb
     void append_escaped(Querybuf& qb, const char* str);
@@ -492,7 +498,6 @@ public:
     void append_escaped(Querybuf& qb, const std::vector<uint8_t>& buf);
 };
 
-}
-}
+} // namespace sql
+} // namespace dballe
 #endif
-

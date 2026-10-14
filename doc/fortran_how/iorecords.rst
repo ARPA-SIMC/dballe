@@ -31,10 +31,10 @@ is read with the functions ``idba_enq*`` (see :ref:`routines`)::
       count = count - 1
     enddo
 
-Note that, when one uses :c:func:`idba_setc`, :c:func:`idba_seti`, :c:func:`idba_enqc`,
-:c:func:`idba_enqi` with parameters that have some decimal digits, DB-All.e will
+Note that, when one uses :ref:`idba_setc`, :ref:`idba_seti`, :ref:`idba_enqc`,
+:ref:`idba_enqi` with parameters that have some decimal digits, DB-All.e will
 work with values as if they did not have a decimal point.  That is, if latitude
-`10.124323` is read with :c:func:`idba_enqi`, then the result will be `10124323`.
+`10.124323` is read with :ref:`idba_enqi`, then the result will be `10124323`.
 
 The following example shows what happens::
 
@@ -60,7 +60,7 @@ Input/output shortcuts
 There are a few functions that are shortcuts to other input and output
 functions:
 
-:c:func:`idba_enqdate` is a shortcut to::
+:ref:`idba_enqdate` is a shortcut to::
 
     idba_enqi(handle, "year", year)
     idba_enqi(handle, "month", month)
@@ -69,7 +69,7 @@ functions:
     idba_enqi(handle, "min", minute)
     idba_enqi(handle, "sec", second)
 
-:c:func:`idba_setdate` is a shortcut to::
+:ref:`idba_setdate` is a shortcut to::
 
     idba_seti(handle, "year", year)
     idba_seti(handle, "month", month)
@@ -78,7 +78,7 @@ functions:
     idba_seti(handle, "min", minute)
     idba_seti(handle, "sec", second)
 
-:c:func:`idba_enqlevel` is a shortcut to::
+:ref:`idba_enqlevel` is a shortcut to::
 
     idba_enqi(handle, "leveltype1", type1)
     idba_enqi(handle, "l1", l1)
@@ -86,20 +86,20 @@ functions:
     idba_enqi(handle, "l2", l2)
 
 
-:c:func:`idba_setlevel` is a shortcut to::
+:ref:`idba_setlevel` is a shortcut to::
 
     idba_seti(handle, "leveltype1", type1)
     idba_seti(handle, "l1", l1)
     idba_seti(handle, "leveltype2", type2)
     idba_seti(handle, "l2", l2)
 
-:c:func:`idba_enqtimerange` is a shortcut to::
+:ref:`idba_enqtimerange` is a shortcut to::
 
     idba_enqi(handle, "pindicator", type)
     idba_enqi(handle, "p1", p1)
     idba_enqi(handle, "p2", p2)
 
-:c:func:`idba_settimerange` is a shortcut to::
+:ref:`idba_settimerange` is a shortcut to::
 
     idba_seti(handle, "pindicator", type)
     idba_seti(handle, "p1", p1)

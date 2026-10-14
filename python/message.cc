@@ -1,17 +1,17 @@
 #define _DBALLE_LIBRARY_CODE
-#include <dballe/message.h>
-#include <dballe/msg/msg.h>
-#include <dballe/core/shortcuts.h>
-#include <dballe/python.h>
-#include <wreport/python.h>
-#include "common.h"
 #include "message.h"
-#include "types.h"
+#include "common.h"
 #include "cursor.h"
-#include "utils/type.h"
+#include "types.h"
 #include "utils/methods.h"
+#include "utils/type.h"
 #include "utils/values.h"
 #include "utils/wreport.h"
+#include <dballe/core/shortcuts.h>
+#include <dballe/message.h>
+#include <dballe/msg/msg.h>
+#include <dballe/python.h>
+#include <wreport/python.h>
 
 using namespace std;
 using namespace dballe;
@@ -23,18 +23,21 @@ PyTypeObject* dpy_Message_Type = nullptr;
 
 static PyObject* dbapy_message_create_new(dballe::MessageType type)
 {
-    try {
+    try
+    {
         return (PyObject*)dballe::python::message_create(type);
-    } DBALLE_CATCH_RETURN_PYO
+    }
+    DBALLE_CATCH_RETURN_PYO
 }
 
 static PyObject* dbapy_message_create(std::shared_ptr<dballe::Message> msg)
 {
-    try {
+    try
+    {
         return (PyObject*)dballe::python::message_create(msg);
-    } DBALLE_CATCH_RETURN_PYO
+    }
+    DBALLE_CATCH_RETURN_PYO
 }
-
 }
 
 namespace {
@@ -42,137 +45,164 @@ namespace {
 struct GetType : Getter<GetType, dpy_Message>
 {
     constexpr static const char* name = "type";
-    constexpr static const char* doc = "message type";
+    constexpr static const char* doc  = "message type";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             return message_type_to_python(self->message->get_type());
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct GetDatetime : Getter<GetDatetime, dpy_Message>
 {
     constexpr static const char* name = "datetime";
-    constexpr static const char* doc = "message datetime";
+    constexpr static const char* doc  = "message datetime";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             return datetime_to_python(self->message->get_datetime());
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct GetCoords : Getter<GetCoords, dpy_Message>
 {
     constexpr static const char* name = "coords";
-    constexpr static const char* doc = "message coordinates";
+    constexpr static const char* doc  = "message coordinates";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             return coords_to_python(self->message->get_coords());
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct GetIdent : Getter<GetIdent, dpy_Message>
 {
     constexpr static const char* name = "ident";
-    constexpr static const char* doc = "message mobile station identifier";
+    constexpr static const char* doc  = "message mobile station identifier";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             return ident_to_python(self->message->get_ident());
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct GetReport : Getter<GetReport, dpy_Message>
 {
     constexpr static const char* name = "report";
-    constexpr static const char* doc = "message report";
+    constexpr static const char* doc  = "message report";
     static PyObject* get(Impl* self, void* closure)
     {
-        try {
+        try
+        {
             auto report = self->message->get_report();
             return PyUnicode_FromStringAndSize(report.data(), report.size());
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
-
 
 struct get : MethKwargs<get, dpy_Message>
 {
     constexpr static const char* name = "get";
-    constexpr static const char* signature = "level: dballe.Level, trange: dballe.Trange, code: str";
+    constexpr static const char* signature =
+        "level: dballe.Level, trange: dballe.Trange, code: str";
     constexpr static const char* returns = "Union[dballe.Var, None]";
-    constexpr static const char* summary = "Get a Var given its level, timerange, and varcode; returns None if not found";
+    constexpr static const char* summary =
+        "Get a Var given its level, timerange, and varcode; returns None if "
+        "not found";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { "level", "trange", "code", nullptr };
-        PyObject* pylevel = nullptr;
-        PyObject* pytrange = nullptr;
-        PyObject* pycode = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "OOO", const_cast<char**>(kwlist), &pylevel, &pytrange, &pycode))
+        static const char* kwlist[] = {"level", "trange", "code", nullptr};
+        PyObject* pylevel           = nullptr;
+        PyObject* pytrange          = nullptr;
+        PyObject* pycode            = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "OOO",
+                                         const_cast<char**>(kwlist), &pylevel,
+                                         &pytrange, &pycode))
             return nullptr;
 
-        try {
-            Level level = level_from_python(pylevel);
+        try
+        {
+            Level level   = level_from_python(pylevel);
             Trange trange = trange_from_python(pytrange);
-            Varcode code = varcode_from_python(pycode);
+            Varcode code  = varcode_from_python(pycode);
 
             const Var* res = self->message->get(level, trange, code);
             if (!res)
                 Py_RETURN_NONE;
             else
                 return wreport_api.var_create(*res);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct get_named : MethKwargs<get_named, dpy_Message>
 {
-    constexpr static const char* name = "get_named";
+    constexpr static const char* name      = "get_named";
     constexpr static const char* signature = "name: str";
-    constexpr static const char* returns = "Union[dballe.Var, None]";
-    constexpr static const char* summary = "Get a Var given its shortcut name; returns None if not found";
-    constexpr static const char* doc = "See :ref:`msg_vars` for the list of available shortcuts.";
+    constexpr static const char* returns   = "Union[dballe.Var, None]";
+    constexpr static const char* summary =
+        "Get a Var given its shortcut name; returns None if not found";
+    constexpr static const char* doc =
+        "See :ref:`msg_vars` for the list of available shortcuts.";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { "name", nullptr };
-        const char* name = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "s", const_cast<char**>(kwlist), &name))
+        static const char* kwlist[] = {"name", nullptr};
+        const char* name            = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "s",
+                                         const_cast<char**>(kwlist), &name))
             return nullptr;
 
-        try {
+        try
+        {
             const Var* res = self->message->get(name);
             if (!res)
                 Py_RETURN_NONE;
             else
                 return wreport_api.var_create(*res);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct set : MethKwargs<set, dpy_Message>
 {
     constexpr static const char* name = "set";
-    constexpr static const char* signature = "level: dballe.Level, trange: dballe.Trange, var: dballe.Var";
-    constexpr static const char* summary = "Set a Var given level and timerange";
+    constexpr static const char* signature =
+        "level: dballe.Level, trange: dballe.Trange, var: dballe.Var";
+    constexpr static const char* summary =
+        "Set a Var given level and timerange";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { "level", "trange", "var", nullptr };
-        PyObject* pylevel = nullptr;
-        PyObject* pytrange = nullptr;
-        PyObject* var = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "OOO!", const_cast<char**>(kwlist), &pylevel, &pytrange, wreport_api.api().var_type, &var))
+        static const char* kwlist[] = {"level", "trange", "var", nullptr};
+        PyObject* pylevel           = nullptr;
+        PyObject* pytrange          = nullptr;
+        PyObject* var               = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(
+                args, kw, "OOO!", const_cast<char**>(kwlist), &pylevel,
+                &pytrange, wreport_api.api().var_type, &var))
             return nullptr;
 
-        try {
-            Level level = level_from_python(pylevel);
+        try
+        {
+            Level level   = level_from_python(pylevel);
             Trange trange = trange_from_python(pytrange);
             self->message->set(level, trange, wreport_api.var(var));
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
 
         Py_RETURN_NONE;
     }
@@ -181,59 +211,70 @@ struct set : MethKwargs<set, dpy_Message>
 struct set_named : MethKwargs<set_named, dpy_Message>
 {
     constexpr static const char* name = "set_named";
-    constexpr static const char* signature = "name: str, value: Union[dballe.Var, int, str, double]";
+    constexpr static const char* signature =
+        "name: str, value: Union[dballe.Var, int, str, double]";
     constexpr static const char* summary = "Set a Var given its shortcut name.";
-    constexpr static const char* doc = "See :ref:`msg_vars` for the list of available shortcuts.";
+    constexpr static const char* doc =
+        "See :ref:`msg_vars` for the list of available shortcuts.";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { "name", "value", nullptr };
-        const char* name = nullptr;
-        Py_ssize_t name_len = 0;
-        PyObject* value = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "s#O", const_cast<char**>(kwlist), &name, &name_len, &value))
+        static const char* kwlist[] = {"name", "value", nullptr};
+        const char* name            = nullptr;
+        Py_ssize_t name_len         = 0;
+        PyObject* value             = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "s#O",
+                                         const_cast<char**>(kwlist), &name,
+                                         &name_len, &value))
             return nullptr;
 
-        try {
+        try
+        {
             if (wreport_api.var_check(value))
             {
                 self->message->set(name, wreport_api.var(value));
-            } else {
-                const impl::Shortcut& shortcut = impl::Shortcut::by_name(name, name_len);
+            }
+            else
+            {
+                const impl::Shortcut& shortcut =
+                    impl::Shortcut::by_name(name, name_len);
                 auto var = newvar(shortcut.code);
                 wreport_api.var_value_from_python(value, *var);
                 self->message->set(name, std::move(var));
             }
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
 
         Py_RETURN_NONE;
     }
 };
 
-template<typename Base>
-struct MethQuery : public MethKwargs<Base, dpy_Message>
+template <typename Base> struct MethQuery : public MethKwargs<Base, dpy_Message>
 {
     typedef typename MethKwargs<Base, dpy_Message>::Impl Impl;
     constexpr static const char* signature = "query: Dict[str, Any]";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { "query", NULL };
-        PyObject* pyquery = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "|O", const_cast<char**>(kwlist), &pyquery))
+        static const char* kwlist[] = {"query", NULL};
+        PyObject* pyquery           = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "|O",
+                                         const_cast<char**>(kwlist), &pyquery))
             return nullptr;
 
-        try {
+        try
+        {
             auto query = query_from_python(pyquery);
             return Base::run_query(self, *query);
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct query_stations : MethQuery<query_stations>
 {
-    constexpr static const char* name = "query_stations";
+    constexpr static const char* name    = "query_stations";
     constexpr static const char* returns = "dballe.CursorStation";
     constexpr static const char* summary = "Query the stations in the message";
-    constexpr static const char* doc = R"(
+    constexpr static const char* doc     = R"(
 :return: a cursor to iterate the query results (see :py:class:`dballe.CursorStation`)
 )";
     static PyObject* run_query(Impl* self, dballe::Query& query)
@@ -247,9 +288,10 @@ struct query_stations : MethQuery<query_stations>
 
 struct query_station_data : MethQuery<query_station_data>
 {
-    constexpr static const char* name = "query_station_data";
+    constexpr static const char* name    = "query_station_data";
     constexpr static const char* returns = "dballe.CursorStationData";
-    constexpr static const char* summary = "Query the constant station data in the message";
+    constexpr static const char* summary =
+        "Query the constant station data in the message";
     constexpr static const char* doc = R"(
 :return: a cursor to iterate the query results (see :py:class:`dballe.CursorStationData`)
 )";
@@ -264,10 +306,10 @@ struct query_station_data : MethQuery<query_station_data>
 
 struct query_data : MethQuery<query_data>
 {
-    constexpr static const char* name = "query_data";
+    constexpr static const char* name    = "query_data";
     constexpr static const char* returns = "dballe.CursorData";
     constexpr static const char* summary = "Query the data in the message";
-    constexpr static const char* doc = R"(
+    constexpr static const char* doc     = R"(
 :return: a cursor to iterate the query results (see :py:class:`dballe.CursorData`)
 )";
     static PyObject* run_query(Impl* self, dballe::Query& query)
@@ -275,7 +317,8 @@ struct query_data : MethQuery<query_data>
         ReleaseGIL gil;
         auto res = self->message->query_data(query);
         gil.lock();
-        return (PyObject*)cursor_create(impl::CursorData::downcast(std::move(res)));
+        return (PyObject*)cursor_create(
+            impl::CursorData::downcast(std::move(res)));
     }
 };
 
@@ -295,12 +338,11 @@ struct query_station_and_data : MethQuery<query_station_and_data>
 };
 #endif
 
-
 struct Definition : public Type<Definition, dpy_Message>
 {
-    constexpr static const char* name = "Message";
+    constexpr static const char* name      = "Message";
     constexpr static const char* qual_name = "dballe.Message";
-    constexpr static const char* doc = R"(
+    constexpr static const char* doc       = R"(
 The contents of a decoded BUFR or CREX message.
 
 DB-All.e can interpret the contents of most weather messages commonly in use,
@@ -342,7 +384,9 @@ Example usage::
                 print("{m.report},{m.coords},{m.ident},{m.datetime},{m.type}".format(m=msg))
 )";
     GetSetters<GetType, GetDatetime, GetCoords, GetIdent, GetReport> getsetters;
-    Methods<get, get_named, set, set_named, query_stations, query_station_data, query_data/*, query_station_and_data*/> methods;
+    Methods<get, get_named, set, set_named, query_stations, query_station_data,
+            query_data /*, query_station_and_data*/>
+        methods;
 
     static void _dealloc(Impl* self)
     {
@@ -352,18 +396,22 @@ Example usage::
 
     static int _init(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { "type", nullptr };
-        PyObject* py_message_type = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "O", const_cast<char**>(kwlist), &py_message_type))
+        static const char* kwlist[] = {"type", nullptr};
+        PyObject* py_message_type   = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(
+                args, kw, "O", const_cast<char**>(kwlist), &py_message_type))
             return -1;
 
-        try {
+        try
+        {
             MessageType type;
             if (read_message_type(py_message_type, type) == -1)
                 return -1;
 
-            new (&(self->message)) std::shared_ptr<Message>(Message::create(type));
-        } DBALLE_CATCH_RETURN_INT
+            new (&(self->message))
+                std::shared_ptr<Message>(Message::create(type));
+        }
+        DBALLE_CATCH_RETURN_INT
 
         return 0;
     }
@@ -371,18 +419,20 @@ Example usage::
 
 Definition* definition = nullptr;
 
-}
+} // namespace
 
 namespace dballe {
 namespace python {
 
 int read_message_type(PyObject* from_python, dballe::MessageType& type)
 {
-    try {
+    try
+    {
         if (PyUnicode_Check(from_python))
         {
             const char* v = PyUnicode_AsUTF8(from_python);
-            if (v == nullptr) return -1;
+            if (v == nullptr)
+                return -1;
 
             if (strcasecmp(v, "generic") == 0)
                 type = MessageType::GENERIC;
@@ -412,12 +462,15 @@ int read_message_type(PyObject* from_python, dballe::MessageType& type)
                 type = MessageType::POLLUTION;
             else
             {
-                PyErr_Format(PyExc_ValueError, "%R is not a valid MessageType value", from_python);
+                PyErr_Format(PyExc_ValueError,
+                             "%R is not a valid MessageType value",
+                             from_python);
                 return -1;
             }
             return 0;
         }
-    } DBALLE_CATCH_RETURN_INT
+    }
+    DBALLE_CATCH_RETURN_INT
 
     PyErr_SetString(PyExc_TypeError, "Expected str");
     return -1;
@@ -431,14 +484,16 @@ PyObject* message_type_to_python(MessageType type)
 
 dpy_Message* message_create(MessageType type)
 {
-    dpy_Message* res = throw_ifnull(PyObject_New(dpy_Message, dpy_Message_Type));
+    dpy_Message* res =
+        throw_ifnull(PyObject_New(dpy_Message, dpy_Message_Type));
     new (&(res->message)) std::shared_ptr<Message>(Message::create(type));
     return res;
 }
 
 dpy_Message* message_create(std::shared_ptr<Message> message)
 {
-    dpy_Message* res = throw_ifnull(PyObject_New(dpy_Message, dpy_Message_Type));
+    dpy_Message* res =
+        throw_ifnull(PyObject_New(dpy_Message, dpy_Message_Type));
     new (&(res->message)) std::shared_ptr<Message>(message);
     return res;
 }
@@ -450,10 +505,10 @@ void register_message(PyObject* m, dbapy_c_api& c_api)
     definition = new Definition;
     definition->define(dpy_Message_Type, m);
 
-    c_api.message_type = dpy_Message_Type;
+    c_api.message_type       = dpy_Message_Type;
     c_api.message_create_new = dbapy_message_create_new;
-    c_api.message_create = dbapy_message_create;
+    c_api.message_create     = dbapy_message_create;
 }
 
-}
-}
+} // namespace python
+} // namespace dballe

@@ -10,19 +10,17 @@ ArrayFile::ArrayFile(Encoding type)
 {
 }
 
-ArrayFile::~ArrayFile()
-{
-}
+ArrayFile::~ArrayFile() {}
 
 Encoding ArrayFile::encoding() const { return file_type; }
 
 void ArrayFile::write(const std::string& msg)
 {
     msgs.push_back(BinaryMessage(file_type));
-    msgs.back().data = msg;
+    msgs.back().data     = msg;
     msgs.back().pathname = m_name;
-    msgs.back().offset = msgs.size() - 1;
-    msgs.back().index = msgs.size() - 1;
+    msgs.back().offset   = msgs.size() - 1;
+    msgs.back().index    = msgs.size() - 1;
 }
 
 BinaryMessage ArrayFile::read()
@@ -33,5 +31,5 @@ BinaryMessage ArrayFile::read()
         return msgs[current++];
 }
 
-}
-}
+} // namespace core
+} // namespace dballe

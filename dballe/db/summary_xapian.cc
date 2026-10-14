@@ -1,16 +1,16 @@
 #define _DBALLE_LIBRARY_CODE
 #include "summary_xapian.h"
-#include "summary_utils.h"
-#include "dballe/core/var.h"
-#include "dballe/core/query.h"
 #include "dballe/core/json.h"
-#include "dballe/msg/msg.h"
+#include "dballe/core/query.h"
+#include "dballe/core/var.h"
 #include "dballe/msg/context.h"
-#include <array>
+#include "dballe/msg/msg.h"
+#include "summary_utils.h"
 #include <algorithm>
-#include <unordered_set>
+#include <array>
 #include <cstring>
 #include <sstream>
+#include <unordered_set>
 
 using namespace std;
 using namespace dballe;
@@ -61,8 +61,7 @@ std::string to_term(const wreport::Varcode& varcode)
     return wreport::varcode_format(varcode);
 }
 
-template<typename Station>
-Station station_from_term(const std::string& term)
+template <typename Station> Station station_from_term(const std::string& term)
 {
     std::stringstream in(term);
     in.get();
@@ -91,30 +90,36 @@ wreport::Varcode varcode_from_term(const std::string& term)
     return WR_STRING_TO_VAR(term.c_str() + 1);
 }
 
-}
+} // namespace
 
-#define CATCH_XAPIAN_RETHROW_WREPORT \
-    } catch (Xapian::Error& e) { \
-        wreport::error_consistency::throwf("Xapian error %s", e.get_description().c_str()); \
+#define CATCH_XAPIAN_RETHROW_WREPORT                                           \
+    }                                                                          \
+    catch (Xapian::Error & e)                                                  \
+    {                                                                          \
+        wreport::error_consistency::throwf("Xapian error %s",                  \
+                                           e.get_description().c_str());
 
 struct XapianDBInmemory : public XapianDB
 {
     Xapian::WritableDatabase db;
 
     XapianDBInmemory()
-        // See https://en.cppreference.com/w/cpp/language/function-try-block
-        try : db("/dev/null", Xapian::DB_BACKEND_INMEMORY)
+    // See https://en.cppreference.com/w/cpp/language/function-try-block
+    try : db("/dev/null", Xapian::DB_BACKEND_INMEMORY)
     {
-    CATCH_XAPIAN_RETHROW_WREPORT
+        CATCH_XAPIAN_RETHROW_WREPORT
     }
 
     Xapian::Database& reader() override { return db; }
     Xapian::WritableDatabase& writer() override { return db; }
     void commit() override { db.commit(); }
 
-    void clear() override {
+    void clear() override
+    {
         db.close();
-        db = Xapian::WritableDatabase("/dev/null", Xapian::DB_BACKEND_INMEMORY | Xapian::DB_CREATE_OR_OVERWRITE);
+        db = Xapian::WritableDatabase("/dev/null",
+                                      Xapian::DB_BACKEND_INMEMORY |
+                                          Xapian::DB_CREATE_OR_OVERWRITE);
     }
 };
 
@@ -124,10 +129,7 @@ struct XapianDBOndisk : public XapianDB
     std::unique_ptr<Xapian::Database> db;
     std::unique_ptr<Xapian::WritableDatabase> writable_db;
 
-    XapianDBOndisk(const std::string& pathname)
-        : pathname(pathname)
-    {
-    }
+    XapianDBOndisk(const std::string& pathname) : pathname(pathname) {}
 
     Xapian::Database& reader() override
     {
@@ -139,7 +141,8 @@ struct XapianDBOndisk : public XapianDB
     Xapian::WritableDatabase& writer() override
     {
         if (!writable_db)
-            writable_db.reset(new Xapian::WritableDatabase(pathname, Xapian::DB_CREATE_OR_OPEN));
+            writable_db.reset(new Xapian::WritableDatabase(
+                pathname, Xapian::DB_CREATE_OR_OPEN));
         return *writable_db;
     }
 
@@ -155,7 +158,8 @@ struct XapianDBOndisk : public XapianDB
             db->reopen();
     }
 
-    void clear() override {
+    void clear() override
+    {
         db.reset();
         writable_db.reset();
 
@@ -163,151 +167,163 @@ struct XapianDBOndisk : public XapianDB
     }
 };
 
-
-template<typename Station>
-BaseSummaryXapian<Station>::BaseSummaryXapian()
+template <typename Station> BaseSummaryXapian<Station>::BaseSummaryXapian()
 {
     db.reset(new XapianDBInmemory);
 }
 
-template<typename Station>
+template <typename Station>
 BaseSummaryXapian<Station>::BaseSummaryXapian(const std::string& pathname)
 {
     db.reset(new XapianDBOndisk(pathname));
 }
 
-template<typename Station>
-BaseSummaryXapian<Station>::~BaseSummaryXapian()
-{
-}
+template <typename Station> BaseSummaryXapian<Station>::~BaseSummaryXapian() {}
 
-template<typename Station>
-bool BaseSummaryXapian<Station>::stations(std::function<bool(const Station&)> dest) const
+template <typename Station>
+bool BaseSummaryXapian<Station>::stations(
+    std::function<bool(const Station&)> dest) const
 {
-    try {
+    try
+    {
         auto& db = this->db->reader();
         auto end = db.allterms_end("S");
         for (auto ti = db.allterms_begin("S"); ti != end; ++ti)
             if (!dest(station_from_term<Station>(*ti)))
                 return false;
         return true;
-    CATCH_XAPIAN_RETHROW_WREPORT
+        CATCH_XAPIAN_RETHROW_WREPORT
     }
 }
 
-template<typename Station>
-bool BaseSummaryXapian<Station>::reports(std::function<bool(const std::string&)> dest) const
+template <typename Station>
+bool BaseSummaryXapian<Station>::reports(
+    std::function<bool(const std::string&)> dest) const
 {
-    try {
+    try
+    {
         auto& db = this->db->reader();
         core::SmallUniqueValueSet<std::string> res;
         auto end = db.allterms_end("S");
         for (auto ti = db.allterms_begin("S"); ti != end; ++ti)
             res.add(station_from_term<Station>(*ti).report);
 
-        for (const auto& r: res)
+        for (const auto& r : res)
             if (!dest(r))
                 return false;
         return true;
-    CATCH_XAPIAN_RETHROW_WREPORT
+        CATCH_XAPIAN_RETHROW_WREPORT
     }
 }
 
-template<typename Station>
-bool BaseSummaryXapian<Station>::levels(std::function<bool(const Level&)> dest) const
+template <typename Station>
+bool BaseSummaryXapian<Station>::levels(
+    std::function<bool(const Level&)> dest) const
 {
-    try {
+    try
+    {
         auto& db = this->db->reader();
         auto end = db.allterms_end("L");
         for (auto ti = db.allterms_begin("L"); ti != end; ++ti)
             if (!dest(level_from_term(*ti)))
                 return false;
         return true;
-    CATCH_XAPIAN_RETHROW_WREPORT
+        CATCH_XAPIAN_RETHROW_WREPORT
     }
 }
 
-template<typename Station>
-bool BaseSummaryXapian<Station>::tranges(std::function<bool(const Trange&)> dest) const
+template <typename Station>
+bool BaseSummaryXapian<Station>::tranges(
+    std::function<bool(const Trange&)> dest) const
 {
-    try {
+    try
+    {
         auto& db = this->db->reader();
         auto end = db.allterms_end("T");
         for (auto ti = db.allterms_begin("T"); ti != end; ++ti)
             if (!dest(trange_from_term(*ti)))
                 return false;
         return true;
-    CATCH_XAPIAN_RETHROW_WREPORT
+        CATCH_XAPIAN_RETHROW_WREPORT
     }
 }
 
-
-template<typename Station>
-bool BaseSummaryXapian<Station>::varcodes(std::function<bool(const wreport::Varcode&)> dest) const
+template <typename Station>
+bool BaseSummaryXapian<Station>::varcodes(
+    std::function<bool(const wreport::Varcode&)> dest) const
 {
-    try {
+    try
+    {
         auto& db = this->db->reader();
         auto end = db.allterms_end("B");
         for (auto ti = db.allterms_begin("B"); ti != end; ++ti)
             if (!dest(varcode_from_term(*ti)))
                 return false;
         return true;
-    CATCH_XAPIAN_RETHROW_WREPORT
+        CATCH_XAPIAN_RETHROW_WREPORT
     }
 }
 
-template<typename Station>
+template <typename Station>
 Datetime BaseSummaryXapian<Station>::datetime_min() const
 {
-    try {
-        auto& db = this->db->reader();
+    try
+    {
+        auto& db       = this->db->reader();
         std::string lb = db.get_value_lower_bound(0);
         if (lb.empty())
             return Datetime();
         return Datetime::from_iso8601(lb.c_str());
-    CATCH_XAPIAN_RETHROW_WREPORT
+        CATCH_XAPIAN_RETHROW_WREPORT
     }
 }
 
-template<typename Station>
+template <typename Station>
 Datetime BaseSummaryXapian<Station>::datetime_max() const
 {
-    try {
-        auto& db = this->db->reader();
+    try
+    {
+        auto& db       = this->db->reader();
         std::string lb = db.get_value_upper_bound(1);
         if (lb.empty())
             return Datetime();
         return Datetime::from_iso8601(lb.c_str());
-    CATCH_XAPIAN_RETHROW_WREPORT
+        CATCH_XAPIAN_RETHROW_WREPORT
     }
 }
 
-template<typename Station>
+template <typename Station>
 unsigned BaseSummaryXapian<Station>::data_count() const
 {
-    try {
-        auto& db = this->db->reader();
+    try
+    {
+        auto& db     = this->db->reader();
         unsigned res = 0;
-        for (auto ival = db.valuestream_begin(2); ival != db.valuestream_end(2); ++ival)
+        for (auto ival = db.valuestream_begin(2); ival != db.valuestream_end(2);
+             ++ival)
             res += Xapian::sortable_unserialise(*ival);
         return res;
-    CATCH_XAPIAN_RETHROW_WREPORT
+        CATCH_XAPIAN_RETHROW_WREPORT
     }
 }
 
-template<typename Station>
-void BaseSummaryXapian<Station>::clear()
+template <typename Station> void BaseSummaryXapian<Station>::clear()
 {
-    try {
+    try
+    {
         db->clear();
-    CATCH_XAPIAN_RETHROW_WREPORT
+        CATCH_XAPIAN_RETHROW_WREPORT
     }
 }
 
-template<typename Station>
-void BaseSummaryXapian<Station>::add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count)
+template <typename Station>
+void BaseSummaryXapian<Station>::add(const Station& station,
+                                     const summary::VarDesc& vd,
+                                     const dballe::DatetimeRange& dtrange,
+                                     size_t count)
 {
-    try {
+    try
+    {
         auto writer = this->db->writer();
         std::array<std::string, 4> terms;
         terms[0] = to_term(station);
@@ -325,7 +341,7 @@ void BaseSummaryXapian<Station>::add(const Station& station, const summary::VarD
         {
             // Insert
             Xapian::Document doc;
-            for (const auto& term: terms)
+            for (const auto& term : terms)
                 doc.add_term(term);
 
             doc.add_value(0, dtrange.min.to_string());
@@ -333,14 +349,16 @@ void BaseSummaryXapian<Station>::add(const Station& station, const summary::VarD
             doc.add_value(2, Xapian::sortable_serialise(count));
 
             writer.add_document(doc);
-        } else {
+        }
+        else
+        {
             // Update
             Xapian::Document doc = mset[0].get_document();
             // TODO: merge dtrange, count
 
             DatetimeRange range(
-                    Datetime::from_iso8601(doc.get_value(0).c_str()),
-                    Datetime::from_iso8601(doc.get_value(1).c_str()));
+                Datetime::from_iso8601(doc.get_value(0).c_str()),
+                Datetime::from_iso8601(doc.get_value(1).c_str()));
             range.merge(dtrange);
 
             doc.add_value(0, range.min.to_string());
@@ -351,24 +369,28 @@ void BaseSummaryXapian<Station>::add(const Station& station, const summary::VarD
 
             writer.replace_document(doc.get_docid(), doc);
         }
-    CATCH_XAPIAN_RETHROW_WREPORT
+        CATCH_XAPIAN_RETHROW_WREPORT
     }
 }
 
-template<typename Station>
-void BaseSummaryXapian<Station>::commit()
+template <typename Station> void BaseSummaryXapian<Station>::commit()
 {
-    try {
+    try
+    {
         db->commit();
-    CATCH_XAPIAN_RETHROW_WREPORT
+        CATCH_XAPIAN_RETHROW_WREPORT
     }
 }
 
-template<typename Station>
-bool BaseSummaryXapian<Station>::iter(std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange& dtrange, size_t count)> dest) const
+template <typename Station>
+bool BaseSummaryXapian<Station>::iter(
+    std::function<bool(const Station&, const summary::VarDesc&,
+                       const DatetimeRange& dtrange, size_t count)>
+        dest) const
 {
-    try {
-        auto& db = this->db->reader();
+    try
+    {
+        auto& db  = this->db->reader();
         // Iterate stations
         auto send = db.allterms_end("S");
         for (auto si = db.allterms_begin("S"); si != send; ++si)
@@ -385,7 +407,8 @@ bool BaseSummaryXapian<Station>::iter(std::function<bool(const Station&, const s
                 Xapian::Document doc = db.get_document(*idoc);
                 summary::VarDesc var;
 
-                for (auto ti = doc.termlist_begin(); ti != doc.termlist_end(); ++ti)
+                for (auto ti = doc.termlist_begin(); ti != doc.termlist_end();
+                     ++ti)
                 {
                     std::string term = *ti;
                     switch (term[0])
@@ -397,8 +420,8 @@ bool BaseSummaryXapian<Station>::iter(std::function<bool(const Station&, const s
                 }
 
                 DatetimeRange dtrange(
-                        Datetime::from_iso8601(doc.get_value(0).c_str()),
-                        Datetime::from_iso8601(doc.get_value(1).c_str()));
+                    Datetime::from_iso8601(doc.get_value(0).c_str()),
+                    Datetime::from_iso8601(doc.get_value(1).c_str()));
                 size_t count = Xapian::sortable_unserialise(doc.get_value(2));
 
                 if (!dest(station, var, dtrange, count))
@@ -407,17 +430,22 @@ bool BaseSummaryXapian<Station>::iter(std::function<bool(const Station&, const s
         }
 
         return true;
-    CATCH_XAPIAN_RETHROW_WREPORT
+        CATCH_XAPIAN_RETHROW_WREPORT
     }
 }
 
-template<typename Station>
-bool BaseSummaryXapian<Station>::iter_filtered(const dballe::Query& query, std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange& dtrange, size_t count)> dest) const
+template <typename Station>
+bool BaseSummaryXapian<Station>::iter_filtered(
+    const dballe::Query& query,
+    std::function<bool(const Station&, const summary::VarDesc&,
+                       const DatetimeRange& dtrange, size_t count)>
+        dest) const
 {
-    try {
+    try
+    {
         auto& db = this->db->reader();
         summary::StationFilter<Station> filter(query);
-        const core::Query& q = core::Query::downcast(query);
+        const core::Query& q         = core::Query::downcast(query);
         DatetimeRange wanted_dtrange = q.get_datetimerange();
 
         Xapian::Query xquery("");
@@ -445,7 +473,8 @@ bool BaseSummaryXapian<Station>::iter_filtered(const dballe::Query& query, std::
             // Skip filtering if we just matched all stations
             if (!all_stations)
             {
-                xquery &= Xapian::Query(Xapian::Query::OP_OR, terms.begin(), terms.end());
+                xquery &= Xapian::Query(Xapian::Query::OP_OR, terms.begin(),
+                                        terms.end());
                 has_query = true;
             }
         }
@@ -464,25 +493,25 @@ bool BaseSummaryXapian<Station>::iter_filtered(const dballe::Query& query, std::
 
         switch (q.varcodes.size())
         {
-            case 0:
-                break;
+            case 0: break;
             case 1:
                 xquery &= Xapian::Query(to_term(*q.varcodes.begin()));
                 has_query = true;
                 break;
-            default:
-            {
+            default: {
                 std::vector<std::string> terms;
-                for (const auto& varcode: q.varcodes)
+                for (const auto& varcode : q.varcodes)
                     terms.emplace_back(to_term(varcode));
-                xquery &= Xapian::Query(Xapian::Query::OP_OR, terms.begin(), terms.end());
+                xquery &= Xapian::Query(Xapian::Query::OP_OR, terms.begin(),
+                                        terms.end());
                 has_query = true;
             }
         }
 
         if (!has_query)
         {
-            return iter([&](const Station& station, const summary::VarDesc& var, const DatetimeRange& dtrange, size_t count) {
+            return iter([&](const Station& station, const summary::VarDesc& var,
+                            const DatetimeRange& dtrange, size_t count) {
                 if (wanted_dtrange.is_disjoint(dtrange))
                     return true;
                 return dest(station, var, dtrange, count);
@@ -512,8 +541,8 @@ bool BaseSummaryXapian<Station>::iter_filtered(const dballe::Query& query, std::
             }
 
             DatetimeRange dtrange(
-                    Datetime::from_iso8601(doc.get_value(0).c_str()),
-                    Datetime::from_iso8601(doc.get_value(1).c_str()));
+                Datetime::from_iso8601(doc.get_value(0).c_str()),
+                Datetime::from_iso8601(doc.get_value(1).c_str()));
             if (wanted_dtrange.is_disjoint(dtrange))
                 continue;
 
@@ -523,14 +552,15 @@ bool BaseSummaryXapian<Station>::iter_filtered(const dballe::Query& query, std::
         }
 
         return true;
-    CATCH_XAPIAN_RETHROW_WREPORT
+        CATCH_XAPIAN_RETHROW_WREPORT
     }
 }
 
-template<typename Station>
+template <typename Station>
 void BaseSummaryXapian<Station>::to_json(core::JSONWriter& writer) const
 {
-    try {
+    try
+    {
         auto& db = this->db->reader();
         writer.start_mapping();
         writer.add("e");
@@ -560,7 +590,8 @@ void BaseSummaryXapian<Station>::to_json(core::JSONWriter& writer) const
                 Trange trange;
                 wreport::Varcode varcode = 0;
 
-                for (auto ti = doc.termlist_begin(); ti != doc.termlist_end(); ++ti)
+                for (auto ti = doc.termlist_begin(); ti != doc.termlist_end();
+                     ++ti)
                 {
                     std::string term = *ti;
                     switch (term[0])
@@ -572,8 +603,8 @@ void BaseSummaryXapian<Station>::to_json(core::JSONWriter& writer) const
                 }
 
                 DatetimeRange dtrange(
-                        Datetime::from_iso8601(doc.get_value(0).c_str()),
-                        Datetime::from_iso8601(doc.get_value(1).c_str()));
+                    Datetime::from_iso8601(doc.get_value(0).c_str()),
+                    Datetime::from_iso8601(doc.get_value(1).c_str()));
                 int count = Xapian::sortable_unserialise(doc.get_value(2));
 
                 writer.start_mapping();
@@ -590,14 +621,15 @@ void BaseSummaryXapian<Station>::to_json(core::JSONWriter& writer) const
 
         writer.end_list();
         writer.end_mapping();
-    CATCH_XAPIAN_RETHROW_WREPORT
+        CATCH_XAPIAN_RETHROW_WREPORT
     }
 }
 
-template<typename Station>
+template <typename Station>
 void BaseSummaryXapian<Station>::dump(FILE* out) const
 {
-    try {
+    try
+    {
         auto& db = this->db->reader();
         for (auto i = db.postlist_begin(""); i != db.postlist_end(""); ++i)
         {
@@ -610,12 +642,12 @@ void BaseSummaryXapian<Station>::dump(FILE* out) const
             fprintf(out, "  dmax: %s\n", doc.get_value(1).c_str());
             fprintf(out, "  count: %s\n", doc.get_value(2).c_str());
         }
-    CATCH_XAPIAN_RETHROW_WREPORT
+        CATCH_XAPIAN_RETHROW_WREPORT
     }
 }
 
 template class BaseSummaryXapian<dballe::Station>;
 template class BaseSummaryXapian<dballe::DBStation>;
 
-}
-}
+} // namespace db
+} // namespace dballe

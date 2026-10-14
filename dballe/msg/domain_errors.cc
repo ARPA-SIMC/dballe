@@ -1,7 +1,7 @@
 #include "domain_errors.h"
+#include <dballe/var.h>
 #include <wreport/options.h>
 #include <wreport/var.h>
-#include <dballe/var.h>
 
 namespace dballe {
 namespace impl {
@@ -21,8 +21,8 @@ void TagDomainErrors::handle_domain_error_double(wreport::Var& var, double val)
 
 TagDomainErrors domain_errors_tag;
 
-
-WreportVarOptionsForImport::WreportVarOptionsForImport(dballe::ImporterOptions::DomainErrors val)
+WreportVarOptionsForImport::WreportVarOptionsForImport(
+    dballe::ImporterOptions::DomainErrors val)
 {
     old_silent = wreport::options::var_silent_domain_errors;
     wreport::options::var_silent_domain_errors = false;
@@ -37,8 +37,7 @@ WreportVarOptionsForImport::WreportVarOptionsForImport(dballe::ImporterOptions::
 
     switch (val)
     {
-        case ImporterOptions::DomainErrors::THROW:
-            break;
+        case ImporterOptions::DomainErrors::THROW: break;
         case ImporterOptions::DomainErrors::UNSET:
             wreport::options::var_silent_domain_errors = true;
             break;
@@ -46,14 +45,16 @@ WreportVarOptionsForImport::WreportVarOptionsForImport(dballe::ImporterOptions::
 #ifdef WREPORT_OPTIONS_HAS_VAR_CLAMP_DOMAIN_ERRORS
             wreport::options::var_clamp_domain_errors = true;
 #else
-            throw std::runtime_error("the current version of wreport does not support clamping domain errors");
+            throw std::runtime_error("the current version of wreport does not "
+                                     "support clamping domain errors");
 #endif
             break;
         case ImporterOptions::DomainErrors::TAG:
 #ifdef WREPORT_OPTIONS_HAS_VAR_HOOK_DOMAIN_ERRORS
             wreport::options::var_hook_domain_errors = &domain_errors_tag;
 #else
-            throw std::runtime_error("the current version of wreport does not support domain error hooks");
+            throw std::runtime_error("the current version of wreport does not "
+                                     "support domain error hooks");
 #endif
             break;
     }
@@ -70,6 +71,6 @@ WreportVarOptionsForImport::~WreportVarOptionsForImport()
 #endif
 }
 
-}
-}
-}
+} // namespace msg
+} // namespace impl
+} // namespace dballe

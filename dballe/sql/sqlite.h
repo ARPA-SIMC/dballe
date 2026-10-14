@@ -6,9 +6,9 @@
 
 #include <dballe/core/error.h>
 #include <dballe/sql/sql.h>
+#include <functional>
 #include <sqlite3.h>
 #include <vector>
-#include <functional>
 
 namespace dballe {
 namespace sql {
@@ -27,7 +27,8 @@ struct error_sqlite : public dballe::error_db
 
     const char* what() const noexcept override { return msg.c_str(); }
 
-    static void throwf(sqlite3* db, const char* fmt, ...) WREPORT_THROWF_ATTRS(2, 3);
+    static void throwf(sqlite3* db, const char* fmt, ...)
+        WREPORT_THROWF_ATTRS(2, 3);
 };
 
 /// Database connection
@@ -37,14 +38,15 @@ protected:
     /// Connection pathname
     std::string pathname;
     /// Connection flags
-    int flags = 0;
+    int flags   = 0;
     /// Database connection
     sqlite3* db = nullptr;
     /// Marker to catch attempts to reuse connections in forked processes
     bool forked = false;
 
     void init_after_connect();
-    static void on_sqlite3_profile(void* arg, const char* query, sqlite3_uint64 usecs);
+    static void on_sqlite3_profile(void* arg, const char* query,
+                                   sqlite3_uint64 usecs);
 
     SQLiteConnection();
 
@@ -57,7 +59,7 @@ protected:
     void reopen();
 
 public:
-    SQLiteConnection(const SQLiteConnection&) = delete;
+    SQLiteConnection(const SQLiteConnection&)  = delete;
     SQLiteConnection(const SQLiteConnection&&) = delete;
     ~SQLiteConnection();
 
@@ -67,11 +69,13 @@ public:
 
     operator sqlite3*() { return db; }
 
-    void open_file(const std::string& pathname, int flags=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
-    void open_memory(int flags=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
-    void open_private_file(int flags=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
+    void open_file(const std::string& pathname,
+                   int flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
+    void open_memory(int flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
+    void open_private_file(int flags = SQLITE_OPEN_READWRITE |
+                                       SQLITE_OPEN_CREATE);
 
-    std::unique_ptr<Transaction> transaction(bool readonly=false) override;
+    std::unique_ptr<Transaction> transaction(bool readonly = false) override;
     std::unique_ptr<SQLiteStatement> sqlitestatement(const std::string& query);
 
     bool has_table(const std::string& name) override;
@@ -107,7 +111,7 @@ public:
      *
      * See sqlite3_trace_v2 docmentation for values for mask use 0 to disable.
      */
-    void trace(unsigned mask=SQLITE_TRACE_STMT);
+    void trace(unsigned mask = SQLITE_TRACE_STMT);
 #endif
 };
 
@@ -116,10 +120,10 @@ struct SQLiteStatement
 {
     SQLiteConnection& conn;
     std::string query;
-    sqlite3_stmt *stm = nullptr;
+    sqlite3_stmt* stm = nullptr;
 
     SQLiteStatement(SQLiteConnection& conn, const std::string& query);
-    SQLiteStatement(const SQLiteStatement&) = delete;
+    SQLiteStatement(const SQLiteStatement&)  = delete;
     SQLiteStatement(const SQLiteStatement&&) = delete;
     ~SQLiteStatement();
     SQLiteStatement& operator=(const SQLiteStatement&) = delete;
@@ -131,7 +135,7 @@ struct SQLiteStatement
      * calling this function twice will re-bind columns instead of adding new
      * ones.
      */
-    template<typename... Args> void bind(const Args& ...args)
+    template <typename... Args> void bind(const Args&... args)
     {
         bindn<sizeof...(args)>(args...);
     }
@@ -142,8 +146,11 @@ struct SQLiteStatement
     void bind_val(int idx, unsigned short val);
     void bind_val(int idx, const Datetime& val);
     void bind_val(int idx, const char* val); // Warning: SQLITE_STATIC is used
-    void bind_val(int idx, const std::string& val); // Warning: SQLITE_STATIC is used
-    void bind_val(int idx, const std::vector<uint8_t>& val); // Warning: SQLITE_STATIC is used
+    void bind_val(int idx,
+                  const std::string& val); // Warning: SQLITE_STATIC is used
+    void
+    bind_val(int idx,
+             const std::vector<uint8_t>& val); // Warning: SQLITE_STATIC is used
 
     /// Run the query, ignoring all results
     void execute();
@@ -166,17 +173,24 @@ struct SQLiteStatement
     int column_int(int col) { return sqlite3_column_int(stm, col); }
 
     /// Read the int value of a column in the result set (0-based)
-    sqlite3_int64 column_int64(int col) { return sqlite3_column_int64(stm, col); }
+    sqlite3_int64 column_int64(int col)
+    {
+        return sqlite3_column_int64(stm, col);
+    }
 
     /// Read the double value of a column in the result set (0-based)
     double column_double(int col) { return sqlite3_column_double(stm, col); }
 
     /// Read the string value of a column in the result set (0-based)
-    const char* column_string(int col) { return (const char*)sqlite3_column_text(stm, col); }
+    const char* column_string(int col)
+    {
+        return (const char*)sqlite3_column_text(stm, col);
+    }
 
     /// Read the string value of a column in the result set (0-based)
-    std::vector<uint8_t> column_blob(int col) {
-        int size = sqlite3_column_bytes(stm, col);
+    std::vector<uint8_t> column_blob(int col)
+    {
+        int size           = sqlite3_column_bytes(stm, col);
         const uint8_t* val = (const uint8_t*)sqlite3_column_blob(stm, col);
         return std::vector<uint8_t>(val, val + size);
     }
@@ -185,7 +199,10 @@ struct SQLiteStatement
     Datetime column_datetime(int col);
 
     /// Check if a column has a NULL value (0-based)
-    bool column_isnull(int col) { return sqlite3_column_type(stm, col) == SQLITE_NULL; }
+    bool column_isnull(int col)
+    {
+        return sqlite3_column_type(stm, col) == SQLITE_NULL;
+    }
 
     void wrap_sqlite3_reset();
     void wrap_sqlite3_reset_nothrow() noexcept;
@@ -228,16 +245,17 @@ struct SQLiteStatement
 
 private:
     // Implementation of variadic bind: terminating condition
-    template<size_t total> void bindn() {}
-    // Implementation of variadic bind: recursive iteration over the parameter pack
-    template<size_t total, typename ...Args, typename T> void bindn(const T& first, const Args& ...args)
+    template <size_t total> void bindn() {}
+    // Implementation of variadic bind: recursive iteration over the parameter
+    // pack
+    template <size_t total, typename... Args, typename T>
+    void bindn(const T& first, const Args&... args)
     {
         bind_val(total - sizeof...(args), first);
         bindn<total>(args...);
     }
 };
 
-}
-}
+} // namespace sql
+} // namespace dballe
 #endif
-

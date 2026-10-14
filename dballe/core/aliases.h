@@ -6,8 +6,8 @@
  * Resolve aliases to variable codes
  */
 
-#include <wreport/varinfo.h>
 #include <string>
+#include <wreport/varinfo.h>
 
 namespace dballe {
 
@@ -46,6 +46,6 @@ wreport::Varcode varcode_alias_resolve_substring(const char* alias, int len);
  */
 wreport::Varcode varcode_alias_resolve(const std::string& alias);
 
-}
+} // namespace dballe
 
 #endif

@@ -1,34 +1,29 @@
 #include "driver.h"
-#include "repinfo.h"
-#include "station.h"
-#include "levtr.h"
 #include "data.h"
-#include "dballe/db/v7/transaction.h"
 #include "dballe/db/v7/db.h"
 #include "dballe/db/v7/qbuilder.h"
+#include "dballe/db/v7/transaction.h"
 #include "dballe/sql/postgresql.h"
 #include "dballe/var.h"
+#include "levtr.h"
+#include "repinfo.h"
+#include "station.h"
 #include <algorithm>
 #include <cstring>
 
 using namespace std;
 using namespace wreport;
-using dballe::sql::PostgreSQLConnection;
 using dballe::sql::error_postgresql;
+using dballe::sql::PostgreSQLConnection;
 
 namespace dballe {
 namespace db {
 namespace v7 {
 namespace postgresql {
 
-Driver::Driver(PostgreSQLConnection& conn)
-    : v7::Driver(conn), conn(conn)
-{
-}
+Driver::Driver(PostgreSQLConnection& conn) : v7::Driver(conn), conn(conn) {}
 
-Driver::~Driver()
-{
-}
+Driver::~Driver() {}
 
 std::unique_ptr<v7::Repinfo> Driver::create_repinfo(v7::Transaction& tr)
 {
@@ -45,7 +40,8 @@ std::unique_ptr<v7::LevTr> Driver::create_levtr(v7::Transaction& tr)
     return unique_ptr<v7::LevTr>(new PostgreSQLLevTr(tr, conn));
 }
 
-std::unique_ptr<v7::StationData> Driver::create_station_data(v7::Transaction& tr)
+std::unique_ptr<v7::StationData>
+Driver::create_station_data(v7::Transaction& tr)
 {
     return unique_ptr<v7::StationData>(new PostgreSQLStationData(tr, conn));
 }
@@ -79,7 +75,8 @@ void Driver::create_tables_v7()
            ident  VARCHAR(64)
         );
     )");
-    conn.exec_no_data("CREATE UNIQUE INDEX pa_uniq ON station(rep, lat, lon, ident);");
+    conn.exec_no_data(
+        "CREATE UNIQUE INDEX pa_uniq ON station(rep, lat, lon, ident);");
     conn.exec_no_data("CREATE INDEX pa_lon ON station(lon);");
 
     conn.exec_no_data(R"(
@@ -94,7 +91,8 @@ void Driver::create_tables_v7()
            p2       INTEGER NOT NULL
         );
     )");
-    conn.exec_no_data("CREATE UNIQUE INDEX levtr_uniq ON levtr(ltype1, l1, ltype2, l2, pind, p1, p2);");
+    conn.exec_no_data("CREATE UNIQUE INDEX levtr_uniq ON levtr(ltype1, l1, "
+                      "ltype2, l2, pind, p1, p2);");
 
     conn.exec_no_data(R"(
         CREATE TABLE station_data (
@@ -105,7 +103,8 @@ void Driver::create_tables_v7()
            attrs       BYTEA
         );
     )");
-    conn.exec_no_data("CREATE UNIQUE INDEX station_data_uniq on station_data(id_station, code);");
+    conn.exec_no_data("CREATE UNIQUE INDEX station_data_uniq on "
+                      "station_data(id_station, code);");
 
     conn.exec_no_data(R"(
         CREATE TABLE data (
@@ -118,7 +117,8 @@ void Driver::create_tables_v7()
            attrs       BYTEA
         );
     )");
-    conn.exec_no_data("CREATE UNIQUE INDEX data_uniq on data(id_station, datetime, id_levtr, code);");
+    conn.exec_no_data("CREATE UNIQUE INDEX data_uniq on data(id_station, "
+                      "datetime, id_levtr, code);");
     // When possible, replace with a postgresql 9.5 BRIN index
     conn.exec_no_data("CREATE INDEX data_dt ON data(datetime);");
 
@@ -158,7 +158,7 @@ void Driver::vacuum_v7()
     )");
 }
 
-}
-}
-}
-}
+} // namespace postgresql
+} // namespace v7
+} // namespace db
+} // namespace dballe

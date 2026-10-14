@@ -1,9 +1,9 @@
 #include "querybuf.h"
 #include "dballe/core/vasprintf.h"
 #include "dballe/var.h"
+#include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
-#include <cstdarg>
 #include <cstring>
 
 using namespace std;
@@ -14,24 +14,24 @@ namespace sql {
 
 Querybuf::Querybuf(size_t reserve)
 {
-	clear();
-	this->reserve(512);
+    clear();
+    this->reserve(512);
 }
 
 Querybuf::~Querybuf() {}
 
 void Querybuf::clear()
 {
-	string::clear();
-	list_first = true;
-	list_sep[0] = 0;
+    string::clear();
+    list_first  = true;
+    list_sep[0] = 0;
 }
 
 void Querybuf::start_list(const char* sep)
 {
-	list_first = true;
-	strncpy(list_sep, sep, 10);
-	list_sep[9] = 0;
+    list_first = true;
+    strncpy(list_sep, sep, 10);
+    list_sep[9] = 0;
 }
 
 void Querybuf::start_list_item()
@@ -51,13 +51,13 @@ void Querybuf::append_int(int val)
 
 void Querybuf::appendf(const char* fmt, ...)
 {
-	va_list ap;
-	va_start(ap, fmt);
-	char* buf;
-	int size = vasprintf(&buf, fmt, ap);
-	append(buf, size);
-	free(buf);
-	va_end(ap);
+    va_list ap;
+    va_start(ap, fmt);
+    char* buf;
+    int size = vasprintf(&buf, fmt, ap);
+    append(buf, size);
+    free(buf);
+    va_end(ap);
 }
 
 void Querybuf::append_list(const char* str)
@@ -68,17 +68,17 @@ void Querybuf::append_list(const char* str)
 
 void Querybuf::append_listf(const char* fmt, ...)
 {
-	va_list ap;
-	va_start(ap, fmt);
+    va_list ap;
+    va_start(ap, fmt);
 
     start_list_item();
 
-	char* buf;
-	int size = vasprintf(&buf, fmt, ap);
-	append(buf, size);
-	free(buf);
+    char* buf;
+    int size = vasprintf(&buf, fmt, ap);
+    append(buf, size);
+    free(buf);
 
-	va_end(ap);
+    va_end(ap);
 }
 
 void Querybuf::append_varlist(const std::string& varlist)
@@ -117,5 +117,5 @@ void Querybuf::append_varlist(const std::set<wreport::Varcode>& varlist)
     }
 }
 
-}
-}
+} // namespace sql
+} // namespace dballe

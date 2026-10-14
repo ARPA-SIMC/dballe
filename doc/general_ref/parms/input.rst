@@ -10,8 +10,8 @@ Parameters used when inserting values
 ============== ======================== ========================== ======================================================
 Name           Unit                     Description                Comment
 ============== ======================== ========================== ======================================================
-``rep_memo``   String                   Type of report             Alias for ``report``
-``report``     String                   Type of report             Alias for ``rep_memo``
+``rep_memo``   String                   Type of report             Alias for ``report``, forced to lower case
+``report``     String                   Type of report             Alias for ``rep_memo``, forced to lower case
 ``ana_id``     Integer                  Station database ID        Can optionally be specified instead of ``lat``, ``lon``, ``ident``, ``rep_memo``: internal DB-ALLe ID referring to an existing station, usable as a shortcut
 ``ident``      String                   Station identifier         Optional: if missing, the station is fixed; if present, it is mobile
 ``lat``        Float                    Latitude

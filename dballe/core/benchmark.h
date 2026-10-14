@@ -5,16 +5,16 @@
  * Simple benchmark infrastructure.
  */
 
-#include <string>
-#include <vector>
+#include <cstdio>
+#include <dballe/file.h>
+#include <dballe/message.h>
 #include <functional>
 #include <memory>
-#include <cstdio>
-#include <time.h>
-#include <sys/time.h>
+#include <string>
 #include <sys/resource.h>
-#include <dballe/message.h>
-#include <dballe/file.h>
+#include <sys/time.h>
+#include <time.h>
+#include <vector>
 
 namespace dballe {
 namespace benchmark {
@@ -26,10 +26,10 @@ struct Task
 {
     Task() {}
     Task(const Task&) = delete;
-    Task(Task&&) = delete;
+    Task(Task&&)      = delete;
     virtual ~Task() {}
     Task& operator=(const Task&) = delete;
-    Task& operator=(Task&&) = delete;
+    Task& operator=(Task&&)      = delete;
 
     virtual const char* name() const = 0;
 
@@ -66,13 +66,13 @@ struct Timeit
 struct Throughput
 {
     std::string task_name;
-    /// How many seconds to run the task to see how many times per second it runs
-    double run_time = 0.5;
+    /// How many seconds to run the task to see how many times per second it
+    /// runs
+    double run_time    = 0.5;
     unsigned times_run = 0;
 
     void run(Progress& progress, Task& task);
 };
-
 
 /// Notify of progress during benchmark execution
 struct Progress
@@ -80,14 +80,13 @@ struct Progress
     virtual ~Progress() {}
 
     virtual void start_timeit(const Timeit& t) = 0;
-    virtual void end_timeit(const Timeit& t) = 0;
+    virtual void end_timeit(const Timeit& t)   = 0;
 
     virtual void start_throughput(const Throughput& t) = 0;
-    virtual void end_throughput(const Throughput& t) = 0;
+    virtual void end_throughput(const Throughput& t)   = 0;
 
     virtual void test_failed(const Task& t, std::exception& e) = 0;
 };
-
 
 /**
  * Basic progress implementation writing progress information to the given
@@ -98,7 +97,7 @@ struct BasicProgress : Progress
     FILE* out;
     FILE* err;
 
-    BasicProgress(FILE* out=stdout, FILE* err=stderr);
+    BasicProgress(FILE* out = stdout, FILE* err = stderr);
 
     void start_timeit(const Timeit& t) override;
     void end_timeit(const Timeit& t) override;
@@ -108,7 +107,6 @@ struct BasicProgress : Progress
 
     void test_failed(const Task& t, std::exception& e) override;
 };
-
 
 /**
  * Base class for all benchmarks.
@@ -124,27 +122,28 @@ struct Benchmark
     /// Tasks for which we time their throughput
     std::vector<Throughput> throughput_tasks;
 
-
     Benchmark();
     virtual ~Benchmark();
 
     /// Run the benchmark and collect timings
-    void timeit(Task& task, unsigned repetitions=1);
+    void timeit(Task& task, unsigned repetitions = 1);
 
     /// Run the benchmark and collect timings
-    void throughput(Task& task, double run_time=0.5);
+    void throughput(Task& task, double run_time = 0.5);
 
     /// Print timings to stdout
     void print_timings();
 };
 
-
 /**
  * Container for parsed messages used for benchmarking
  */
-struct Messages : public std::vector<std::vector<std::shared_ptr<dballe::Message>>>
+struct Messages
+    : public std::vector<std::vector<std::shared_ptr<dballe::Message>>>
 {
-    void load(const std::string& pathname, dballe::Encoding encoding=dballe::Encoding::BUFR, const char* codec_options="accurate");
+    void load(const std::string& pathname,
+              dballe::Encoding encoding = dballe::Encoding::BUFR,
+              const char* codec_options = "accurate");
 
     // Copy the first \a size messages, change their datetime, and append them
     // to the vector
@@ -158,7 +157,7 @@ struct Whitelist : protected std::vector<std::string>
     bool has(const std::string& val);
 };
 
-}
-}
+} // namespace benchmark
+} // namespace dballe
 
 #endif

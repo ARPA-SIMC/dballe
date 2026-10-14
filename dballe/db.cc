@@ -1,10 +1,10 @@
 #include "db.h"
+#include "core/string.h"
 #include "db/db.h"
 #include "sql/sql.h"
-#include "core/string.h"
 #include "wreport/utils/string.h"
-#include <cstring>
 #include <cstdlib>
+#include <cstring>
 
 using namespace wreport;
 
@@ -13,22 +13,29 @@ namespace dballe {
 static bool parse_wipe(const std::string& strval)
 {
     std::string val = str::lower(strval);
-    if (val.empty()) return true;
-    if (val == "1") return true;
-    if (val == "yes") return true;
-    if (val == "true") return true;
-    if (val == "0") return false;
-    if (val == "no") return false;
-    if (val == "false") return false;
-    wreport::error_consistency::throwf("unsupported value for wipe: %s (supported: 1/0, true/false, yes/no)", strval.c_str());
+    if (val.empty())
+        return true;
+    if (val == "1")
+        return true;
+    if (val == "yes")
+        return true;
+    if (val == "true")
+        return true;
+    if (val == "0")
+        return false;
+    if (val == "no")
+        return false;
+    if (val == "false")
+        return false;
+    wreport::error_consistency::throwf(
+        "unsupported value for wipe: %s (supported: 1/0, true/false, yes/no)",
+        strval.c_str());
 }
 
-void DBConnectOptions::reset_actions()
-{
-    wipe = false;
-}
+void DBConnectOptions::reset_actions() { wipe = false; }
 
-std::unique_ptr<DBConnectOptions> DBConnectOptions::create(const std::string& url)
+std::unique_ptr<DBConnectOptions>
+DBConnectOptions::create(const std::string& url)
 {
     std::unique_ptr<DBConnectOptions> res(new DBConnectOptions);
     res->url = url;
@@ -50,7 +57,8 @@ std::unique_ptr<DBConnectOptions> DBConnectOptions::create(const std::string& ur
     return res;
 }
 
-std::unique_ptr<DBConnectOptions> DBConnectOptions::test_create(const char* backend)
+std::unique_ptr<DBConnectOptions>
+DBConnectOptions::test_create(const char* backend)
 {
     std::string envname = "DBA_DB";
     if (backend)
@@ -64,15 +72,12 @@ std::unique_ptr<DBConnectOptions> DBConnectOptions::test_create(const char* back
     return create(envurl);
 }
 
-
-
 const DBImportOptions DBImportOptions::defaults;
 
 std::unique_ptr<DBImportOptions> DBImportOptions::create()
 {
     return std::unique_ptr<DBImportOptions>(new DBImportOptions);
 }
-
 
 const DBInsertOptions DBInsertOptions::defaults;
 
@@ -85,10 +90,7 @@ std::unique_ptr<DBInsertOptions> DBInsertOptions::create()
  * Cursor*
  */
 
-Cursor::~Cursor()
-{
-}
-
+Cursor::~Cursor() {}
 
 /*
  * Transaction
@@ -96,27 +98,28 @@ Cursor::~Cursor()
 
 Transaction::~Transaction() {}
 
-void Transaction::import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportOptions& opts)
+void Transaction::import_messages(
+    const std::vector<std::shared_ptr<Message>>& messages,
+    const DBImportOptions& opts)
 {
-    for (const auto& i: messages)
+    for (const auto& i : messages)
         import_message(*i, opts);
 }
-
 
 /*
  * DB
  */
 
-DB::~DB()
-{
-}
+DB::~DB() {}
 
 std::shared_ptr<DB> DB::connect(const DBConnectOptions& opts)
 {
     if (opts.url == "mem:")
     {
         return db::DB::connect_memory();
-    } else {
+    }
+    else
+    {
         auto conn(sql::Connection::create(opts));
         auto res = db::DB::create(conn);
         if (opts.wipe)
@@ -127,35 +130,35 @@ std::shared_ptr<DB> DB::connect(const DBConnectOptions& opts)
 
 std::shared_ptr<CursorStation> DB::query_stations(const Query& query)
 {
-    auto t = transaction();
+    auto t   = transaction();
     auto res = t->query_stations(query);
     return res;
 }
 
 std::shared_ptr<CursorStationData> DB::query_station_data(const Query& query)
 {
-    auto t = transaction();
+    auto t   = transaction();
     auto res = t->query_station_data(query);
     return res;
 }
 
 std::shared_ptr<CursorData> DB::query_data(const Query& query)
 {
-    auto t = transaction();
+    auto t   = transaction();
     auto res = t->query_data(query);
     return res;
 }
 
 std::shared_ptr<CursorSummary> DB::query_summary(const Query& query)
 {
-    auto t = transaction();
+    auto t   = transaction();
     auto res = t->query_summary(query);
     return res;
 }
 
 std::shared_ptr<CursorMessage> DB::query_messages(const Query& query)
 {
-    auto t = transaction();
+    auto t   = transaction();
     auto res = t->query_messages(query);
     return res;
 }
@@ -188,7 +191,8 @@ void DB::import_message(const Message& message, const DBImportOptions& opts)
     t->commit();
 }
 
-void DB::import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportOptions& opts)
+void DB::import_messages(const std::vector<std::shared_ptr<Message>>& messages,
+                         const DBImportOptions& opts)
 {
     auto t = transaction();
     t->import_messages(messages, opts);
@@ -209,4 +213,4 @@ void DB::insert_data(Data& vals, const DBInsertOptions& opts)
     t->commit();
 }
 
-}
+} // namespace dballe

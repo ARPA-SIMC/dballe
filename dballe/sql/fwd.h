@@ -16,6 +16,6 @@ class MySQLConnection;
 class PostgreSQLConnection;
 class SQLiteConnection;
 class SQLiteStatement;
-}
-}
+} // namespace sql
+} // namespace dballe
 #endif

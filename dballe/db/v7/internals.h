@@ -1,15 +1,16 @@
 #ifndef DBALLE_DB_V7_INTERNALS_H
 #define DBALLE_DB_V7_INTERNALS_H
 
-#include <wreport/var.h>
 #include <vector>
+#include <wreport/var.h>
 
 namespace dballe {
 namespace db {
 namespace v7 {
 
 /// Store a list of attributes to be inserted/updated in the database
-struct AttributeList : public std::vector<std::pair<wreport::Varcode, const char*>>
+struct AttributeList
+    : public std::vector<std::pair<wreport::Varcode, const char*>>
 {
     void add(wreport::Varcode code, const char* value)
     {
@@ -20,7 +21,8 @@ struct AttributeList : public std::vector<std::pair<wreport::Varcode, const char
     const char* get(wreport::Varcode code) const
     {
         for (const_iterator i = begin(); i != end(); ++i)
-            if (i->first == code) return i->second;
+            if (i->first == code)
+                return i->second;
         return nullptr;
     }
 
@@ -35,7 +37,7 @@ struct AttributeList : public std::vector<std::pair<wreport::Varcode, const char
         {
             if (i->first == code)
             {
-                res = i->second;
+                res       = i->second;
                 i->second = nullptr;
                 break;
             }
@@ -46,8 +48,8 @@ struct AttributeList : public std::vector<std::pair<wreport::Varcode, const char
     }
 };
 
-}
-}
-}
+} // namespace v7
+} // namespace db
+} // namespace dballe
 
 #endif

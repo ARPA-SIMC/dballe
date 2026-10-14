@@ -1,7 +1,7 @@
 #define _DBALLE_TEST_CODE
+#include "config.h"
 #include "dballe/db/tests.h"
 #include "summary.h"
-#include "config.h"
 
 #ifdef HAVE_XAPIAN
 #include "dballe/db/summary_xapian.h"
@@ -15,8 +15,7 @@ using namespace std;
 
 namespace {
 
-template<typename BACKEND>
-class Tests : public TestCase
+template <typename BACKEND> class Tests : public TestCase
 {
     using TestCase::TestCase;
 
@@ -29,21 +28,23 @@ Tests<DBSummaryXapian> tg2("db_summary_xapian");
 void set_station_id(Station& station, int id) {}
 void set_station_id(DBStation& station, int id) { station.id = id; }
 
-template<typename BACKEND>
+template <typename BACKEND>
 std::vector<std::string> get_reports(const BACKEND& summary)
 {
     std::vector<std::string> res;
-    summary.reports([&](const std::string& l) { res.emplace_back(l); return true; });
+    summary.reports([&](const std::string& l) {
+        res.emplace_back(l);
+        return true;
+    });
     return res;
 }
 
-template<typename BACKEND>
-void Tests<BACKEND>::register_tests()
+template <typename BACKEND> void Tests<BACKEND>::register_tests()
 {
 
-this->add_method("xapian_concurrency", [] {
+    this->add_method("xapian_concurrency", [] {
 #ifndef HAVE_XAPIAN
-    throw TestSkipped();
+        throw TestSkipped();
 #else
     typename BACKEND::station_type station;
     set_station_id(station, 1);
@@ -77,10 +78,9 @@ this->add_method("xapian_concurrency", [] {
     reports = get_reports(summary2);
     wassert(actual(reports.size()) == 0);
 #endif
-});
-
+    });
 }
 
-}
+} // namespace
 
 #endif

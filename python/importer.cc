@@ -1,11 +1,11 @@
 #define _DBALLE_LIBRARY_CODE
-#include "common.h"
 #include "importer.h"
 #include "binarymessage.h"
-#include "file.h"
-#include "message.h"
+#include "common.h"
 #include "dballe/file.h"
 #include "dballe/msg/msg.h"
+#include "file.h"
+#include "message.h"
 #include "utils/type.h"
 #include "wreport/options.h"
 
@@ -15,7 +15,7 @@ using namespace dballe::python;
 using namespace wreport;
 
 extern "C" {
-PyTypeObject* dpy_Importer_Type = nullptr;
+PyTypeObject* dpy_Importer_Type     = nullptr;
 PyTypeObject* dpy_ImporterFile_Type = nullptr;
 }
 
@@ -28,7 +28,7 @@ typedef MethGenericEnter<dpy_ImporterFile> __enter__;
 struct __exit__ : MethVarargs<__exit__, dpy_ImporterFile>
 {
     constexpr static const char* name = "__exit__";
-    constexpr static const char* doc = "Context manager __exit__";
+    constexpr static const char* doc  = "Context manager __exit__";
     static PyObject* run(Impl* self, PyObject* args)
     {
         PyObject* exc_type;
@@ -37,22 +37,23 @@ struct __exit__ : MethVarargs<__exit__, dpy_ImporterFile>
         if (!PyArg_ParseTuple(args, "OOO", &exc_type, &exc_val, &exc_tb))
             return nullptr;
 
-        try {
+        try
+        {
             Py_XDECREF(self->importer);
             self->importer = nullptr;
             Py_XDECREF(self->file);
             self->file = nullptr;
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
         Py_RETURN_NONE;
     }
 };
 
-
 struct Definition : public Type<Definition, dpy_ImporterFile>
 {
-    constexpr static const char* name = "ImporterFile";
+    constexpr static const char* name      = "ImporterFile";
     constexpr static const char* qual_name = "dballe.ImporterFile";
-    constexpr static const char* doc = R"(
+    constexpr static const char* doc       = R"(
 Message importer iterating over the contents of a a :class:`dballe.File`.
 
 This is never instantiated explicitly, but is returned by
@@ -69,7 +70,9 @@ of :class:`dballe.Message` objects.
     {
         if (!self->file || !self->importer)
         {
-            PyErr_SetString(PyExc_RuntimeError, "cannot access a dballe.ImporterFile after the with block where it was used");
+            PyErr_SetString(PyExc_RuntimeError,
+                            "cannot access a dballe.ImporterFile after the "
+                            "with block where it was used");
             throw PythonException();
         }
     }
@@ -83,16 +86,19 @@ of :class:`dballe.Message` objects.
 
     static PyObject* _iter(Impl* self)
     {
-        try {
+        try
+        {
             check_valid(self);
             Py_INCREF(self);
             return (PyObject*)self;
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 
     static PyObject* _iternext(Impl* self)
     {
-        try {
+        try
+        {
             check_valid(self);
             BinaryMessage binmsg = self->file->file->file().read();
             if (!binmsg)
@@ -103,44 +109,53 @@ of :class:`dballe.Message` objects.
             auto messages = self->importer->importer->from_binary(binmsg);
             pyo_unique_ptr res(throw_ifnull(PyTuple_New(messages.size())));
             for (size_t i = 0; i < messages.size(); ++i)
-                PyTuple_SET_ITEM((PyTupleObject*)res.get(), i, (PyObject*)message_create(messages[i]));
+                PyTuple_SET_ITEM((PyTupleObject*)res.get(), i,
+                                 (PyObject*)message_create(messages[i]));
             return res.release();
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 Definition* definition = nullptr;
-}
+} // namespace importerfile
 
 namespace importer {
 struct from_binary : MethKwargs<from_binary, dpy_Importer>
 {
-    constexpr static const char* name = "from_binary";
+    constexpr static const char* name      = "from_binary";
     constexpr static const char* signature = "binmsg: dballe.BinaryMessage";
-    constexpr static const char* returns = "Sequence[dballe.BinaryMessage]";
-    constexpr static const char* summary = "Decode a BinaryMessage to a tuple of dballe.Message objects";
+    constexpr static const char* returns   = "Sequence[dballe.BinaryMessage]";
+    constexpr static const char* summary =
+        "Decode a BinaryMessage to a tuple of dballe.Message objects";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { "binmsg", nullptr };
-        dpy_BinaryMessage* binmsg = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "O!", const_cast<char**>(kwlist), dpy_BinaryMessage_Type, &binmsg))
+        static const char* kwlist[] = {"binmsg", nullptr};
+        dpy_BinaryMessage* binmsg   = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O!",
+                                         const_cast<char**>(kwlist),
+                                         dpy_BinaryMessage_Type, &binmsg))
             return nullptr;
-        try {
+        try
+        {
             auto messages = self->importer->from_binary(binmsg->message);
             pyo_unique_ptr res(throw_ifnull(PyTuple_New(messages.size())));
             for (size_t i = 0; i < messages.size(); ++i)
-                PyTuple_SET_ITEM((PyTupleObject*)res.get(), i, (PyObject*)message_create(messages[i]));
+                PyTuple_SET_ITEM((PyTupleObject*)res.get(), i,
+                                 (PyObject*)message_create(messages[i]));
             return res.release();
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct from_file : MethKwargs<from_file, dpy_Importer>
 {
     constexpr static const char* name = "from_file";
-    constexpr static const char* signature = "file: Union[dballe.File, str, File]";
+    constexpr static const char* signature =
+        "file: Union[dballe.File, str, File]";
     constexpr static const char* returns = "dballe.ImporterFile";
-    constexpr static const char* doc = R"(
+    constexpr static const char* doc     = R"(
 Wrap a :class:`dballe.File` into a sequence of tuples of :class:`dballe.Message` objects.
 
 `file` can be a :class:`dballe.File`, a file name, or a file-like object. A :class:`dballe.File`
@@ -148,36 +163,43 @@ is automatically constructed if needed, using the importer encoding.
 )";
     static PyObject* run(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { "file", nullptr };
-        PyObject* obj = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "O", const_cast<char**>(kwlist), &obj))
+        static const char* kwlist[] = {"file", nullptr};
+        PyObject* obj               = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "O",
+                                         const_cast<char**>(kwlist), &obj))
             return nullptr;
 
-        try {
+        try
+        {
             py_unique_ptr<dpy_File> file;
 
             if (dpy_File_Check(obj))
             {
                 Py_INCREF(obj);
                 file = (dpy_File*)obj;
-            } else {
-                file = file_create_r_from_object(obj, self->importer->encoding());
+            }
+            else
+            {
+                file =
+                    file_create_r_from_object(obj, self->importer->encoding());
             }
 
-            py_unique_ptr<dpy_ImporterFile> res = throw_ifnull(PyObject_New(dpy_ImporterFile, dpy_ImporterFile_Type));
+            py_unique_ptr<dpy_ImporterFile> res = throw_ifnull(
+                PyObject_New(dpy_ImporterFile, dpy_ImporterFile_Type));
             res->file = file.release();
             Py_INCREF(self);
             res->importer = self;
             return (PyObject*)res.release();
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 };
 
 struct Definition : public Type<Definition, dpy_Importer>
 {
-    constexpr static const char* name = "Importer";
+    constexpr static const char* name      = "Importer";
     constexpr static const char* qual_name = "dballe.Importer";
-    constexpr static const char* doc = R"(
+    constexpr static const char* doc       = R"(
 Message importer.
 
 This is the engine that decodes binary messages and interprets their contents
@@ -233,14 +255,18 @@ Example usage::
 
     static int _init(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { "encoding", "simplified", "domain_errors", nullptr };
-        const char* encoding = nullptr;
-        int simplified = -1;
-        const char* domain_errors = "raise";
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "s|ps", const_cast<char**>(kwlist), &encoding, &simplified, &domain_errors))
+        static const char* kwlist[] = {"encoding", "simplified",
+                                       "domain_errors", nullptr};
+        const char* encoding        = nullptr;
+        int simplified              = -1;
+        const char* domain_errors   = "raise";
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "s|ps",
+                                         const_cast<char**>(kwlist), &encoding,
+                                         &simplified, &domain_errors))
             return -1;
 
-        try {
+        try
+        {
             impl::ImporterOptions opts;
             if (simplified != -1)
                 opts.simplified = simplified;
@@ -258,27 +284,35 @@ Example usage::
 #endif
             else
             {
-                PyErr_Format(PyExc_ValueError, "domain_errors argument has unsupported value '%s'", domain_errors);
+                PyErr_Format(
+                    PyExc_ValueError,
+                    "domain_errors argument has unsupported value '%s'",
+                    domain_errors);
                 throw PythonException();
             }
-            self->importer = Importer::create(File::parse_encoding(encoding), opts).release();
-        } DBALLE_CATCH_RETURN_INT
+            self->importer =
+                Importer::create(File::parse_encoding(encoding), opts)
+                    .release();
+        }
+        DBALLE_CATCH_RETURN_INT
         return 0;
     }
 };
 
 Definition* definition = nullptr;
-}
+} // namespace importer
 
-}
+} // namespace
 
 namespace dballe {
 namespace python {
 
-dpy_Importer* importer_create(Encoding encoding, const dballe::ImporterOptions& opts)
+dpy_Importer* importer_create(Encoding encoding,
+                              const dballe::ImporterOptions& opts)
 {
     dpy_Importer* res = PyObject_New(dpy_Importer, dpy_Importer_Type);
-    if (!res) return nullptr;
+    if (!res)
+        return nullptr;
     res->importer = Importer::create(encoding, opts).release();
     return res;
 }
@@ -294,6 +328,5 @@ void register_importer(PyObject* m)
     importer::definition->define(dpy_Importer_Type, m);
 }
 
-}
-}
-
+} // namespace python
+} // namespace dballe

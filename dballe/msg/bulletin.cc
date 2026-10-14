@@ -1,9 +1,9 @@
 #include "bulletin.h"
 #include "dballe/core/csv.h"
-#include <wreport/bulletin.h>
-#include <wreport/var.h>
-#include <wreport/utils/string.h>
 #include <string>
+#include <wreport/bulletin.h>
+#include <wreport/utils/string.h>
+#include <wreport/var.h>
 
 using namespace std;
 using namespace wreport;
@@ -26,7 +26,7 @@ struct Writer : public CSVWriter
         row.clear();
     }
 
-    void print_var(const Var& var, const Var* parent=0)
+    void print_var(const Var& var, const Var* parent = 0)
     {
         string code;
         if (parent)
@@ -39,7 +39,9 @@ struct Writer : public CSVWriter
         {
             switch (var.info()->type)
             {
-                case Vartype::Integer: add_keyval(code.c_str(), var.enqi()); break;
+                case Vartype::Integer:
+                    add_keyval(code.c_str(), var.enqi());
+                    break;
                 case Vartype::Decimal:
                     add_value(code.c_str());
                     add_value_raw(var.format(""));
@@ -47,7 +49,9 @@ struct Writer : public CSVWriter
                     break;
                 default: add_keyval(code.c_str(), var.format("")); break;
             }
-        } else {
+        }
+        else
+        {
             add_value(code.c_str());
             add_value_empty();
             flush_row();
@@ -63,7 +67,8 @@ struct Writer : public CSVWriter
             for (size_t i = 0; i < s.size(); ++i)
             {
                 print_var(s[i]);
-                for (const Var* a = s[i].next_attr(); a != NULL; a = a->next_attr())
+                for (const Var* a = s[i].next_attr(); a != NULL;
+                     a            = a->next_attr())
                     print_var(*a, &(s[i]));
             }
         }
@@ -94,40 +99,46 @@ struct Writer : public CSVWriter
         add_keyval("update_sequence_number", bul.update_sequence_number);
         char buf[30];
         snprintf(buf, 29, "%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu",
-                bul.rep_year, bul.rep_month, bul.rep_day,
-                bul.rep_hour, bul.rep_minute, bul.rep_second);
+                 bul.rep_year, bul.rep_month, bul.rep_day, bul.rep_hour,
+                 bul.rep_minute, bul.rep_second);
         add_keyval("representative_time", buf);
         if (const BufrBulletin* b = dynamic_cast<const BufrBulletin*>(&bul))
         {
             add_keyval("encoding", "bufr");
             add_keyval("edition_number", b->edition_number);
-            add_keyval("master_table_version_number", b->master_table_version_number);
-            add_keyval("master_table_version_number_local", b->master_table_version_number_local);
+            add_keyval("master_table_version_number",
+                       b->master_table_version_number);
+            add_keyval("master_table_version_number_local",
+                       b->master_table_version_number_local);
             add_keyval("compression", b->compression ? "true" : "false");
-            add_keyval("optional_section", str::encode_cstring(b->optional_section));
-        } else if (const CrexBulletin* b = dynamic_cast<const CrexBulletin*>(&bul)) {
+            add_keyval("optional_section",
+                       str::encode_cstring(b->optional_section));
+        }
+        else if (const CrexBulletin* b =
+                     dynamic_cast<const CrexBulletin*>(&bul))
+        {
             add_keyval("encoding", "crex");
             add_keyval("edition_number", b->edition_number);
-            add_keyval("master_table_version_number", b->master_table_version_number);
-            add_keyval("master_table_version_number_bufr", b->master_table_version_number_bufr);
-            add_keyval("master_table_version_number_local", b->master_table_version_number_local);
-            add_keyval("has_check_digit", b->has_check_digit ? "true" : "false");
-        } else
+            add_keyval("master_table_version_number",
+                       b->master_table_version_number);
+            add_keyval("master_table_version_number_bufr",
+                       b->master_table_version_number_bufr);
+            add_keyval("master_table_version_number_local",
+                       b->master_table_version_number_local);
+            add_keyval("has_check_digit",
+                       b->has_check_digit ? "true" : "false");
+        }
+        else
             throw error_consistency("encoding not supported for CSV dump");
         print_subsets(bul);
     }
 };
 
-}
+} // namespace
 
-BulletinCSVWriter::BulletinCSVWriter(FILE* out)
-    : out(out)
-{
-}
+BulletinCSVWriter::BulletinCSVWriter(FILE* out) : out(out) {}
 
-BulletinCSVWriter::~BulletinCSVWriter()
-{
-}
+BulletinCSVWriter::~BulletinCSVWriter() {}
 
 void BulletinCSVWriter::output_bulletin(const wreport::Bulletin& bulletin)
 {
@@ -144,5 +155,5 @@ void BulletinCSVWriter::output_bulletin(const wreport::Bulletin& bulletin)
     writer.write_bulletin(bulletin);
 }
 
-}
-}
+} // namespace msg
+} // namespace dballe

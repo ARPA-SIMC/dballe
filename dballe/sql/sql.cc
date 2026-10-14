@@ -1,17 +1,17 @@
 #include "sql.h"
-#include "dballe/types.h"
+#include "config.h"
 #include "dballe/db.h"
+#include "dballe/types.h"
 #include "querybuf.h"
 #include "sqlite.h"
-#include "config.h"
 #ifdef HAVE_LIBPQ
 #include "postgresql.h"
 #endif
 #ifdef HAVE_MYSQL
 #include "mysql.h"
 #endif
-#include <cstring>
 #include <cstdlib>
+#include <cstring>
 
 using namespace std;
 using namespace wreport;
@@ -28,60 +28,65 @@ const char* format_server_type(ServerType type)
 {
     switch (type)
     {
-        case ServerType::MYSQL: return "mysql";
-        case ServerType::SQLITE: return "sqlite";
-        case ServerType::ORACLE: return "oracle";
+        case ServerType::MYSQL:    return "mysql";
+        case ServerType::SQLITE:   return "sqlite";
+        case ServerType::ORACLE:   return "oracle";
         case ServerType::POSTGRES: return "postgresql";
-        default: return "unknown";
+        default:                   return "unknown";
     }
 }
 
-Connection::Connection()
-{
-}
+Connection::Connection() {}
 
-Connection::~Connection()
-{
-}
+Connection::~Connection() {}
 
 static std::vector<std::weak_ptr<Connection>> atfork_connections;
 
 void Connection::atfork_prepare_hook()
 {
-    try {
-        for (auto& c: atfork_connections)
+    try
+    {
+        for (auto& c : atfork_connections)
             if (!c.expired())
                 c.lock()->fork_prepare();
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         fprintf(stderr, "pre-fork error: %s\n", e.what());
     }
 }
 
 void Connection::atfork_parent_hook()
 {
-    try {
-        for (auto& c: atfork_connections)
+    try
+    {
+        for (auto& c : atfork_connections)
             if (!c.expired())
                 c.lock()->fork_parent();
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         fprintf(stderr, "post-fork parent error: %s\n", e.what());
     }
 }
 
 void Connection::atfork_child_hook()
 {
-    try {
-        for (auto& c: atfork_connections)
+    try
+    {
+        for (auto& c : atfork_connections)
             if (!c.expired())
                 c.lock()->fork_child();
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         fprintf(stderr, "post-fork child error: %s\n", e.what());
     }
 }
 
 void Connection::register_atfork()
 {
-    for (auto& c: atfork_connections)
+    for (auto& c : atfork_connections)
         if (c.expired())
         {
             c = shared_from_this();
@@ -92,8 +97,10 @@ void Connection::register_atfork()
     static bool atfork_registered = false;
     if (!atfork_registered)
     {
-        if (pthread_atfork(atfork_prepare_hook, atfork_parent_hook, atfork_child_hook) != 0)
-            throw error_system("cannot register atfork handlers for db connections");
+        if (pthread_atfork(atfork_prepare_hook, atfork_parent_hook,
+                           atfork_child_hook) != 0)
+            throw error_system(
+                "cannot register atfork handlers for db connections");
         atfork_registered = true;
     }
 }
@@ -104,9 +111,8 @@ void Connection::fork_child() {}
 
 void Connection::add_datetime(Querybuf& qb, const Datetime& dt) const
 {
-    qb.appendf("'%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu'",
-            dt.year, dt.month, dt.day,
-            dt.hour, dt.minute, dt.second);
+    qb.appendf("'%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu'", dt.year, dt.month,
+               dt.day, dt.hour, dt.minute, dt.second);
 }
 
 std::shared_ptr<Connection> Connection::create(const DBConnectOptions& options)
@@ -126,7 +132,8 @@ std::shared_ptr<Connection> Connection::create(const DBConnectOptions& options)
     }
     if (strncmp(url, "mem:", 4) == 0)
     {
-        throw error_consistency("SQL connections are not available on mem: databases");
+        throw error_consistency(
+            "SQL connections are not available on mem: databases");
     }
     if (strncmp(url, "postgresql:", 11) == 0)
     {
@@ -151,5 +158,5 @@ std::shared_ptr<Connection> Connection::create(const DBConnectOptions& options)
     error_consistency::throwf("unsupported url \"%s\"", url);
 }
 
-}
-}
+} // namespace sql
+} // namespace dballe

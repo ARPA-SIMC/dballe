@@ -24,13 +24,13 @@ public:
     DBValues values;
 
 public:
-    Data() = default;
+    Data()                = default;
     Data(const Data& rec) = default;
-    Data(Data&& rec) = default;
+    Data(Data&& rec)      = default;
     ~Data();
 
     Data& operator=(const Data& rec) = default;
-    Data& operator=(Data&& rec) = default;
+    Data& operator=(Data&& rec)      = default;
 
     bool operator==(const dballe::Data& rec) const override;
     bool operator!=(const dballe::Data& rec) const override;
@@ -103,7 +103,7 @@ public:
      */
     void set_from_string(const char* str);
 
-     /**
+    /**
      * Set the Data from a ", "-separated string of assignments.
      *
      * The implementation is not efficient and the method is not safe for any
@@ -121,7 +121,6 @@ protected:
     void setf(const char* key, unsigned len, const char* val);
 };
 
-}
-}
+} // namespace core
+} // namespace dballe
 #endif
-

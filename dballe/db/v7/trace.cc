@@ -1,7 +1,7 @@
 #include "trace.h"
 #include "dballe/core/query.h"
-#include <wreport/error.h>
 #include <unistd.h>
+#include <wreport/error.h>
 
 using namespace wreport;
 
@@ -23,7 +23,8 @@ std::vector<std::string> read_argv()
 {
     std::vector<std::string> argv;
     FILE* in = fopen("/proc/self/cmdline", "rb");
-    if (!in) throw error_system("cannot open /proc/self/cmdline");
+    if (!in)
+        throw error_system("cannot open /proc/self/cmdline");
 
     std::string cur;
     char c;
@@ -33,7 +34,8 @@ std::vector<std::string> read_argv()
         {
             argv.push_back(cur);
             cur.clear();
-        } else
+        }
+        else
             cur += c;
     }
 
@@ -64,14 +66,11 @@ std::string format_time_fname(time_t time)
     return buf;
 }
 
-}
+} // namespace
 
 namespace trace {
 
-Step::Step(const std::string& name)
-    : name(name), start(clock())
-{
-}
+Step::Step(const std::string& name) : name(name), start(clock()) {}
 
 Step::Step(const std::string& name, const std::string& detail)
     : name(name), detail(detail), start(clock())
@@ -84,10 +83,7 @@ Step::~Step()
     delete sibling;
 }
 
-void Step::done()
-{
-    end = clock();
-}
+void Step::done() { end = clock(); }
 
 unsigned Step::elapsed_usec() const
 {
@@ -114,32 +110,38 @@ void Step::to_json(core::JSONWriter& writer) const
 
 Tracer<> Transaction::trace_query_stations(const Query& query)
 {
-    return Tracer<>(add_child(new trace::Step("query_stations", query_to_string(query))));
+    return Tracer<>(
+        add_child(new trace::Step("query_stations", query_to_string(query))));
 }
 
 Tracer<> Transaction::trace_query_station_data(const Query& query)
 {
-    return Tracer<>(add_child(new trace::Step("query_station_data", query_to_string(query))));
+    return Tracer<>(add_child(
+        new trace::Step("query_station_data", query_to_string(query))));
 }
 
 Tracer<> Transaction::trace_query_data(const Query& query)
 {
-    return Tracer<>(add_child(new trace::Step("query_data", query_to_string(query))));
+    return Tracer<>(
+        add_child(new trace::Step("query_data", query_to_string(query))));
 }
 
 Tracer<> Transaction::trace_query_summary(const Query& query)
 {
-    return Tracer<>(add_child(new trace::Step("query_summary", query_to_string(query))));
+    return Tracer<>(
+        add_child(new trace::Step("query_summary", query_to_string(query))));
 }
 
 Tracer<> Transaction::trace_import(unsigned count)
 {
-    return Tracer<>(add_child(new trace::Step("import", std::to_string(count))));
+    return Tracer<>(
+        add_child(new trace::Step("import", std::to_string(count))));
 }
 
 Tracer<> Transaction::trace_export_msgs(const Query& query)
 {
-    return Tracer<>(add_child(new trace::Step("export_msgs", query_to_string(query))));
+    return Tracer<>(
+        add_child(new trace::Step("export_msgs", query_to_string(query))));
 }
 
 Tracer<> Transaction::trace_insert_station_data()
@@ -164,30 +166,33 @@ Tracer<> Transaction::trace_func(const std::string& name)
 
 Tracer<> Transaction::trace_remove_station_data(const Query& query)
 {
-    return Tracer<>(add_child(new trace::Step("remove_station_data", query_to_string(query))));
+    return Tracer<>(add_child(
+        new trace::Step("remove_station_data", query_to_string(query))));
 }
 
 Tracer<> Transaction::trace_remove_data(const Query& query)
 {
-    return Tracer<>(add_child(new trace::Step("remove_data", query_to_string(query))));
+    return Tracer<>(
+        add_child(new trace::Step("remove_data", query_to_string(query))));
 }
 
 Tracer<> Transaction::trace_remove_station_data_by_id(int id)
 {
-    return Tracer<>(add_child(new trace::Step("remove_station_data_by_id", std::to_string(id))));
+    return Tracer<>(add_child(
+        new trace::Step("remove_station_data_by_id", std::to_string(id))));
 }
 
 Tracer<> Transaction::trace_remove_data_by_id(int id)
 {
-    return Tracer<>(add_child(new trace::Step("remove_data_by_id", std::to_string(id))));
+    return Tracer<>(
+        add_child(new trace::Step("remove_data_by_id", std::to_string(id))));
 }
 
-}
-
+} // namespace trace
 
 QuietCollectTrace::~QuietCollectTrace()
 {
-    for (auto& i: steps)
+    for (auto& i : steps)
         delete i;
 }
 
@@ -222,7 +227,6 @@ Tracer<> QuietCollectTrace::trace_vacuum()
     return Tracer<>(steps.back());
 }
 
-
 CollectTrace::CollectTrace(const std::string& logdir)
     : logdir(logdir), start(time(nullptr))
 {
@@ -243,7 +247,7 @@ void CollectTrace::save()
 
     writer.add("ops");
     writer.start_list();
-    for (const auto& s: steps)
+    for (const auto& s : steps)
         s->to_json(writer);
     writer.end_list();
 
@@ -262,13 +266,11 @@ void CollectTrace::save()
     fclose(out);
 }
 
-
 static bool _in_test_suite = false;
 
 bool Trace::in_test_suite() { return _in_test_suite; }
 void Trace::set_in_test_suite() { _in_test_suite = true; }
 
-
-}
-}
-}
+} // namespace v7
+} // namespace db
+} // namespace dballe

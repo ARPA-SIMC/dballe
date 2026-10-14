@@ -1,13 +1,13 @@
 #include "driver.h"
-#include "repinfo.h"
-#include "station.h"
-#include "levtr.h"
 #include "data.h"
-#include "dballe/db/v7/transaction.h"
 #include "dballe/db/v7/db.h"
 #include "dballe/db/v7/qbuilder.h"
+#include "dballe/db/v7/transaction.h"
 #include "dballe/sql/mysql.h"
 #include "dballe/var.h"
+#include "levtr.h"
+#include "repinfo.h"
+#include "station.h"
 #include <algorithm>
 #include <cstring>
 
@@ -15,8 +15,8 @@ using namespace std;
 using namespace wreport;
 using dballe::sql::MySQLConnection;
 using dballe::sql::MySQLStatement;
-using dballe::sql::Transaction;
 using dballe::sql::Querybuf;
+using dballe::sql::Transaction;
 using dballe::sql::mysql::Row;
 
 namespace dballe {
@@ -24,14 +24,9 @@ namespace db {
 namespace v7 {
 namespace mysql {
 
-Driver::Driver(MySQLConnection& conn)
-    : v7::Driver(conn), conn(conn)
-{
-}
+Driver::Driver(MySQLConnection& conn) : v7::Driver(conn), conn(conn) {}
 
-Driver::~Driver()
-{
-}
+Driver::~Driver() {}
 
 std::unique_ptr<v7::Repinfo> Driver::create_repinfo(v7::Transaction& tr)
 {
@@ -48,7 +43,8 @@ std::unique_ptr<v7::LevTr> Driver::create_levtr(v7::Transaction& tr)
     return unique_ptr<v7::LevTr>(new MySQLLevTr(tr, conn));
 }
 
-std::unique_ptr<v7::StationData> Driver::create_station_data(v7::Transaction& tr)
+std::unique_ptr<v7::StationData>
+Driver::create_station_data(v7::Transaction& tr)
 {
     return unique_ptr<v7::StationData>(new MySQLStationData(tr, conn));
 }
@@ -59,7 +55,8 @@ std::unique_ptr<v7::Data> Driver::create_data(v7::Transaction& tr)
 }
 
 // Extra options needed to fix MySQL's defaults. See: #153
-#define DBA_MYSQL_DEFAULT_TABLE_OPTIONS "CHARACTER SET = utf8mb4, COLLATE = utf8mb4_bin, ENGINE = InnoDB"
+#define DBA_MYSQL_DEFAULT_TABLE_OPTIONS                                        \
+    "CHARACTER SET = utf8mb4, COLLATE = utf8mb4_bin, ENGINE = InnoDB"
 
 void Driver::create_tables_v7()
 {
@@ -137,17 +134,19 @@ void Driver::delete_tables_v7()
 }
 void Driver::vacuum_v7()
 {
-    conn.exec_no_data("DELETE ltr FROM levtr ltr LEFT JOIN data d ON d.id_levtr=ltr.id WHERE d.id_levtr IS NULL");
+    conn.exec_no_data("DELETE ltr FROM levtr ltr LEFT JOIN data d ON "
+                      "d.id_levtr=ltr.id WHERE d.id_levtr IS NULL");
     conn.exec_no_data(R"(
         DELETE sd
           FROM station_data sd
           LEFT JOIN data dd ON sd.id_station = dd.id_station
          WHERE dd.id IS NULL
     )");
-    conn.exec_no_data("DELETE s FROM station s LEFT JOIN data d ON d.id_station = s.id WHERE d.id IS NULL");
+    conn.exec_no_data("DELETE s FROM station s LEFT JOIN data d ON "
+                      "d.id_station = s.id WHERE d.id IS NULL");
 }
 
-}
-}
-}
-}
+} // namespace mysql
+} // namespace v7
+} // namespace db
+} // namespace dballe

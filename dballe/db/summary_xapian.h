@@ -16,17 +16,17 @@ struct XapianDB
 {
     virtual ~XapianDB() {}
 
-    virtual Xapian::Database& reader() = 0;
+    virtual Xapian::Database& reader()         = 0;
     virtual Xapian::WritableDatabase& writer() = 0;
-    virtual void commit() = 0;
-    virtual void clear() = 0;
+    virtual void commit()                      = 0;
+    virtual void clear()                       = 0;
 };
 
 /**
  * High level objects for working with DB-All.e DB summaries
  */
-template<typename Station>
-class BaseSummaryXapian: public BaseSummary<Station>
+template <typename Station>
+class BaseSummaryXapian : public BaseSummary<Station>
 {
     std::unique_ptr<XapianDB> db;
 
@@ -46,11 +46,16 @@ public:
     unsigned data_count() const override;
 
     void clear() override;
-    void add(const Station& station, const summary::VarDesc& vd, const dballe::DatetimeRange& dtrange, size_t count) override;
+    void add(const Station& station, const summary::VarDesc& vd,
+             const dballe::DatetimeRange& dtrange, size_t count) override;
     void commit() override;
 
-    bool iter(std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange&, size_t)>) const override;
-    bool iter_filtered(const dballe::Query& query, std::function<bool(const Station&, const summary::VarDesc&, const DatetimeRange&, size_t)>) const override;
+    bool iter(std::function<bool(const Station&, const summary::VarDesc&,
+                                 const DatetimeRange&, size_t)>) const override;
+    bool iter_filtered(
+        const dballe::Query& query,
+        std::function<bool(const Station&, const summary::VarDesc&,
+                           const DatetimeRange&, size_t)>) const override;
 
     /// Serialize to JSON
     void to_json(core::JSONWriter& writer) const override;
@@ -71,7 +76,7 @@ typedef BaseSummaryXapian<dballe::DBStation> DBSummaryXapian;
 extern template class BaseSummaryXapian<dballe::Station>;
 extern template class BaseSummaryXapian<dballe::DBStation>;
 
-}
-}
+} // namespace db
+} // namespace dballe
 
 #endif

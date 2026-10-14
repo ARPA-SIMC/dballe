@@ -25,6 +25,6 @@ struct Varmatch
     static std::unique_ptr<Varmatch> parse(const std::string& filter);
 };
 
-}
+} // namespace dballe
 
 #endif

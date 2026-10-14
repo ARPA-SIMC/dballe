@@ -3,9 +3,9 @@
 
 #include <dballe/db/v7/repinfo.h>
 #include <dballe/sql/fwd.h>
-#include <vector>
-#include <string>
 #include <map>
+#include <string>
+#include <vector>
 
 namespace dballe {
 namespace db {
@@ -24,7 +24,7 @@ struct SQLiteRepinfoV7 : public v7::Repinfo
     dballe::sql::SQLiteConnection& conn;
 
     SQLiteRepinfoV7(dballe::sql::SQLiteConnection& conn);
-    SQLiteRepinfoV7(const SQLiteRepinfoV7&) = delete;
+    SQLiteRepinfoV7(const SQLiteRepinfoV7&)  = delete;
     SQLiteRepinfoV7(const SQLiteRepinfoV7&&) = delete;
     virtual ~SQLiteRepinfoV7();
     SQLiteRepinfoV7& operator=(const SQLiteRepinfoV7&) = delete;
@@ -41,8 +41,8 @@ protected:
     void insert_auto_entry(const char* memo) override;
 };
 
-}
-}
-}
-}
+} // namespace sqlite
+} // namespace v7
+} // namespace db
+} // namespace dballe
 #endif

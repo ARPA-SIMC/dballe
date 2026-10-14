@@ -9,9 +9,7 @@ Wreport::Wreport()
     // instantiated at module level
 }
 
-Wreport::~Wreport()
-{
-}
+Wreport::~Wreport() {}
 
 void Wreport::import()
 {
@@ -28,15 +26,19 @@ void Wreport::import()
 #ifdef WREPORT_API1_MIN_VERSION
     if (m_api->version_major != 1)
     {
-        PyErr_Format(PyExc_RuntimeError, "wreport C API version is %d.%d but only 1.x is supported",
+        PyErr_Format(PyExc_RuntimeError,
+                     "wreport C API version is %d.%d but only 1.x is supported",
                      m_api->version_major, m_api->version_minor);
         throw PythonException();
     }
 
     if (m_api->version_minor < WREPORT_API1_MIN_VERSION)
     {
-        PyErr_Format(PyExc_RuntimeError, "wreport C API version is %d.%d but only 1.x is supported, with x > %d",
-                     m_api->version_major, m_api->version_minor, WREPORT_API1_MIN_VERSION);
+        PyErr_Format(PyExc_RuntimeError,
+                     "wreport C API version is %d.%d but only 1.x is "
+                     "supported, with x > %d",
+                     m_api->version_major, m_api->version_minor,
+                     WREPORT_API1_MIN_VERSION);
         throw PythonException();
     }
 #endif
@@ -46,10 +48,12 @@ void Wreport::require_imported() const
 {
     if (!m_api)
     {
-        PyErr_SetString(PyExc_RuntimeError, "attempted to use the wreport C API without importing it");
+        PyErr_SetString(
+            PyExc_RuntimeError,
+            "attempted to use the wreport C API without importing it");
         throw PythonException();
     }
 }
 
-}
-}
+} // namespace python
+} // namespace dballe

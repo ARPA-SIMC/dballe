@@ -1,11 +1,11 @@
 #ifndef DBALLE_DB_V7_MYSQL_LEVTRV7_H
 #define DBALLE_DB_V7_MYSQL_LEVTRV7_H
 
-#include <dballe/db/db.h>
-#include <dballe/db/v7/levtr.h>
-#include <dballe/db/v7/fwd.h>
-#include <dballe/sql/fwd.h>
 #include <cstdio>
+#include <dballe/db/db.h>
+#include <dballe/db/v7/fwd.h>
+#include <dballe/db/v7/levtr.h>
+#include <dballe/sql/fwd.h>
 #include <memory>
 
 namespace dballe {
@@ -25,12 +25,13 @@ protected:
      */
     dballe::sql::MySQLConnection& conn;
 
-    void _dump(std::function<void(int, const Level&, const Trange&)> out) override;
+    void
+    _dump(std::function<void(int, const Level&, const Trange&)> out) override;
 
 public:
     MySQLLevTr(v7::Transaction& tr, dballe::sql::MySQLConnection& conn);
-    MySQLLevTr(const LevTr&) = delete;
-    MySQLLevTr(const LevTr&&) = delete;
+    MySQLLevTr(const LevTr&)                 = delete;
+    MySQLLevTr(const LevTr&&)                = delete;
     MySQLLevTr& operator=(const MySQLLevTr&) = delete;
     ~MySQLLevTr();
 
@@ -39,9 +40,8 @@ public:
     int obtain_id(Tracer<>& trc, const LevTrEntry& desc) override;
 };
 
-
-}
-}
-}
-}
+} // namespace mysql
+} // namespace v7
+} // namespace db
+} // namespace dballe
 #endif

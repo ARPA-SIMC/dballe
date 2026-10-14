@@ -16,10 +16,10 @@ complete unit, and can never be only partially complete.
     
     (from https://en.wikipedia.org/wiki/Transaction_processing)
 
-In Fortran, a transaction begins with :c:func:`idba_begin` and ends with
-:c:func:`idba_commit`. If :c:func:`idba_commit` is not called, all modifications done using
+In Fortran, a transaction begins with :ref:`idba_begin` and ends with
+:ref:`idba_commit`. If :ref:`idba_commit` is not called, all modifications done using
 that session handle will be discarded as if they had never happened. When
-:c:func:`idba_commit` is called, all modifications done using that session handle are
+:ref:`idba_commit` is called, all modifications done using that session handle are
 saved and will be available for others to read.
 
 For example, this code will print ``0`` and then ``1``::
@@ -50,7 +50,7 @@ SQLite specific limitations
 ---------------------------
 
 SQLite does not support writing data while another session is reading it. This
-means that :c:func:`idba_commit` will exit with an error if there is a read session
+means that :ref:`idba_commit` will exit with an error if there is a read session
 open. For example, this code will fail::
 
     idba_begin(dbhandle, handle_write, "write", "write", "write")

@@ -1,36 +1,31 @@
 #include "driver.h"
-#include "repinfo.h"
-#include "station.h"
-#include "levtr.h"
 #include "data.h"
-#include "dballe/db/v7/qbuilder.h"
 #include "dballe/db/v7/db.h"
+#include "dballe/db/v7/qbuilder.h"
 #include "dballe/db/v7/transaction.h"
 #include "dballe/sql/sqlite.h"
 #include "dballe/var.h"
+#include "levtr.h"
+#include "repinfo.h"
+#include "station.h"
 #include <algorithm>
 #include <cstring>
 
 using namespace std;
 using namespace wreport;
+using dballe::sql::Querybuf;
 using dballe::sql::SQLiteConnection;
 using dballe::sql::SQLiteStatement;
 using dballe::sql::Transaction;
-using dballe::sql::Querybuf;
 
 namespace dballe {
 namespace db {
 namespace v7 {
 namespace sqlite {
 
-Driver::Driver(SQLiteConnection& conn)
-    : v7::Driver(conn), conn(conn)
-{
-}
+Driver::Driver(SQLiteConnection& conn) : v7::Driver(conn), conn(conn) {}
 
-Driver::~Driver()
-{
-}
+Driver::~Driver() {}
 
 std::unique_ptr<v7::Repinfo> Driver::create_repinfo(v7::Transaction& tr)
 {
@@ -47,7 +42,8 @@ std::unique_ptr<v7::LevTr> Driver::create_levtr(v7::Transaction& tr)
     return unique_ptr<v7::LevTr>(new SQLiteLevTr(tr, conn));
 }
 
-std::unique_ptr<v7::StationData> Driver::create_station_data(v7::Transaction& tr)
+std::unique_ptr<v7::StationData>
+Driver::create_station_data(v7::Transaction& tr)
 {
     return unique_ptr<v7::StationData>(new SQLiteStationData(tr, conn));
 }
@@ -156,7 +152,7 @@ void Driver::vacuum_v7()
     )");
 }
 
-}
-}
-}
-}
+} // namespace sqlite
+} // namespace v7
+} // namespace db
+} // namespace dballe

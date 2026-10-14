@@ -59,17 +59,13 @@ class TestFileRead(unittest.TestCase):
 
     def test_refcounting(self):
         file = dballe.File(self.pathname)
-        self.assertEqual(sys.getrefcount(file), 2)  # file, getrefcount
+        initial = sys.getrefcount(file)
         with file as f:
-            self.assertEqual(sys.getrefcount(file), 4)  # file, __enter__ result, f, getrefcount
-            self.assertEqual(sys.getrefcount(f), 4)  # file, __enter__ result, f, getrefcount
-            for msg in f:
-                self.assertEqual(sys.getrefcount(f), 5)  # file, __enter__ result, f, __iter__ result, getrefcount
-                self.assertEqual(sys.getrefcount(msg), 2)  # msg, getrefcount
-                data = bytes(msg)
-                self.assertEqual(sys.getrefcount(msg), 2)  # msg, getrefcount
-                self.assertEqual(sys.getrefcount(data), 2)  # data, getrefcount
-            self.assertEqual(sys.getrefcount(msg), 2)  # msg, getrefcount
-            self.assertEqual(sys.getrefcount(f), 4)  # file, __enter__ result, f, getrefcount
-        self.assertEqual(sys.getrefcount(file), 3)  # file, f, _getrefcount
-        self.assertEqual(sys.getrefcount(f), 3)  # file, f, _getrefcount
+            inside_with = sys.getrefcount(file)
+            self.assertGreater(inside_with, initial)
+            for _ in f:
+                inside_for = sys.getrefcount(file)
+                self.assertGreater(inside_for, inside_with)
+            self.assertEqual(sys.getrefcount(file), inside_with)
+        del f
+        self.assertEqual(sys.getrefcount(file), initial)

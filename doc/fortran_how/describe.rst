@@ -15,15 +15,15 @@ proper description of the values into the string.
 
 The functions are:
 
-* :c:func:`idba_describe_level`:
+* :ref:`idba_describe_level`:
   Describes a level.  For example, ``idba_describe_level(handle,106,10,106,20,string)``
   will store in ``string`` something like: *"Layer between 10hm and
   20hm above ground"*.
-* :c:func:`idba_describe_timerange`:
+* :ref:`idba_describe_timerange`:
   Describes a time range.  For example, ``idba_describe_timerange(handle,3,0,600,string)``
   will store in ``string`` something like: *"Average between reference
   time+0s to reference time+600s"*.
-* :c:func:`idba_describe_var(handle,varcode,value,string)`:
+* :ref:`idba_describe_var(handle,varcode,value,string)`:
   Describe a value.  For example, ``idba_describe_var(handle,"B12001","280",string)``
   will store in ``string`` something like: *"280 (K) TEMPERATURE/DRY-BULB
   TEMPERATURE"*.

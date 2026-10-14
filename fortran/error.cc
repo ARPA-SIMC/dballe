@@ -1,9 +1,9 @@
 #include "dballe/fortran/api.h"
 #include "handles.h"
-#include <wreport/error.h>
 #include <cstdint>
-#include <cstring>
 #include <cstdio>
+#include <cstring>
+#include <wreport/error.h>
 
 #define MAX_CALLBACKS 50
 
@@ -14,20 +14,20 @@ typedef void (*fdba_error_callback)(int* data);
 
 struct HErrcb : public dballe::fortran::HBase
 {
-	ErrorCode error;
-	fdba_error_callback cb;
-	int data;
+    ErrorCode error;
+    fdba_error_callback cb;
+    int data;
 
-	void start() { dballe::fortran::HBase::start(); }
-	void stop() { dballe::fortran::HBase::stop(); }
+    void start() { dballe::fortran::HBase::start(); }
+    void stop() { dballe::fortran::HBase::stop(); }
 
-	// Check if this callback should be triggered by this error code
-	// If it should, invoke the callback
-	void check_invoke(ErrorCode code)
-	{
-		if (error == 0 || error == code)
-			cb(&data);
-	}
+    // Check if this callback should be triggered by this error code
+    // If it should, invoke the callback
+    void check_invoke(ErrorCode code)
+    {
+        if (error == 0 || error == code)
+            cb(&data);
+    }
 };
 
 struct dballe::fortran::Handler<HErrcb, MAX_CALLBACKS> herr;
@@ -35,7 +35,7 @@ struct dballe::fortran::Handler<HErrcb, MAX_CALLBACKS> herr;
 static ErrorCode last_err_code = WR_ERR_NONE;
 static char last_err_msg[1024];
 
-}
+} // namespace
 
 namespace dballe {
 namespace fortran {
@@ -43,10 +43,10 @@ namespace fortran {
 static int usage_refcount = 0;
 void error_init()
 {
-	if (usage_refcount > 0)
-		return;
-	herr.init("Error Handling", "MAX_CALLBACKS");
-	++usage_refcount;
+    if (usage_refcount > 0)
+        return;
+    herr.init("Error Handling", "MAX_CALLBACKS");
+    ++usage_refcount;
 }
 
 int error(wreport::error& e)
@@ -54,24 +54,24 @@ int error(wreport::error& e)
     last_err_code = e.code();
     strncpy(last_err_msg, e.what(), 1023);
     size_t todo = herr.in_use;
-	for (int i = 0; todo && i < MAX_CALLBACKS; ++i)
-		if (herr.records[i].used)
-		{
-			herr.records[i].check_invoke(last_err_code);
-			--todo;
-		}
-	return 1;
+    for (int i = 0; todo && i < MAX_CALLBACKS; ++i)
+        if (herr.records[i].used)
+        {
+            herr.records[i].check_invoke(last_err_code);
+            --todo;
+        }
+    return 1;
 }
 
 int success()
 {
-	last_err_code = WR_ERR_NONE;
-	last_err_msg[0] = 0;
-	return 0;
+    last_err_code   = WR_ERR_NONE;
+    last_err_msg[0] = 0;
+    return 0;
 }
 
-}
-}
+} // namespace fortran
+} // namespace dballe
 
 using namespace dballe;
 
@@ -105,10 +105,7 @@ extern "C" {
  * @return
  *   The error code.
  */
-int idba_error_code()
-{
-    return last_err_code;
-}
+int idba_error_code() { return last_err_code; }
 
 /**
  * Return the error message for the last function that was called.
@@ -174,16 +171,17 @@ void idba_error_details(char* message, unsigned message_len)
  * @return
  *   The error indicator for the function
  */
-int idba_error_set_callback(int code, fdba_error_callback func, int data, int* handle)
+int idba_error_set_callback(int code, fdba_error_callback func, int data,
+                            int* handle)
 {
     // Initialise the error library in case it has not been done yet
     fortran::error_init();
 
-    *handle = herr.request();
+    *handle   = herr.request();
     HErrcb& h = herr.get(*handle);
-    h.error = (ErrorCode)code;
-    h.cb = func;
-    h.data = data;
+    h.error   = (ErrorCode)code;
+    h.cb      = func;
+    h.data    = data;
     return fortran::success();
 }
 
@@ -224,11 +222,11 @@ void idba_error_handle_tolerating_overflows(int* debug)
     if (last_err_code != WR_ERR_NOTFOUND)
     {
         if (*debug)
-            fprintf(stderr, "DB-All.e error %d: %s\n", last_err_code, last_err_msg);
+            fprintf(stderr, "DB-All.e error %d: %s\n", last_err_code,
+                    last_err_msg);
         exit(1);
     }
 }
 
 /// @}
-
 }

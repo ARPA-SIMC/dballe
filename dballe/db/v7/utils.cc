@@ -5,6 +5,5 @@ namespace db {
 namespace v7 {
 
 }
-}
-}
-
+} // namespace db
+} // namespace dballe

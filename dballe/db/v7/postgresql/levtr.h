@@ -1,11 +1,11 @@
 #ifndef DBALLE_DB_V7_POSTGRESQL_LEVTRV7_H
 #define DBALLE_DB_V7_POSTGRESQL_LEVTRV7_H
 
-#include <dballe/db/db.h>
-#include <dballe/db/v7/levtr.h>
-#include <dballe/db/v7/fwd.h>
-#include <dballe/sql/fwd.h>
 #include <cstdio>
+#include <dballe/db/db.h>
+#include <dballe/db/v7/fwd.h>
+#include <dballe/db/v7/levtr.h>
+#include <dballe/sql/fwd.h>
 #include <memory>
 
 namespace dballe {
@@ -22,12 +22,14 @@ struct PostgreSQLLevTr : public v7::LevTr
 protected:
     dballe::sql::PostgreSQLConnection& conn;
 
-    void _dump(std::function<void(int, const Level&, const Trange&)> out) override;
+    void
+    _dump(std::function<void(int, const Level&, const Trange&)> out) override;
 
 public:
-    PostgreSQLLevTr(v7::Transaction& tr, dballe::sql::PostgreSQLConnection& conn);
-    PostgreSQLLevTr(const LevTr&) = delete;
-    PostgreSQLLevTr(const LevTr&&) = delete;
+    PostgreSQLLevTr(v7::Transaction& tr,
+                    dballe::sql::PostgreSQLConnection& conn);
+    PostgreSQLLevTr(const LevTr&)                      = delete;
+    PostgreSQLLevTr(const LevTr&&)                     = delete;
     PostgreSQLLevTr& operator=(const PostgreSQLLevTr&) = delete;
     ~PostgreSQLLevTr();
 
@@ -36,9 +38,8 @@ public:
     int obtain_id(Tracer<>& trc, const LevTrEntry& desc) override;
 };
 
-
-}
-}
-}
-}
+} // namespace postgresql
+} // namespace v7
+} // namespace db
+} // namespace dballe
 #endif

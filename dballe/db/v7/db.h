@@ -1,14 +1,14 @@
 #ifndef DBA_DB_V7_H
 #define DBA_DB_V7_H
 
+#include <dballe/db/db.h>
+#include <dballe/db/v7/fwd.h>
+#include <dballe/db/v7/trace.h>
 #include <dballe/fwd.h>
 #include <dballe/sql/fwd.h>
-#include <dballe/db/db.h>
-#include <dballe/db/v7/trace.h>
-#include <dballe/db/v7/fwd.h>
-#include <wreport/varinfo.h>
-#include <string>
 #include <memory>
+#include <string>
+#include <wreport/varinfo.h>
 
 namespace dballe {
 namespace db {
@@ -23,7 +23,7 @@ public:
     /// Database connection
     std::shared_ptr<dballe::sql::Connection> conn;
     /// Database query tracing
-    Trace* trace = nullptr;
+    Trace* trace         = nullptr;
     /// True if we print an EXPLAIN trace of all queries to stderr
     bool explain_queries = false;
 
@@ -37,19 +37,21 @@ public:
     DB(std::shared_ptr<dballe::sql::Connection> conn);
     virtual ~DB();
 
-    db::Format format() const { return Format::V7; }
+    db::Format format() const override { return Format::V7; }
 
     /// Access the backend DB driver
     v7::Driver& driver();
 
-    std::shared_ptr<dballe::Transaction> transaction(bool readonly=false) override;
-    std::shared_ptr<dballe::db::Transaction> test_transaction(bool readonly=false) override;
+    std::shared_ptr<dballe::Transaction>
+    transaction(bool readonly = false) override;
+    std::shared_ptr<dballe::db::Transaction>
+    test_transaction(bool readonly = false) override;
 
-    void disappear();
+    void disappear() override;
 
     /**
-     * Reset the database, removing all existing DBALLE tables and re-creating them
-     * empty.
+     * Reset the database, removing all existing DBALLE tables and re-creating
+     * them empty.
      *
      * @param repinfo_file
      *   The name of the CSV file with the report type information data to load.
@@ -58,7 +60,7 @@ public:
      *   If repinfo_file is NULL, then the default of /etc/dballe/repinfo.csv is
      *   used.
      */
-    void reset(const char* repinfo_file = 0);
+    void reset(const char* repinfo_file = 0) override;
 
     /**
      * Delete all the DB-ALLe tables from the database.
@@ -72,15 +74,16 @@ public:
      * \li lev_tr values for which no data exists
      * \li station values for which no lev_tr exists
      *
-     * Depending on database size, this routine can take a few minutes to execute.
+     * Depending on database size, this routine can take a few minutes to
+     * execute.
      */
-    void vacuum();
+    void vacuum() override;
 
     friend class dballe::DB;
     friend class dballe::db::v7::Transaction;
 };
 
-}
-}
-}
+} // namespace v7
+} // namespace db
+} // namespace dballe
 #endif

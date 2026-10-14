@@ -11,8 +11,9 @@ namespace dballe {
  *
  * If the argument is not found, returns false.
  */
-bool url_pop_query_string(std::string& url, const std::string& name, std::string& val);
+bool url_pop_query_string(std::string& url, const std::string& name,
+                          std::string& val);
 
-}
+} // namespace dballe
 
 #endif

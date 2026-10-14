@@ -7,8 +7,8 @@
 #include <dballe/core/error.h>
 #include <dballe/fwd.h>
 #include <dballe/sql/fwd.h>
-#include <string>
 #include <memory>
+#include <string>
 
 /// Define this to enable referential integrity
 #undef USE_REF_INT
@@ -24,7 +24,10 @@
 #define IFTRACE if (1)
 #else
 /** Ouput a trace message */
-#define TRACE(...) do { } while (0)
+#define TRACE(...)                                                             \
+    do                                                                         \
+    {                                                                          \
+    } while (0)
 /** Prefix a block of code to compile only if trace is enabled */
 #define IFTRACE if (0)
 #endif
@@ -37,8 +40,7 @@ class Datetime;
 namespace sql {
 
 /// Supported SQL servers.
-enum class ServerType
-{
+enum class ServerType {
     MYSQL,
     SQLITE,
     ORACLE,
@@ -47,7 +49,6 @@ enum class ServerType
 
 /// Return a string description for a ServerType value
 const char* format_server_type(ServerType type);
-
 
 class Connection : public std::enable_shared_from_this<Connection>
 {
@@ -88,7 +89,7 @@ public:
      * The transaction will be controller by the returned Transaction object,
      * and will end when its destuctor is called.
      */
-    virtual std::unique_ptr<Transaction> transaction(bool readonly=false) = 0;
+    virtual std::unique_ptr<Transaction> transaction(bool readonly = false) = 0;
 
     /// Check if the database contains a table
     virtual bool has_table(const std::string& name) = 0;
@@ -105,7 +106,8 @@ public:
      *
      * The table is created if it does not exist.
      */
-    virtual void set_setting(const std::string& key, const std::string& value) = 0;
+    virtual void set_setting(const std::string& key,
+                             const std::string& value) = 0;
 
     /// Drop the settings table
     virtual void drop_settings() = 0;
@@ -136,7 +138,7 @@ class Transaction
 {
 public:
     Transaction() {}
-    Transaction(const Transaction&) = delete;
+    Transaction(const Transaction&)            = delete;
     Transaction& operator=(const Transaction&) = delete;
     virtual ~Transaction();
 
@@ -154,7 +156,7 @@ public:
     virtual void lock_table(const char* name) = 0;
 };
 
-}
-}
+} // namespace sql
+} // namespace dballe
 
 #endif

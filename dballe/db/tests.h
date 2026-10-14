@@ -1,19 +1,21 @@
-#include <dballe/msg/tests.h>
-#include <dballe/values.h>
 #include <dballe/core/data.h>
-#include <dballe/db/fwd.h>
-#include <dballe/db/v7/fwd.h>
 #include <dballe/db/db.h>
+#include <dballe/db/fwd.h>
 #include <dballe/db/summary.h>
+#include <dballe/db/v7/fwd.h>
+#include <dballe/msg/tests.h>
 #include <dballe/sql/fwd.h>
-#include <utility>
+#include <dballe/values.h>
 #include <functional>
+#include <utility>
 
 namespace dballe {
 namespace tests {
 
-impl::Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const dballe::Query& query);
-impl::Messages messages_from_db(std::shared_ptr<db::Transaction> tr, const char* query);
+impl::Messages messages_from_db(std::shared_ptr<db::Transaction> tr,
+                                const dballe::Query& query);
+impl::Messages messages_from_db(std::shared_ptr<db::Transaction> tr,
+                                const char* query);
 
 /// Base for datasets used to populate test databases
 struct TestDataSet
@@ -51,8 +53,7 @@ struct V7DB
     static std::shared_ptr<DB> create_db(const std::string& backend, bool wipe);
 };
 
-template<typename DB>
-struct BaseDBFixture : public Fixture
+template <typename DB> struct BaseDBFixture : public Fixture
 {
     std::string backend;
     std::shared_ptr<typename DB::DB> db;
@@ -67,8 +68,7 @@ struct BaseDBFixture : public Fixture
     bool has_driver();
 };
 
-template<typename DB>
-struct EmptyTransactionFixture : public BaseDBFixture<DB>
+template <typename DB> struct EmptyTransactionFixture : public BaseDBFixture<DB>
 {
     using BaseDBFixture<DB>::BaseDBFixture;
     std::shared_ptr<typename DB::TR> tr;
@@ -78,7 +78,7 @@ struct EmptyTransactionFixture : public BaseDBFixture<DB>
     void populate(TestDataSet& data_set);
 };
 
-template<typename DB, typename TestData>
+template <typename DB, typename TestData>
 struct TransactionFixture : public EmptyTransactionFixture<DB>
 {
     using EmptyTransactionFixture<DB>::EmptyTransactionFixture;
@@ -92,15 +92,13 @@ struct TransactionFixture : public EmptyTransactionFixture<DB>
     }
 };
 
-template<typename DB>
-struct DBFixture : public BaseDBFixture<DB>
+template <typename DB> struct DBFixture : public BaseDBFixture<DB>
 {
     using BaseDBFixture<DB>::BaseDBFixture;
 
     void test_setup();
     void populate_database(TestDataSet& data_set);
 };
-
 
 struct ActualCursor : public Actual<std::shared_ptr<dballe::Cursor>>
 {
@@ -113,27 +111,34 @@ struct ActualCursor : public Actual<std::shared_ptr<dballe::Cursor>>
     void data_context_matches(const Data& expected);
 
     /// Check cursor data variable after a query_data
-    void data_var_matches(const Data& expected, wreport::Varcode code) {
+    void data_var_matches(const Data& expected, wreport::Varcode code)
+    {
         data_var_matches(core::Data::downcast(expected).values.var(code));
     }
     /// Check cursor data variable(s) after a query_data
-    void data_var_matches(const DBValues& expected) {
-        if (auto c = std::dynamic_pointer_cast<dballe::db::CursorStation>(_actual))
+    void data_var_matches(const DBValues& expected)
+    {
+        if (auto c =
+                std::dynamic_pointer_cast<dballe::db::CursorStation>(_actual))
         {
             DBValues actual_values = c->get_values();
             if (!actual_values.vars_equal(expected))
                 // Quick hack to get proper formatting of mismatch
                 wassert(actual(c->get_values()) == expected);
         }
-        else if (auto c = std::dynamic_pointer_cast<dballe::CursorStationData>(_actual))
+        else if (auto c = std::dynamic_pointer_cast<dballe::CursorStationData>(
+                     _actual))
             data_var_matches(expected.var(c->get_varcode()));
-        else if (auto c = std::dynamic_pointer_cast<dballe::CursorData>(_actual))
+        else if (auto c =
+                     std::dynamic_pointer_cast<dballe::CursorData>(_actual))
             data_var_matches(expected.var(c->get_varcode()));
         else
-            throw wreport::error_consistency("cannot call data_var_matches on this kind of cursor");
+            throw wreport::error_consistency(
+                "cannot call data_var_matches on this kind of cursor");
     }
     /// Check cursor data variable after a query_data
-    void data_var_matches(const Values& expected, wreport::Varcode code) {
+    void data_var_matches(const Values& expected, wreport::Varcode code)
+    {
         data_var_matches(expected.var(code));
     }
     /// Check cursor data variable after a query_data
@@ -142,12 +147,15 @@ struct ActualCursor : public Actual<std::shared_ptr<dballe::Cursor>>
     /// Check cursor data context and variable after a query_data
     void data_matches(const Data& ds)
     {
-        if (auto c = std::dynamic_pointer_cast<dballe::CursorStationData>(_actual))
+        if (auto c =
+                std::dynamic_pointer_cast<dballe::CursorStationData>(_actual))
             data_matches(ds, c->get_varcode());
-        else if (auto c = std::dynamic_pointer_cast<dballe::CursorData>(_actual))
+        else if (auto c =
+                     std::dynamic_pointer_cast<dballe::CursorData>(_actual))
             data_matches(ds, c->get_varcode());
         else
-            throw wreport::error_consistency("cannot call data_matches on this kind of cursor");
+            throw wreport::error_consistency(
+                "cannot call data_matches on this kind of cursor");
     }
     /// Check cursor data context and variable after a query_data
     void data_matches(const Data& ds, wreport::Varcode code);
@@ -155,8 +163,7 @@ struct ActualCursor : public Actual<std::shared_ptr<dballe::Cursor>>
 
 typedef std::function<void(const db::DBSummary&)> result_checker;
 
-template<typename DB>
-struct ActualDB : public Actual<std::shared_ptr<DB>>
+template <typename DB> struct ActualDB : public Actual<std::shared_ptr<DB>>
 {
     using Actual<std::shared_ptr<DB>>::Actual;
 
@@ -170,18 +177,42 @@ struct ActualDB : public Actual<std::shared_ptr<DB>>
     void try_station_query(const std::string& query, unsigned expected);
 
     /// Check results of a summary query
-    void try_summary_query(const std::string& query, unsigned expected, result_checker checker=nullptr);
+    void try_summary_query(const std::string& query, unsigned expected,
+                           result_checker checker = nullptr);
 };
 
-inline ActualCursor actual(std::shared_ptr<dballe::Cursor>& actual) { return ActualCursor(actual); }
-inline ActualCursor actual(std::shared_ptr<dballe::CursorStation>& actual) { return ActualCursor(actual); }
-inline ActualCursor actual(std::shared_ptr<dballe::CursorStationData>& actual) { return ActualCursor(actual); }
-inline ActualCursor actual(std::shared_ptr<dballe::CursorData>& actual) { return ActualCursor(actual); }
-inline ActualCursor actual(std::shared_ptr<dballe::CursorSummary>& actual) { return ActualCursor(actual); }
-inline ActualDB<dballe::DB> actual(std::shared_ptr<dballe::DB> actual) { return ActualDB<dballe::DB>(actual); }
+inline ActualCursor actual(std::shared_ptr<dballe::Cursor>& actual)
+{
+    return ActualCursor(actual);
+}
+inline ActualCursor actual(std::shared_ptr<dballe::CursorStation>& actual)
+{
+    return ActualCursor(actual);
+}
+inline ActualCursor actual(std::shared_ptr<dballe::CursorStationData>& actual)
+{
+    return ActualCursor(actual);
+}
+inline ActualCursor actual(std::shared_ptr<dballe::CursorData>& actual)
+{
+    return ActualCursor(actual);
+}
+inline ActualCursor actual(std::shared_ptr<dballe::CursorSummary>& actual)
+{
+    return ActualCursor(actual);
+}
+inline ActualDB<dballe::DB> actual(std::shared_ptr<dballe::DB> actual)
+{
+    return ActualDB<dballe::DB>(actual);
+}
 ActualDB<dballe::DB> actual(std::shared_ptr<dballe::db::v7::DB> actual);
-inline ActualDB<dballe::db::Transaction> actual(std::shared_ptr<dballe::db::Transaction> actual) { return ActualDB<dballe::db::Transaction>(actual); }
-ActualDB<dballe::db::Transaction> actual(std::shared_ptr<dballe::db::v7::Transaction> actual);
+inline ActualDB<dballe::db::Transaction>
+actual(std::shared_ptr<dballe::db::Transaction> actual)
+{
+    return ActualDB<dballe::db::Transaction>(actual);
+}
+ActualDB<dballe::db::Transaction>
+actual(std::shared_ptr<dballe::db::v7::Transaction> actual);
 
 extern template class BaseDBFixture<V7DB>;
 extern template class DBFixture<V7DB>;
@@ -189,5 +220,5 @@ extern template class EmptyTransactionFixture<V7DB>;
 extern template class ActualDB<dballe::DB>;
 extern template class ActualDB<dballe::db::Transaction>;
 
-}
-}
+} // namespace tests
+} // namespace dballe

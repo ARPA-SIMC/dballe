@@ -92,9 +92,9 @@ compatibility.
 ---------------------------
 
 Wrap in a single database transaction everything that happens on a session
-between :c:func:`idba_begin` and :c:func:`idba_commit`, unless
-:c:func:`idba_begin` is called with only ``"read"`` access levels.
+between :ref:`idba_begin` and :ref:`idba_commit`, unless
+:ref:`idba_begin` is called with only ``"read"`` access levels.
 
 This should make execution faster at least on PostgreSQL and MySQL, and if
-:c:func:`idba_commit` is not called, like if the program aborts because of an
+:ref:`idba_commit` is not called, like if the program aborts because of an
 error, then the partial work is rolled back rather than kept in the database.

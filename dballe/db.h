@@ -2,9 +2,9 @@
 #define DBALLE_DB_H
 
 #include <dballe/fwd.h>
-#include <wreport/var.h>
 #include <memory>
 #include <vector>
+#include <wreport/var.h>
 
 namespace dballe {
 
@@ -44,16 +44,16 @@ public:
      * Create a DBConnectOptions for running unit tests. Optionally allows to
      * select a backend database.
      */
-    static std::unique_ptr<DBConnectOptions> test_create(const char* backend=nullptr);
+    static std::unique_ptr<DBConnectOptions>
+    test_create(const char* backend = nullptr);
 
 protected:
-    DBConnectOptions() = default;
-    DBConnectOptions(const DBConnectOptions&) = default;
-    DBConnectOptions(DBConnectOptions&&) = default;
+    DBConnectOptions()                                   = default;
+    DBConnectOptions(const DBConnectOptions&)            = default;
+    DBConnectOptions(DBConnectOptions&&)                 = default;
     DBConnectOptions& operator=(const DBConnectOptions&) = default;
-    DBConnectOptions& operator=(DBConnectOptions&&) = default;
+    DBConnectOptions& operator=(DBConnectOptions&&)      = default;
 };
-
 
 /**
  * Options controlling how messages are imported in the database.
@@ -104,14 +104,14 @@ public:
 
     friend class DB;
     friend class Transaction;
-protected:
-    DBImportOptions() = default;
-    DBImportOptions(const DBImportOptions&) = default;
-    DBImportOptions(DBImportOptions&&) = default;
-    DBImportOptions& operator=(const DBImportOptions&) = default;
-    DBImportOptions& operator=(DBImportOptions&&) = default;
-};
 
+protected:
+    DBImportOptions()                                  = default;
+    DBImportOptions(const DBImportOptions&)            = default;
+    DBImportOptions(DBImportOptions&&)                 = default;
+    DBImportOptions& operator=(const DBImportOptions&) = default;
+    DBImportOptions& operator=(DBImportOptions&&)      = default;
+};
 
 /**
  * Options controlling how values are inserted in the database
@@ -122,7 +122,8 @@ protected:
 class DBInsertOptions
 {
 public:
-    /// If true, then existing data can be rewritten, else data can only be added.
+    /// If true, then existing data can be rewritten, else data can only be
+    /// added.
     bool can_replace = false;
 
     /**
@@ -138,13 +139,12 @@ public:
     static const DBInsertOptions defaults;
 
 protected:
-    DBInsertOptions() = default;
-    DBInsertOptions(const DBInsertOptions&) = default;
-    DBInsertOptions(DBInsertOptions&&) = default;
+    DBInsertOptions()                                  = default;
+    DBInsertOptions(const DBInsertOptions&)            = default;
+    DBInsertOptions(DBInsertOptions&&)                 = default;
     DBInsertOptions& operator=(const DBInsertOptions&) = default;
-    DBInsertOptions& operator=(DBInsertOptions&&) = default;
+    DBInsertOptions& operator=(DBInsertOptions&&)      = default;
 };
-
 
 class Transaction : public std::enable_shared_from_this<Transaction>
 {
@@ -173,26 +173,28 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::shared_ptr<CursorStation> query_stations(const Query& query) = 0;
+    virtual std::shared_ptr<CursorStation>
+    query_stations(const Query& query) = 0;
 
     /**
      * Query the station variables in the database.
      *
-     * When multiple values per variable are present, the results will be presented
-     * in increasing order of priority.
+     * When multiple values per variable are present, the results will be
+     * presented in increasing order of priority.
      *
      * @param query
      *   The Query selecting the station data to return
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::shared_ptr<CursorStationData> query_station_data(const Query& query) = 0;
+    virtual std::shared_ptr<CursorStationData>
+    query_station_data(const Query& query) = 0;
 
     /**
      * Query the database.
      *
-     * When multiple values per variable are present, the results will be presented
-     * in increasing order of priority.
+     * When multiple values per variable are present, the results will be
+     * presented in increasing order of priority.
      *
      * @param query
      *   The Query selecting the data to return
@@ -209,7 +211,8 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::shared_ptr<CursorSummary> query_summary(const Query& query) = 0;
+    virtual std::shared_ptr<CursorSummary>
+    query_summary(const Query& query) = 0;
 
     /**
      * Query the database returning the matching data as Message objects.
@@ -219,7 +222,8 @@ public:
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::shared_ptr<CursorMessage> query_messages(const Query& query) = 0;
+    virtual std::shared_ptr<CursorMessage>
+    query_messages(const Query& query) = 0;
 
     /**
      * Remove all data from the database.
@@ -253,7 +257,9 @@ public:
      * @param opts
      *   Options controlling the import process
      */
-    virtual void import_message(const Message& message, const DBImportOptions& opts=DBImportOptions::defaults) = 0;
+    virtual void
+    import_message(const Message& message,
+                   const DBImportOptions& opts = DBImportOptions::defaults) = 0;
 
     /**
      * Import Messages into the DB-All.e database
@@ -263,7 +269,9 @@ public:
      * @param opts
      *   Options controlling the import process
      */
-    virtual void import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportOptions& opts=DBImportOptions::defaults);
+    virtual void
+    import_messages(const std::vector<std::shared_ptr<Message>>& messages,
+                    const DBImportOptions& opts = DBImportOptions::defaults);
 
     /**
      * Insert station values into the database
@@ -276,7 +284,9 @@ public:
      * @param opts
      *   Options controlling the insert operation
      */
-    virtual void insert_station_data(Data& data, const DBInsertOptions& opts=DBInsertOptions::defaults) = 0;
+    virtual void insert_station_data(
+        Data& data,
+        const DBInsertOptions& opts = DBInsertOptions::defaults) = 0;
 
     /**
      * Insert data values into the database
@@ -289,11 +299,12 @@ public:
      * @param opts
      *   Options controlling the insert operation
      */
-    virtual void insert_data(Data& data, const DBInsertOptions& opts=DBInsertOptions::defaults) = 0;
+    virtual void
+    insert_data(Data& data,
+                const DBInsertOptions& opts = DBInsertOptions::defaults) = 0;
 };
 
-
-class DB: public std::enable_shared_from_this<DB>
+class DB : public std::enable_shared_from_this<DB>
 {
 public:
     virtual ~DB();
@@ -307,7 +318,8 @@ public:
      * Begin a transaction on this database, and return a Transaction object
      * that can be used to commit it.
      */
-    virtual std::shared_ptr<dballe::Transaction> transaction(bool readonly=false) = 0;
+    virtual std::shared_ptr<dballe::Transaction>
+    transaction(bool readonly = false) = 0;
 
     /**
      * Start a query on the station variables archive.
@@ -327,21 +339,22 @@ public:
     /**
      * Query the station variables in the database.
      *
-     * When multiple values per variable are present, the results will be presented
-     * in increasing order of priority.
+     * When multiple values per variable are present, the results will be
+     * presented in increasing order of priority.
      *
      * @param query
      *   The Query selecting the station data to return
      * @return
      *   The cursor to use to iterate over the results
      */
-    virtual std::shared_ptr<CursorStationData> query_station_data(const Query& query);
+    virtual std::shared_ptr<CursorStationData>
+    query_station_data(const Query& query);
 
     /**
      * Query the database.
      *
-     * When multiple values per variable are present, the results will be presented
-     * in increasing order of priority.
+     * When multiple values per variable are present, the results will be
+     * presented in increasing order of priority.
      *
      * @param query
      *   The Query selecting the data to return
@@ -402,7 +415,9 @@ public:
      * @param opts
      *   Options controlling the import process
      */
-    void import_message(const Message& message, const DBImportOptions& opts=DBImportOptions::defaults);
+    void
+    import_message(const Message& message,
+                   const DBImportOptions& opts = DBImportOptions::defaults);
 
     /**
      * Import Messages into the DB-All.e database
@@ -412,7 +427,9 @@ public:
      * @param opts
      *   Options controlling the import process
      */
-    void import_messages(const std::vector<std::shared_ptr<Message>>& messages, const DBImportOptions& opts=DBImportOptions::defaults);
+    void
+    import_messages(const std::vector<std::shared_ptr<Message>>& messages,
+                    const DBImportOptions& opts = DBImportOptions::defaults);
 
     /**
      * Insert station values into the database
@@ -425,7 +442,8 @@ public:
      * @param opts
      *   Options controlling the insert operation
      */
-    void insert_station_data(Data& vals, const DBInsertOptions& opts=DBInsertOptions::defaults);
+    void insert_station_data(
+        Data& vals, const DBInsertOptions& opts = DBInsertOptions::defaults);
 
     /**
      * Insert data values into the database
@@ -438,9 +456,10 @@ public:
      * @param opts
      *   Options controlling the insert operation
      */
-    void insert_data(Data& vals, const DBInsertOptions& opts=DBInsertOptions::defaults);
+    void insert_data(Data& vals,
+                     const DBInsertOptions& opts = DBInsertOptions::defaults);
 };
 
-}
+} // namespace dballe
 
 #endif

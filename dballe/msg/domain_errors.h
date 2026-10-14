@@ -35,9 +35,8 @@ class TagDomainErrors : public wreport::options::DomainErrorHook
     void handle_domain_error_double(wreport::Var& var, double val) override;
 };
 
-
-}
-}
-}
+} // namespace msg
+} // namespace impl
+} // namespace dballe
 
 #endif

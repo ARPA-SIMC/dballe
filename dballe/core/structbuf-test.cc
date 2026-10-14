@@ -1,5 +1,5 @@
-#include "tests.h"
 #include "structbuf.h"
+#include "tests.h"
 
 using namespace dballe;
 using namespace wreport;
@@ -66,4 +66,4 @@ class Tests : public TestCase
     }
 } test("core_structbuf");
 
-}
+} // namespace

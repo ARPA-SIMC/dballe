@@ -30,55 +30,64 @@ struct API;
 
 struct HBase
 {
-	bool used;
+    bool used;
 
-	HBase() : used(false) {}
+    HBase() : used(false) {}
 
-	void start() { used = true; }
-	void stop() { used = false; }
+    void start() { used = true; }
+    void stop() { used = false; }
 };
 
-template<typename T, int MAX>
-struct Handler
+template <typename T, int MAX> struct Handler
 {
-	T* records;
-	int next;
-	const char* name;
-	const char* def;
-	size_t in_use;
+    T* records;
+    int next;
+    const char* name;
+    const char* def;
+    size_t in_use;
 
-	void init(const char* name, const char* def)
-	{
-		this->name = name;
-		this->def = def;
-		records = new T[MAX];
-		next = 0;
-		in_use = 0;
-	}
+    void init(const char* name, const char* def)
+    {
+        this->name = name;
+        this->def  = def;
+        records    = new T[MAX];
+        next       = 0;
+        in_use     = 0;
+    }
 
     T& get(int id)
     {
         if (!records[id].used)
-            wreport::error_handles::throwf("Handle %d used after it has been closed, or when it has never been opened", id);
+            wreport::error_handles::throwf(
+                "Handle %d used after it has been closed, or when it has never "
+                "been opened",
+                id);
         return records[id];
     }
 
-	int request()
-	{
-		for (int i = 0; i < MAX && (records[next].used); ++i)
-			next = (next + 1) % MAX;
-		if (records[next].used)
-			wreport::error_handles::throwf("No more handles for %s. The maximum limit is %d: to increase it, recompile DB-All.e setting %s to a higher value", name, MAX, def);
-		/* Setup the new handle */
-		records[next].start();
-		++in_use;
-		return next;
-	}
+    int request()
+    {
+        for (int i = 0; i < MAX && (records[next].used); ++i)
+            next = (next + 1) % MAX;
+        if (records[next].used)
+            wreport::error_handles::throwf(
+                "No more handles for %s. The maximum limit is %d: to increase "
+                "it, recompile DB-All.e setting %s to a higher value",
+                name, MAX, def);
+        /* Setup the new handle */
+        records[next].start();
+        ++in_use;
+        return next;
+    }
 
     void release(int h)
     {
-        if (!in_use) wreport::error_handles::throwf("Attempted to close handle %d when no handles are in use", h);
-        if (!records[h].used) wreport::error_handles::throwf("Attempted to close handle %d which was not open", h);
+        if (!in_use)
+            wreport::error_handles::throwf(
+                "Attempted to close handle %d when no handles are in use", h);
+        if (!records[h].used)
+            wreport::error_handles::throwf(
+                "Attempted to close handle %d which was not open", h);
         records[h].stop();
         --in_use;
     }
@@ -87,7 +96,7 @@ struct Handler
 /// Initialise error handlers
 void error_init();
 
-}
-}
+} // namespace fortran
+} // namespace dballe
 
 #endif

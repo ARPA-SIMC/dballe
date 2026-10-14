@@ -37,6 +37,7 @@ mkdir -p "$OUTDIR"
 
 export PYTHONPATH="@pythonpath_src@:@pythonpath_build@"
 export top_builddir="@top_builddir@"
+export DBALLE_C_XML_DIR="@doc_build@/c_xml/"
 
 "@doxygen@" "@doc_build@/libdballe.dox"
 TEST_CODE_OUTPUT=test_code.json "@sphinx_build@" -b html "@doc_src@" "$OUTDIR"

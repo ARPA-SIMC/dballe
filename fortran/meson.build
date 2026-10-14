@@ -1,8 +1,13 @@
+extra_warnings = cpp.get_supported_arguments([
+  '-Wno-missing-declarations',
+])
+
 libdballef = both_libraries('dballef',
     'error.cc', 'binding.cc', 'dballef.f90',
     version: libdballef_so_version,
     install: true,
     include_directories: toplevel_inc,
+    cpp_args: extra_warnings,
     link_with: [libdballe],
     dependencies: [
         libwreport_dep,
@@ -51,6 +56,6 @@ common_test_sources = ['test.f90', 'dbtest.f90']
 runtest = find_program('../extra/runtest')
 
 foreach s: test_sources
-    e = executable(s, [s + '.f90'] + common_test_sources, link_with: [libdballef])
+    e = executable(s, [s + '.f90'] + common_test_sources + tables, link_with: [libdballef])
     test(s, runtest, args: [e])
 endforeach

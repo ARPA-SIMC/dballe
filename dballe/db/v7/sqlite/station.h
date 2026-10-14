@@ -26,33 +26,40 @@ protected:
     dballe::sql::SQLiteConnection& conn;
 
     /** Precompiled select fixed station query */
-    dballe::sql::SQLiteStatement* sfstm = nullptr;
+    dballe::sql::SQLiteStatement* sfstm  = nullptr;
     /** Precompiled select mobile station query */
-    dballe::sql::SQLiteStatement* smstm = nullptr;
+    dballe::sql::SQLiteStatement* smstm  = nullptr;
     /** Precompiled insert query */
-    dballe::sql::SQLiteStatement* istm = nullptr;
+    dballe::sql::SQLiteStatement* istm   = nullptr;
     /** Precompiled select station data query */
     dballe::sql::SQLiteStatement* ssdstm = nullptr;
 
-    void _dump(std::function<void(int, int, const Coords& coords, const char* ident)> out) override;
+    void
+    _dump(std::function<void(int, int, const Coords& coords, const char* ident)>
+              out) override;
 
 public:
     SQLiteStation(v7::Transaction& tr, dballe::sql::SQLiteConnection& conn);
     ~SQLiteStation();
-    SQLiteStation(const SQLiteStation&) = delete;
-    SQLiteStation(const SQLiteStation&&) = delete;
+    SQLiteStation(const SQLiteStation&)            = delete;
+    SQLiteStation(const SQLiteStation&&)           = delete;
     SQLiteStation& operator=(const SQLiteStation&) = delete;
 
     DBStation lookup(Tracer<>& trc, int id_station) override;
     int maybe_get_id(Tracer<>& trc, const dballe::DBStation& st) override;
     int insert_new(Tracer<>& trc, const dballe::DBStation& desc) override;
-    void get_station_vars(Tracer<>& trc, int id_station, std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
-    void add_station_vars(Tracer<>& trc, int id_station, DBValues& values) override;
-    void run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb, std::function<void(const dballe::DBStation&)>) override;
+    void get_station_vars(
+        Tracer<>& trc, int id_station,
+        std::function<void(std::unique_ptr<wreport::Var>)> dest) override;
+    void add_station_vars(Tracer<>& trc, int id_station,
+                          DBValues& values) override;
+    void
+    run_station_query(Tracer<>& trc, const v7::StationQueryBuilder& qb,
+                      std::function<void(const dballe::DBStation&)>) override;
 };
 
-}
-}
-}
-}
+} // namespace sqlite
+} // namespace v7
+} // namespace db
+} // namespace dballe
 #endif

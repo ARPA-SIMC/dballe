@@ -1,5 +1,6 @@
 // List of headers to precompile.
-// See https://github.com/mesonbuild/meson/blob/master/docs/markdown/Precompiled-headers.md
+// See
+// https://github.com/mesonbuild/meson/blob/master/docs/markdown/Precompiled-headers.md
 //
 // Hint: git grep -h '#include <'| sort | uniq -c | sort -n
 //
@@ -13,38 +14,38 @@
 // Note also that changing one of the included headers will trigger a rebuild
 // of everything.
 
-#include <cstring>
-#include <memory>
-#include <vector>
-#include <cstdlib>
-#include <wreport/bulletin.h>
-#include <string>
-#include <wreport/error.h>
-#include <functional>
-#include <cstdio>
-#include <wreport/var.h>
-#include <sstream>
 #include <algorithm>
-#include <wreport/varinfo.h>
-#include <iostream>
+#include <cassert>
+#include <cctype>
 #include <cmath>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <functional>
+#include <iomanip>
+#include <iosfwd>
+#include <iostream>
+#include <limits>
+#include <map>
+#include <memory>
+#include <ostream>
+#include <set>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <sys/types.h>
+#include <unistd.h>
+#include <unordered_set>
+#include <vector>
+#include <wreport/bulletin.h>
+#include <wreport/codetables.h>
+#include <wreport/conv.h>
+#include <wreport/error.h>
 #include <wreport/notes.h>
 #include <wreport/subset.h>
-#include <unistd.h>
-#include <map>
 #include <wreport/utils/string.h>
-#include <ostream>
-#include <iosfwd>
-#include <wreport/vartable.h>
-#include <set>
-#include <wreport/conv.h>
-#include <unordered_set>
-#include <limits>
-#include <cstdarg>
-#include <cctype>
 #include <wreport/utils/sys.h>
-#include <wreport/codetables.h>
-#include <sys/types.h>
-#include <stdexcept>
-#include <iomanip>
-#include <cassert>
+#include <wreport/var.h>
+#include <wreport/varinfo.h>
+#include <wreport/vartable.h>

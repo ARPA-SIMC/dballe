@@ -1,9 +1,9 @@
 #include "file.h"
-#include <wreport/bulletin.h>
+#include <errno.h>
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
+#include <wreport/bulletin.h>
 
 using namespace wreport;
 using namespace std;
@@ -16,10 +16,7 @@ File::File(const std::string& name, FILE* fd, bool close_on_exit)
 {
 }
 
-File::~File()
-{
-    close();
-}
+File::~File() { close(); }
 
 void File::close()
 {
@@ -30,7 +27,7 @@ void File::close()
     }
 }
 
-bool File::foreach(std::function<bool(const BinaryMessage&)> dest)
+bool File::foreach (std::function<bool(const BinaryMessage&)> dest)
 {
     while (true)
     {
@@ -38,7 +35,8 @@ bool File::foreach(std::function<bool(const BinaryMessage&)> dest)
         {
             if (!dest(bm))
                 return false;
-        } else
+        }
+        else
             break;
     }
     return true;
@@ -47,13 +45,15 @@ bool File::foreach(std::function<bool(const BinaryMessage&)> dest)
 std::string File::resolve_test_data_file(const std::string& name)
 {
     // Skip appending the test data path for pathnames starting with ./
-    if (name[0] == '.') return name;
+    if (name[0] == '.')
+        return name;
     const char* testdatadirenv = getenv("DBA_TESTDATA");
-    std::string testdatadir = testdatadirenv ? testdatadirenv : ".";
+    std::string testdatadir    = testdatadirenv ? testdatadirenv : ".";
     return testdatadir + "/" + name;
 }
 
-std::unique_ptr<dballe::File> File::open_test_data_file(Encoding type, const std::string& name)
+std::unique_ptr<dballe::File> File::open_test_data_file(Encoding type,
+                                                        const std::string& name)
 {
     return File::create(type, resolve_test_data_file(name), "r");
 }
@@ -66,7 +66,7 @@ BinaryMessage BufrFile::read()
     if (BufrBulletin::read(fd, res.data, m_name.c_str(), &res.offset))
     {
         res.pathname = m_name;
-        res.index = idx++;
+        res.index    = idx++;
         return res;
     }
     return BinaryMessage(Encoding::BUFR);
@@ -87,7 +87,7 @@ BinaryMessage CrexFile::read()
     if (CrexBulletin::read(fd, res.data, m_name.c_str(), &res.offset))
     {
         res.pathname = m_name;
-        res.index = idx++;
+        res.index    = idx++;
         return res;
     }
     return BinaryMessage(Encoding::CREX);
@@ -118,8 +118,8 @@ BinaryMessage JsonFile::read()
         return res;
 
     res.pathname = m_name;
-    res.index = idx++;
-    res.offset = offset;
+    res.index    = idx++;
+    res.offset   = offset;
     return res;
 }
 
@@ -132,8 +132,9 @@ void JsonFile::write(const std::string& msg)
         error_system::throwf("cannot write JSON line to %s", m_name.c_str());
     // No need to add a newline, as the JSON exporter already does
     // if (putc('\n', fd) == EOF)
-    //     error_system::throwf("cannot write JSON line terminator to %s", m_name.c_str());
+    //     error_system::throwf("cannot write JSON line terminator to %s",
+    //     m_name.c_str());
 }
 
-}
-}
+} // namespace core
+} // namespace dballe

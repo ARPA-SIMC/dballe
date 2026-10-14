@@ -1,12 +1,12 @@
 #ifndef DBALLE_CORE_ENQ_H
 #define DBALLE_CORE_ENQ_H
 
+#include <dballe/core/var.h>
 #include <dballe/fwd.h>
 #include <dballe/types.h>
 #include <dballe/values.h>
-#include <dballe/core/var.h>
-#include <wreport/error.h>
 #include <string>
+#include <wreport/error.h>
 
 namespace dballe {
 namespace impl {
@@ -20,15 +20,13 @@ struct Enq
     unsigned len;
     bool missing = true;
 
-    Enq(const char* key, unsigned len)
-        : key(key), len(len)
-    {
-    }
+    Enq(const char* key, unsigned len) : key(key), len(len) {}
     virtual ~Enq() {}
 
     [[noreturn]] void throw_notfound()
     {
-        wreport::error_notfound::throwf("key %s not found on this query result", key);
+        wreport::error_notfound::throwf("key %s not found on this query result",
+                                        key);
     }
 
     // Return the name of this access operation
@@ -82,36 +80,59 @@ struct Enq
     }
 
     // Set latitude
-    virtual void set_lat(int lat) { wreport::error_consistency::throwf("cannot %s `%s`", name(), key); }
+    virtual void set_lat(int lat)
+    {
+        wreport::error_consistency::throwf("cannot %s `%s`", name(), key);
+    }
 
     // Set longitude
-    virtual void set_lon(int lon) { wreport::error_consistency::throwf("cannot %s `%s`", name(), key); }
+    virtual void set_lon(int lon)
+    {
+        wreport::error_consistency::throwf("cannot %s `%s`", name(), key);
+    }
 
     // Set coordinates
-    virtual void set_coords(const Coords& c) { wreport::error_consistency::throwf("cannot %s `%s`", name(), key); }
+    virtual void set_coords(const Coords& c)
+    {
+        wreport::error_consistency::throwf("cannot %s `%s`", name(), key);
+    }
 
     // Set station
-    virtual void set_station(const Station& s) { wreport::error_consistency::throwf("cannot %s `%s`", name(), key); }
+    virtual void set_station(const Station& s)
+    {
+        wreport::error_consistency::throwf("cannot %s `%s`", name(), key);
+    }
 
     // Set station with DB info
-    virtual void set_dbstation(const DBStation& s) { wreport::error_consistency::throwf("cannot %s `%s`", name(), key); }
+    virtual void set_dbstation(const DBStation& s)
+    {
+        wreport::error_consistency::throwf("cannot %s `%s`", name(), key);
+    }
 
     // Set datetime
-    virtual void set_datetime(const Datetime& dt) { wreport::error_consistency::throwf("cannot %s `%s`", name(), key); }
+    virtual void set_datetime(const Datetime& dt)
+    {
+        wreport::error_consistency::throwf("cannot %s `%s`", name(), key);
+    }
 
     // Set level
-    virtual void set_level(const Level& dt) { wreport::error_consistency::throwf("cannot %s `%s`", name(), key); }
+    virtual void set_level(const Level& dt)
+    {
+        wreport::error_consistency::throwf("cannot %s `%s`", name(), key);
+    }
 
     // Set timerange
-    virtual void set_trange(const Trange& dt) { wreport::error_consistency::throwf("cannot %s `%s`", name(), key); }
+    virtual void set_trange(const Trange& dt)
+    {
+        wreport::error_consistency::throwf("cannot %s `%s`", name(), key);
+    }
 
-    template<typename Values>
-    bool search_b_values(const Values& values)
+    template <typename Values> bool search_b_values(const Values& values)
     {
         if (key[0] != 'B' || len != 6)
             return false;
 
-        wreport::Varcode code = WR_STRING_TO_VAR(key + 1);
+        wreport::Varcode code   = WR_STRING_TO_VAR(key + 1);
         const wreport::Var* var = values.maybe_var(code);
         if (var && var->isset())
             set_var_value(*var);
@@ -133,10 +154,9 @@ struct Enq
         return true;
     }
 
-    template<typename Values>
-    void search_alias_values(const Values& values)
+    template <typename Values> void search_alias_values(const Values& values)
     {
-        wreport::Varcode code = dballe::resolve_varcode(key);
+        wreport::Varcode code   = dballe::resolve_varcode(key);
         const wreport::Var* var = values.maybe_var(code);
         if (var && var->isset())
             set_var_value(*var);
@@ -162,13 +182,13 @@ struct Enqi : public Enq
 
     void set_bool(bool val) override
     {
-        res = val ? 1 : 0;
+        res     = val ? 1 : 0;
         missing = false;
     }
 
     void set_int(int val) override
     {
-        res = val;
+        res     = val;
         missing = false;
     }
 
@@ -176,7 +196,7 @@ struct Enqi : public Enq
     {
         if (val == MISSING_INT)
             return;
-        res = val;
+        res     = val;
         missing = false;
     }
 
@@ -184,7 +204,7 @@ struct Enqi : public Enq
     {
         if (lat == MISSING_INT)
             return;
-        res = lat;
+        res     = lat;
         missing = false;
     }
 
@@ -192,14 +212,14 @@ struct Enqi : public Enq
     {
         if (lon == MISSING_INT)
             return;
-        res = lon;
+        res     = lon;
         missing = false;
     }
 
     void set_var_value(const wreport::Var& var) override
     {
         missing = false;
-        res = var.enqi();
+        res     = var.enqi();
     }
 };
 
@@ -212,13 +232,13 @@ struct Enqd : public Enq
 
     void set_bool(bool val) override
     {
-        res = val ? 1 : 0;
+        res     = val ? 1 : 0;
         missing = false;
     }
 
     void set_int(int val) override
     {
-        res = val;
+        res     = val;
         missing = false;
     }
 
@@ -226,7 +246,7 @@ struct Enqd : public Enq
     {
         if (val == MISSING_INT)
             return;
-        res = val;
+        res     = val;
         missing = false;
     }
 
@@ -234,7 +254,7 @@ struct Enqd : public Enq
     {
         if (lat == MISSING_INT)
             return;
-        res = Coords::lat_from_int(lat);
+        res     = Coords::lat_from_int(lat);
         missing = false;
     }
 
@@ -242,18 +262,18 @@ struct Enqd : public Enq
     {
         if (lon == MISSING_INT)
             return;
-        res = Coords::lon_from_int(lon);
+        res     = Coords::lon_from_int(lon);
         missing = false;
     }
 
     void set_var_value(const wreport::Var& var) override
     {
         missing = false;
-        res = var.enqd();
+        res     = var.enqd();
     }
 };
 
-}
-}
+} // namespace impl
+} // namespace dballe
 
 #endif

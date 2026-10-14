@@ -1,18 +1,18 @@
 #include "msg.h"
 #include "context.h"
-#include "dballe/cursor.h"
-#include "dballe/core/shortcuts.h"
-#include "dballe/msg/cursor.h"
-#include "dballe/core/var.h"
 #include "dballe/core/csv.h"
-#include <wreport/codetables.h>
-#include <wreport/notes.h>
+#include "dballe/core/shortcuts.h"
+#include "dballe/core/var.h"
+#include "dballe/cursor.h"
+#include "dballe/msg/cursor.h"
+#include <cctype>
 #include <cstdlib>
 #include <cstring>
-#include <cctype>
-#include <sstream>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
+#include <wreport/codetables.h>
+#include <wreport/notes.h>
 
 using namespace wreport;
 using namespace std;
@@ -22,7 +22,8 @@ namespace impl {
 
 namespace msg {
 
-Contexts::const_iterator Contexts::find(const Level& level, const Trange& trange) const
+Contexts::const_iterator Contexts::find(const Level& level,
+                                        const Trange& trange) const
 {
     /* Binary search */
     if (m_contexts.empty())
@@ -32,7 +33,7 @@ Contexts::const_iterator Contexts::find(const Level& level, const Trange& trange
     while (low <= high)
     {
         const_iterator middle = low + (high - low) / 2;
-        int cmp = middle->compare(level, trange);
+        int cmp               = middle->compare(level, trange);
         if (cmp > 0)
             high = middle - 1;
         else if (cmp < 0)
@@ -53,7 +54,7 @@ Contexts::iterator Contexts::find(const Level& level, const Trange& trange)
     while (low <= high)
     {
         iterator middle = low + (high - low) / 2;
-        int cmp = middle->compare(level, trange);
+        int cmp         = middle->compare(level, trange);
         if (cmp > 0)
             high = middle - 1;
         else if (cmp < 0)
@@ -64,7 +65,8 @@ Contexts::iterator Contexts::find(const Level& level, const Trange& trange)
     return m_contexts.end();
 }
 
-Contexts::iterator Contexts::insert_new(const Level& level, const Trange& trange)
+Contexts::iterator Contexts::insert_new(const Level& level,
+                                        const Trange& trange)
 {
     // Enlarge the buffer
     m_contexts.emplace_back(level, trange);
@@ -98,7 +100,6 @@ bool Contexts::drop(const Level& level, const Trange& trange)
     return true;
 }
 
-
 Messages messages_from_csv(CSVReader& in)
 {
     Messages res;
@@ -111,17 +112,21 @@ Messages messages_from_csv(CSVReader& in)
             return res;
 
         if (in.cols.size() != 13)
-            error_consistency::throwf("cannot parse CSV line has %zd fields instead of 13", in.cols.size());
+            error_consistency::throwf(
+                "cannot parse CSV line has %zd fields instead of 13",
+                in.cols.size());
         if (first)
         {
-            // If we are the first run, initialse old_* markers with the contents of this line
+            // If we are the first run, initialse old_* markers with the
+            // contents of this line
             old_rep = in.cols[2];
-            first = false;
-        } else if (old_rep != in.cols[2])
+            first   = false;
+        }
+        else if (old_rep != in.cols[2])
             // If Report changes, we are done
             break;
 
-        auto msg = impl::Message::create();
+        auto msg      = impl::Message::create();
         bool has_next = msg->from_csv(in);
         res.emplace_back(msg);
         if (!has_next)
@@ -132,7 +137,7 @@ Messages messages_from_csv(CSVReader& in)
 
 void messages_to_csv(const Messages& msgs, CSVWriter& out)
 {
-    for (const auto& i: msgs)
+    for (const auto& i : msgs)
         impl::Message::downcast(i)->to_csv(out);
 }
 
@@ -141,8 +146,9 @@ unsigned messages_diff(const Messages& msgs1, const Messages& msgs2)
     unsigned diffs = 0;
     if (msgs1.size() != msgs2.size())
     {
-        notes::logf("the message groups contain a different number of messages (first is %zd, second is %zd)\n",
-                msgs1.size(), msgs2.size());
+        notes::logf("the message groups contain a different number of messages "
+                    "(first is %zd, second is %zd)\n",
+                    msgs1.size(), msgs2.size());
         ++diffs;
     }
     size_t count = min(msgs1.size(), msgs2.size());
@@ -160,7 +166,7 @@ void messages_print(const Messages& msgs, FILE* out)
     }
 }
 
-}
+} // namespace msg
 
 std::shared_ptr<Message> Message::create()
 {
@@ -198,7 +204,8 @@ std::shared_ptr<dballe::Message> Message::clone() const
 
 Datetime Message::get_datetime() const
 {
-    int ye = MISSING_INT, mo=MISSING_INT, da=MISSING_INT, ho=MISSING_INT, mi=MISSING_INT, se=MISSING_INT;
+    int ye = MISSING_INT, mo = MISSING_INT, da = MISSING_INT, ho = MISSING_INT,
+        mi = MISSING_INT, se = MISSING_INT;
     if (const Var* v = station_data.maybe_var(sc::year.code))
         ye = v->enqi();
     if (const Var* v = station_data.maybe_var(sc::month.code))
@@ -269,10 +276,12 @@ void Message::clear()
     data.clear();
 }
 
-const msg::Context* Message::find_context(const Level& lev, const Trange& tr) const
+const msg::Context* Message::find_context(const Level& lev,
+                                          const Trange& tr) const
 {
     if (lev.is_missing() && tr.is_missing())
-        throw std::runtime_error("find_contexts called for station level, but this is no longer supported");
+        throw std::runtime_error("find_contexts called for station level, but "
+                                 "this is no longer supported");
 
     auto i = data.find(lev, tr);
     if (i == data.end())
@@ -280,15 +289,13 @@ const msg::Context* Message::find_context(const Level& lev, const Trange& tr) co
     return &*i;
 }
 
-const Values& Message::find_station_context() const
-{
-    return station_data;
-}
+const Values& Message::find_station_context() const { return station_data; }
 
 msg::Context* Message::edit_context(const Level& lev, const Trange& tr)
 {
     if (lev.is_missing() && tr.is_missing())
-        throw std::runtime_error("find_contexts called for station level, but this is no longer supported");
+        throw std::runtime_error("find_contexts called for station level, but "
+                                 "this is no longer supported");
 
     auto i = data.find(lev, tr);
     if (i == data.end())
@@ -299,7 +306,8 @@ msg::Context* Message::edit_context(const Level& lev, const Trange& tr)
 msg::Context& Message::obtain_context(const Level& lev, const Trange& tr)
 {
     if (lev.is_missing() && tr.is_missing())
-        throw std::runtime_error("find_contexts called for station level, but this is no longer supported");
+        throw std::runtime_error("find_contexts called for station level, but "
+                                 "this is no longer supported");
 
     auto i = data.obtain(lev, tr);
     return *i;
@@ -310,7 +318,8 @@ bool Message::remove_context(const Level& lev, const Trange& tr)
     return data.drop(lev, tr);
 }
 
-const Var* Message::get_impl(const Level& lev, const Trange& tr, Varcode code) const
+const Var* Message::get_impl(const Level& lev, const Trange& tr,
+                             Varcode code) const
 {
     if (lev.is_missing() && tr.is_missing())
         return station_data.maybe_var(code);
@@ -321,24 +330,28 @@ const Var* Message::get_impl(const Level& lev, const Trange& tr, Varcode code) c
     return ctx->values.maybe_var(code);
 }
 
-bool Message::foreach_var(std::function<bool(const Level&, const Trange&, const wreport::Var&)> dest) const
+bool Message::foreach_var(
+    std::function<bool(const Level&, const Trange&, const wreport::Var&)> dest)
+    const
 {
-    for (const auto& var: station_data)
+    for (const auto& var : station_data)
         if (!dest(Level(), Trange(), *var))
             return false;
 
-    for (const auto& ctx: data)
-        for (const auto& var: ctx.values)
+    for (const auto& ctx : data)
+        for (const auto& var : ctx.values)
             if (!dest(ctx.level, ctx.trange, *var))
                 return false;
 
     return true;
 }
 
-wreport::Var* Message::edit(wreport::Varcode code, const Level& lev, const Trange& tr)
+wreport::Var* Message::edit(wreport::Varcode code, const Level& lev,
+                            const Trange& tr)
 {
     if (lev.is_missing() && tr.is_missing())
-        throw std::runtime_error("find_contexts called for station level, but this is no longer supported");
+        throw std::runtime_error("find_contexts called for station level, but "
+                                 "this is no longer supported");
 
     auto ctx = data.find(lev, tr);
     if (ctx == data.end())
@@ -354,22 +367,28 @@ const Var* Message::get(const Shortcut& shortcut) const
     return get(shortcut.level, shortcut.trange, shortcut.code);
 }
 
-std::shared_ptr<dballe::CursorStation> Message::query_stations(const Query& query) const
+std::shared_ptr<dballe::CursorStation>
+Message::query_stations(const Query& query) const
 {
-    return std::make_shared<msg::CursorStation>(std::static_pointer_cast<const impl::Message>(shared_from_this()));
+    return std::make_shared<msg::CursorStation>(
+        std::static_pointer_cast<const impl::Message>(shared_from_this()));
 }
 
-std::shared_ptr<dballe::CursorStationData> Message::query_station_data(const Query& query) const
+std::shared_ptr<dballe::CursorStationData>
+Message::query_station_data(const Query& query) const
 {
-    return std::make_shared<msg::CursorStationData>(std::static_pointer_cast<const impl::Message>(shared_from_this()));
+    return std::make_shared<msg::CursorStationData>(
+        std::static_pointer_cast<const impl::Message>(shared_from_this()));
 }
 
-std::shared_ptr<dballe::CursorData> Message::query_data(const Query& query) const
+std::shared_ptr<dballe::CursorData>
+Message::query_data(const Query& query) const
 {
     return std::make_shared<msg::CursorData>(*this);
 }
 
-std::shared_ptr<dballe::CursorData> Message::query_station_and_data(const Query& query) const
+std::shared_ptr<dballe::CursorData>
+Message::query_station_and_data(const Query& query) const
 {
     return std::make_shared<msg::CursorData>(*this, true);
 }
@@ -388,8 +407,8 @@ struct VarContext
     VarContext(const impl::Message& m) : msg(m)
     {
         // Extract datetime, lat, lon
-        lat = m.station_data.maybe_var(sc::latitude.code);
-        lon = m.station_data.maybe_var(sc::longitude.code);
+        lat  = m.station_data.maybe_var(sc::latitude.code);
+        lon  = m.station_data.maybe_var(sc::longitude.code);
         memo = m.station_data.maybe_var(sc::rep_memo.code);
         if (memo)
             rep_memo = memo->enqc();
@@ -424,20 +443,22 @@ struct VarContext
 
             // Time range
             trange.to_csv(out);
-        } else {
+        }
+        else
+        {
             for (int i = 0; i < 8; ++i)
                 out.add_value_empty();
         }
     }
 };
 
-}
+} // namespace
 
 void Message::to_csv(CSVWriter& out) const
 {
     VarContext vc(*this);
 
-    for (const auto& val: station_data)
+    for (const auto& val : station_data)
     {
         vc.print(out, Level(), Trange());
 
@@ -449,15 +470,16 @@ void Message::to_csv(CSVWriter& out) const
         for (const Var* a = val->next_attr(); a != NULL; a = a->next_attr())
         {
             vc.print(out, Level(), Trange());
-            out.add_value(varcode_format(val->code()) + "." + varcode_format(a->code())); // B code
+            out.add_value(varcode_format(val->code()) + "." +
+                          varcode_format(a->code())); // B code
             out.add_var_value_formatted(*a);
             out.flush_row();
         }
     }
 
-    for (const auto& ctx: data)
+    for (const auto& ctx : data)
     {
-        for (const auto& val: ctx.values)
+        for (const auto& val : ctx.values)
         {
             const Var& v = *val;
 
@@ -471,7 +493,8 @@ void Message::to_csv(CSVWriter& out) const
             for (const Var* a = v.next_attr(); a != NULL; a = a->next_attr())
             {
                 vc.print(out, ctx.level, ctx.trange);
-                out.add_value(varcode_format(v.code()) + "." + varcode_format(a->code())); // B code
+                out.add_value(varcode_format(v.code()) + "." +
+                              varcode_format(a->code())); // B code
                 out.add_var_value_formatted(*a);
                 out.flush_row();
             }
@@ -507,7 +530,7 @@ int str_to_int(const std::string& str)
     else
         return stoi(str);
 }
-}
+} // namespace
 
 bool Message::from_csv(CSVReader& in)
 {
@@ -523,25 +546,33 @@ bool Message::from_csv(CSVReader& in)
         if (in.cols.empty())
             break;
         if (in.cols.size() != 13)
-            error_consistency::throwf("cannot parse CSV line has %zd fields instead of 13", in.cols.size());
+            error_consistency::throwf(
+                "cannot parse CSV line has %zd fields instead of 13",
+                in.cols.size());
         if (first)
         {
-            // If we are the first run, initialse old_* markers with the contents of this line
-            old_lon = in.cols[0];
-            old_lat = in.cols[1];
-            old_rep = in.cols[2];
+            // If we are the first run, initialse old_* markers with the
+            // contents of this line
+            old_lon  = in.cols[0];
+            old_lat  = in.cols[1];
+            old_rep  = in.cols[2];
             old_date = in.cols[3];
             set_latitude(strtod(old_lat.c_str(), NULL));
             set_longitude(strtod(old_lon.c_str(), NULL));
             set_rep_memo(old_rep.c_str());
             if (!old_date.empty())
                 set_datetime(Datetime::from_iso8601(old_date.c_str()));
-            type = type_from_repmemo(old_rep.c_str());
+            type  = type_from_repmemo(old_rep.c_str());
             first = false;
-        } else if (old_lon != in.cols[0] || old_lat != in.cols[1] || old_rep != in.cols[2]) {
+        }
+        else if (old_lon != in.cols[0] || old_lat != in.cols[1] ||
+                 old_rep != in.cols[2])
+        {
             // If Longitude, Latitude or Report change, we are done
             break;
-        } else if (old_date != in.cols[3]) {
+        }
+        else if (old_date != in.cols[3])
+        {
             // In case of Date differences, we need to deal with station
             // information for which the date is left empty
             if (old_date.empty())
@@ -558,41 +589,51 @@ bool Message::from_csv(CSVReader& in)
                 break;
         }
 
-        //         0         1        2      3    4      5  6      7  8          9  10 11      12
-        // out << "Longitude,Latitude,Report,Date,Level1,L1,Level2,L2,Time range,P1,P2,Varcode,Value" << endl;
+        //         0         1        2      3    4      5  6      7  8 9  10 11
+        //         12
+        // out << "Longitude,Latitude,Report,Date,Level1,L1,Level2,L2,Time
+        // range,P1,P2,Varcode,Value" << endl;
 
         // Acquire the data
-        Level lev(str_to_int(in.cols[4]), str_to_int(in.cols[5]), str_to_int(in.cols[6]), str_to_int(in.cols[7]));
+        Level lev(str_to_int(in.cols[4]), str_to_int(in.cols[5]),
+                  str_to_int(in.cols[6]), str_to_int(in.cols[7]));
         if (in.cols[3].empty())
             // If we have station info, set level accordingly
             lev = Level();
-        Trange tr(str_to_int(in.cols[8]), str_to_int(in.cols[9]), str_to_int(in.cols[10]));
+        Trange tr(str_to_int(in.cols[8]), str_to_int(in.cols[9]),
+                  str_to_int(in.cols[10]));
 
         // Parse variable code
         if (in.cols[11].size() == 13)
         {
             // Bxxyyy.Bxxyyy: attribute
-            Varcode vcode = varcode_parse(in.cols[11].substr(0, 6).c_str());
+            Varcode vcode     = varcode_parse(in.cols[11].substr(0, 6).c_str());
             // Find master variable
             wreport::Var* var = edit(vcode, lev, tr);
             if (var == NULL)
-                error_consistency::throwf("cannot find corresponding variable for attribute %s", in.cols[11].c_str());
+                error_consistency::throwf(
+                    "cannot find corresponding variable for attribute %s",
+                    in.cols[11].c_str());
 
             Varcode acode = varcode_parse(in.cols[11].substr(7).c_str());
-            auto attr = newvar(acode);
+            auto attr     = newvar(acode);
             attr->setf(in.cols[12].c_str());
             var->seta(move(attr));
-        } else if (in.cols[11].size() == 6) {
+        }
+        else if (in.cols[11].size() == 6)
+        {
             // Bxxyyy: variable
-            Varcode vcode = varcode_parse(in.cols[11].c_str());
+            Varcode vcode       = varcode_parse(in.cols[11].c_str());
             unique_ptr<Var> var = newvar(vcode);
             var->setf(in.cols[12].c_str());
             if (lev.is_missing() && tr.is_missing())
                 station_data.set(std::move(var));
             else
                 set(lev, tr, std::move(var));
-        } else
-            error_consistency::throwf("cannot parse variable code %s", in.cols[11].c_str());
+        }
+        else
+            error_consistency::throwf("cannot parse variable code %s",
+                                      in.cols[11].c_str());
 
         if (!in.next())
             break;
@@ -632,33 +673,51 @@ void Message::print(FILE* out) const
     {
         case MessageType::PILOT:
         case MessageType::TEMP:
-        case MessageType::TEMP_SHIP:
-        {
+        case MessageType::TEMP_SHIP: {
             unsigned sounding_idx = 0;
             for (auto i = data.cbegin(); i != data.cend(); ++i)
             {
                 if (const Var* vsig = i->find_vsig())
                 {
                     int vs = vsig->enqi();
-                    fprintf(out, "Sounding #%u (level %d -", ++sounding_idx, vs);
-                    if (vs & BUFR08042::MISSING) fprintf(out, " missing");
-                    if (vs & BUFR08042::H2PRESS) fprintf(out, " h2press");
-                    if (vs & BUFR08042::RESERVED) fprintf(out, " reserved");
-                    if (vs & BUFR08042::REGIONAL) fprintf(out, " regional");
-                    if (vs & BUFR08042::TOPWIND) fprintf(out, " topwind");
-                    if (vs & BUFR08042::ENDMISSW) fprintf(out, " endmissw");
-                    if (vs & BUFR08042::BEGMISSW) fprintf(out, " begmissw");
-                    if (vs & BUFR08042::ENDMISSH) fprintf(out, " endmissh");
-                    if (vs & BUFR08042::BEGMISSH) fprintf(out, " begmissh");
-                    if (vs & BUFR08042::ENDMISST) fprintf(out, " endmisst");
-                    if (vs & BUFR08042::BEGMISST) fprintf(out, " begmisst");
-                    if (vs & BUFR08042::SIGWIND) fprintf(out, " sigwind");
-                    if (vs & BUFR08042::SIGHUM) fprintf(out, " sighum");
-                    if (vs & BUFR08042::SIGTEMP) fprintf(out, " sigtemp");
-                    if (vs & BUFR08042::MAXWIND) fprintf(out, " maxwind");
-                    if (vs & BUFR08042::TROPO) fprintf(out, " tropo");
-                    if (vs & BUFR08042::STD) fprintf(out, " std");
-                    if (vs & BUFR08042::SURFACE) fprintf(out, " surface");
+                    fprintf(out, "Sounding #%u (level %d -", ++sounding_idx,
+                            vs);
+                    if (vs & BUFR08042::MISSING)
+                        fprintf(out, " missing");
+                    if (vs & BUFR08042::H2PRESS)
+                        fprintf(out, " h2press");
+                    if (vs & BUFR08042::RESERVED)
+                        fprintf(out, " reserved");
+                    if (vs & BUFR08042::REGIONAL)
+                        fprintf(out, " regional");
+                    if (vs & BUFR08042::TOPWIND)
+                        fprintf(out, " topwind");
+                    if (vs & BUFR08042::ENDMISSW)
+                        fprintf(out, " endmissw");
+                    if (vs & BUFR08042::BEGMISSW)
+                        fprintf(out, " begmissw");
+                    if (vs & BUFR08042::ENDMISSH)
+                        fprintf(out, " endmissh");
+                    if (vs & BUFR08042::BEGMISSH)
+                        fprintf(out, " begmissh");
+                    if (vs & BUFR08042::ENDMISST)
+                        fprintf(out, " endmisst");
+                    if (vs & BUFR08042::BEGMISST)
+                        fprintf(out, " begmisst");
+                    if (vs & BUFR08042::SIGWIND)
+                        fprintf(out, " sigwind");
+                    if (vs & BUFR08042::SIGHUM)
+                        fprintf(out, " sighum");
+                    if (vs & BUFR08042::SIGTEMP)
+                        fprintf(out, " sigtemp");
+                    if (vs & BUFR08042::MAXWIND)
+                        fprintf(out, " maxwind");
+                    if (vs & BUFR08042::TROPO)
+                        fprintf(out, " tropo");
+                    if (vs & BUFR08042::STD)
+                        fprintf(out, " std");
+                    if (vs & BUFR08042::SURFACE)
+                        fprintf(out, " surface");
                     fprintf(out, ") ");
                 }
                 i->print(out);
@@ -666,7 +725,7 @@ void Message::print(FILE* out) const
             break;
         }
         default:
-            for (const auto& ctx: data)
+            for (const auto& ctx : data)
                 ctx.print(out);
             break;
     }
@@ -683,7 +742,6 @@ static void station_data_summary(const Var& var, ostream& out)
     out << varcode_format(var.code()) << "[" << var.info()->desc << "]";
 }
 
-
 unsigned Message::diff(const dballe::Message& o) const
 {
     const Message& msg = downcast(o);
@@ -691,8 +749,10 @@ unsigned Message::diff(const dballe::Message& o) const
     unsigned diffs = 0;
     if (type != msg.type)
     {
-        notes::logf("the messages have different type (first is %s (%d), second is %s (%d))\n",
-                format_message_type(type), static_cast<int>(type), format_message_type(msg.type), static_cast<int>(msg.type));
+        notes::logf("the messages have different type (first is %s (%d), "
+                    "second is %s (%d))\n",
+                    format_message_type(type), static_cast<int>(type),
+                    format_message_type(msg.type), static_cast<int>(msg.type));
         ++diffs;
     }
 
@@ -702,8 +762,10 @@ unsigned Message::diff(const dballe::Message& o) const
     while (v1 != station_data.cend() && v2 != msg.station_data.cend())
     {
         // Skip second=0 in station context
-        if (v1->code() == WR_VAR(0, 4, 6) && (*v1)->enqi() == 0) ++v1;
-        if (v2->code() == WR_VAR(0, 4, 6) && (*v2)->enqi() == 0) ++v2;
+        if (v1->code() == WR_VAR(0, 4, 6) && (*v1)->enqi() == 0)
+            ++v1;
+        if (v2->code() == WR_VAR(0, 4, 6) && (*v2)->enqi() == 0)
+            ++v2;
         if (v1 == station_data.end() || v2 == msg.station_data.end())
             break;
 
@@ -713,7 +775,9 @@ unsigned Message::diff(const dballe::Message& o) const
             diffs += (*v1)->diff(**v2);
             ++v1;
             ++v2;
-        } else if (cmp < 0) {
+        }
+        else if (cmp < 0)
+        {
             if (!(*v1)->isset())
             {
                 station_data_summary(**v1, notes::log());
@@ -721,7 +785,9 @@ unsigned Message::diff(const dballe::Message& o) const
                 ++diffs;
             }
             ++v1;
-        } else {
+        }
+        else
+        {
             if (!(*v2)->isset())
             {
                 station_data_summary(**v2, notes::log());
@@ -756,7 +822,9 @@ unsigned Message::diff(const dballe::Message& o) const
             diffs += i1->diff(*i2);
             ++i1;
             ++i2;
-        } else if (cmp < 0) {
+        }
+        else if (cmp < 0)
+        {
             if (!i1->values.empty())
             {
                 notes::log() << "Context ";
@@ -765,7 +833,9 @@ unsigned Message::diff(const dballe::Message& o) const
                 ++diffs;
             }
             ++i1;
-        } else {
+        }
+        else
+        {
             if (!i2->values.empty())
             {
                 notes::log() << "Context ";
@@ -785,7 +855,6 @@ unsigned Message::diff(const dballe::Message& o) const
         ++i1;
         ++diffs;
     }
-
 
     while (i2 != msg.data.end())
     {
@@ -812,7 +881,8 @@ void Message::set(const Shortcut& shortcut, const wreport::Var& var)
         set(shortcut.level, shortcut.trange, shortcut.code, var);
 }
 
-void Message::set_impl(const Level& lev, const Trange& tr, std::unique_ptr<Var> var)
+void Message::set_impl(const Level& lev, const Trange& tr,
+                       std::unique_ptr<Var> var)
 {
     if (lev.is_missing() && tr.is_missing())
         station_data.set(std::move(var));
@@ -823,7 +893,8 @@ void Message::set_impl(const Level& lev, const Trange& tr, std::unique_ptr<Var> 
     }
 }
 
-void Message::seti(const Level& lev, const Trange& tr, Varcode code, int val, int conf)
+void Message::seti(const Level& lev, const Trange& tr, Varcode code, int val,
+                   int conf)
 {
     unique_ptr<Var> var(newvar(code, val));
     if (conf != -1)
@@ -834,7 +905,8 @@ void Message::seti(const Level& lev, const Trange& tr, Varcode code, int val, in
         set(lev, tr, std::move(var));
 }
 
-void Message::setd(const Level& lev, const Trange& tr, Varcode code, double val, int conf)
+void Message::setd(const Level& lev, const Trange& tr, Varcode code, double val,
+                   int conf)
 {
     unique_ptr<Var> var(newvar(code, val));
     if (conf != -1)
@@ -845,7 +917,8 @@ void Message::setd(const Level& lev, const Trange& tr, Varcode code, double val,
         set(lev, tr, std::move(var));
 }
 
-void Message::setc(const Level& lev, const Trange& tr, Varcode code, const char* val, int conf)
+void Message::setc(const Level& lev, const Trange& tr, Varcode code,
+                   const char* val, int conf)
 {
     unique_ptr<Var> var(newvar(code, val));
     if (conf != -1)
@@ -858,32 +931,45 @@ void Message::setc(const Level& lev, const Trange& tr, Varcode code, const char*
 
 MessageType Message::type_from_repmemo(const char* repmemo)
 {
-    if (repmemo == NULL || repmemo[0] == 0) return MessageType::GENERIC;
+    if (repmemo == NULL || repmemo[0] == 0)
+        return MessageType::GENERIC;
     switch (tolower(repmemo[0]))
     {
         case 'a':
-            if (strcasecmp(repmemo+1, "cars")==0) return MessageType::ACARS;
-            if (strcasecmp(repmemo+1, "irep")==0) return MessageType::AIREP;
-            if (strcasecmp(repmemo+1, "mdar")==0) return MessageType::AMDAR;
+            if (strcasecmp(repmemo + 1, "cars") == 0)
+                return MessageType::ACARS;
+            if (strcasecmp(repmemo + 1, "irep") == 0)
+                return MessageType::AIREP;
+            if (strcasecmp(repmemo + 1, "mdar") == 0)
+                return MessageType::AMDAR;
             break;
         case 'b':
-            if (strcasecmp(repmemo+1, "uoy")==0) return MessageType::BUOY;
+            if (strcasecmp(repmemo + 1, "uoy") == 0)
+                return MessageType::BUOY;
             break;
         case 'm':
-            if (strcasecmp(repmemo+1, "etar")==0) return MessageType::METAR;
+            if (strcasecmp(repmemo + 1, "etar") == 0)
+                return MessageType::METAR;
             break;
         case 'p':
-            if (strcasecmp(repmemo+1, "ilot")==0) return MessageType::PILOT;
-            if (strcasecmp(repmemo+1, "ollution")==0) return MessageType::POLLUTION;
+            if (strcasecmp(repmemo + 1, "ilot") == 0)
+                return MessageType::PILOT;
+            if (strcasecmp(repmemo + 1, "ollution") == 0)
+                return MessageType::POLLUTION;
             break;
         case 's':
-            if (strcasecmp(repmemo+1, "atellite")==0) return MessageType::SAT;
-            if (strcasecmp(repmemo+1, "hip")==0) return MessageType::SHIP;
-            if (strcasecmp(repmemo+1, "ynop")==0) return MessageType::SYNOP;
+            if (strcasecmp(repmemo + 1, "atellite") == 0)
+                return MessageType::SAT;
+            if (strcasecmp(repmemo + 1, "hip") == 0)
+                return MessageType::SHIP;
+            if (strcasecmp(repmemo + 1, "ynop") == 0)
+                return MessageType::SYNOP;
             break;
         case 't':
-            if (strcasecmp(repmemo+1, "emp")==0) return MessageType::TEMP;
-            if (strcasecmp(repmemo+1, "empship")==0) return MessageType::TEMP_SHIP;
+            if (strcasecmp(repmemo + 1, "emp") == 0)
+                return MessageType::TEMP;
+            if (strcasecmp(repmemo + 1, "empship") == 0)
+                return MessageType::TEMP_SHIP;
             break;
     }
     return MessageType::GENERIC;
@@ -906,21 +992,24 @@ const char* Message::repmemo_from_type(MessageType type)
         case MessageType::SAT:       return "satellite";
         case MessageType::POLLUTION: return "pollution";
         case MessageType::GENERIC:
-        default:            return "generic";
+        default:                     return "generic";
     }
 }
 
 void Message::sounding_pack_levels()
 {
     msg::Contexts new_data;
-    for (auto& ctx: data)
+    for (auto& ctx : data)
     {
         if (ctx.find_vsig())
-            // FIXME: shouldn't this also set significance bits in the output level?
-            new_data.obtain(Level(ctx.level.ltype1, ctx.level.l1), ctx.trange)->values.merge(std::move(ctx.values));
+            // FIXME: shouldn't this also set significance bits in the output
+            // level?
+            new_data.obtain(Level(ctx.level.ltype1, ctx.level.l1), ctx.trange)
+                ->values.merge(std::move(ctx.values));
         else
             // If it is not a sounding level, just copy it
-            new_data.obtain(ctx.level, ctx.trange)->values = std::move(ctx.values);
+            new_data.obtain(ctx.level, ctx.trange)->values =
+                std::move(ctx.values);
     }
     data = std::move(new_data);
 }
@@ -935,25 +1024,19 @@ void Message::set_datetime(const Datetime& dt)
     set_second(dt.second);
 }
 
+MatchedMsg::MatchedMsg(const Message& m) : m(m) {}
 
-MatchedMsg::MatchedMsg(const Message& m)
-    : m(m)
-{
-}
-
-MatchedMsg::~MatchedMsg()
-{
-}
+MatchedMsg::~MatchedMsg() {}
 
 matcher::Result MatchedMsg::match_var_id(int value) const
 {
-    for (const auto& val: m.station_data)
+    for (const auto& val : m.station_data)
         if (const Var* a = val->enqa(WR_VAR(0, 33, 195)))
             if (a->enqi() == value)
                 return matcher::MATCH_YES;
 
-    for (const auto& ctx: m.data)
-        for (const auto& val: ctx.values)
+    for (const auto& ctx : m.data)
+        for (const auto& val : ctx.values)
             if (const Var* a = val->enqa(WR_VAR(0, 33, 195)))
                 if (a->enqi() == value)
                     return matcher::MATCH_YES;
@@ -965,7 +1048,8 @@ matcher::Result MatchedMsg::match_station_id(int val) const
     if (const wreport::Var* var = m.station_data.maybe_var(WR_VAR(0, 1, 192)))
     {
         return var->enqi() == val ? matcher::MATCH_YES : matcher::MATCH_NO;
-    } else
+    }
+    else
         return matcher::MATCH_NA;
 }
 
@@ -974,15 +1058,18 @@ matcher::Result MatchedMsg::match_station_wmo(int block, int station) const
     if (const wreport::Var* var = m.station_data.maybe_var(WR_VAR(0, 1, 1)))
     {
         // Match block
-        if (var->enqi() != block) return matcher::MATCH_NO;
+        if (var->enqi() != block)
+            return matcher::MATCH_NO;
 
         // If station was not requested, we are done
-        if (station == -1) return matcher::MATCH_YES;
+        if (station == -1)
+            return matcher::MATCH_YES;
 
         // Match station
         if (const wreport::Var* var = m.station_data.maybe_var(WR_VAR(0, 1, 2)))
         {
-            if (var->enqi() != station) return matcher::MATCH_NO;
+            if (var->enqi() != station)
+                return matcher::MATCH_NO;
             return matcher::MATCH_YES;
         }
     }
@@ -992,24 +1079,30 @@ matcher::Result MatchedMsg::match_station_wmo(int block, int station) const
 matcher::Result MatchedMsg::match_datetime(const DatetimeRange& range) const
 {
     Datetime dt = m.get_datetime();
-    if (dt.is_missing()) return matcher::MATCH_NA;
+    if (dt.is_missing())
+        return matcher::MATCH_NA;
     return range.contains(dt) ? matcher::MATCH_YES : matcher::MATCH_NO;
 }
 
-matcher::Result MatchedMsg::match_coords(const LatRange& latrange, const LonRange& lonrange) const
+matcher::Result MatchedMsg::match_coords(const LatRange& latrange,
+                                         const LonRange& lonrange) const
 {
     Coords coords = m.get_coords();
     if (coords.is_missing())
     {
-        matcher::Result r1 = latrange.is_missing() ? matcher::MATCH_YES : matcher::MATCH_NA;
-        matcher::Result r2 = lonrange.is_missing() ? matcher::MATCH_YES : matcher::MATCH_NA;
+        matcher::Result r1 =
+            latrange.is_missing() ? matcher::MATCH_YES : matcher::MATCH_NA;
+        matcher::Result r2 =
+            lonrange.is_missing() ? matcher::MATCH_YES : matcher::MATCH_NA;
         if (r1 == matcher::MATCH_YES && r2 == matcher::MATCH_YES)
             return matcher::MATCH_YES;
         return matcher::MATCH_NA;
     }
 
-    matcher::Result r1 = latrange.contains(coords.lat) ? matcher::MATCH_YES : matcher::MATCH_NO;
-    matcher::Result r2 = lonrange.contains(coords.lon) ? matcher::MATCH_YES : matcher::MATCH_NO;
+    matcher::Result r1 =
+        latrange.contains(coords.lat) ? matcher::MATCH_YES : matcher::MATCH_NO;
+    matcher::Result r2 =
+        lonrange.contains(coords.lon) ? matcher::MATCH_YES : matcher::MATCH_NO;
 
     if (r1 == matcher::MATCH_YES && r2 == matcher::MATCH_YES)
         return matcher::MATCH_YES;
@@ -1022,68 +1115,73 @@ matcher::Result MatchedMsg::match_rep_memo(const char* memo) const
 {
     if (const Var* var = m.station_data.maybe_var(sc::rep_memo.code))
     {
-        if (!var->isset()) return matcher::MATCH_NA;
-        return strcmp(memo, var->enqc()) == 0 ? matcher::MATCH_YES : matcher::MATCH_NO;
-    } else
+        if (!var->isset())
+            return matcher::MATCH_NA;
+        return strcmp(memo, var->enqc()) == 0 ? matcher::MATCH_YES
+                                              : matcher::MATCH_NO;
+    }
+    else
         return matcher::MATCH_NA;
 }
 
-
-MatchedMessages::MatchedMessages(const Messages& m)
-    : m(m)
-{
-}
-MatchedMessages::~MatchedMessages()
-{
-}
+MatchedMessages::MatchedMessages(const Messages& m) : m(m) {}
+MatchedMessages::~MatchedMessages() {}
 
 matcher::Result MatchedMessages::match_var_id(int val) const
 {
-    for (const auto& i: m)
-        if (MatchedMsg(*impl::Message::downcast(i)).match_var_id(val) == matcher::MATCH_YES)
+    for (const auto& i : m)
+        if (MatchedMsg(*impl::Message::downcast(i)).match_var_id(val) ==
+            matcher::MATCH_YES)
             return matcher::MATCH_YES;
     return matcher::MATCH_NA;
 }
 
 matcher::Result MatchedMessages::match_station_id(int val) const
 {
-    for (const auto& i: m)
-        if (MatchedMsg(*impl::Message::downcast(i)).match_station_id(val) == matcher::MATCH_YES)
+    for (const auto& i : m)
+        if (MatchedMsg(*impl::Message::downcast(i)).match_station_id(val) ==
+            matcher::MATCH_YES)
             return matcher::MATCH_YES;
     return matcher::MATCH_NA;
 }
 
 matcher::Result MatchedMessages::match_station_wmo(int block, int station) const
 {
-    for (const auto& i: m)
-        if (MatchedMsg(*impl::Message::downcast(i)).match_station_wmo(block, station) == matcher::MATCH_YES)
+    for (const auto& i : m)
+        if (MatchedMsg(*impl::Message::downcast(i))
+                .match_station_wmo(block, station) == matcher::MATCH_YES)
             return matcher::MATCH_YES;
     return matcher::MATCH_NA;
 }
 
-matcher::Result MatchedMessages::match_datetime(const DatetimeRange& range) const
+matcher::Result
+MatchedMessages::match_datetime(const DatetimeRange& range) const
 {
-    for (const auto& i: m)
-        if (MatchedMsg(*impl::Message::downcast(i)).match_datetime(range) == matcher::MATCH_YES)
+    for (const auto& i : m)
+        if (MatchedMsg(*impl::Message::downcast(i)).match_datetime(range) ==
+            matcher::MATCH_YES)
             return matcher::MATCH_YES;
     return matcher::MATCH_NA;
 }
 
-matcher::Result MatchedMessages::match_coords(const LatRange& latrange, const LonRange& lonrange) const
+matcher::Result MatchedMessages::match_coords(const LatRange& latrange,
+                                              const LonRange& lonrange) const
 {
-    for (const auto& i: m)
-        if (MatchedMsg(*impl::Message::downcast(i)).match_coords(latrange, lonrange) == matcher::MATCH_YES)
+    for (const auto& i : m)
+        if (MatchedMsg(*impl::Message::downcast(i))
+                .match_coords(latrange, lonrange) == matcher::MATCH_YES)
             return matcher::MATCH_YES;
     return matcher::MATCH_NA;
 }
 
 matcher::Result MatchedMessages::match_rep_memo(const char* memo) const
 {
-    for (const auto& i: m)
-        if (MatchedMsg(*impl::Message::downcast(i)).match_rep_memo(memo) == matcher::MATCH_YES)
+    for (const auto& i : m)
+        if (MatchedMsg(*impl::Message::downcast(i)).match_rep_memo(memo) ==
+            matcher::MATCH_YES)
             return matcher::MATCH_YES;
     return matcher::MATCH_NA;
 }
 
-}
-}
+} // namespace impl
+} // namespace dballe

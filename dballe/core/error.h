@@ -20,9 +20,12 @@ struct error : public wreport::error
 /// Error in case of failed database operations
 struct error_db : public error
 {
-    wreport::ErrorCode code() const noexcept override { return wreport::WR_ERR_ODBC; }
+    wreport::ErrorCode code() const noexcept override
+    {
+        return wreport::WR_ERR_ODBC;
+    }
 };
 
-}
+} // namespace dballe
 
 #endif

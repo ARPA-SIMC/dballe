@@ -1,9 +1,9 @@
 #ifndef DBALLE_DB_DEFS_H
 #define DBALLE_DB_DEFS_H
 
+#include <vector>
 #include <wreport/error.h>
 #include <wreport/varinfo.h>
-#include <vector>
 
 namespace dballe {
 namespace db {
@@ -13,6 +13,6 @@ namespace db {
  */
 typedef std::vector<wreport::Varcode> AttrList;
 
-}
-}
+} // namespace db
+} // namespace dballe
 #endif

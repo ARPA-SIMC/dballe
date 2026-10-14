@@ -10,4 +10,4 @@ std::unique_ptr<Query> Query::create()
     return unique_ptr<Query>(new core::Query);
 }
 
-}
+} // namespace dballe

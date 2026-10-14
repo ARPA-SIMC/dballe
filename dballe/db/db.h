@@ -1,18 +1,18 @@
 #ifndef DBALLE_DB_DB_H
 #define DBALLE_DB_DB_H
 
-#include <dballe/fwd.h>
 #include <dballe/core/cursor.h>
 #include <dballe/db.h>
-#include <dballe/db/fwd.h>
 #include <dballe/db/defs.h>
+#include <dballe/db/fwd.h>
+#include <dballe/fwd.h>
 #include <dballe/msg/fwd.h>
 #include <dballe/sql/fwd.h>
-#include <wreport/varinfo.h>
-#include <wreport/var.h>
-#include <string>
-#include <memory>
 #include <functional>
+#include <memory>
+#include <string>
+#include <wreport/var.h>
+#include <wreport/varinfo.h>
 
 /** @file
  * @ingroup db
@@ -24,27 +24,29 @@ namespace dballe {
 
 namespace impl {
 
-/// DBImportOptions with public constructor and copy, safe to use in dballe code but not accessible from the public API
+/// DBImportOptions with public constructor and copy, safe to use in dballe code
+/// but not accessible from the public API
 struct DBImportOptions : public dballe::DBImportOptions
 {
-    DBImportOptions() = default;
-    DBImportOptions(const DBImportOptions& o) = default;
-    DBImportOptions(DBImportOptions&& o) = default;
+    DBImportOptions()                                  = default;
+    DBImportOptions(const DBImportOptions& o)          = default;
+    DBImportOptions(DBImportOptions&& o)               = default;
     DBImportOptions& operator=(const DBImportOptions&) = default;
-    DBImportOptions& operator=(DBImportOptions&&) = default;
+    DBImportOptions& operator=(DBImportOptions&&)      = default;
 };
 
-/// DBInsertOptions with public constructor and copy, safe to use in dballe code but not accessible from the public API
+/// DBInsertOptions with public constructor and copy, safe to use in dballe code
+/// but not accessible from the public API
 struct DBInsertOptions : public dballe::DBInsertOptions
 {
-    DBInsertOptions() = default;
-    DBInsertOptions(const DBInsertOptions& o) = default;
-    DBInsertOptions(DBInsertOptions&& o) = default;
+    DBInsertOptions()                                  = default;
+    DBInsertOptions(const DBInsertOptions& o)          = default;
+    DBInsertOptions(DBInsertOptions&& o)               = default;
     DBInsertOptions& operator=(const DBInsertOptions&) = default;
-    DBInsertOptions& operator=(DBInsertOptions&&) = default;
+    DBInsertOptions& operator=(DBInsertOptions&&)      = default;
 };
 
-}
+} // namespace impl
 
 namespace db {
 
@@ -53,7 +55,6 @@ std::string format_format(Format format);
 
 /// Parse a formatted db::Format value
 Format format_parse(const std::string& str);
-
 
 struct CursorStation : public impl::CursorStation
 {
@@ -65,7 +66,7 @@ struct CursorStation : public impl::CursorStation
      *
      * If dump is a FILE pointer, also dump the cursor values to it
      */
-    virtual unsigned test_iterate(FILE* dump=0) = 0;
+    virtual unsigned test_iterate(FILE* dump = 0) = 0;
 };
 
 struct CursorStationData : public impl::CursorStationData
@@ -85,7 +86,9 @@ struct CursorStationData : public impl::CursorStationData
     /**
      * Query/return the attributes for the current value of this cursor
      */
-    virtual void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read=false) = 0;
+    virtual void
+    query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest,
+                bool force_read = false) = 0;
 
     /// Insert/update attributes for the current variable
     virtual void insert_attrs(const Values& attrs);
@@ -98,7 +101,7 @@ struct CursorStationData : public impl::CursorStationData
      *
      * If dump is a FILE pointer, also dump the cursor values to it
      */
-    virtual unsigned test_iterate(FILE* dump=0) = 0;
+    virtual unsigned test_iterate(FILE* dump = 0) = 0;
 };
 
 struct CursorData : public impl::CursorData
@@ -118,7 +121,9 @@ struct CursorData : public impl::CursorData
     /**
      * Query/return the attributes for the current value of this cursor
      */
-    virtual void query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest, bool force_read=false) = 0;
+    virtual void
+    query_attrs(std::function<void(std::unique_ptr<wreport::Var>)> dest,
+                bool force_read = false) = 0;
 
     /// Insert/update attributes for the current variable
     virtual void insert_attrs(const Values& attrs);
@@ -131,7 +136,7 @@ struct CursorData : public impl::CursorData
      *
      * If dump is a FILE pointer, also dump the cursor values to it
      */
-    virtual unsigned test_iterate(FILE* dump=0) = 0;
+    virtual unsigned test_iterate(FILE* dump = 0) = 0;
 };
 
 struct CursorSummary : public impl::CursorSummary
@@ -144,9 +149,8 @@ struct CursorSummary : public impl::CursorSummary
      *
      * If dump is a FILE pointer, also dump the cursor values to it
      */
-    virtual unsigned test_iterate(FILE* dump=0) = 0;
+    virtual unsigned test_iterate(FILE* dump = 0) = 0;
 };
-
 
 class Transaction : public dballe::Transaction
 {
@@ -166,27 +170,34 @@ public:
      * Query attributes on a station value
      *
      * @param data_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the
+     * value
      * @param dest
      *   The function that will be called on each resulting attribute
      */
-    virtual void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
+    virtual void attr_query_station(
+        int data_id,
+        std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 
     /**
      * Query attributes on a data value
      *
      * @param data_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the
+     * value
      * @param dest
      *   The function that will be called on each resulting attribute
      */
-    virtual void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
+    virtual void attr_query_data(
+        int data_id,
+        std::function<void(std::unique_ptr<wreport::Var>)> dest) = 0;
 
     /**
      * Insert new attributes on a station value
      *
      * @param data_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the
+     * value
      * @param attrs
      *   The attributes to be added
      */
@@ -196,7 +207,8 @@ public:
      * Insert new attributes on a data value
      *
      * @param data_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the
+     * value
      * @param attrs
      *   The attributes to be added
      */
@@ -206,27 +218,30 @@ public:
      * Delete attributes from a station value
      *
      * @param data_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the
+     * value
      * @param attrs
-     *   Array of WMO codes of the attributes to delete.  If empty, all attributes
-     *   associated to the value will be deleted.
+     *   Array of WMO codes of the attributes to delete.  If empty, all
+     * attributes associated to the value will be deleted.
      */
-    virtual void attr_remove_station(int data_id, const db::AttrList& attrs) = 0;
+    virtual void attr_remove_station(int data_id,
+                                     const db::AttrList& attrs) = 0;
 
     /**
      * Delete attributes from a data value
      *
      * @param data_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the
+     * value
      * @param attrs
-     *   Array of WMO codes of the attributes to delete.  If empty, all attributes
-     *   associated to the value will be deleted.
+     *   Array of WMO codes of the attributes to delete.  If empty, all
+     * attributes associated to the value will be deleted.
      */
     virtual void attr_remove_data(int data_id, const db::AttrList& attrs) = 0;
 
     /**
-     * Update the repinfo table in the database, with the data found in the given
-     * file.
+     * Update the repinfo table in the database, with the data found in the
+     * given file.
      *
      * @param repinfo_file
      *   The name of the CSV file with the report type information data to load.
@@ -241,7 +256,8 @@ public:
      * @retval updated
      *   The number of repinfo entries that have been updated
      */
-    virtual void update_repinfo(const char* repinfo_file, int* added, int* deleted, int* updated) = 0;
+    virtual void update_repinfo(const char* repinfo_file, int* added,
+                                int* deleted, int* updated) = 0;
 
     /**
      * Dump the entire contents of the database to an output stream
@@ -249,7 +265,7 @@ public:
     virtual void dump(FILE* out) = 0;
 };
 
-class DB: public dballe::DB
+class DB : public dballe::DB
 {
 public:
     static db::Format get_default_format();
@@ -295,8 +311,8 @@ public:
     virtual void disappear() = 0;
 
     /**
-     * Reset the database, removing all existing Db-All.e tables and re-creating them
-     * empty.
+     * Reset the database, removing all existing Db-All.e tables and re-creating
+     * them empty.
      *
      * @param repinfo_file
      *   The name of the CSV file with the report type information data to load.
@@ -305,13 +321,14 @@ public:
      *   If repinfo_file is NULL, then the default of /etc/dballe/repinfo.csv is
      *   used.
      */
-    virtual void reset(const char* repinfo_file=0) = 0;
+    virtual void reset(const char* repinfo_file = 0) = 0;
 
     /**
      * Same as transaction(), but the resulting transaction will throw an
      * exception if commit is called. Used for tests.
      */
-    virtual std::shared_ptr<dballe::db::Transaction> test_transaction(bool readonly=false) = 0;
+    virtual std::shared_ptr<dballe::db::Transaction>
+    test_transaction(bool readonly = false) = 0;
 
     /**
      * Perform database cleanup operations.
@@ -320,7 +337,8 @@ public:
      * \li context values for which no data exists
      * \li station values for which no context exists
      *
-     * Depending on database size, this routine can take a few minutes to execute.
+     * Depending on database size, this routine can take a few minutes to
+     * execute.
      */
     virtual void vacuum() = 0;
 
@@ -328,27 +346,33 @@ public:
      * Query attributes on a station value
      *
      * @param data_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the
+     * value
      * @param dest
      *   The function that will be called on each resulting attribute
      */
-    virtual void attr_query_station(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest);
+    virtual void attr_query_station(
+        int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest);
 
     /**
      * Query attributes on a data value
      *
      * @param data_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the
+     * value
      * @param dest
      *   The function that will be called on each resulting attribute
      */
-    virtual void attr_query_data(int data_id, std::function<void(std::unique_ptr<wreport::Var>)>&& dest);
+    virtual void
+    attr_query_data(int data_id,
+                    std::function<void(std::unique_ptr<wreport::Var>)>&& dest);
 
     /**
      * Insert new attributes on a station value
      *
      * @param data_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the
+     * value
      * @param attrs
      *   The attributes to be added
      */
@@ -358,7 +382,8 @@ public:
      * Insert new attributes on a data value
      *
      * @param data_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the
+     * value
      * @param attrs
      *   The attributes to be added
      */
@@ -368,10 +393,11 @@ public:
      * Delete attributes from a station value
      *
      * @param data_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the
+     * value
      * @param attrs
-     *   Array of WMO codes of the attributes to delete.  If empty, all attributes
-     *   associated to the value will be deleted.
+     *   Array of WMO codes of the attributes to delete.  If empty, all
+     * attributes associated to the value will be deleted.
      */
     void attr_remove_station(int data_id, const db::AttrList& attrs);
 
@@ -379,10 +405,11 @@ public:
      * Delete attributes from a data value
      *
      * @param data_id
-     *   The id (returned by Cursor::attr_reference_id()) used to refer to the value
+     *   The id (returned by Cursor::attr_reference_id()) used to refer to the
+     * value
      * @param attrs
-     *   Array of WMO codes of the attributes to delete.  If empty, all attributes
-     *   associated to the value will be deleted.
+     *   Array of WMO codes of the attributes to delete.  If empty, all
+     * attributes associated to the value will be deleted.
      */
     void attr_remove_data(int data_id, const db::AttrList& attrs);
 
@@ -398,23 +425,29 @@ public:
     static const char* default_repinfo_file();
 
     /// Downcast a unique_ptr pointer
-    inline static std::unique_ptr<db::DB> downcast(std::unique_ptr<dballe::DB> db)
+    inline static std::unique_ptr<db::DB>
+    downcast(std::unique_ptr<dballe::DB> db)
     {
         db::DB* res = dynamic_cast<db::DB*>(db.get());
-        if (!res) throw std::runtime_error("Attempted to downcast the wrong kind of DB");
+        if (!res)
+            throw std::runtime_error(
+                "Attempted to downcast the wrong kind of DB");
         db.release();
         return std::unique_ptr<db::DB>(res);
     }
 
     /// Downcast a shared_ptr pointer
-    inline static std::shared_ptr<db::DB> downcast(std::shared_ptr<dballe::DB> db)
+    inline static std::shared_ptr<db::DB>
+    downcast(std::shared_ptr<dballe::DB> db)
     {
         auto res = std::dynamic_pointer_cast<db::DB>(db);
-        if (!res) throw std::runtime_error("Attempted to downcast the wrong kind of DB");
+        if (!res)
+            throw std::runtime_error(
+                "Attempted to downcast the wrong kind of DB");
         return res;
     }
 };
 
-}
-}
+} // namespace db
+} // namespace dballe
 #endif

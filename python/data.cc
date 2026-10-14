@@ -1,11 +1,11 @@
 #define _DBALLE_LIBRARY_CODE
 #include "dballe/core/data.h"
-#include "enq.h"
-#include "data.h"
 #include "common.h"
+#include "data.h"
+#include "enq.h"
 #include "types.h"
-#include "utils/type.h"
 #include "utils/methods.h"
+#include "utils/type.h"
 
 using namespace std;
 using namespace dballe;
@@ -15,7 +15,6 @@ using namespace wreport;
 extern "C" {
 
 PyTypeObject* dpy_Data_Type = nullptr;
-
 }
 
 namespace {
@@ -24,9 +23,9 @@ namespace data {
 
 struct Definition : public Type<Definition, dpy_Data>
 {
-    constexpr static const char* name = "Data";
+    constexpr static const char* name      = "Data";
     constexpr static const char* qual_name = "dballe.Data";
-    constexpr static const char* doc = R"(
+    constexpr static const char* doc       = R"(
 key-value representation of a value with its associated metadata.
 
 This is used when inserting values in a database, and can be indexed and
@@ -58,7 +57,7 @@ See :ref:`python_how_convertvars` for an example.
         res += self->data->level.to_string();
         res += ", trange:";
         res += self->data->trange.to_string();
-        for (const auto& val: self->data->values)
+        for (const auto& val : self->data->values)
         {
             res += ", ";
             res += varcode_format(val->code());
@@ -78,13 +77,16 @@ See :ref:`python_how_convertvars` for an example.
 
     static int _init(Impl* self, PyObject* args, PyObject* kw)
     {
-        static const char* kwlist[] = { nullptr };
-        if (!PyArg_ParseTupleAndKeywords(args, kw, "", const_cast<char**>(kwlist)))
+        static const char* kwlist[] = {nullptr};
+        if (!PyArg_ParseTupleAndKeywords(args, kw, "",
+                                         const_cast<char**>(kwlist)))
             return -1;
 
-        try {
+        try
+        {
             self->data = new core::Data;
-        } DBALLE_CATCH_RETURN_INT
+        }
+        DBALLE_CATCH_RETURN_INT
 
         // TODO: support a dict-like constructor?
 
@@ -93,9 +95,11 @@ See :ref:`python_how_convertvars` for an example.
 
     static PyObject* mp_subscript(Impl* self, PyObject* pykey)
     {
-        try {
+        try
+        {
             Py_ssize_t len;
-            const char* key = throw_ifnull(PyUnicode_AsUTF8AndSize(pykey, &len));
+            const char* key =
+                throw_ifnull(PyUnicode_AsUTF8AndSize(pykey, &len));
             Enqpy enq(key, len);
             data_enq_generic(*self->data, enq);
             if (enq.missing)
@@ -104,28 +108,31 @@ See :ref:`python_how_convertvars` for an example.
                 throw PythonException();
             }
             return enq.res;
-        } DBALLE_CATCH_RETURN_PYO
+        }
+        DBALLE_CATCH_RETURN_PYO
     }
 
-    static int mp_ass_subscript(Impl* self, PyObject *pykey, PyObject *val)
+    static int mp_ass_subscript(Impl* self, PyObject* pykey, PyObject* val)
     {
-        try {
+        try
+        {
             Py_ssize_t len;
-            const char* key = throw_ifnull(PyUnicode_AsUTF8AndSize(pykey, &len));
+            const char* key =
+                throw_ifnull(PyUnicode_AsUTF8AndSize(pykey, &len));
             if (val)
                 data_setpy(*self->data, key, len, val);
             else
                 data_unsetpy(*self->data, key, len);
             return 0;
-        } DBALLE_CATCH_RETURN_INT
+        }
+        DBALLE_CATCH_RETURN_INT
     }
-
 };
 
 Definition* definition = nullptr;
-}
+} // namespace data
 
-}
+} // namespace
 
 namespace dballe {
 namespace python {
@@ -139,12 +146,12 @@ dpy_Data* data_create()
 dpy_Data* data_create(std::unique_ptr<core::Data> data)
 {
     dpy_Data* result = PyObject_New(dpy_Data, dpy_Data_Type);
-    if (!result) return nullptr;
+    if (!result)
+        return nullptr;
 
     result->data = data.release();
     return result;
 }
-
 
 void register_data(PyObject* m)
 {
@@ -154,7 +161,7 @@ void register_data(PyObject* m)
     data::definition->define(dpy_Data_Type, m);
 }
 
-}
-}
+} // namespace python
+} // namespace dballe
 
 #include "data-access.tcc"
