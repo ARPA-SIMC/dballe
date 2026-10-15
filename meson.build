@@ -156,12 +156,6 @@ pkg.generate(libdballef,
 )
 
 
-# Install old m4 macro files
-
-m4_dir = get_option('datadir') / 'aclocal'
-install_data('libdballe.m4', 'libdballef.m4', install_dir: m4_dir)
-
-
 #    AC_MSG_CHECKING([for wreport documentation dir $WREPORT_DOXYGEN_DIR])
 #    AC_MSG_RESULT([$wreport_doxygen_dir_result])
 #    AC_MSG_CHECKING([for wreport doxytag file $WREPORT_DOXYGEN_TAGFILE])
