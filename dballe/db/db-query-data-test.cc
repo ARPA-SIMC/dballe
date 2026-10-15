@@ -116,10 +116,6 @@ EmptyFixtureTests<V7DB> tg4("db_query_data2_v7_sqlite", "SQLITE");
 OldFixtureTests<V7DB> tg6("db_query_data1_v7_postgresql", "POSTGRESQL");
 EmptyFixtureTests<V7DB> tg8("db_query_data2_v7_postgresql", "POSTGRESQL");
 #endif
-#ifdef HAVE_MYSQL
-OldFixtureTests<V7DB> tga("db_query_data1_v7_mysql", "MYSQL");
-EmptyFixtureTests<V7DB> tgc("db_query_data2_v7_mysql", "MYSQL");
-#endif
 
 template <typename DB> void OldFixtureTests<DB>::register_tests()
 {

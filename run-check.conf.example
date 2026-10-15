@@ -3,7 +3,6 @@
 
 #DBA_DB_SQLITE=sqlite://test.sqlite
 #DBA_DB_POSTGRESQL=postgresql:///test
-#DBA_DB_MYSQL=mysql:///test
 
 # Default database to use for command line tools
 #DBA_DB=$DBA_DB_SQLITE

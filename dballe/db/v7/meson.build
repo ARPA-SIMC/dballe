@@ -54,16 +54,6 @@ if libpq_dep.found()
         subdir: 'dballe/db/v7/postgresql',
     )
 endif
-if mariadb_dep.found()
-    install_headers(
-	'mysql/repinfo.h',
-	'mysql/station.h',
-	'mysql/levtr.h',
-	'mysql/data.h',
-	'mysql/driver.h',
-        subdir: 'dballe/db/v7/mysql',
-    )
-endif
 
 foreach f: [['cursor-access.in.cc', 'cursor-access.cc']]
     libdballe_sources += custom_target(f[1], output: f[1], input: f[0], command: [mklookup, '@INPUT@', '-o', '@OUTPUT@'])

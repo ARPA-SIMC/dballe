@@ -15,9 +15,6 @@
 #ifdef HAVE_LIBPQ
 #include "dballe/sql/postgresql.h"
 #endif
-#ifdef HAVE_MYSQL
-#include "dballe/sql/mysql.h"
-#endif
 
 using namespace std;
 using namespace wreport;
@@ -437,34 +434,6 @@ bool DataQueryBuilder::match_attrs(const Var& var) const
     return false;
 }
 
-#if 0
-bool DataQueryBuilder::add_attrfilter_where(const char* tbl)
-{
-    if (query.attr_filter.empty()) return false;
-
-    const char *op, *value, *value1;
-    Varinfo info = decode_data_filter(query.attr_filter, &op, &value, &value1);
-
-    const char* atbl = query_station_vars ? "station_attr" : "attr";
-
-    sql_from.appendf(" JOIN %s %s_atf ON %s.id=%s_atf.id_data AND %s_atf.code=%d", atbl, tbl, tbl, tbl, tbl, info->code);
-    if (value[0] == '\'')
-        if (value1 == NULL)
-            sql_where.append_listf("%s_atf.value%s%s", tbl, op, value);
-        else
-            sql_where.append_listf("%s_atf.value BETWEEN %s AND %s", tbl, value, value1);
-    else
-    {
-        const char* type = (conn.server_type == ServerType::MYSQL) ? "SIGNED" : "INT";
-        if (value1 == NULL)
-            sql_where.append_listf("CAST(%s_atf.value AS %s)%s%s", tbl, type, op, value);
-        else
-            sql_where.append_listf("CAST(%s_atf.value AS %s) BETWEEN %s AND %s", tbl, type, value, value1);
-    }
-    return true;
-}
-#endif
-
 void DataQueryBuilder::build_order_by()
 {
     if (modifiers & DBA_DB_MODIFIER_BEST)
@@ -594,16 +563,6 @@ bool QueryBuilder::add_pa_where(const char* tbl)
             TRACE("found ident: adding AND %s.ident=$1::text.  val is %s\n",
                   tbl, query.ident.get());
 #endif
-#ifdef HAVE_MYSQL
-        }
-        else if (dballe::sql::MySQLConnection* c =
-                     dynamic_cast<dballe::sql::MySQLConnection*>(&conn))
-        {
-            string escaped = c->escape(query.ident.get());
-            sql_where.append_listf("%s.ident='%s'", tbl, escaped.c_str());
-            TRACE("found ident: adding AND %s.ident='%s'.  val is %s\n", tbl,
-                  escaped.c_str(), query.ident.get());
-#endif
         }
         else
         {
@@ -650,8 +609,7 @@ bool QueryBuilder::add_pa_where(const char* tbl)
                                   value, value1);
         else
         {
-            const char* type =
-                (conn.server_type == ServerType::MYSQL) ? "SIGNED" : "INT";
+            const char* type = "INT";
             if (value1 == NULL)
                 sql_where.appendf(" AND CAST(%s_af.value AS %s)%s%s)", tbl,
                                   type, op, value);
@@ -885,8 +843,7 @@ bool QueryBuilder::add_datafilter_where(const char* tbl)
                                    value1);
     else
     {
-        const char* type =
-            (conn.server_type == ServerType::MYSQL) ? "SIGNED" : "INT";
+        const char* type = "INT";
         if (value1 == NULL)
             sql_where.append_listf("CAST(%s.value AS %s)%s%s", tbl, type, op,
                                    value);

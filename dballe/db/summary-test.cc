@@ -37,12 +37,6 @@ Tests<V7DB, SummaryMemory> tg3("db_summary_memory_v7_postgresql_summary_memory",
 Tests<V7DB, DBSummaryMemory>
     tg4("db_summary_memory_v7_postgresql_dbsummary_memory", "POSTGRESQL");
 #endif
-#ifdef HAVE_MYSQL
-Tests<V7DB, SummaryMemory> tg5("db_summary_memory_v7_mysql_summary_memory",
-                               "MYSQL");
-Tests<V7DB, DBSummaryMemory> tg6("db_summary_memory_v7_mysql_dbsummary_memory",
-                                 "MYSQL");
-#endif
 
 std::unique_ptr<Summary> other_summary(const DBSummaryMemory&)
 {
@@ -63,12 +57,6 @@ Tests<V7DB, SummaryXapian> tg9("db_summary_xapian_v7_postgresql_summary_disk",
                                "POSTGRESQL");
 Tests<V7DB, DBSummaryXapian>
     tg10("db_summary_xapian_v7_postgresql_dbsummary_disk", "POSTGRESQL");
-#endif
-#ifdef HAVE_MYSQL
-Tests<V7DB, SummaryXapian> tg11("db_summary_xapian_v7_mysql_summary_disk",
-                                "MYSQL");
-Tests<V7DB, DBSummaryXapian> tg12("db_summary_xapian_v7_mysql_dbsummary_disk",
-                                  "MYSQL");
 #endif
 
 std::unique_ptr<Summary> other_summary(const DBSummaryXapian&)

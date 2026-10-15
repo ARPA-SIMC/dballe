@@ -30,8 +30,6 @@ class Benchmark:
         if name in ("pg", "postgresql"):
             self.db = "postgresql"
             self.env["DBA_DB"] = self.env["DBA_DB_POSTGRESQL"]
-        elif name == "mysql":
-            self.env["DBA_DB"] = self.env["DBA_DB_MYSQL"]
         elif name == "sqlite":
             self.env["DBA_DB"] = self.env["DBA_DB_SQLITE"]
         elif name == "mem":
@@ -43,10 +41,6 @@ class Benchmark:
         elif name in ("pgv7", "postgresqlv7"):
             self.db = "postgresqlv7"
             self.env["DBA_DB"] = self.env["DBA_DB_POSTGRESQL"]
-            self.env["DBA_DB_FORMAT"] = "V7"
-        elif name == "mysqlv7":
-            self.db = "mysqlv7"
-            self.env["DBA_DB"] = self.env["DBA_DB_MYSQL"]
             self.env["DBA_DB_FORMAT"] = "V7"
         else:
             raise RuntimeError("unknown database type {}".format(name))

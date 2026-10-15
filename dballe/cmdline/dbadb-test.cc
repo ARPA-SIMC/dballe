@@ -26,9 +26,6 @@ Tests<V7DB> tg2a("cmdline_dbadb_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
 Tests<V7DB> tg6a("cmdline_dbadb_v7_postgresql", "POSTGRESQL");
 #endif
-#ifdef HAVE_MYSQL
-Tests<V7DB> tg8a("cmdline_dbadb_v7_mysql", "MYSQL");
-#endif
 
 template <typename DB> void Tests<DB>::register_tests()
 {

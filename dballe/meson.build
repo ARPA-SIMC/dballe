@@ -59,12 +59,6 @@ if libpq_dep.found()
         subdir: 'dballe/sql',
     )
 endif
-if mariadb_dep.found()
-    install_headers(
-        'sql/mysql.h',
-        subdir: 'dballe/sql',
-    )
-endif
 
 install_headers(
     'cmdline/cmdline.h',
@@ -90,17 +84,6 @@ if libpq_dep.found()
         ]
 endif
 
-if mariadb_dep.found()
-        libdballe_sources += [
-                'sql/mysql.cc',
-                'db/v7/mysql/repinfo.cc',
-                'db/v7/mysql/station.cc',
-                'db/v7/mysql/levtr.cc',
-                'db/v7/mysql/data.cc',
-                'db/v7/mysql/driver.cc',
-        ]
-endif
-
 if xapian_dep.found()
         libdballe_sources += [
                 'db/summary_xapian.cc',
@@ -118,7 +101,6 @@ libdballe = both_libraries('dballe',
                 libwreport_dep,
                 sqlite3_dep,
                 libpq_dep,
-                mariadb_dep,
                 xapian_dep,
                 popt_dep,
         ])
@@ -207,12 +189,6 @@ if libpq_dep.found()
         ]
 endif
 
-if mariadb_dep.found()
-        test_dballe_sources += [
-                'sql/mysql-test.cc',
-        ]
-endif
-
 if xapian_dep.found()
         libdballe_sources += [
                 'db/summary_xapian.cc',
@@ -229,7 +205,6 @@ test_dballe = executable('test-dballe', test_dballe_sources + tables,
                 libwreport_dep,
                 sqlite3_dep,
                 libpq_dep,
-                mariadb_dep,
                 xapian_dep,
                 popt_dep,
         ])

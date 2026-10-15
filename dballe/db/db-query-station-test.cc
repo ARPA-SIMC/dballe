@@ -196,8 +196,5 @@ Tests<V7DB> tg2("db_query_station_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
 Tests<V7DB> tg4("db_query_station_v7_postgresql", "POSTGRESQL");
 #endif
-#ifdef HAVE_MYSQL
-Tests<V7DB> tg6("db_query_station_v7_mysql", "MYSQL");
-#endif
 
 } // namespace

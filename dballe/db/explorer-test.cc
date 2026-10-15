@@ -30,10 +30,6 @@ Tests<V7DB, Explorer> tg3("db_explorer_v7_postgresql_explorer", "POSTGRESQL");
 Tests<V7DB, DBExplorer> tg4("db_explorer_v7_postgresql_dbexplorer",
                             "POSTGRESQL");
 #endif
-#ifdef HAVE_MYSQL
-Tests<V7DB, Explorer> tg5("db_explorer_v7_mysql_explorer", "MYSQL");
-Tests<V7DB, DBExplorer> tg6("db_explorer_v7_mysql_dbexplorer", "MYSQL");
-#endif
 
 template <typename Station>
 void test_explorer_contents(const BaseExplorer<Station>& explorer)

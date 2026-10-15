@@ -123,8 +123,5 @@ Tests<V7DB> test_sqlitev7("db_v7_repinfo_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
 Tests<V7DB> test_psqlv7("db_v7_repinfo_postgresql", "POSTGRESQL");
 #endif
-#ifdef HAVE_MYSQL
-Tests<V7DB> test_mysqlv7("db_v7_repinfo_mysql", "MYSQL");
-#endif
 
 } // namespace

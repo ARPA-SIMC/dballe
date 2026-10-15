@@ -24,9 +24,6 @@ Tests tg1("db_v7_utils_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
 Tests tg3("db_v7_utils_postgresql", "POSTGRESQL");
 #endif
-#ifdef HAVE_MYSQL
-Tests tg4("db_v7_utils_mysql", "MYSQL");
-#endif
 
 void Tests::register_tests()
 {

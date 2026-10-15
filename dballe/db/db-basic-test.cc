@@ -39,16 +39,10 @@ Tests<V7DB> tg2("db_basic_tr_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
 Tests<V7DB> tg4("db_basic_tr_v7_postgresql", "POSTGRESQL");
 #endif
-#ifdef HAVE_MYSQL
-Tests<V7DB> tg6("db_basic_tr_v7_mysql", "MYSQL");
-#endif
 
 CommitTests<V7DB> ct2("db_basic_db_v7_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
 CommitTests<V7DB> ct4("db_basic_db_v7_postgresql", "POSTGRESQL");
-#endif
-#ifdef HAVE_MYSQL
-CommitTests<V7DB> ct6("db_basic_db_v7_mysql", "MYSQL");
 #endif
 
 template <typename DB> void Tests<DB>::register_tests()

@@ -7,9 +7,6 @@
 #ifdef HAVE_LIBPQ
 #include "postgresql.h"
 #endif
-#ifdef HAVE_MYSQL
-#include "mysql.h"
-#endif
 #include <cstdlib>
 #include <cstring>
 
@@ -28,7 +25,6 @@ const char* format_server_type(ServerType type)
 {
     switch (type)
     {
-        case ServerType::MYSQL:    return "mysql";
         case ServerType::SQLITE:   return "sqlite";
         case ServerType::ORACLE:   return "oracle";
         case ServerType::POSTGRES: return "postgresql";
@@ -147,13 +143,7 @@ std::shared_ptr<Connection> Connection::create(const DBConnectOptions& options)
     }
     if (strncmp(url, "mysql:", 6) == 0)
     {
-#ifdef HAVE_MYSQL
-        auto conn = MySQLConnection::create();
-        conn->open_url(url);
-        return conn;
-#else
         throw error_unimplemented("MySQL support is not available");
-#endif
     }
     error_consistency::throwf("unsupported url \"%s\"", url);
 }

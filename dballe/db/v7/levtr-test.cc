@@ -25,9 +25,6 @@ Tests test_sqlite("db_v7_levtr_sqlite", "SQLITE");
 #ifdef HAVE_LIBPQ
 Tests test_psql("db_v7_levtr_postgresql", "POSTGRESQL");
 #endif
-#ifdef HAVE_MYSQL
-Tests test_mysql("db_v7_levtr_mysql", "MYSQL");
-#endif
 
 void Tests::register_tests()
 {

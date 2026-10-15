@@ -41,7 +41,6 @@ namespace sql {
 
 /// Supported SQL servers.
 enum class ServerType {
-    MYSQL,
     SQLITE,
     ORACLE,
     POSTGRES,
