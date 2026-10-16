@@ -14,7 +14,6 @@ Build-Depends:
   python3-breathe,
   libsqlite3-dev (>= 3.14),
   libpq-dev,
-  default-libmysqlclient-dev,
   libwreport-dev (>= 3.38),
   python3-wreport (>= 3.38),
   libwreport-doc (>= 3.38),
@@ -37,8 +36,7 @@ Package: libdballe-dev
 Section: libdevel
 Architecture: any
 Depends: libdballe9 (= ${binary:Version}), libwreport-dev (>= 3.22), ${misc:Depends},
-  libsqlite3-dev (>= 3.14), libpq-dev, default-libmysqlclient-dev,
-  libpopt-dev, libxapian-dev
+  libsqlite3-dev (>= 3.14), libpq-dev, libpopt-dev, libxapian-dev
 Recommends: pkg-config
 Description: DB-All.e C development library for weather research
  DB-All.e is a fast on-disk database where meteorological observed and
