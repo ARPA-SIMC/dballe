@@ -4,4 +4,3 @@ usr/include/dballe/dballef.mod
 usr/lib/*/libdballef*.a
 usr/lib/*/libdballef*.so
 usr/lib/*/pkgconfig/libdballef*
-usr/share/aclocal/libdballef*.m4

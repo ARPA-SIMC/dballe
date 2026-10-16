@@ -1,6 +1,9 @@
 dballe (9.14-1) UNRELEASED; urgency=medium
 
   * Drop default-libmysqlclient-dev from dependencies
+  * Do not install now-removed .m4 files
+
+ -- Enrico Zini <enrico@debian.org>  Fri, 16 Oct 2026 15:08:35 +0200
 
 dballe (9.13-2) UNRELEASED; urgency=medium
 
