@@ -1,10 +1,10 @@
+// SPDX-License-Identifier: BSD-3-Clause
+
 #ifndef DBALLE_PYTHON_DICT_H
 #define DBALLE_PYTHON_DICT_H
 
-#define PY_SSIZE_T_CLEAN
 #include "core.h"
 #include "values.h"
-#include <Python.h>
 
 namespace dballe::python {
 

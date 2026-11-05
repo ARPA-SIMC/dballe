@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BSD-3-Clause
+
 #ifndef DBALLE_PYTHON_METHODS_H
 #define DBALLE_PYTHON_METHODS_H
 

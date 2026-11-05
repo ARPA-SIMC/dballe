@@ -1,9 +1,9 @@
+// SPDX-License-Identifier: BSD-3-Clause
+
 #ifndef DBALLE_PYTHON_VALUES_H
 #define DBALLE_PYTHON_VALUES_H
 
-#define PY_SSIZE_T_CLEAN
 #include "core.h"
-#include <Python.h>
 #include <filesystem>
 #include <stdexcept>
 #include <string>

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BSD-3-Clause
+
 #include "values.h"
 #include "core.h"
 #include <string>

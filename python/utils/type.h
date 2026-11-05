@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BSD-3-Clause
+
 #ifndef DBALLE_PYTHON_TYPE_H
 #define DBALLE_PYTHON_TYPE_H
 
@@ -16,7 +18,7 @@ template <typename Child, typename IMPL> struct Getter
 
     static PyObject* get(Impl* self, void* closure)
     {
-        PyErr_Format(PyExc_NotImplementedError, "getter %s is not implemented",
+        PyErr_Format(PyExc_NotImplementedError, "%s getter is not implemented",
                      Child::name);
         return nullptr;
     }
@@ -25,6 +27,35 @@ template <typename Child, typename IMPL> struct Getter
     {
         return PyGetSetDef{const_cast<char*>(Child::name), (getter)Child::get,
                            nullptr, const_cast<char*>(Child::doc),
+                           Child::closure};
+    }
+};
+
+template <typename Child, typename IMPL> struct GetSetter
+{
+    typedef IMPL Impl;
+    constexpr static const char* name = "TODO";
+    constexpr static const char* doc  = "TODO: write getsetter documentation";
+    constexpr static void* closure    = nullptr;
+
+    static PyObject* get(Impl* self, void* closure)
+    {
+        PyErr_Format(PyExc_NotImplementedError, "%s getter is not implemented",
+                     Child::name);
+        return nullptr;
+    }
+
+    static int set(Impl* self, PyObject* value, void* closure)
+    {
+        PyErr_Format(PyExc_NotImplementedError, "%s setter is not implemented",
+                     Child::name);
+        return -1;
+    }
+
+    static constexpr PyGetSetDef def()
+    {
+        return PyGetSetDef{const_cast<char*>(Child::name), (getter)Child::get,
+                           (setter)Child::set, const_cast<char*>(Child::doc),
                            Child::closure};
     }
 };
@@ -84,53 +115,7 @@ template <typename Child, typename IMPL> struct Type
 {
     typedef IMPL Impl;
 
-#if 0
-    // Not supported in Centos 7, use this when we can use a newer C++ compiler
-    PySequenceMethods _sequence_methods {
-        .sq_length = (lenfunc)Child::sq_length,
-        .sq_concat = (binaryfunc)Child::sq_concat,
-        .sq_repeat = (ssizeargfunc)Child::sq_repeat,
-        .sq_item = (ssizeargfunc)Child::sq_item,
-        .sq_ass_item = (ssizeobjargproc)Child::sq_ass_item,
-        .sq_contains = (objobjproc)Child::sq_contains,
-        .sq_inplace_concat = (binaryfunc)Child::sq_inplace_concat,
-        .sq_inplace_repeat = (ssizeargfunc)Child::sq_inplace_repeat,
-    };
-    PyMappingMethods _mapping_methods {
-        .mp_length = (lenfunc)Child::mp_length,
-        .mp_subscript = (binaryfunc)ChilChild::mp_subscript,
-        .mp_ass_subscript = (objobjargproc)Child::mp_ass_subscript,
-    };
-#else
-    PySequenceMethods _sequence_methods;
-    PyMappingMethods _mapping_methods;
-
-    Type()
-    {
-        _sequence_methods.sq_length =
-            reinterpret_cast<lenfunc>(Child::sq_length);
-        _sequence_methods.sq_concat =
-            reinterpret_cast<binaryfunc>(Child::sq_concat);
-        _sequence_methods.sq_repeat =
-            reinterpret_cast<ssizeargfunc>(Child::sq_repeat);
-        _sequence_methods.sq_item =
-            reinterpret_cast<ssizeargfunc>(Child::sq_item);
-        _sequence_methods.sq_ass_item =
-            reinterpret_cast<ssizeobjargproc>(Child::sq_ass_item);
-        _sequence_methods.sq_contains =
-            reinterpret_cast<objobjproc>(Child::sq_contains);
-        _sequence_methods.sq_inplace_concat =
-            reinterpret_cast<binaryfunc>(Child::sq_inplace_concat);
-        _sequence_methods.sq_inplace_repeat =
-            reinterpret_cast<ssizeargfunc>(Child::sq_inplace_repeat);
-        _mapping_methods.mp_length =
-            reinterpret_cast<lenfunc>(Child::mp_length);
-        _mapping_methods.mp_subscript =
-            reinterpret_cast<binaryfunc>(Child::mp_subscript);
-        _mapping_methods.mp_ass_subscript =
-            reinterpret_cast<objobjargproc>(Child::mp_ass_subscript);
-    }
-#endif
+    Type() {}
 
     static PyObject* _str(Impl* self)
     {
@@ -163,6 +148,8 @@ template <typename Child, typename IMPL> struct Type
     constexpr static binaryfunc mp_subscript        = nullptr;
     constexpr static objobjargproc mp_ass_subscript = nullptr;
 
+    constexpr static unsigned long tp_flags = Py_TPFLAGS_DEFAULT;
+
     static int _init(Impl* self, PyObject* args, PyObject* kw)
     {
         // Default implementation raising NotImplementedError
@@ -182,85 +169,51 @@ template <typename Child, typename IMPL> struct Type
     {
         Child* d = static_cast<Child*>(this);
 
-        unsigned long tp_flags = Py_TPFLAGS_DEFAULT;
-
-        PySequenceMethods* tp_as_sequence = nullptr;
-        if (Child::sq_length || Child::sq_concat || Child::sq_repeat ||
-            Child::sq_item || Child::sq_ass_item || Child::sq_contains ||
-            Child::sq_inplace_concat || Child::sq_inplace_repeat)
-        {
-            tp_as_sequence = &_sequence_methods;
-        }
-
-        PyMappingMethods* tp_as_mapping = nullptr;
-        if (Child::mp_length || Child::mp_subscript || Child::mp_ass_subscript)
-            tp_as_mapping = &_mapping_methods;
-
-        py_unique_ptr<PyTypeObject> type = new PyTypeObject{
-            PyVarObject_HEAD_INIT(NULL, 0) Child::qual_name, // tp_name
-            sizeof(Impl),                                    // tp_basicsize
-            0,                                               // tp_itemsize
-            (destructor)Child::_dealloc,                     // tp_dealloc
-            0,                                               // tp_print
-            0,                                               // tp_getattr
-            0,                                               // tp_setattr
-            0,                                               // tp_reserved
-            (reprfunc)Child::_repr,                          // tp_repr
-            0,                                               // tp_as_number
-            tp_as_sequence,                                  // tp_as_sequence
-            tp_as_mapping,                                   // tp_as_mapping
-            (hashfunc)Child::_hash,                          // tp_hash
-            (ternaryfunc)Child::_call,                       // tp_call
-            (reprfunc)Child::_str,                           // tp_str
-            0,                                               // tp_getattro
-            0,                                               // tp_setattro
-            0,                                               // tp_as_buffer
-            tp_flags,                                        // tp_flags
-            Child::doc,                                      // tp_doc
-            0,                                               // tp_traverse
-            0,                                               // tp_clear
-            (richcmpfunc)Child::_richcompare,                // tp_richcompare
-            0,                              // tp_weaklistoffset
-            (getiterfunc)Child::_iter,      // tp_iter
-            (iternextfunc)Child::_iternext, // tp_iternext
-            d->methods.as_py(),             // tp_methods
-            0,                              // tp_members
-            d->getsetters.as_py(),          // tp_getset
-            0,                              // tp_base
-            0,                              // tp_dict
-            0,                              // tp_descr_get
-            0,                              // tp_descr_set
-            0,                              // tp_dictoffset
-            (initproc)Child::_init,         // tp_init
-            0,                              // tp_alloc
-            PyType_GenericNew,              // tp_new
-            0,                              // tp_free
-            0,                              // tp_is_gc
-            0,                              // tp_bases
-            0,                              // tp_mro
-            0,                              // tp_cache
-            0,                              // tp_subclasses
-            0,                              // tp_weaklist
-            0,                              // tp_del
-            0,                              // tp_version_tag
-            0,                              // tp_finalize
-#if !(PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION < 8)
-            0, // tp_vectorcall
-#endif
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconditionally-supported"
+#pragma GCC diagnostic ignored "-Wcast-qual"
+        PyType_Slot slots[] = {
+            {Py_tp_dealloc,        (void*)Child::_dealloc         },
+            {Py_tp_repr,           (void*)Child::_repr            },
+            {Py_tp_hash,           (void*)Child::_hash            },
+            {Py_tp_call,           (void*)Child::_call            },
+            {Py_tp_str,            (void*)Child::_str             },
+            {Py_tp_doc,            (void*)PyDoc_STR(Child::doc)   },
+            {Py_tp_richcompare,    (void*)Child::_richcompare     },
+            {Py_tp_iter,           (void*)Child::_iter            },
+            {Py_tp_iternext,       (void*)Child::_iternext        },
+            {Py_tp_methods,        (void*)d->methods.as_py()      },
+            {Py_tp_getset,         (void*)d->getsetters.as_py()   },
+            {Py_tp_init,           (void*)Child::_init            },
+            {Py_tp_new,            (void*)PyType_GenericNew       },
+            {Py_sq_length,         (void*)Child::sq_length        },
+            {Py_sq_concat,         (void*)Child::sq_concat        },
+            {Py_sq_repeat,         (void*)Child::sq_repeat        },
+            {Py_sq_item,           (void*)Child::sq_item          },
+            {Py_sq_ass_item,       (void*)Child::sq_ass_item      },
+            {Py_sq_contains,       (void*)Child::sq_contains      },
+            {Py_sq_inplace_concat, (void*)Child::sq_inplace_concat},
+            {Py_sq_inplace_repeat, (void*)Child::sq_inplace_repeat},
+            {Py_mp_length,         (void*)Child::mp_length        },
+            {Py_mp_subscript,      (void*)Child::mp_subscript     },
+            {Py_mp_ass_subscript,  (void*)Child::mp_ass_subscript },
+            {0,                    NULL                           }
         };
+#pragma GCC diagnostic pop
 
-        if (PyType_Ready(type) != 0)
-            throw PythonException();
+        PyType_Spec spec = {Child::qual_name, sizeof(Impl), 0,
+                            (unsigned long)Child::tp_flags, slots};
+        pyo_unique_ptr type(throw_ifnull(PyType_FromSpec(&spec)));
 
         if (module)
         {
+            // PyModule_AddObject steals a reference
             type.incref();
-            if (PyModule_AddObject(module, Child::name,
-                                   (PyObject*)type.get()) != 0)
+            if (PyModule_AddObject(module, Child::name, type) != 0)
                 throw PythonException();
         }
-        type_object = type.release();
-    }
+        type_object = (PyTypeObject*)type.release();
+    } // namespace dballe::python
 };
 
 } // namespace dballe::python
