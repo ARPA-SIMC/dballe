@@ -1,5 +1,6 @@
 #include "common.h"
 #include "dballe/core/var.h"
+#include "dballe/query.h"
 #include "dballe/types.h"
 #include "utils/values.h"
 #include "utils/wreport.h"
@@ -91,6 +92,17 @@ int dballe_int_from_python(PyObject* o)
 {
     if (o == NULL || o == Py_None)
         return MISSING_INT;
+
+    if (PyUnicode_Check(o))
+    {
+        if (string_from_python(o) == "-")
+            return REQUIRED_MISSING_INT;
+        PyErr_Format(PyExc_TypeError,
+                     "%R cannot be interpreted as an integer, missing value "
+                     "(None) or required missing value ('-')",
+                     o);
+        throw PythonException();
+    }
 
     int res = PyLong_AsLong(o);
     if (res == -1 && PyErr_Occurred())

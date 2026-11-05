@@ -11,23 +11,27 @@ class BaseExplorerTestMixin(DballeDBMixin):
         super().setUp()
         with self.db.transaction() as tr:
             data = dict(
-                    lat=12.34560, lon=76.54320,
-                    datetime=datetime.datetime(1945, 4, 25, 8, 0, 0),
-                    level=(10, 11, 15, 22),
-                    trange=(20, 111, 222),
-                    rep_memo="synop",
-                    B01011="test1",
-                    B01012=500)
+                lat=12.34560,
+                lon=76.54320,
+                datetime=datetime.datetime(1945, 4, 25, 8, 0, 0),
+                level=(10, 11, 15, 22),
+                trange=(20, 111, 222),
+                rep_memo="synop",
+                B01011="test1",
+                B01012=500,
+            )
             tr.insert_data(data, False, True)
 
             data = dict(
-                    lat=12.34560, lon=76.54320,
-                    ident="foo",
-                    datetime=datetime.datetime(1945, 4, 25, 12, 0, 0),
-                    level=(10, 11, 15, 22),
-                    trange=(20, 111, 223),
-                    rep_memo="amdar",
-                    B01012=500)
+                lat=12.34560,
+                lon=76.54320,
+                ident="foo",
+                datetime=datetime.datetime(1945, 4, 25, 12, 0, 0),
+                level=(10, 11),
+                trange=(20, 111, 223),
+                rep_memo="amdar",
+                B01012=500,
+            )
             tr.insert_data(data, False, True)
 
         # Track explorers created during the test case
@@ -53,25 +57,47 @@ class BaseExplorerTestMixin(DballeDBMixin):
         return self._make_explorer(name, *args, **kw)
 
     def assertExplorerContents(self, explorer, count_unfiltered=3, count_filtered=1):
-        self.assertCountEqual(explorer.all_stations, [
-            self._station("synop", 1, 12.34560, 76.54320, None),
-            self._station("amdar", 2, 12.34560, 76.54320, "foo"),
-        ])
-        self.assertCountEqual(explorer.stations, [
-            self._station("amdar", 2, 12.34560, 76.54320, "foo"),
-        ])
+        self.assertCountEqual(
+            explorer.all_stations,
+            [
+                self._station("synop", 1, 12.34560, 76.54320, None),
+                self._station("amdar", 2, 12.34560, 76.54320, "foo"),
+            ],
+        )
+        self.assertCountEqual(
+            explorer.stations,
+            [
+                self._station("amdar", 2, 12.34560, 76.54320, "foo"),
+            ],
+        )
         self.assertCountEqual(explorer.all_reports, ["amdar", "synop"])
         self.assertEqual(explorer.reports, ["amdar"])
-        self.assertEqual(explorer.all_levels, [(10, 11, 15, 22)])
-        self.assertEqual(explorer.levels, [(10, 11, 15, 22)])
+        self.assertEqual(explorer.all_levels, [(10, 11, 15, 22), (10, 11, None, None)])
+        self.assertEqual(explorer.levels, [(10, 11, None, None)])
         self.assertEqual(explorer.all_tranges, [(20, 111, 222), (20, 111, 223)])
         self.assertEqual(explorer.tranges, [(20, 111, 223)])
         self.assertEqual(explorer.all_varcodes, ["B01011", "B01012"])
         self.assertEqual(explorer.varcodes, ["B01012"])
-        self.assertEqual(explorer.all_stats, dballe.ExplorerStats((
-            datetime.datetime(1945, 4, 25,  8, 0), datetime.datetime(1945, 4, 25, 12, 0), count_unfiltered)))
-        self.assertEqual(explorer.stats, dballe.ExplorerStats((
-            datetime.datetime(1945, 4, 25, 12, 0), datetime.datetime(1945, 4, 25, 12, 0), count_filtered)))
+        self.assertEqual(
+            explorer.all_stats,
+            dballe.ExplorerStats(
+                (
+                    datetime.datetime(1945, 4, 25, 8, 0),
+                    datetime.datetime(1945, 4, 25, 12, 0),
+                    count_unfiltered,
+                )
+            ),
+        )
+        self.assertEqual(
+            explorer.stats,
+            dballe.ExplorerStats(
+                (
+                    datetime.datetime(1945, 4, 25, 12, 0),
+                    datetime.datetime(1945, 4, 25, 12, 0),
+                    count_filtered,
+                )
+            ),
+        )
 
     def test_create(self):
         explorer = self._explorer("e1")
@@ -125,38 +151,103 @@ class BaseExplorerTestMixin(DballeDBMixin):
                 rows = list(cur)
             self.assertEqual(len(rows), 1)
 
+            if self.BACKEND != "xapian":
+                # This is not yet correctly implemented on Xapian
+                with explorer.query_summary_all({"level": (10, 11, None, None)}) as cur:
+                    rows = list(cur)
+                self.assertEqual(len(rows), 3)
+
+                with explorer.query_summary_all({"level": (10, 11, "-", "-")}) as cur:
+                    rows = list(cur)
+                self.assertEqual(len(rows), 1)
+
     def test_create_from_msgs(self):
         importer = dballe.Importer("BUFR")
 
         with self._explorer() as explorer:
             with explorer.rebuild() as update:
-                with importer.from_file(test_pathname("bufr/gts-acars-uk1.bufr")) as imp:
+                with importer.from_file(
+                    test_pathname("bufr/gts-acars-uk1.bufr")
+                ) as imp:
                     update.add_messages(imp)
             explorer.set_filter({"level": dballe.Level(102, 6260000)})
 
-            self.assertCountEqual(explorer.all_stations, [
-                self._station("amdar", None, 48.90500, 10.63667, "EU3375"),
-            ])
-            self.assertCountEqual(explorer.stations, [
-                self._station("amdar", None, 48.90500, 10.63667, "EU3375"),
-            ])
+            self.assertCountEqual(
+                explorer.all_stations,
+                [
+                    self._station("amdar", None, 48.90500, 10.63667, "EU3375"),
+                ],
+            )
+            self.assertCountEqual(
+                explorer.stations,
+                [
+                    self._station("amdar", None, 48.90500, 10.63667, "EU3375"),
+                ],
+            )
             self.assertEqual(explorer.all_reports, ["amdar"])
             self.assertEqual(explorer.reports, ["amdar"])
             self.assertEqual(explorer.all_levels, [dballe.Level(102, 6260000), None])
             self.assertEqual(explorer.levels, [dballe.Level(102, 6260000)])
             self.assertEqual(explorer.all_tranges, [dballe.Trange(254, 0, 0), None])
             self.assertEqual(explorer.tranges, [dballe.Trange(254, 0, 0)])
-            self.assertCountEqual(explorer.all_varcodes, [
-                "B04001", "B04002", "B04003", "B04004", "B04005", "B01011", "B05001", "B06001",
-                "B01006", "B02061", "B02062", "B02064", "B07030", "B08004", "B11001", "B11002", "B12101", "B13002",
-            ])
-            self.assertCountEqual(explorer.varcodes, [
-                "B01006", "B02061", "B02062", "B02064", "B07030", "B08004", "B11001", "B11002", "B12101", "B13002",
-            ])
-            self.assertEqual(explorer.all_stats, dballe.ExplorerStats((
-                datetime.datetime(2009, 2, 24, 11, 31), datetime.datetime(2009, 2, 24, 11, 31), 18)))
-            self.assertEqual(explorer.stats, dballe.ExplorerStats((
-                datetime.datetime(2009, 2, 24, 11, 31), datetime.datetime(2009, 2, 24, 11, 31), 10)))
+            self.assertCountEqual(
+                explorer.all_varcodes,
+                [
+                    "B04001",
+                    "B04002",
+                    "B04003",
+                    "B04004",
+                    "B04005",
+                    "B01011",
+                    "B05001",
+                    "B06001",
+                    "B01006",
+                    "B02061",
+                    "B02062",
+                    "B02064",
+                    "B07030",
+                    "B08004",
+                    "B11001",
+                    "B11002",
+                    "B12101",
+                    "B13002",
+                ],
+            )
+            self.assertCountEqual(
+                explorer.varcodes,
+                [
+                    "B01006",
+                    "B02061",
+                    "B02062",
+                    "B02064",
+                    "B07030",
+                    "B08004",
+                    "B11001",
+                    "B11002",
+                    "B12101",
+                    "B13002",
+                ],
+            )
+            self.assertEqual(
+                explorer.all_stats,
+                dballe.ExplorerStats(
+                    (
+                        datetime.datetime(2009, 2, 24, 11, 31),
+                        datetime.datetime(2009, 2, 24, 11, 31),
+                        18,
+                    )
+                ),
+            )
+            self.assertEqual(
+                explorer.stats,
+                dballe.ExplorerStats(
+                    (
+                        datetime.datetime(2009, 2, 24, 11, 31),
+                        datetime.datetime(2009, 2, 24, 11, 31),
+                        10,
+                    )
+                ),
+            )
 
     def test_persistence(self):
         with self._explorer() as explorer:
@@ -196,34 +287,82 @@ class BaseExplorerTestMixin(DballeDBMixin):
         with self._explorer("e1") as explorer:
             with explorer.update() as updater:
                 importer = dballe.Importer("BUFR")
-                with importer.from_file(test_pathname("bufr/gts-acars1.bufr")) as messages:
+                with importer.from_file(
+                    test_pathname("bufr/gts-acars1.bufr")
+                ) as messages:
                     updater.add_messages(messages)
-            self.assertEqual(explorer.all_varcodes, [
-                'B01011', 'B02062', 'B02064', 'B04001', 'B04002', 'B04003',
-                'B04004', 'B04005', 'B04006', 'B05001', 'B06001', 'B07030',
-                'B08004', 'B11001', 'B11002', 'B12101', 'B13002'])
+            self.assertEqual(
+                explorer.all_varcodes,
+                [
+                    "B01011",
+                    "B02062",
+                    "B02064",
+                    "B04001",
+                    "B04002",
+                    "B04003",
+                    "B04004",
+                    "B04005",
+                    "B04006",
+                    "B05001",
+                    "B06001",
+                    "B07030",
+                    "B08004",
+                    "B11001",
+                    "B11002",
+                    "B12101",
+                    "B13002",
+                ],
+            )
 
         with self._explorer("e2") as explorer:
             with explorer.update() as updater:
                 importer = dballe.Importer("BUFR")
-                with importer.from_file(test_pathname("bufr/gts-acars1.bufr")) as messages:
+                with importer.from_file(
+                    test_pathname("bufr/gts-acars1.bufr")
+                ) as messages:
                     updater.add_messages(messages, station_data=True, data=False)
-            self.assertEqual(explorer.all_varcodes, [
-                'B01011', 'B04001', 'B04002', 'B04003', 'B04004', 'B04005',
-                'B04006', 'B05001', 'B06001'])
+            self.assertEqual(
+                explorer.all_varcodes,
+                [
+                    "B01011",
+                    "B04001",
+                    "B04002",
+                    "B04003",
+                    "B04004",
+                    "B04005",
+                    "B04006",
+                    "B05001",
+                    "B06001",
+                ],
+            )
 
         with self._explorer("e3") as explorer:
             with explorer.update() as updater:
                 importer = dballe.Importer("BUFR")
-                with importer.from_file(test_pathname("bufr/gts-acars1.bufr")) as messages:
+                with importer.from_file(
+                    test_pathname("bufr/gts-acars1.bufr")
+                ) as messages:
                     updater.add_messages(messages, station_data=False, data=True)
-            self.assertEqual(explorer.all_varcodes, [
-                'B02062', 'B02064', 'B07030', 'B08004', 'B11001', 'B11002', 'B12101', 'B13002'])
+            self.assertEqual(
+                explorer.all_varcodes,
+                [
+                    "B02062",
+                    "B02064",
+                    "B07030",
+                    "B08004",
+                    "B11001",
+                    "B11002",
+                    "B12101",
+                    "B13002",
+                ],
+            )
 
         with self._explorer("e4") as explorer:
             with explorer.update() as updater:
                 importer = dballe.Importer("BUFR")
-                with importer.from_file(test_pathname("bufr/gts-acars1.bufr")) as messages:
+                with importer.from_file(
+                    test_pathname("bufr/gts-acars1.bufr")
+                ) as messages:
                     updater.add_messages(messages, station_data=False, data=False)
             self.assertEqual(explorer.all_varcodes, [])
 
@@ -234,10 +373,10 @@ class BaseExplorerTestMixin(DballeDBMixin):
                 updater.add_json(fd.read())
 
         query = {
-            'datetimemin': datetime.datetime(2020, 1, 1, 1, 0),
-            'datetimemax': datetime.datetime(2020, 6, 1, 15, 13),
-            'rep_memo': 'simnpr',
-            'query': 'details'
+            "datetimemin": datetime.datetime(2020, 1, 1, 1, 0),
+            "datetimemax": datetime.datetime(2020, 6, 1, 15, 13),
+            "rep_memo": "simnpr",
+            "query": "details",
         }
         for cur in explorer.query_summary_all(query):
             cur["yearmin"]
@@ -292,15 +431,23 @@ class XapianExplorerTestMixin:
 
 class DballeV7ExplorerXapianTest(XapianExplorerTestMixin, unittest.TestCase):
     DB_FORMAT = "V7"
+    BACKEND = "xapian"
 
 
 class DballeV7ExplorerJSONTest(JSONExplorerTestMixin, unittest.TestCase):
     DB_FORMAT = "V7"
+    BACKEND = "json"
 
 
-class DballeV7DBExplorerXapianTest(XapianExplorerTestMixin, DBExplorerTestMixin, unittest.TestCase):
+class DballeV7DBExplorerXapianTest(
+    XapianExplorerTestMixin, DBExplorerTestMixin, unittest.TestCase
+):
     DB_FORMAT = "V7"
+    BACKEND = "xapian"
 
 
-class DballeV7DBExplorerJSONTest(JSONExplorerTestMixin, DBExplorerTestMixin, unittest.TestCase):
+class DballeV7DBExplorerJSONTest(
+    JSONExplorerTestMixin, DBExplorerTestMixin, unittest.TestCase
+):
     DB_FORMAT = "V7"
+    BACKEND = "json"

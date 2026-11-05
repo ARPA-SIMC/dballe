@@ -253,6 +253,36 @@ void Tests::register_tests()
         wassert(actual(lr) == LonRange());
     });
 
+    add_method("level", [] {
+        Level missing;
+        wassert(actual(missing.ltype1) == MISSING_INT);
+        wassert(actual(missing.l1) == MISSING_INT);
+        wassert(actual(missing.ltype2) == MISSING_INT);
+        wassert(actual(missing.l2) == MISSING_INT);
+
+        Level full(1, 2, 3, 4);
+        wassert(actual(full.ltype1) == 1);
+        wassert(actual(full.l1) == 2);
+        wassert(actual(full.ltype2) == 3);
+        wassert(actual(full.l2) == 4);
+
+        Level even(MISSING_INT, 2, MISSING_INT, 4);
+        Level odd(1, MISSING_INT, 3, MISSING_INT);
+
+        wassert_true(missing.matches(full));
+        wassert_true(
+            Level(MISSING_INT, MISSING_INT, REQUIRED_MISSING_INT, MISSING_INT)
+                .matches(missing));
+        wassert_true(even.matches(full));
+        wassert_true(odd.matches(full));
+        wassert_true(Level(REQUIRED_MISSING_INT, 2, REQUIRED_MISSING_INT, 4)
+                         .matches(even));
+        wassert_true(Level(1, REQUIRED_MISSING_INT, 3, REQUIRED_MISSING_INT)
+                         .matches(odd));
+        wassert_true(Level(1).matches(full));
+        wassert_false(Level(1, REQUIRED_MISSING_INT).matches(full));
+    });
+
     add_method("level_descs", []() {
         // Try to get descriptions for all the layers
         for (int i = 0; i < 261; ++i)
