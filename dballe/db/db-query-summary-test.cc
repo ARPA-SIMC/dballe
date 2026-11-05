@@ -43,7 +43,7 @@ struct DBData : public TestDataSet
         data["rec1b"].values.set("B12103", 281.0);
         data["rec2a"].station  = stations["st2_metar"].station;
         data["rec2a"].datetime = Datetime(1945, 4, 25, 8);
-        data["rec2a"].level    = Level(10, 11, 15, 22);
+        data["rec2a"].level    = Level(10, 11);
         data["rec2a"].trange   = Trange(20, 111, 122);
         data["rec2a"].values.set("B12101", 300.0);
         data["rec2a"].values.set("B12103", 298.0);
@@ -155,8 +155,9 @@ template <typename DB> class Tests : public FixtureTestCase<DBDataFixture<DB>>
                 wassert(actual(stations[0].coords) ==
                         Coords(12.34560, 76.54320));
                 auto levels = get_levels(res);
-                wassert(actual(levels.size()) == 1u);
+                wassert(actual(levels.size()) == 2u);
                 wassert(actual(levels[0]) == Level(10, 11, 15, 22));
+                wassert(actual(levels[1]) == Level(10, 11));
                 auto tranges = get_tranges(res);
                 wassert(actual(tranges.size()) == 1u);
                 wassert(actual(tranges[0]) == Trange(20, 111, 122));
@@ -277,12 +278,14 @@ template <typename DB> class Tests : public FixtureTestCase<DBDataFixture<DB>>
         this->add_method("query_level", [](Fixture& f) {
             wassert(actual(f.tr).try_summary_query("leveltype1=10", 4));
             wassert(actual(f.tr).try_summary_query("leveltype1=11", 0));
-            wassert(actual(f.tr).try_summary_query("leveltype2=15", 4));
+            wassert(actual(f.tr).try_summary_query("leveltype2=15", 2));
             wassert(actual(f.tr).try_summary_query("leveltype2=16", 0));
+            wassert(actual(f.tr).try_summary_query("leveltype2=-", 2));
             wassert(actual(f.tr).try_summary_query("l1=11", 4));
             wassert(actual(f.tr).try_summary_query("l1=12", 0));
-            wassert(actual(f.tr).try_summary_query("l2=22", 4));
+            wassert(actual(f.tr).try_summary_query("l2=22", 2));
             wassert(actual(f.tr).try_summary_query("l2=23", 0));
+            wassert(actual(f.tr).try_summary_query("l2=-", 2));
         });
         this->add_method("query_var", [](Fixture& f) {
             wassert(actual(f.tr).try_summary_query("var=B01001", 0));
