@@ -1,5 +1,6 @@
 #include "types.h"
 #include "core/csv.h"
+#include "query.h"
 #include <cmath>
 #include <cstring>
 #include <iomanip>
@@ -1218,6 +1219,66 @@ int Level::compare(const Level& l) const
     if ((res = ltype2 - l.ltype2))
         return res;
     return l2 - l.l2;
+}
+
+bool Level::matches(const Level& l) const
+{
+    if (is_missing())
+        return true;
+
+    switch (ltype1)
+    {
+        case REQUIRED_MISSING_INT:
+            if (l.ltype1 != MISSING_INT)
+                return false;
+            break;
+        case MISSING_INT: break;
+        default:
+            if (l.ltype1 != ltype1)
+                return false;
+            break;
+    }
+
+    switch (l1)
+    {
+        case REQUIRED_MISSING_INT:
+            if (l.l1 != MISSING_INT)
+                return false;
+            break;
+        case MISSING_INT: break;
+        default:
+            if (l.l1 != l1)
+                return false;
+            break;
+    }
+
+    switch (ltype2)
+    {
+        case REQUIRED_MISSING_INT:
+            if (l.ltype2 != MISSING_INT)
+                return false;
+            break;
+        case MISSING_INT: break;
+        default:
+            if (l.ltype2 != ltype2)
+                return false;
+            break;
+    }
+
+    switch (l2)
+    {
+        case REQUIRED_MISSING_INT:
+            if (l.l2 != MISSING_INT)
+                return false;
+            break;
+        case MISSING_INT: break;
+        default:
+            if (l.l2 != l2)
+                return false;
+            break;
+    }
+
+    return true;
 }
 
 static std::string describe_level(int ltype, int val)

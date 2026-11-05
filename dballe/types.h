@@ -658,6 +658,14 @@ struct Level
     int compare(const Level& l) const;
 
     /**
+     * Match this level against the given one.
+     *
+     * Consider this level a parsed level query, and check if it matches a
+     * level.
+     */
+    bool matches(const Level& l) const;
+
+    /**
      * Return a string description of this level
      */
     std::string describe() const;

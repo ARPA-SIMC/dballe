@@ -153,6 +153,10 @@ class BaseExplorerTestMixin(DballeDBMixin):
 
             with explorer.query_summary_all({"level": (10, 11, None, None)}) as cur:
                 rows = list(cur)
+            self.assertEqual(len(rows), 3)
+
+            with explorer.query_summary_all({"level": (10, 11, "-", "-")}) as cur:
+                rows = list(cur)
             self.assertEqual(len(rows), 1)
 
     def test_create_from_msgs(self):

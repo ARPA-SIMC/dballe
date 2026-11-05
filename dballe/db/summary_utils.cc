@@ -83,7 +83,7 @@ void StationEntry<Station>::add_filtered(const StationEntry& entries,
 
     for (const auto& entry : entries)
     {
-        if (!q.level.is_missing() && q.level != entry.var.level)
+        if (!q.level.matches(entry.var.level))
             continue;
 
         if (!q.trange.is_missing() && q.trange != entry.var.trange)
@@ -113,7 +113,7 @@ bool StationEntry<Station>::iter_filtered(
 
     for (const auto& entry : *this)
     {
-        if (!q.level.is_missing() && q.level != entry.var.level)
+        if (!q.level.matches(entry.var.level))
             continue;
 
         if (!q.trange.is_missing() && q.trange != entry.var.trange)
