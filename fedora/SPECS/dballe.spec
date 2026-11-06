@@ -112,15 +112,15 @@ The Fedora packaging of DB-All.e includes all the features of the libraries,
     physical principles, built to support operations such as quality control,
     data thinning, correlation of data from mixed sources
 
-%package -n libdballe-doc
-Summary:   DB-ALL.e core C development library (documentation)
-Group: Applications/Meteo
-%description  -n libdballe-doc
- DB-ALL.e core C development library (documentation)
- DB-All.e is a fast on-disk database where meteorological observed and
- forecast data can be stored, searched, retrieved and updated.
- .
- This is the documentation for the core DB_All.e development library.
+# %package -n libdballe-doc
+# Summary:   DB-ALL.e core C development library (documentation)
+# Group: Applications/Meteo
+# %description  -n libdballe-doc
+#  DB-ALL.e core C development library (documentation)
+#  DB-All.e is a fast on-disk database where meteorological observed and
+#  forecast data can be stored, searched, retrieved and updated.
+#  .
+#  This is the documentation for the core DB_All.e development library.
 
 
 %package  -n libdballe9
@@ -266,9 +266,9 @@ mv $RPM_BUILD_ROOT%{_includedir}/dballe/dballef.mod $RPM_BUILD_ROOT%{_fmoddir}
 %{_libdir}/libdballef*.so.*
 
 
-%files -n libdballe-doc
-%defattr(-,root,root,-)
-%doc %{_docdir}/%{name}/*
+# %files -n libdballe-doc
+# %defattr(-,root,root,-)
+# %doc %{_docdir}/%{name}/*
 
 %files -n python3-dballe
 %defattr(-,root,root,-)
