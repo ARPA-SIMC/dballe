@@ -8,9 +8,12 @@ volnd that allows to automatically export matrices of data out of the database.
 .. toctree::
     :maxdepth: 2
 
-    types
+    var-metadata
+    var-values
+    var
     messages
     cursors
     db
     explorer
     volnd
+    misc

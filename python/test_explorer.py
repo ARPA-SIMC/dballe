@@ -157,7 +157,16 @@ class BaseExplorerTestMixin(DballeDBMixin):
                     rows = list(cur)
                 self.assertEqual(len(rows), 3)
 
-                with explorer.query_summary_all({"level": (10, 11, "-", "-")}) as cur:
+                with explorer.query_summary_all(
+                    {
+                        "level": (
+                            10,
+                            11,
+                            dballe.REQUIRED_MISSING,
+                            dballe.REQUIRED_MISSING,
+                        )
+                    }
+                ) as cur:
                     rows = list(cur)
                 self.assertEqual(len(rows), 1)
 

@@ -55,12 +55,15 @@ sphinx_doc_sources = [
     'python_how/insert.rst',
     'python_how/attributes.rst',
     'python_ref/index.rst',
-    'python_ref/types.rst',
     'python_ref/messages.rst',
     'python_ref/cursors.rst',
     'python_ref/db.rst',
     'python_ref/explorer.rst',
     'python_ref/volnd.rst',
+    'python_ref/misc.rst',
+    'python_ref/var.rst',
+    'python_ref/var-metadata.rst',
+    'python_ref/var-values.rst',
 ]
 
 subdir('general_ref')

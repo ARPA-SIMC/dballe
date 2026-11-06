@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from wreport import Var, Varinfo, Vartable
 import _dballe
 from _dballe import (
@@ -13,6 +12,7 @@ from _dballe import (
     CursorSummaryDB,
     CursorSummaryDBSummary,
     CursorSummarySummary,
+    Data,
     DB,
     DBExplorer,
     DBExplorerUpdate,
@@ -28,6 +28,7 @@ from _dballe import (
     ImporterFile,
     Level,
     Message,
+    REQUIRED_MISSING,
     Station,
     Trange,
     Transaction,
@@ -48,6 +49,7 @@ __all__ = [
     "CursorSummaryDB",
     "CursorSummaryDBSummary",
     "CursorSummarySummary",
+    "Data",
     "DB",
     "DBExplorer",
     "DBExplorerUpdate",
@@ -63,6 +65,7 @@ __all__ = [
     "ImporterFile",
     "Level",
     "Message",
+    "REQUIRED_MISSING",
     "Station",
     "Trange",
     "Transaction",

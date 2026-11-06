@@ -19,3 +19,7 @@ database explorer
 .. autoclass:: dballe.DBExplorerUpdate
     :members:
     :undoc-members:
+
+.. autoclass:: dballe.ExplorerStats
+    :members:
+    :undoc-members:

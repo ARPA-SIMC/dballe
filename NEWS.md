@@ -1,3 +1,8 @@
+# New in version UNRELEASED
+
+* Honor `REQUIRED_MISSING_INT` when querying summaries, except for Xapian backend (#201)
+* Added `dballe.REQUIRED_MISSING` constant for Python (#201)
+
 # New in version 9.14
 
 * Do not assume exact changes in refcounts, as python 3.14 breaks some (#295)

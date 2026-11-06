@@ -180,7 +180,6 @@ static PyModuleDef dballe_module = {
     NULL,                         /* m_traverse */
     NULL,                         /* m_clear */
     NULL,                         /* m_free */
-
 };
 
 PyMODINIT_FUNC PyInit__dballe(void);
@@ -199,6 +198,7 @@ PyMODINIT_FUNC PyInit__dballe(void)
 
         pyo_unique_ptr m(PyModule_Create(&dballe_module));
         PyModule_AddStringConstant(m, "__version__", PACKAGE_VERSION);
+        PyModule_AddStringConstant(m, "REQUIRED_MISSING", "-");
         register_types(m);
         register_data(m);
         register_binarymessage(m);
