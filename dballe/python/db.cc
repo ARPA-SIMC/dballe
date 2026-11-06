@@ -1379,7 +1379,7 @@ See :ref:`python_how_dumpdb` and :ref:`python_how_insert` examples.
     static void _dealloc(Impl* self)
     {
         self->db.~shared_ptr<db::DB>();
-        Py_TYPE(self)->tp_free(self);
+        PyObject_Free(self);
     }
 };
 
@@ -1498,7 +1498,7 @@ See :ref:`python_how_dumpdb` and :ref:`python_how_insert` examples.
     static void _dealloc(Impl* self)
     {
         self->db.~shared_ptr<dballe::db::Transaction>();
-        Py_TYPE(self)->tp_free(self);
+        PyObject_Free(self);
     }
 };
 

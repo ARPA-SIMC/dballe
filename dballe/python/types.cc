@@ -194,7 +194,7 @@ Constructor: Level(ltype1: int=None, l1: int=None, ltype2: int=None, l2: int=Non
     static void _dealloc(Impl* self)
     {
         self->val.~Level();
-        Py_TYPE(self)->tp_free(self);
+        PyObject_Free(self);
     }
 
     static int _init(Impl* self, PyObject* args, PyObject* kw)
@@ -361,7 +361,7 @@ Constructor: Trange(pind: int=None, p1: int=None, p2: int=None)
     static void _dealloc(Impl* self)
     {
         self->val.~Trange();
-        Py_TYPE(self)->tp_free(self);
+        PyObject_Free(self);
     }
 
     static int _init(Impl* self, PyObject* args, PyObject* kw)
@@ -589,7 +589,7 @@ struct BaseDefinition
     static void _dealloc(Impl* self)
     {
         self->val.~Station();
-        Py_TYPE(self)->tp_free(self);
+        PyObject_Free(self);
     }
 
     static int _init(Impl* self, PyObject* args, PyObject* kw)

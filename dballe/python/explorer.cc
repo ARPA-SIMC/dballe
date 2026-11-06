@@ -589,7 +589,7 @@ an indexed Xapian database.
     static void _dealloc(Impl* self)
     {
         delete self->explorer;
-        Py_TYPE(self)->tp_free(self);
+        PyObject_Free(self);
     }
 
     static PyObject* _str(Impl* self) { return PyUnicode_FromString(name); }
@@ -883,7 +883,7 @@ struct Definition
     static void _dealloc(Impl* self)
     {
         self->update.~Update();
-        Py_TYPE(self)->tp_free(self);
+        PyObject_Free(self);
     }
 
     static int _init(Impl* self, PyObject* args, PyObject* kw)

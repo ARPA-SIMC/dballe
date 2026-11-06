@@ -525,7 +525,7 @@ struct DefinitionBase : public Type<Definition, Impl>
     static void _dealloc(Impl* self)
     {
         self->cur.~shared_ptr();
-        Py_TYPE(self)->tp_free(self);
+        PyObject_Free(self);
     }
 
     static PyObject* _iter(Impl* self)

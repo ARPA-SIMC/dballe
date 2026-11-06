@@ -391,7 +391,7 @@ Example usage::
     static void _dealloc(Impl* self)
     {
         self->message.~shared_ptr<Message>();
-        Py_TYPE(self)->tp_free(self);
+        PyObject_Free(self);
     }
 
     static int _init(Impl* self, PyObject* args, PyObject* kw)

@@ -81,7 +81,7 @@ of :class:`dballe.Message` objects.
     {
         Py_XDECREF(self->importer);
         Py_XDECREF(self->file);
-        Py_TYPE(self)->tp_free(self);
+        PyObject_Free(self);
     }
 
     static PyObject* _iter(Impl* self)
@@ -250,7 +250,7 @@ Example usage::
     static void _dealloc(Impl* self)
     {
         delete self->importer;
-        Py_TYPE(self)->tp_free(self);
+        PyObject_Free(self);
     }
 
     static int _init(Impl* self, PyObject* args, PyObject* kw)

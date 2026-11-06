@@ -43,7 +43,7 @@ See :ref:`python_how_convertvars` for an example.
     static void _dealloc(Impl* self)
     {
         delete self->data;
-        Py_TYPE(self)->tp_free(self);
+        PyObject_Free(self);
     }
 
     static PyObject* _str(Impl* self)

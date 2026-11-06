@@ -285,7 +285,7 @@ Example usage::
     static void _dealloc(Impl* self)
     {
         delete self->file;
-        Py_TYPE(self)->tp_free(self);
+        PyObject_Free(self);
     }
 
     static int _init(dpy_File* self, PyObject* args, PyObject* kw)

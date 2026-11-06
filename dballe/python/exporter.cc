@@ -110,7 +110,7 @@ the contents of a :class:`dballe.Message`.
     static void _dealloc(Impl* self)
     {
         delete self->exporter;
-        Py_TYPE(self)->tp_free(self);
+        PyObject_Free(self);
     }
 
     static int _init(Impl* self, PyObject* args, PyObject* kw)

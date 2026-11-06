@@ -115,7 +115,7 @@ read. Is it used by :class:`dballe.File` to return the binary messages it reads.
     static void _dealloc(Impl* self)
     {
         self->message.~BinaryMessage();
-        Py_TYPE(self)->tp_free(self);
+        PyObject_Free(self);
     }
 
     static int _init(Impl* self, PyObject* args, PyObject* kw)
