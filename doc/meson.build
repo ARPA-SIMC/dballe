@@ -90,13 +90,13 @@ build_docs = configure_file(output: 'build-docs', input: 'build-docs.in', config
     'doc_build': meson.current_build_dir(),
     'top_builddir': meson.project_build_root(),
     'pythonpath_src': meson.project_source_root() / 'python',
-    'pythonpath_build': meson.project_build_root() / 'python',
+    'pythonpath_build': meson.project_build_root() / 'dballe/python',
 })
 
 built_docs = custom_target('built_docs',
     input: [libdballe_dox, sphinx_doc_sources, doxygen_doc_sources],
     output: ['libdballe.doxytags', 'html'],
-    depends: [libdballe, py_dballe],
+    depends: [libdballe, py_dballe, python_sources_stamp],
     command: [build_docs],
     install_dir: docdir,
     install: true,

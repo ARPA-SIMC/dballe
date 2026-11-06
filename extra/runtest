@@ -57,20 +57,22 @@ then
     done
 fi
 
+export TOP_SRCDIR
+export TOP_BUILDDIR
 export WREPORT_EXTRA_TABLES="$TESTDIR/tables"
 export WREPORT_TESTDATA="$TOP_SRCDIR/extra"
 export DBA_REPINFO=$TOP_SRCDIR/tables/repinfo.csv
 export DBA_TABLES=$TOP_SRCDIR/tables
 export DBA_TESTDATA=$TOP_SRCDIR/extra
 export DBA_INSECURE_SQLITE=1
+export PATH="$TOP_BUILDDIR/src:$PATH"
 
-export PYTHONPATH=$TOP_SRCDIR/python/:$TOP_BUILDDIR/python
+export PYTHONPATH=$TOP_SRCDIR/python/:$TOP_BUILDDIR/dballe/python
 # export PYTHONWARNINGS=error
 export PYTHONWARNINGS=default
 # See https://docs.python.org/3/library/devmode.html
 export PYTHONDEVMODE=1
 
-export TOP_SRCDIR
 ulimit -v 4294967 || true
 ulimit -n 1024 || true
 

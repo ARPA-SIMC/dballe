@@ -105,6 +105,7 @@ libdballe = both_libraries('dballe',
                 popt_dep,
         ])
 
+subdir('python')
 
 #
 # Unit testing
