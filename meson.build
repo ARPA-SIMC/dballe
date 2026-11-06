@@ -153,6 +153,12 @@ pkg.generate(libdballef,
     requires: [libwreport_dep],
 )
 
+# To avoid having to build depend on its prerequisites on all architectures,
+# documentation is only built when explicitly requested.
+# `built_docs` now has build_by_default: false, and we use this to add a 'ninja
+# doc' target that can will build the docs only
+run_target('doc', command: ['/bin/true'], depends: [built_docs])
+
 
 #    AC_MSG_CHECKING([for wreport documentation dir $WREPORT_DOXYGEN_DIR])
 #    AC_MSG_RESULT([$wreport_doxygen_dir_result])
